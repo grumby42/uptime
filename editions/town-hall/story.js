@@ -50,6 +50,7 @@ function editionTile(d, ch, x, y) {
   if (typeof mkTile === 'function') d = mkTile(d, ch, x, y);
   if (typeof rhTile === 'function') d = rhTile(d, ch, x, y);
   if (typeof bmTile === 'function') d = bmTile(d, ch, x, y);
+  if (typeof svTile === 'function') d = svTile(d, ch, x, y);
   return d;
 }
 async function introScript() {
@@ -87,6 +88,7 @@ function triggers() {
   if (typeof mkTriggers === 'function' && mkTriggers()) return true;
   if (typeof rhTriggers === 'function' && rhTriggers()) return true;
   if (typeof bmTriggers === 'function' && bmTriggers()) return true;
+  if (typeof svTriggers === 'function' && svTriggers()) return true;
   if (G.map === 'hub' && G.y >= 11) {
     if (!G.f.portDone || G.day < 2) {
       run(async () => {
@@ -114,6 +116,7 @@ function interact() {
   if (typeof mkInteract === 'function' && mkInteract(ch, tx, ty)) return;
   if (typeof rhInteract === 'function' && rhInteract(ch, tx, ty)) return;
   if (typeof bmInteract === 'function' && bmInteract(ch, tx, ty)) return;
+  if (typeof svInteract === 'function' && svInteract(ch, tx, ty)) return;
   if (ch === 'k') run(kioskTask);
   else if (ch === 'n') run(wifiTask);
   else if (ch === 'p') run(() => pcTask(tx));
@@ -169,7 +172,7 @@ async function talk(npc) {
     case 'vex': await vexScript(); break;
     case 'marisol': await boardScript(); break;
     case 'imani': await dojoIntro(); break;
-    default: if (typeof mrTalk === 'function') await mrTalk(npc); if (typeof crTalk === 'function') await crTalk(npc); if (typeof mkTalk === 'function') await mkTalk(npc); if (typeof rhTalk === 'function') await rhTalk(npc); if (typeof bmTalk === 'function') await bmTalk(npc);
+    default: if (typeof mrTalk === 'function') await mrTalk(npc); if (typeof crTalk === 'function') await crTalk(npc); if (typeof mkTalk === 'function') await mkTalk(npc); if (typeof rhTalk === 'function') await rhTalk(npc); if (typeof bmTalk === 'function') await bmTalk(npc); if (typeof svTalk === 'function') await svTalk(npc);
   }
   await mfaMeet(npc);
 }
@@ -409,6 +412,7 @@ async function evolveCheck() {
   if (typeof mkEvolveCheck === 'function') await mkEvolveCheck();
   if (typeof rhEvolveCheck === 'function') await rhEvolveCheck();
   if (typeof bmEvolveCheck === 'function') await bmEvolveCheck();
+  if (typeof svEvolveCheck === 'function') await svEvolveCheck();
   if (!G.items.guide) return;
   const t = G.party.find(p => p.lvl >= 5 && !p.tuned);
   if (!t) return;

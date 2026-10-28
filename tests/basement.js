@@ -509,7 +509,10 @@ async function recordsDone(s, extra, party) {
   await s.settle();
   p = await s.peek();
   const qc = await s.page.evaluate(() => {
-    const ids = Object.keys(QT_CLUES), line = bmQtTimeline();
+    // The Basement suspicion file is built only from clues that have a Basement timeline row (BM_QT_LINE); a later
+    // district's Quiet Thread clue (e.g. the Server Room's sv-nesting) is found after the file is handed over and is
+    // excluded here, so the count stays 12.
+    const ids = Object.keys(QT_CLUES).filter(id => BM_QT_LINE[id]), line = bmQtTimeline();
     return { allTimed: ids.every(id => BM_QT_LINE[id]), timesInSeen: ids.every(id => QT_CLUES[id].seen.includes(BM_QT_LINE[id].t)), techOk: line.every(x => QT_TECH[x.tech]),
       sorted: line.every((x, i) => i === 0 || line[i - 1].t <= x.t), n: line.length, nClues: ids.length,
       svcOk: ids.filter(id => /svc-print/.test(BM_QT_LINE[id].who)).every(id => /svc-print/.test(QT_CLUES[id].seen)),
@@ -527,7 +530,7 @@ async function recordsDone(s, extra, party) {
     /IT Basement district: secured/.test(sum) && /Beacon Badge/.test(sum) && /Tier 3 senior analyst/.test(sum) && /one real attack hidden by an exclusion/.test(sum) && /The Quiet Thread is on file/.test(sum) && /Next: the Server Room/.test(sum) && /Forty quiet minutes/.test(sum), sum.slice(0, 400));
   await s.pickLabel(/Keep exploring/); await s.settle();
   p = await s.peek();
-  check('after the district: objective done (Next: the Server Room); series save marks the IT Basement done', p.objective.done && /Server Room/.test(p.objective.text) && await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).editions['town-hall'].itBasement === true), p.objective);
+  check('after the district: objective points to the Server Room (done, or the Server Room district); series save marks the IT Basement done', (p.objective.done || p.objective.district === 'server') && /Server Room/.test(p.objective.text) && await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).editions['town-hall'].itBasement === true), p.objective);
   check('Credits list the basement sources and keep the MITRE notice', await s.page.evaluate(() => { const c = creditsHtml(); return /SP 800-41 Rev\. 1/.test(c) && /RFC 5905/.test(c) && /M-26-14/.test(c) && /Sysmon/.test(c) && /Nmap/.test(c) && /reproduced and distributed with the permission of The MITRE Corporation/.test(c); }));
   results.errors = s.errors; results.requests = s.requests;
   if (s.errors.length || s.requests.length) failed = true;

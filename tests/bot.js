@@ -162,7 +162,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -199,7 +199,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (sig !== lastSig) { lastSig = sig; lastProgress = Date.now(); }
     if (p.battle && !p.battle.story) stats.alertTechs[p.battle.tech] = (stats.alertTechs[p.battle.tech] || 0) + 1;
     else if (Date.now() - lastProgress > 15000) throw new Error('stuck: ' + sig);
-    if (p.extra && p.extra.bmSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (p.extra && p.extra.svSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (p.extra && p.extra.bmSummary && !stats.bmSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.bmSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-basement'); }
+    if (p.map === 'server' && !p.ui && !stats.shots.server && p.started && p.f.svPriv) { stats.shots.server = 1; await shot('server'); }
+    if (p.ui && p.ui.type === 'modal' && !stats.shots.tiering && /Tiering ·/.test(await page.textContent('#modal'))) { stats.shots.tiering = 1; await shot('tiering'); }
+    if (p.ui && p.ui.type === 'modal' && !stats.shots.finding && /Assessment finding/.test(await page.textContent('#modal'))) { stats.shots.finding = 1; await shot('assessment-finding'); }
     if (p.extra && p.extra.rhSummary && !stats.rhSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.rhSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-records'); }
     if (p.map === 'basement' && !p.ui && !stats.shots.basement && p.started && p.f.bmCover) { stats.shots.basement = 1; await shot('basement'); }
     if (p.ui && p.ui.type === 'modal' && !stats.shots.tuning && /Rule tuning ·/.test(await page.textContent('#modal'))) { stats.shots.tuning = 1; await shot('rule-tuning'); }
@@ -240,6 +244,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     // Same in the IT Basement, once the fieldwork is done, so its logging and boundary templates get played.
     if (p.map === 'basement' && p.f.bmTune && !p.f.bmBoss && p.queue > 0 && p.focus > 12 && (stats.basementQueue || 0) < 8) { stats.basementQueue = (stats.basementQueue || 0) + 1; await press('select'); await sleep(30); continue; }
     if (!savedCheckBasement && p.map === 'basement' && p.f.bmDrill1 && !p.f.bmDirective) { savedCheckBasement = await saveReload(); continue; }
+    // Same in the Server Room, once the fieldwork is done, so its identity-infrastructure templates get played.
+    if (p.map === 'server' && p.f.svTier && !p.f.svBoss && p.queue > 0 && p.focus > 12 && (stats.serverQueue || 0) < 8) { stats.serverQueue = (stats.serverQueue || 0) + 1; await press('select'); await sleep(30); continue; }
+    if (!savedCheckServer && p.map === 'server' && p.f.svDrill1 && !p.f.svDirective) { savedCheckServer = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -253,11 +260,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const result = {
     quietTechInAlertMix: quietInAlerts,
     mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter,
-    errors, requests, saveReload: savedCheck, saveReloadMailRoom: savedCheckMail, saveReloadClerks: savedCheckClerks, saveReloadMarket: savedCheckMarket, saveReloadRecords: savedCheckRecords, saveReloadBasement: savedCheckBasement, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll,
-    final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, party: fin.party, m: fin.m, mfa: fin.mfa, insider: fin.f.insider, cards: fin.f.cards, mrCards: fin.f.mrCards, mr: fin.extra && fin.extra.mr, crCards: fin.f.crCards, cr: fin.extra && fin.extra.cr, mkCards: fin.f.mkCards, mk: fin.extra && fin.extra.mk, rhCards: fin.f.rhCards, rh: fin.extra && fin.extra.rh, bmCards: fin.f.bmCards, bm: fin.extra && fin.extra.bm, objective: fin.objective },
+    errors, requests, saveReload: savedCheck, saveReloadMailRoom: savedCheckMail, saveReloadClerks: savedCheckClerks, saveReloadMarket: savedCheckMarket, saveReloadRecords: savedCheckRecords, saveReloadBasement: savedCheckBasement, saveReloadServer: savedCheckServer, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll,
+    final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, party: fin.party, m: fin.m, mfa: fin.mfa, insider: fin.f.insider, cards: fin.f.cards, mrCards: fin.f.mrCards, mr: fin.extra && fin.extra.mr, crCards: fin.f.crCards, cr: fin.extra && fin.extra.cr, mkCards: fin.f.mkCards, mk: fin.extra && fin.extra.mk, rhCards: fin.f.rhCards, rh: fin.extra && fin.extra.rh, bmCards: fin.f.bmCards, bm: fin.extra && fin.extra.bm, svCards: fin.f.svCards, sv: fin.extra && fin.extra.sv, objective: fin.objective },
     stats
   };
   console.log(JSON.stringify(result, null, 1));
   await browser.close();
-  process.exit(errors.length || requests.length || !savedCheck || !savedCheck.restored || !savedCheckMail || !savedCheckMail.restored || !savedCheckMail.exportRoundTrip || !savedCheckClerks || !savedCheckClerks.restored || !savedCheckClerks.exportRoundTrip || !savedCheckMarket || !savedCheckMarket.restored || !savedCheckMarket.exportRoundTrip || !savedCheckRecords || !savedCheckRecords.restored || !savedCheckRecords.exportRoundTrip || !savedCheckBasement || !savedCheckBasement.restored || !savedCheckBasement.exportRoundTrip || quietInAlerts.length ? 1 : 0);
+  process.exit(errors.length || requests.length || !savedCheck || !savedCheck.restored || !savedCheckMail || !savedCheckMail.restored || !savedCheckMail.exportRoundTrip || !savedCheckClerks || !savedCheckClerks.restored || !savedCheckClerks.exportRoundTrip || !savedCheckMarket || !savedCheckMarket.restored || !savedCheckMarket.exportRoundTrip || !savedCheckRecords || !savedCheckRecords.restored || !savedCheckRecords.exportRoundTrip || !savedCheckBasement || !savedCheckBasement.restored || !savedCheckBasement.exportRoundTrip || !savedCheckServer || !savedCheckServer.restored || !savedCheckServer.exportRoundTrip || quietInAlerts.length ? 1 : 0);
 })().catch(async e => { console.error('BOT FAILED:', e.message); process.exit(2); });

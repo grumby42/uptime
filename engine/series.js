@@ -54,6 +54,8 @@ function qtStageFor(n) { return n >= QT_SUSPECT ? 2 : n >= 1 ? 1 : 0; }
 const QT_TECH = {
   'T1078':     {name: 'Valid Accounts', tactic: ['Initial Access', 'Persistence', 'Privilege Escalation', 'Stealth'],
                 plain: 'Signing in with a real account’s real password. Nothing fails, so nothing alerts.'},
+  'T1078.002': {name: 'Valid Accounts: Domain Accounts', tactic: ['Initial Access', 'Persistence', 'Privilege Escalation', 'Stealth'],
+                plain: 'Using a real domain account, and the rights it quietly holds, to blend in. A service account over-privileged years ago still looks ordinary: nothing fails, so nothing alerts.'},
   'T1090':     {name: 'Proxy', tactic: ['Command and Control'],
                 plain: 'Relaying traffic through another device so neither end shows where it really comes from or goes.'},
   'T1685.005': {name: 'Disable or Modify Tools: Clear Windows Event Logs', tactic: ['Defense Impairment'],

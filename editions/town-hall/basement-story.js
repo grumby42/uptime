@@ -125,6 +125,7 @@ function bmObjective() {
   if (!f.bmNight3) return at('End your shift at your desk.', 13, 13);
   if (!f.bmBoss) return at('Magda needs you: a server’s log has been wiped.', 14, 7);
   if (!f.bmFile) return at('Rae wants your Unexplained notes as one timeline. Talk to her.', 16, 7);
+  if (typeof svObjective === 'function') return svObjective();
   return {text: 'IT Basement secured. Next: the Server Room.', done: true, district: 'basement'};
 }
 
