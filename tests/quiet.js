@@ -159,7 +159,9 @@ const SENTRY = [/Sentry: look/], LEDGER = [/Ledger: check/];
   const sum5 = s.summaryText();
   check('>=3 clues: summary says something quiet is moving', /Something quiet is moving in the network/.test(sum5) && /Hunt mode opens later/.test(sum5));
   const p5 = await s.peek();
-  check('slice completes with the thread unresolved', p5.summary && p5.objective.done === true, p5.objective);
+  // Front Desk complete: the objective is either done or has moved on to the Mail Room (district 2).
+  const fdDone = o => o.done === true || o.district === 'mail';
+  check('slice completes with the thread unresolved', p5.summary && fdDone(p5.objective), p5.objective);
   // New game in the same browser: the edition restarts, the series record stays.
   await s.page.reload();
   await s.page.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
@@ -197,7 +199,7 @@ const SENTRY = [/Sentry: look/], LEDGER = [/Ledger: check/];
   check('<3 clues: no explicit line', !/Something quiet|Hunt mode/.test(summaryText), summaryText);
   check('<3 clues: a subtle line only', /closet router blinked/.test(summaryText), summaryText.slice(-300));
   const p3 = await s3.peek();
-  check('slice completes with <3 clues', p3.summary && p3.objective.done === true);
+  check('slice completes with <3 clues', p3.summary && (p3.objective.done === true || p3.objective.district === 'mail'), p3.objective);
   results.session3Errors = s3.errors; if (s3.errors.length || s3.requests.length) failed = true;
   await s3.ctx.close();
 

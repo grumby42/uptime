@@ -45,6 +45,7 @@ function editionTile(d, ch, x, y) {
   if (ch === 'p' && (G.pcs[x] || G.f.logs)) d.pal = 'pcOn';
   if (ch === 'k' && G.f.kiosk) d.pal = 'kioskOk';
   if (ch === 'n' && G.f.wifi) d.pal = 'closetOk';
+  if (typeof mrTile === 'function') d = mrTile(d, ch, x, y);
   return d;
 }
 async function introScript() {
@@ -72,10 +73,12 @@ function objective() {
   }
   if (!f.boardDone) return {text: 'Take the Identity Board challenge (Marisol Diaz).', map: 'board', x: 9, y: 2};
   if (!f.bossDone) return {text: 'Rae needs you: an incident is starting.', map: 'desk', x: 16, y: 6};
+  if (typeof mrObjective === 'function') { const o = mrObjective(); if (o) return o; }
   return {text: 'Slice complete. Next: the Mail Room.', done: true};
 }
 
 function triggers() {
+  if (typeof mrTriggers === 'function' && mrTriggers()) return true;
   if (G.map === 'hub' && G.y >= 11) {
     if (!G.f.portDone || G.day < 2) {
       run(async () => {
@@ -98,6 +101,7 @@ function interact() {
   const ch = tileChar(G.map, tx, ty);
   const door = doorAt(G.map, tx, ty);
   if (door && door.locked) { run(async () => { await say(door.locked); }); return; }
+  if (typeof mrInteract === 'function' && mrInteract(ch, tx, ty)) return;
   if (ch === 'k') run(kioskTask);
   else if (ch === 'n') run(wifiTask);
   else if (ch === 'p') run(() => pcTask(tx));
@@ -153,6 +157,7 @@ async function talk(npc) {
     case 'vex': await vexScript(); break;
     case 'marisol': await boardScript(); break;
     case 'imani': await dojoIntro(); break;
+    default: if (typeof mrTalk === 'function') await mrTalk(npc);
   }
   await mfaMeet(npc);
 }
@@ -385,6 +390,7 @@ async function dojoPuzzle(i) {
   }
 }
 async function evolveCheck() {
+  if (typeof mrEvolveCheck === 'function') await mrEvolveCheck();
   if (!G.items.guide) return;
   const t = G.party.find(p => p.lvl >= 5 && !p.tuned);
   if (!t) return;

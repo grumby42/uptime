@@ -41,7 +41,8 @@ function metricVals() {
     esc: m.escOk,
     uptime: +G.uptime.toFixed(2),
     mfa: Math.round(G.mfaSet.length / ACCOUNTS_TOTAL * 100),
-    patch: Math.round(Object.keys(GROUPS).filter(groupFixed).length / 4 * 100)
+    patch: Math.round(Object.keys(GROUPS).filter(groupFixed).length / 4 * 100),
+    ...(typeof editionMetricVals === 'function' ? editionMetricVals() : {})
   };
 }
 const METRICS = [
@@ -53,9 +54,11 @@ const METRICS = [
   {k: 'mfa', label: 'MFA coverage', unit: '%', higher: true},
   {k: 'patch', label: 'Patch state', unit: '%', higher: true}
 ];
+if (typeof EDITION_METRICS !== 'undefined') METRICS.push(...EDITION_METRICS);
 function track() {
   const v = metricVals();
   for (const d of METRICS) {
+    if (d.when && !d.when()) continue;
     const x = v[d.k]; if (x === null || x === undefined) continue;
     const t = G.track[d.k] || (G.track[d.k] = {best: x, worst: x});
     if (d.higher) { t.best = Math.max(t.best, x); t.worst = Math.min(t.worst, x); }
@@ -217,7 +220,8 @@ async function endShift(reason) {
   await surfaceMissed(false);
 }
 async function briefing() {
-  const a = BRIEFS[(G.day * 2) % BRIEFS.length], b = BRIEFS[(G.day * 2 + 1) % BRIEFS.length];
+  const L = typeof briefList === 'function' ? briefList() : BRIEFS;
+  const a = L[(G.day * 2) % L.length], b = L[(G.day * 2 + 1) % L.length];
   const body = '<p>Morning briefing, Day ' + G.day + '. Two items from the threat-intel feed:</p>' +
     '<ol><li>' + esc(a.text) + '</li><li>' + esc(b.text) + '</li></ol>' +
     '<p>Act on one and that threat’s odds drop by half for a week.</p>';
@@ -234,6 +238,7 @@ function genAlert(forceKind) {
     let w = x.w;
     if (G.brief[x.t] && G.brief[x.t] >= G.day) w *= 0.5;
     if (G.badge && x.t === 'sprayer') w *= 0.5;
+    if (typeof alertWeight === 'function') w = alertWeight(x.t, w);
     return {t: x.t, w: w};
   });
   const t = weighted(wts).t;
@@ -241,7 +246,7 @@ function genAlert(forceKind) {
   const chain = ALERT_CHAINS[t];
   return {
     kind: kind, threat: t, tech: th.tech, tags: th.tags, story: false, group: 'a',
-    title: tpl.rule, host: pick(HOSTS) + ' · Front Desk',
+    title: tpl.rule, host: (typeof alertHost === 'function' && alertHost()) || pick(HOSTS) + ' · Front Desk',
     enemy: kind === 'mal' ? {spr: th.spr, pal: th.pal} : kind === 'fp' ? {spr: 'noise', pal: 'noise'} : {spr: 'player', pal: 'staffer'},
     clues: v.clues, truth: v.truth, resp: tpl.mal.resp,
     rate: kind === 'mal' ? 12 + Math.floor(rnd() * 5) : 8,
@@ -356,6 +361,7 @@ async function useAbility(k, m) {
   const a = ABIL[k], s = B.spec;
   G.focus -= a.cost;
   unlock('act', k);
+  if (typeof onAbility === 'function') onAbility(k, B);
   shake = 300;
   if (a.type === 'inv') {
     let gain = a.ev * m * power();
@@ -447,6 +453,7 @@ async function closeFlow() {
   }
   if (s.kind === 'fp') { G.focus = Math.max(0, G.focus - 2); msg += ' (False positives drain Focus: −2.)'; }
   await say(msg);
+  if (typeof onAlertClosed === 'function') await onAlertClosed(s, verdict, correct, r);
   await say('ATT&CK: the rule maps to ' + s.tech + ' ' + TECH[s.tech].name + ' (' + TECH[s.tech].tactic.join(', ') + ').' + (fresh ? ' Added to the Field Manual.' : ''));
   await gainXP(xp + (s.story ? 20 : 0));
   return s.story ? 'win' : 'closed';
@@ -478,15 +485,16 @@ async function gainXP(n) {
 function scorecardHtml() {
   const v = metricVals();
   const fmt = (d, x) => x === null || x === undefined ? '—' : (d.k === 'uptime' ? x.toFixed(2) : x) + d.unit;
-  const rows = METRICS.map(d => {
+  const rows = METRICS.filter(d => !d.when || d.when()).map(d => {
     const tr = G.track[d.k] || {};
     const tgt = G.targets[d.k];
-    const tgtS = (d.k === 'tta' ? '≤ ' : '≥ ') + (d.k === 'uptime' ? tgt.toFixed(1) : tgt) + d.unit;
+    const tgtS = (d.k === 'tta' || d.lower ? '≤ ' : '≥ ') + (d.k === 'uptime' ? tgt.toFixed(1) : tgt) + d.unit;
     const na = d.tier1 && G.rank === 'Intern';
     return '<tr><td>' + d.label + (na ? ' <small>(Tier 1)</small>' : '') + '</td><td><b>' + fmt(d, v[d.k]) + '</b></td><td>' + fmt(d, tr.best) + '</td><td>' + fmt(d, tr.worst) + '</td><td>' + tgtS + '</td></tr>';
   }).join('');
   return '<table class="sc"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
     (G.f.directive ? '<p class="dir">Directive: time-to-acknowledge target cut from 20 s to 15 s.</p>' : '') +
+    (typeof editionScoreHtml === 'function' ? editionScoreHtml() : '') +
     '<p>Rank <b>' + G.rank + '</b> · Day ' + G.day + ' · Reputation ' + G.rep + ' · Badge: ' + (G.badge ? 'Key Badge' : 'none') + '</p>' +
     '<p>Buildings: ' + Object.keys(GROUPS).map(g => GROUPS[g].name + ' ' + (groupFixed(g) ? 'lit' : 'dark') + ' (' + G.health[g] + '%)').join(' · ') + '</p>' +
     '<p>Ticking: events ingested <b>' + G.m.events.toLocaleString('en-US') + '</b> · queue <b>' + G.queue + '</b> · auto-closed <b>' + G.m.autoClosed + '</b>' + (G.f.autoUnlocked ? ' · automation ' + (G.auto ? 'ON' : 'off') : '') + '</p>' +
@@ -517,7 +525,7 @@ function toolsHtml() {
   return G.party.map((t, i) => {
     const T = TOOLS[t.id];
     return '<div class="fm"><b>' + esc(toolName(t)) + '</b> · ' + CLASSES[T.cls].label + ' · ' + T.sub + ' · Lv ' + t.lvl + ' (' + t.xp + '/' + (20 * t.lvl) + ' XP)' + (i === G.active ? ' · <i>active</i>' : '') +
-      '<br>' + esc(T.blurb) + '<br><small>Strong vs: ' + CLASSES[T.cls].strong.join(', ') + (T.cls === 'logging' ? ' (with logging on)' : '') + '</small><br><small>' + T.abil.map(k => ABIL[k].name + ' (' + ABIL[k].cost + ')').join(' · ') + '</small></div>';
+      '<br>' + esc(T.blurb) + '<br><small>Strong vs: ' + (CLASSES[T.cls].strongLabel || CLASSES[T.cls].strong.join(', ')) + (T.cls === 'logging' ? ' (with logging on)' : '') + '</small><br><small>' + T.abil.map(k => ABIL[k].name + ' (' + ABIL[k].cost + ')').join(' · ') + '</small></div>';
   }).join('') + '<p>Tuning Guide: ' + (G.items.guide ? '1 (use on a Lv 5+ tool)' : 'none') + '</p>';
 }
 function creditsHtml() {
@@ -528,6 +536,7 @@ function creditsHtml() {
     '<p>Defensive actions are written in our own words in the style of MITRE D3FEND. Function names are from the NIST Cybersecurity Framework (CSF) 2.0.</p>' +
     '<h3>Facts used</h3><p>' + esc(EDITION.creditsFacts) + '</p>' +
     '<h3>Inspiration only</h3><p>Genre inspiration from classic handheld monster-collecting RPGs; the 1990s CGI series set inside a computer; incident-response card games such as Backdoors &amp; Breaches by Black Hills Information Security; and the National Cyber League / Cyber Skyline. No names, art, cards or other material from those works are used.</p>' +
+    (EDITION.creditsInspiration ? '<p>' + esc(EDITION.creditsInspiration) + '</p>' : '') +
     '<p class="small">Everything invented for play is labelled (game) in the Field Manual. No network requests; saves stay in this browser.</p>';
 }
 async function startMenu() {
@@ -689,7 +698,8 @@ window.__UPTIME = {
       f: G.f, rank: G.rank, ui: ui, objective: objective(), solid: solid, doors: MAPS[G.map].doors,
       battle: B ? {kind: B.spec.kind, ev: B.ev, dwell: B.dwell, story: !!B.spec.story, tech: B.spec.tech} : null,
       party: G.party, metrics: metricVals(), m: G.m, fm: fmPct(), queue: G.queue, mfa: G.mfaSet.length, summary: !!G.f.summaryShown,
-      qt: Series.qt()
+      qt: Series.qt(),
+      extra: typeof peekExtra === 'function' ? peekExtra() : null
     };
   },
   turbo(on) { UI.turbo = !!on; },

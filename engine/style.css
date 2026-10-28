@@ -114,3 +114,16 @@ textarea{width:100%;font-family:var(--mono);font-size:12px;background:#fff;color
 .logo{font-size:44px;font-weight:800;letter-spacing:8px;color:var(--accent)}
 .big{font-size:17px;font-weight:700}
 @media (max-width:420px){ table.sc{font-size:11.5px} table.sc th,table.sc td{padding:3px 2px} .mbody{font-size:14px;padding:6px 10px} }
+
+/* Investigation drills, inbox room and text stream (Mail Room) */
+pre.art{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-family:var(--mono);font-size:12px;line-height:1.35;
+  background:rgba(127,127,127,.12);border-left:3px solid var(--accent);padding:6px 8px;margin:.4em 0;-webkit-user-select:text;user-select:text}
+pre.art.wall{border-left-color:var(--muted);color:var(--muted);max-height:220px;overflow:auto}
+pre.art.ai{border-left-color:var(--gold)}
+.find{margin:.4em 0}
+.mbody details summary{cursor:pointer;color:var(--accent)}
+.mail{border:2px solid var(--paper-ink);padding:6px 8px;margin:.4em 0;font-size:14px}
+.mail .mh{font-size:12px;color:var(--muted);word-break:break-word}
+.mail .cue{display:block;margin-top:4px;font-size:12px;border-left:3px solid var(--gold);padding-left:6px}
+.sms{max-width:85%;border-radius:10px;padding:6px 10px;margin:6px 0;background:rgba(127,127,127,.18);font-size:14px}
+.sms .from{display:block;font-size:11px;color:var(--muted)}

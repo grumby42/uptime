@@ -1,5 +1,5 @@
-// Uptime slice 1 — Playwright playthrough bot + checks.
-// Plays from New game to the end-of-slice screen using real inputs:
+// Uptime Town Hall — Playwright playthrough bot + checks.
+// Plays from New game through the Front Desk and the Mail Room to the end-of-district screen using real inputs:
 //   desktop: keyboard (arrows, Z, X, Enter, Shift); phone: taps on the on-screen pad and on menu options.
 // Usage: node bot.js desktop|phone [outdir]   (UPTIME_FILE=file:///... to test another build)
 // Also checks: no Quiet Thread technique ever shows up as an ordinary alert, and the series save
@@ -122,11 +122,21 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     }
     return null;
   }
-  const HUBDOOR = { desk: [4, 6], board: [6, 17], dojo: [24, 17] };
+  // Next door to take toward another map: breadth-first search over the maps' unlocked doors.
+  async function nextDoor(from, to) {
+    const doors = await page.evaluate(() => Object.fromEntries(Object.entries(MAPS).map(([k, v]) => [k, Object.entries(v.doors || {}).filter(([, d]) => d.to && !d.locked).map(([xy, d]) => [xy, d.to])])));
+    const prev = new Map([[from, null]]), q = [from];
+    while (q.length) {
+      const m = q.shift();
+      if (m === to) { let k = m, hop = null; while (prev.get(k)) { hop = prev.get(k); k = hop[0]; } return hop[1].split(',').map(Number); }
+      for (const [xy, t] of doors[m] || []) if (!prev.has(t)) { prev.set(t, [m, xy]); q.push(t); }
+    }
+    throw new Error('no door route ' + from + ' -> ' + to);
+  }
   async function navigate(p) {
     const o = p.objective;
     let gx, gy, tile = false;
-    if (p.map !== o.map) { tile = true; if (p.map !== 'hub') { gx = 9; gy = 10; } else { [gx, gy] = HUBDOOR[o.map]; } }
+    if (p.map !== o.map) { tile = true; [gx, gy] = await nextDoor(p.map, o.map); }
     else { gx = o.x; gy = o.y; tile = !!o.step; }
     const r = bfs(p, gx, gy, tile);
     if (!r) throw new Error('no path to ' + JSON.stringify(o) + ' from ' + p.map + ' ' + p.x + ',' + p.y);
@@ -147,16 +157,47 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheck = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheck = null, savedCheckMail = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
+  async function saveReload() {
+    const before = await peek();
+    const waitK = async k => { for (let i = 0; i < 100; i++) { const q = await peek(); if (q.ui && q.ui.type === 'modal') { const j = q.ui.options.findIndex(x => x.meta && x.meta.k === k); if (j >= 0) return [q, j]; } await sleep(20); } throw new Error('menu option ' + k + ' never appeared: ' + JSON.stringify((await peek()).ui)); };
+    const waitTitle = async t => { for (let i = 0; i < 100; i++) { const q = await peek(); const h = await page.textContent('#modal'); if (q.ui && q.ui.type === 'modal' && h.includes(t)) return q; await sleep(20); } throw new Error('modal ' + t + ' never appeared'); };
+    const tag = before.map === 'hub' ? '' : '-' + before.map;
+    await press('start');
+    let [q, j] = await waitK('score'); await pick(q, j);
+    q = await waitTitle('Now'); await shot('scorecard' + tag); await pick(q, 0);
+    [q, j] = await waitK('fm'); await pick(q, j);
+    q = await waitTitle('complete'); await shot('fieldmanual' + tag); await pick(q, 0);
+    [q, j] = await waitK('save'); await pick(q, j);
+    q = await waitTitle('Saved'); await pick(q, 0);
+    [q, j] = await waitK('close'); await pick(q, j);
+    const code = await page.evaluate(() => encodeSave(__UPTIME.state()));
+    await page.reload();
+    await page.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
+    await page.evaluate(() => __UPTIME.turbo(true));
+    [q, j] = await waitK('cont'); await pick(q, j);
+    await sleep(100);
+    const after = await peek();
+    const same = ['map', 'x', 'y', 'day', 'rank', 'queue', 'mfa'].every(k => JSON.stringify(before[k]) === JSON.stringify(after[k])) &&
+      JSON.stringify(before.f) === JSON.stringify(after.f) && JSON.stringify(before.party) === JSON.stringify(after.party) &&
+      JSON.stringify(before.qt) === JSON.stringify(after.qt) && JSON.stringify(before.extra) === JSON.stringify(after.extra) &&
+      JSON.stringify(before.metrics) === JSON.stringify(after.metrics);
+    const decoded = await page.evaluate(c => { try { const g = decodeSave(c); return g.day; } catch (e) { return 'ERR ' + e.message; } }, code);
+    return { restored: same, exportRoundTrip: decoded === before.day, day: before.day, map: before.map, x: before.x, y: before.y };
+  }
   await shot('title');
   while (true) {
     if (++iter > 40000 || Date.now() - t0 > 20 * 60 * 1000) throw new Error('bot timed out at iteration ' + iter);
     const p = await peek();
-    const sig = JSON.stringify([p.map, p.x, p.y, p.ui && p.ui.type, p.ui && (p.ui.text || '').slice(0, 30), p.objective && p.objective.text, p.battle && p.battle.ev, p.battle && p.battle.dwell]);
+    const sig = JSON.stringify([p.map, p.x, p.y, p.ui && p.ui.type, p.ui && (p.ui.text || '').slice(0, 30), p.ui && p.ui.options && p.ui.options.map(o => o.label).join('|').slice(0, 80), p.ui && p.ui.sel, p.objective && p.objective.text, p.battle && p.battle.ev, p.battle && p.battle.dwell]);
     if (sig !== lastSig) { lastSig = sig; lastProgress = Date.now(); }
     if (p.battle && !p.battle.story) stats.alertTechs[p.battle.tech] = (stats.alertTechs[p.battle.tech] || 0) + 1;
     else if (Date.now() - lastProgress > 15000) throw new Error('stuck: ' + sig);
-    if (p.summary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (p.extra && p.extra.mrSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (p.summary && !stats.fdSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.fdSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-frontdesk'); }
+    if (p.map === 'mail' && p.ui && p.ui.type === 'modal' && !stats.shots['drill'] && /Drill ·/.test(await page.textContent('#modal'))) { stats.shots.drill = 1; await shot('drill'); }
+    if (p.map === 'mail' && !p.ui && !stats.shots.mail && p.started) { stats.shots.mail = 1; await shot('mailroom'); }
     // screenshots at notable moments
     if (p.battle && !stats.shots.battle && p.ui && p.ui.type === 'choice') { stats.shots.battle = 1; await shot('battle'); }
     if (p.started && p.map === 'hub' && !p.ui && !stats.shots.hub) { stats.shots.hub = 1; await shot('hub'); }
@@ -166,34 +207,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (p.ui) { await handleUI(p); continue; }
     if (GAMER && p.started && !p.busy && !p.moving && p.party.length && p.queue > 0 && p.focus > 4) { await press('select'); await sleep(30); continue; }
     if (!p.started || p.busy || p.moving) { await sleep(15); continue; }
+    // In the Mail Room, work a few alerts from the queue so the Mail Room templates and home-threat mix get played.
+    if (p.map === 'mail' && p.f.mrMet && p.queue > 0 && p.focus > 12 && (stats.mailQueue || 0) < 8) { stats.mailQueue = (stats.mailQueue || 0) + 1; await press('select'); await sleep(30); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
-    if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) {
-      const before = await peek();
-      const waitK = async k => { for (let i = 0; i < 100; i++) { const q = await peek(); if (q.ui && q.ui.type === 'modal') { const j = q.ui.options.findIndex(x => x.meta && x.meta.k === k); if (j >= 0) return [q, j]; } await sleep(20); } throw new Error('menu option ' + k + ' never appeared: ' + JSON.stringify((await peek()).ui)); };
-      const waitTitle = async t => { for (let i = 0; i < 100; i++) { const q = await peek(); const h = await page.textContent('#modal'); if (q.ui && q.ui.type === 'modal' && h.includes(t)) return q; await sleep(20); } throw new Error('modal ' + t + ' never appeared'); };
-      await press('start');
-      let [q, j] = await waitK('score'); await pick(q, j);
-      q = await waitTitle('Now'); await shot('scorecard'); await pick(q, 0);
-      [q, j] = await waitK('fm'); await pick(q, j);
-      q = await waitTitle('complete'); await shot('fieldmanual'); await pick(q, 0);
-      [q, j] = await waitK('save'); await pick(q, j);
-      q = await waitTitle('Saved'); await pick(q, 0);
-      [q, j] = await waitK('close'); await pick(q, j);
-      // export code round-trip
-      const code = await page.evaluate(() => encodeSave(__UPTIME.state()));
-      await page.reload();
-      await page.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
-      await page.evaluate(() => __UPTIME.turbo(true));
-      [q, j] = await waitK('cont'); await pick(q, j);
-      await sleep(100);
-      const after = await peek();
-      const same = ['map', 'x', 'y', 'day', 'rank', 'queue', 'mfa'].every(k => JSON.stringify(before[k]) === JSON.stringify(after[k])) &&
-        JSON.stringify(before.f) === JSON.stringify(after.f) && JSON.stringify(before.party) === JSON.stringify(after.party) &&
-        JSON.stringify(before.qt) === JSON.stringify(after.qt);
-      const decoded = await page.evaluate(c => { try { const g = decodeSave(c); return g.day; } catch (e) { return 'ERR ' + e.message; } }, code);
-      savedCheck = { restored: same, exportRoundTrip: decoded === before.day, day: before.day, map: before.map, x: before.x, y: before.y };
-      continue;
-    }
+    if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
+    if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
     await navigate(p);
   }
   await sleep(100);
@@ -204,11 +222,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const result = {
     quietTechInAlertMix: quietInAlerts,
     mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter,
-    errors, requests, saveReload: savedCheck, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll,
-    final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, party: fin.party, m: fin.m, mfa: fin.mfa, insider: fin.f.insider, cards: fin.f.cards },
+    errors, requests, saveReload: savedCheck, saveReloadMailRoom: savedCheckMail, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll,
+    final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, party: fin.party, m: fin.m, mfa: fin.mfa, insider: fin.f.insider, cards: fin.f.cards, mrCards: fin.f.mrCards, mr: fin.extra && fin.extra.mr, objective: fin.objective },
     stats
   };
   console.log(JSON.stringify(result, null, 1));
   await browser.close();
-  process.exit(errors.length || requests.length || !savedCheck || !savedCheck.restored || quietInAlerts.length ? 1 : 0);
+  process.exit(errors.length || requests.length || !savedCheck || !savedCheck.restored || !savedCheckMail || !savedCheckMail.restored || !savedCheckMail.exportRoundTrip || quietInAlerts.length ? 1 : 0);
 })().catch(async e => { console.error('BOT FAILED:', e.message); process.exit(2); });

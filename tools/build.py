@@ -16,7 +16,7 @@ ENGINE = os.path.join(ROOT, 'engine')
 EDITIONS = os.path.join(ROOT, 'editions')
 # Script order inside each page: shared data and engine first, then the edition, then the game core.
 ENGINE_PRE = ['core-data.js', 'engine.js', 'series.js']
-ENGINE_POST = ['game.js']
+ENGINE_POST = ['drill.js', 'game.js']
 
 
 def read(path):
@@ -61,7 +61,7 @@ def validate(ed):
     files = [os.path.join(ENGINE, 'core-data.js'), os.path.join(ENGINE, 'series.js')]
     files += [os.path.join(ed['dir'], f) for f in ed['files'] if f != 'story.js']
     check = '\n'.join(read(f) for f in files) + VALIDATE
-    out = subprocess.run(['node', '-e', check], capture_output=True, text=True)
+    out = subprocess.run(['node', '-'], input=check, capture_output=True, text=True)  # stdin: the script outgrew argv
     if out.returncode != 0:
         sys.exit('validation crashed (%s):\n%s' % (ed['id'], out.stderr))
     errs = json.loads(out.stdout.strip().splitlines()[-1])
@@ -129,7 +129,7 @@ footer{margin-top:28px;font-size:12px;color:var(--muted)}
 <p class="sub">A security-analyst RPG in small offline editions. Each one runs in your browser, phone or desktop, with no network requests. Saves stay in this browser.</p>
 <ol>
 %(items)s
-<li class="soon">Next: the Mail Room</li>
+<li class="soon">Next: Clerks&rsquo; Row</li>
 </ol>
 <footer>Build %(build_id)s &middot; %(build_ts)s &middot; Code under the MIT licence; framework data keeps its own terms (see CREDITS.md).</footer>
 </main>

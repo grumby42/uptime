@@ -8,8 +8,8 @@ Planned home: GitHub Pages at `grumby42/uptime` (open `index.html` for the serie
 
 | # | Edition | District | Status |
 |---|---|---|---|
-| 1 | Town Hall | Front Desk | playable (about 30 minutes) |
-| 2 | Mail Room | | next |
+| 1 | Town Hall | Front Desk, then the Mail Room | playable (about 30 minutes each) |
+| | | Clerks' Row | next |
 
 ## Layout
 
@@ -19,6 +19,7 @@ engine/                     shared code
   shell.html, style.css     page skeleton and layout (phone portrait: map above pad; desktop/landscape: overlays)
   core-data.js              sprites, palettes, tile legend, tool classes, tools, abilities, NIST CSF function names
   engine.js                 RNG, sprite cache, integer scaling, input, dialogue/choice/modal UI, save codec
+  drill.js                  investigation drills: one artefact, a query budget, verdict, reasoning, alternatives, AI helper
   series.js                 series save ('uptime.series') and the Quiet Thread core
   game.js                   overworld, battles, alerts, scorecard, Field Manual, menus, save/load, title, debug hooks
 editions/town-hall/
@@ -26,6 +27,9 @@ editions/town-hall/
   data.js                   maps, people, ATT&CK techniques met here, threats, alerts, briefings, dojo, cards, facts
   quiet.js                  Quiet Thread clues for this edition
   story.js                  EDITION settings, state, objectives, interactions, story scripts, summary
+  mailroom-data.js          Mail Room (district 2): art, map, people, techniques, threats, alerts, drills, mini-games, facts
+  mailroom-quiet.js         Quiet Thread clues found in the Mail Room
+  mailroom-story.js         Mail Room objectives, scripts, metrics, Mail Board, payment-fraud incident, summary
   index.html                the built game (generated)
 tools/build.py              builds every edition and the menu
 tests/                      Playwright checks
@@ -44,11 +48,13 @@ Every build is stamped `ARCD-YYYYMMDD-HHMMZ` with a UTC timestamp from the clock
 
 Need Node and Playwright (Chromium).
 
-    node tests/bot.js desktop      # plays New game -> end-of-slice with the keyboard
+    node tests/bot.js desktop      # plays New game -> Front Desk -> Mail Room -> end-of-district with the keyboard
     node tests/bot.js phone        # same with taps on the on-screen pad (360x800)
     GAMER=1 node tests/bot.js desktop   # closes everything as a false positive; hidden missed attacks must surface
     node tests/layout.js           # pad and screen fit in phone portrait/landscape and desktop; series menu fits a phone
     node tests/quiet.js            # Quiet Thread: scripted clue path, saves across reload / New game / export-import, summary lines
+    node tests/mailroom.js         # Mail Room: Key Badge door, inbox room, drills (broad vs focused, Tally), save/reload,
+                                   #   Quiet Thread mailbox clues, alert mix (home x3, Seal Badge), time to quarantine, phone drill layout
 
 The bots also check: zero console errors, zero network requests, mid-game save/reload (including the series save), the export-code round trip, no horizontal scroll, and that no Quiet Thread technique ever appears as an ordinary alert. Set `UPTIME_FILE=file:///path/to/build.html` to test another build.
 
@@ -70,3 +76,8 @@ Arrows or D-pad move. Z = A (talk, confirm). X = B (back). Enter = Start (menu).
 ## Licence
 
 Code: MIT (see LICENSE). Framework data keeps its own terms (see CREDITS.md).
+
+## The Mail Room (district 2)
+
+Reached from the plaza after the Identity Board (Key Badge door east of the records office). Bea Lindqvist's problem: phishing gets through and nobody reports it. Inbox room (trust or report, escape-room framing), text stream (smishing), phone booth (vishing: call back on a known number), three investigation drills (a phished ShareBox link, a BEC invoice from a hijacked supplier mailbox, MFA push fatigue), Tally the AI assistant (specific questions help; "everything" gets silently truncated and is wrong once), the OSINT Dojo (defensive), the Mail Board (Seal Badge + Sieve, which evolves to Sifter), and a payment-fraud incident (tabletop + three stages). New Tier 1 metrics: phishing report rate, time to quarantine, BEC payments stopped. Drillbit evolves into Reportbird when one-click reporting arrives. Two more Quiet Thread clues sit on the old shared-mailbox console.
+
