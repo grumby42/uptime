@@ -1,5 +1,5 @@
 // Uptime Town Hall — Playwright playthrough bot + checks.
-// Plays from New game through the Front Desk and the Mail Room to the end-of-district screen using real inputs:
+// Plays from New game through the Front Desk, the Mail Room and Clerks' Row to the end-of-district screen using real inputs:
 //   desktop: keyboard (arrows, Z, X, Enter, Shift); phone: taps on the on-screen pad and on menu options.
 // Usage: node bot.js desktop|phone [outdir]   (UPTIME_FILE=file:///... to test another build)
 // Also checks: no Quiet Thread technique ever shows up as an ordinary alert, and the series save
@@ -157,7 +157,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheck = null, savedCheckMail = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheck = null, savedCheckMail = null, savedCheckClerks = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -194,7 +194,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (sig !== lastSig) { lastSig = sig; lastProgress = Date.now(); }
     if (p.battle && !p.battle.story) stats.alertTechs[p.battle.tech] = (stats.alertTechs[p.battle.tech] || 0) + 1;
     else if (Date.now() - lastProgress > 15000) throw new Error('stuck: ' + sig);
-    if (p.extra && p.extra.mrSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (p.extra && p.extra.crSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (p.extra && p.extra.mrSummary && !stats.mrSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.mrSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-mailroom'); }
+    if (p.map === 'clerks' && !p.ui && !stats.shots.clerks && p.started && p.f.crTriage) { stats.shots.clerks = 1; await shot('clerks'); }
+    if (p.map === 'clerks' && !p.ui && !stats.shots.contain && p.f.crContain && !p.f.crContained) { stats.shots.contain = 1; await shot('clerks-containment'); }
+    if (p.ui && p.ui.type === 'modal' && !stats.shots.triage && /Patch Tuesday triage/.test(await page.textContent('#modal'))) { stats.shots.triage = 1; await shot('patch-triage'); }
     if (p.summary && !stats.fdSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.fdSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-frontdesk'); }
     if (p.map === 'mail' && p.ui && p.ui.type === 'modal' && !stats.shots['drill'] && /Drill ·/.test(await page.textContent('#modal'))) { stats.shots.drill = 1; await shot('drill'); }
     if (p.map === 'mail' && !p.ui && !stats.shots.mail && p.started) { stats.shots.mail = 1; await shot('mailroom'); }
@@ -209,6 +213,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (!p.started || p.busy || p.moving) { await sleep(15); continue; }
     // In the Mail Room, work a few alerts from the queue so the Mail Room templates and home-threat mix get played.
     if (p.map === 'mail' && p.f.mrMet && p.queue > 0 && p.focus > 12 && (stats.mailQueue || 0) < 8) { stats.mailQueue = (stats.mailQueue || 0) + 1; await press('select'); await sleep(30); continue; }
+    // Same in Clerks' Row, so its endpoint alert templates get played.
+    if (p.map === 'clerks' && p.f.crMet && !p.f.crContain && p.queue > 0 && p.focus > 12 && (stats.clerksQueue || 0) < 8) { stats.clerksQueue = (stats.clerksQueue || 0) + 1; await press('select'); await sleep(30); continue; }
+    if (!savedCheckClerks && p.map === 'clerks' && p.f.crDrill1 && !p.f.crException) { savedCheckClerks = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -222,11 +229,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const result = {
     quietTechInAlertMix: quietInAlerts,
     mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter,
-    errors, requests, saveReload: savedCheck, saveReloadMailRoom: savedCheckMail, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll,
-    final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, party: fin.party, m: fin.m, mfa: fin.mfa, insider: fin.f.insider, cards: fin.f.cards, mrCards: fin.f.mrCards, mr: fin.extra && fin.extra.mr, objective: fin.objective },
+    errors, requests, saveReload: savedCheck, saveReloadMailRoom: savedCheckMail, saveReloadClerks: savedCheckClerks, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll,
+    final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, party: fin.party, m: fin.m, mfa: fin.mfa, insider: fin.f.insider, cards: fin.f.cards, mrCards: fin.f.mrCards, mr: fin.extra && fin.extra.mr, crCards: fin.f.crCards, cr: fin.extra && fin.extra.cr, objective: fin.objective },
     stats
   };
   console.log(JSON.stringify(result, null, 1));
   await browser.close();
-  process.exit(errors.length || requests.length || !savedCheck || !savedCheck.restored || !savedCheckMail || !savedCheckMail.restored || !savedCheckMail.exportRoundTrip || quietInAlerts.length ? 1 : 0);
+  process.exit(errors.length || requests.length || !savedCheck || !savedCheck.restored || !savedCheckMail || !savedCheckMail.restored || !savedCheckMail.exportRoundTrip || !savedCheckClerks || !savedCheckClerks.restored || !savedCheckClerks.exportRoundTrip || quietInAlerts.length ? 1 : 0);
 })().catch(async e => { console.error('BOT FAILED:', e.message); process.exit(2); });

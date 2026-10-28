@@ -1,7 +1,7 @@
 {
   "id": "town-hall",
   "name": "Town Hall",
-  "district": "Front Desk and Mail Room districts",
+  "district": "Front Desk, Mail Room and Clerks’ Row districts",
   "slice": 1,
   "blurb": "You're the new security intern in a small town. Investigate alerts, fix what's broken, and keep the district running.",
   "files": [
@@ -10,6 +10,9 @@
     "story.js",
     "mailroom-data.js",
     "mailroom-quiet.js",
-    "mailroom-story.js"
+    "mailroom-story.js",
+    "clerks-data.js",
+    "clerks-quiet.js",
+    "clerks-story.js"
   ]
 }

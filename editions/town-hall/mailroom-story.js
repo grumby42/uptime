@@ -106,6 +106,7 @@ function mrObjective() {
   }
   if (!f.mrBoard) return {text: 'Take the Mail Board challenge (Ines Calloway, through the east door).', map: 'mboard', x: 9, y: 2, district: 'mail'};
   if (!f.mrBoss) return {text: 'Bea needs you: a payment problem is starting.', map: 'mail', x: 14, y: 9, district: 'mail'};
+  if (typeof crObjective === 'function') return crObjective();
   return {text: 'Mail Room secured. Next: Clerks’ Row.', done: true, district: 'mail'};
 }
 
