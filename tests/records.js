@@ -17,6 +17,17 @@ require('fs').mkdirSync(OUT, { recursive: true });
 const KEY = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', a: 'z', b: 'x', start: 'Enter', select: 'Shift' };
 const DIR = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Tap a menu option by what it says (or by its meta.good flag), never by position: option order is shuffled.
+async function tapOpt(sess, test) {
+  const idx = await sess.page.evaluate(src => {
+    const u = __UPTIME.peek().ui; const opts = (u && u.options) || [];
+    if (src === '@good') return opts.findIndex(o => o.meta && o.meta.good && !o.disabled);
+    const r = new RegExp(src); return opts.findIndex(o => r.test(o.label) && !o.disabled);
+  }, test instanceof RegExp ? test.source : test);
+  if (idx < 0) throw new Error('no option matching ' + test);
+  await sess.page.tap('#mopts [data-i="' + idx + '"]');
+}
 const results = {};
 let failed = false;
 function check(name, ok, info) { results[name] = ok ? 'ok' : 'FAIL ' + (info !== undefined ? JSON.stringify(info).slice(0, 500) : ''); if (!ok) failed = true; }
@@ -548,13 +559,13 @@ async function settleTo(s, re) {
   let lay = await fit();
   await ph.page.screenshot({ path: OUT + '/records-phone-restore.png' });
   check('phone: restore-order modal fits 360 px, no horizontal scroll', lay.sw <= 360 && lay.box[0] >= 0 && lay.box[1] <= 360.5 && lay.optsInside, lay);
-  await ph.page.tap('#mopts [data-i="0"]'); await sleep(450);
+  await tapOpt(ph, /^DIR-01 directory/); await sleep(450);
   check('phone: tapping a system opens its restore points', /Restore point · DIR-01 directory/.test(await ph.modalText()) && (await fit()).sw <= 360);
-  await ph.page.tap('#mopts [data-i="2"]'); await sleep(450);
+  await tapOpt(ph, /^Whole server from Day 4 01:00/); await sleep(450);
   check('phone: the directory from before the compromise comes back at hour 4', /Restore order · hour 4/.test(await ph.modalText()));
-  for (let n = 0; n < 4; n++) { await ph.page.tap('#mopts [data-i="0"]'); await sleep(420); await ph.page.tap('#mopts [data-i="1"]'); await sleep(420); }
+  for (let n = 0; n < 4; n++) { await tapOpt(ph, '@good'); await sleep(420); await tapOpt(ph, /^Rebuild from the golden image/); await sleep(420); }
   check('phone: the recovery summary fits too', /5 of 5 within RTO/.test(await ph.modalText()) && (await fit()).sw <= 360);
-  await ph.page.tap('#mopts [data-i="0"]'); await sleep(420);
+  await tapOpt(ph, /^Declare recovery complete/); await sleep(420);
   await ph.settle();
   await ph.page.evaluate(() => { const G = __UPTIME.state(); G.x = 14; G.y = 7; run(rhDrill3); });
   await ph.untilChoice(); await sleep(400);

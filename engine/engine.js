@@ -26,6 +26,26 @@ function weighted(list) { // [{w,...}]
   for (const x of list) { if ((r -= x.w) < 0) return x; }
   return list[list.length - 1];
 }
+/* Answer order: a deterministic shuffle for lists that have a right answer, so position never gives it
+   away. Opt in with {shuffle: true}. Navigation items (Back, Done, decide, ask the AI, or pin: true)
+   keep their places. Seeded from the save's seed and the labels, so a list keeps its order on reload,
+   and it never touches the game's own random stream. Callers still get the index into their own array. */
+function shuffleOrder(items, o) {
+  const perm = items.map((_, i) => i);
+  if (!o || !o.shuffle) return perm;
+  const pinned = it => it.pin || it.done || (it.meta && (it.meta.back || it.meta.done || it.meta.decide || it.meta.ai));
+  const free = perm.filter(i => !pinned(items[i]));
+  if (free.length < 2) return perm;
+  let h = 2166136261 ^ ((typeof G !== 'undefined' && G && G.seed) >>> 0);
+  const key = items.map(it => it.label).join('\u0001');
+  for (let i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
+  const r = makeRng(h >>> 0), sh = free.slice();
+  for (let i = sh.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const x = sh[i]; sh[i] = sh[j]; sh[j] = x; }
+  free.forEach((pos, k) => { perm[pos] = sh[k]; });
+  return perm; // perm[display position] = caller's index
+}
+// The first arr.length items of a shuffled list, in the order the player sees them (for card text in the body).
+function shownOrder(arr, items) { return shuffleOrder(items, {shuffle: true}).filter(i => i < arr.length).map(i => arr[i]); }
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -178,11 +198,13 @@ const UI = {
   },
   choose(prompt, items, o) {
     o = o || {};
+    const perm = shuffleOrder(items, o);
+    const shown = perm.map(i => items[i]);
     return new Promise(res => {
       this.mode = 'choice';
-      this.choice = {items, cursor: o.cursor || 0, cols: o.cols || 1, resolve: res, cancel: !!o.cancel};
+      this.choice = {items: shown, perm, cursor: Math.max(0, perm.indexOf(o.cursor || 0)), cols: o.cols || 1, resolve: res, cancel: !!o.cancel};
       this.openedAt = performance.now();
-      while (this.choice.items[this.choice.cursor] && this.choice.items[this.choice.cursor].disabled && this.choice.cursor < items.length - 1) this.choice.cursor++;
+      while (this.choice.items[this.choice.cursor] && this.choice.items[this.choice.cursor].disabled && this.choice.cursor < shown.length - 1) this.choice.cursor++;
       this.who.textContent = o.who || ''; this.who.style.display = o.who ? '' : 'none';
       this.text.textContent = prompt || '';
       this.more.style.visibility = 'hidden';
@@ -207,7 +229,7 @@ const UI = {
     const c = this.choice;
     this.choice = null; this.mode = null;
     this.opts.innerHTML = '';
-    c.resolve(i);
+    c.resolve(i < 0 ? i : c.perm[i]);
   },
   hidePanel() { if (!this.mode) this.showPanel(false); },
   handle(b) {
@@ -233,8 +255,9 @@ const UI = {
   /* Modal: full-screen readable page with a list of options. */
   openModal(title, bodyHtml, items, o) {
     o = o || {};
+    const perm = shuffleOrder(items, o);
     return new Promise(res => {
-      this.modal = {items, cursor: o.cursor || 0, resolve: res, closable: o.closable !== false, multi: o.multi || 0, sel: new Set()};
+      this.modal = {items: perm.map(i => items[i]), perm, cursor: Math.max(0, perm.indexOf(o.cursor || 0)), resolve: res, closable: o.closable !== false, multi: o.multi || 0, sel: new Set()};
       this.openedAt = performance.now();
       this.modalEl.innerHTML =
         '<div class="mbox ' + (o.cls || '') + '"><div class="mhead">' + esc(title) + '</div>' +
@@ -271,7 +294,7 @@ const UI = {
   closeModal(v) {
     const m = this.modal; this.modal = null;
     this.modalEl.classList.remove('show'); this.modalEl.innerHTML = '';
-    if (m) m.resolve(v);
+    if (m) m.resolve(Array.isArray(v) ? v.map(i => m.perm[i]) : v < 0 ? v : m.perm[v]);
   },
   modalHandle(b) {
     const m = this.modal, n = m.items.length;

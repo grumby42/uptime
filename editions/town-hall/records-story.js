@@ -17,7 +17,7 @@
 'use strict';
 
 if (typeof EDITION !== 'undefined') {
-  EDITION.creditsFacts += ' Records Hall: MITRE ATT&CK v20 (T1486, T1490, T1485, T1567.002, T1560.001, T1078; Quiet Thread T1555). NIST SP 800-34 Rev. 1 and the NIST CSRC glossary (RTO, RPO, MTD, business impact analysis). NIST CSWP 29 (CSF 2.0: PR.DS-11, RC.RP-03, RC.RP-05). CISA and MS-ISAC #StopRansomware Guide (September 2023). CISA alert AA18-337A (SamSam). NCSC (UK): Offline backups in an online world (2019) and Principles for ransomware-resistant on-premises backups (2024). IETF RFC 4648; NIST FIPS 180-4, FIPS 197 and SP 800-57 Part 1 Rev. 5. US Department of Justice SamSam indictment (November 2018); US Treasury designation sm556 (November 2018); OFAC Updated Advisory on Potential Sanctions Risks for Facilitating Ransomware Payments (September 2021). FBI Memphis Field Office ransomware advice. Testimony of Atlanta Mayor Keisha Lance Bottoms to the House Homeland Security Committee’s cybersecurity subcommittee (June 2019).';
+  EDITION.creditsFacts += ' Records Hall: MITRE ATT&CK v20 (T1486, T1490, T1485, T1567.002, T1560.001, T1078, T1484.001, T1136.002; Quiet Thread T1555). NIST SP 800-34 Rev. 1 and the NIST CSRC glossary (RTO, RPO, MTD, business impact analysis). NIST CSWP 29 (CSF 2.0: PR.DS-11, RC.RP-03, RC.RP-05). CISA and MS-ISAC #StopRansomware Guide (September 2023). CISA Eviction Strategies Tool, countermeasure CM0050 (KRBTGT reset twice). DHS NCCIC and FBI alert AA18-337A (SamSam). NCSC (UK): Offline backups in an online world (2019) and Principles for ransomware-resistant on-premises backups (2024). IETF RFC 4648; NIST FIPS 180-4, FIPS 197 and SP 800-57 Part 1 Rev. 5. US Department of Justice SamSam indictment (November 2018); US Treasury designation sm556 (November 2018); OFAC Updated Advisory on Potential Sanctions Risks for Facilitating Ransomware Payments (September 2021). FBI Memphis Field Office ransomware advice. Testimony of Atlanta Mayor Keisha Lance Bottoms to the House Homeland Security Committee’s cybersecurity subcommittee (June 2019).';
 }
 
 /* ---------- State ---------- */
@@ -234,7 +234,7 @@ async function odileTalk() {
   if (!f.rhNight2) { await say('Go home. Tomorrow will come soon enough.', who); return; }
   if (!f.rhDrill3) { await rhDrill3(); return; }
   if (!f.rhBoard) { await say('Margit runs the Records Board, through the east door. Tobias’s Dojo first, if you want it.', who); return; }
-  if (!f.rhNight3) { await say('The hunt has checked 9 of our 31 servers for the tools from PLAN-LT-04 (game). It goes on tomorrow. Go home.', who); return; }
+  if (!f.rhNight3) { await say('The hunt has checked 9 of our 31 servers for the tools from PLAN-LT-04 (game). The directory review is booked behind it, for tomorrow. Go home.', who); return; }
   if (!f.rhBoss) { await rhBossScript(); return; }
   await say('Every system back, from copies we proved clean, in the order we planned. The IT Basement is next.', who);
   await rhSummary();
@@ -256,7 +256,7 @@ async function rhRestoreTest() {
       {label: 'Restore real systems into the isolated lab, time each one end to end, and have its owner check the data', meta: {good: true}},
       {label: 'Read the job reports: green means it works'},
       {label: 'Restore over the live permits server tonight, to make it real'},
-      {label: 'Restore one small file from each job'}]);
+      {label: 'Restore one small file from each job'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Green means the job finished. It doesn’t say you can restore from it, or how long it takes.');
     else if (i === 2) await say('If it fails, you’ve caused the outage you were testing for. That’s what the isolated lab is for.');
@@ -283,10 +283,10 @@ async function rhBia() {
   const who = 'Deshawn Pruitt', c = RH();
   await say('Permits, deeds, licences: if the database is down, inspections stop and nobody can build anything. Ask me what you need.', who);
   // 1. The critical list: owners say what stops; the dependencies count too.
-  const body = '<p>A business impact analysis, lite: what stops when each service stops, and how soon it hurts. Pick the <b>five</b> that go on the critical list.</p>' +
-    RH_SERVICES.map(s => '<div class="card"><b>' + esc(s.name) + '</b><br><span class="small">' + esc(s.owner) + '</span></div>').join('');
   const items = RH_SERVICES.map(s => ({label: s.name, meta: {good: s.crit}})).concat([{label: 'This is the critical list', done: true, meta: {done: true}}]);
-  const sel = await UI.openModal('Business impact analysis', body, items, {multi: 5, closable: false, cls: 'drill'});
+  const body = '<p>A business impact analysis, lite: what stops when each service stops, and how soon it hurts. Pick the <b>five</b> that go on the critical list.</p>' +
+    shownOrder(RH_SERVICES, items).map(s => '<div class="card"><b>' + esc(s.name) + '</b><br><span class="small">' + esc(s.owner) + '</span></div>').join('');
+  const sel = await UI.openModal('Business impact analysis', body, items, {shuffle: true, multi: 5, closable: false, cls: 'drill'});
   const picked = sel.map(i => RH_SERVICES[i].id), right = picked.filter(id => RH_SERVICES.find(s => s.id === id).crit).length;
   if (right < 5) await say('Close. The directory and DNS: no resident ever sees them, and nothing on the list restores without them. A critical list includes the systems the critical services depend on.', 'Odile Brennan');
   c.crit = RH_SERVICES.filter(s => s.crit).map(s => s.id);
@@ -296,7 +296,7 @@ async function rhBia() {
       {label: 'Ask Deshawn when the harm starts (a day without inspections), set the RTO under that at 16 hours, and an RPO of 12 hours: back it up twice a day', meta: {good: true}},
       {label: 'Zero downtime and zero data loss, for everything'},
       {label: 'IT decides: 72 hours is what we can do'},
-      {label: 'Whatever the nightly job gives us: up to a day of lost work'}]);
+      {label: 'Whatever the nightly job gives us: up to a day of lost work'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Possible, for a price nobody here would pay, and not needed: Deshawn can run on paper for a day. Objectives come from what the business can bear.');
     else if (i === 2) await say('Then IT has decided how long inspections stop, without asking. And 72 hours is far past the day Deshawn can bear.');
@@ -307,7 +307,7 @@ async function rhBia() {
   await UI.openModal('Recovery objectives', '<p>Agreed with each owner (game hours). The RTO sits inside the owner’s limit; the RPO sets how often each system is backed up.</p>' +
     '<table class="sc"><tr><th>System</th><th>Owner’s limit (MTD)</th><th>RTO</th><th>RPO</th></tr>' + rows + '</table>' +
     '<p>NIST SP 800-34 Rev. 1: the recovery time objective is how long a system can be in recovery before it harms the mission; the recovery point objective is the point in time to which data must be recovered; and because the RTO must not let the maximum tolerable downtime be exceeded, it is normally shorter.</p>' +
-    '<p>Measured against these, your restore tests cover three of the five within their RTOs. The directory and DNS have never been tested.</p>', [{label: 'Agreed', meta: {good: true}}], {closable: false, cls: 'drill'});
+    '<p>(SP 800-34 sets an MTD for a mission or business process; a system’s limit here is the tightest MTD of the processes that need it.)</p><p>Measured against these, your restore tests cover three of the five within their RTOs. The directory and DNS have never been tested.</p>', [{label: 'Agreed', meta: {good: true}}], {closable: false, cls: 'drill'});
   G.f.rhBia = true; unlock('act', 'rtorpo'); unlock('act', 'bia'); unlock('fact', 'sp80034'); touchCSF('Identify'); touchCSF('Govern'); track();
   await say('Sixteen hours. I can tell my inspectors that. Nobody’s ever asked me before.', who);
 }
@@ -339,7 +339,7 @@ async function rhOfflineCopy() {
       {label: 'Three copies on two kinds of storage, one offsite, and one the network can’t reach: production, the appliance with a retention lock, and weekly encrypted tapes for the offsite store', meta: {good: true}},
       {label: 'A second copy on the same appliance'},
       {label: 'Copy everything to cloud storage mapped as a drive on the file server'},
-      {label: 'One copy is enough: the appliance has redundant disks'}]);
+      {label: 'One copy is enough: the appliance has redundant disks'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Same box, same room, same password. One fire or one stolen password takes both.');
     else if (i === 2) await say('Anything the file server can write to, ransomware on the file server can encrypt. A backup the network can always reach is not the one that saves you.');
@@ -351,7 +351,7 @@ async function rhOfflineCopy() {
     const i = await choose('The tapes will be encrypted. Where does the key live?', [
       {label: 'In the key vault, with an escrowed copy sealed in the offsite store, and a test restore using only the escrowed key', meta: {good: true}},
       {label: 'In the backup server’s settings, where the software can find it'},
-      {label: 'Nowhere: don’t encrypt the tapes, they’re offsite anyway'}]);
+      {label: 'Nowhere: don’t encrypt the tapes, they’re offsite anyway'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('If ransomware takes the backup server, it takes the only key with it, and every tape becomes noise.');
     else await say('Tapes travel, and tapes get lost. CISA’s #StopRansomware Guide asks for offline, encrypted backups of critical data.');
@@ -360,7 +360,7 @@ async function rhOfflineCopy() {
   while (true) {
     const i = await choose('Coverage check: 4 of the 5 critical systems are on the weekly tapes. The directory’s job writes to the appliance only.', [
       {label: 'Add the directory’s backup to the weekly tapes', meta: {good: true}},
-      {label: 'Leave it: the directory is small and easy to rebuild'}]);
+      {label: 'Leave it: the directory is small and easy to rebuild'}], {shuffle: true});
     if (i === 0) break;
     await say('Every account, group and policy the town has is in it, and nothing else signs anyone in without it. Rebuilding it from memory takes weeks.');
   }
@@ -376,7 +376,7 @@ async function rhCredsStep() {
       {label: 'Separate backup admin accounts that exist only on the backup system, MFA on any change or deletion, alerts on mass deletes and retention changes, and no domain accounts at all', meta: {good: true}},
       {label: 'Change the domain admin password'},
       {label: 'Move the console to an unusual port'},
-      {label: 'Give backup rights to fewer domain admins'}]);
+      {label: 'Give backup rights to fewer domain admins'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('A new password is stolen the same way as the old one. The point is that a domain password shouldn’t open the backups at all.');
     else if (i === 2) await say('Attackers scan every port. Hiding the door isn’t a lock.');
@@ -392,7 +392,7 @@ async function hesterTalk() {
   const who = 'Hester Quayle', f = G.f;
   if (!f.rhDrill1) { await say('The new document system arrives a department at a time. Nico keeps the schedule; I keep the retention schedule. Between us, nothing gets thrown away by accident.', who); return; }
   if (!f.rhBoss) { await say('Phase 3 is Finance, next week. The change ticket goes to your queue this time, so nobody panics at a few thousand renamed files.', who); return; }
-  await say('Two centuries of minutes, and the only copies that survived that night were the ones nobody could reach. I’ve put that in the minutes.', who);
+  await say('Two centuries of minutes, and the only copies that survived that night were the ones nobody could delete. I’ve put that in the minutes.', who);
 }
 
 /* ---------- The directive (game): cut backup storage costs by 40% ---------- */
@@ -402,10 +402,10 @@ async function leonaTalk() {
   await say('Finance. Backup storage is the fastest-growing line in the IT budget, and the council wants it down by forty percent this year. (game)', who);
   while (true) {
     const i = await choose('How do you cut backup storage costs by 40%?', [
-      {label: 'Tier it with the owners: 14 nightly, 8 weekly and 12 monthly copies (the monthlies on the offline tapes), stop backing up scratch space and duplicates, and keep enough history to reach back before an intruder arrived', meta: {good: true, k: 'tier'}},
+      {label: 'Tier it with the owners: nightly copies kept 14 days, weeklies 8 weeks, monthlies a year (weeklies and monthlies on the offline tapes), stop backing up scratch space and duplicates, and keep enough history to reach back before an intruder arrived', meta: {good: true, k: 'tier'}},
       {label: 'Keep only 7 days of backups', meta: {k: 'week'}},
       {label: 'Drop the offline tapes: the appliance has copies', meta: {k: 'tapes'}},
-      {label: 'Back up weekly instead of nightly', meta: {k: 'weekly'}}]);
+      {label: 'Back up weekly instead of nightly', meta: {k: 'weekly'}}], {shuffle: true});
     if (i === 0) { c.directive = 'tier'; break; }
     if (i === 1) await say('If an intruder has been in for longer than a week, every copy you keep contains them, and there is no clean copy to go back to.');
     else if (i === 2) await say('The offline copy is the one ransomware can’t reach. It’s the last thing to cut, not the first.');
@@ -467,7 +467,7 @@ async function rhDojoPuzzle(i) {
   const p = RH_DOJO[i], c = RH();
   if (c.dojo[i]) { await say('Solved. ' + p.explain); return; }
   while (true) {
-    const k = await UI.openModal('Cryptography · ' + p.title, '<pre class="art">' + esc(p.art) + '</pre><p><b>' + esc(p.q) + '</b></p>', p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {closable: false, cls: 'drill'});
+    const k = await UI.openModal('Cryptography · ' + p.title, '<pre class="art">' + esc(p.art) + '</pre><p><b>' + esc(p.q) + '</b></p>', p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {shuffle: true, closable: false, cls: 'drill'});
     if (k === p.good) break;
     await say('Not quite. Who can turn it back, and with what?');
   }
@@ -520,8 +520,8 @@ function rhBossStages(picks, d) {
     s1: {kind: 'mal', threat: 'gloam', tech: 'T1486', tags: ['files'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('isolate') ? 9 : 14, dwell0: 20,
       title: 'Stage 1: the stacks go dark', host: 'FS-01, FS-02 and every server the policy reached', enemy: {spr: 'gloam', pal: 'gloam'},
-      clues: ['At ' + RH_ENCRYPT + ' a scheduled task started the same program on every server except the directory. Files are renamed and turned to noise, and a ransom note sits in every share.', 'At 02:38 every volume shadow copy on the file servers was deleted, by svc-scanbak, a domain admin account nobody on the team created.', 'The task came from a new group policy, “Printer Mapping Update”, created by svc-scanbak at ' + RH_GPO + ' last night.'],
-      truth: 'Data Encrypted for Impact, pushed to every server at once through group policy, after the shadow copies were deleted (Inhibit System Recovery).',
+      clues: ['At ' + RH_ENCRYPT + ' a scheduled task started the same program on every server except the directory and FS-03, an old server outside the group the policy targets. Files are renamed and turned to noise, and a ransom note sits in every share.', 'At 02:38 every volume shadow copy on the file servers was deleted, by svc-scanbak, a domain admin account nobody on the team created.', 'The task came from a new group policy, “Printer Mapping Update”, created by svc-scanbak at ' + RH_GPO + ' last night.'],
+      truth: 'Data Encrypted for Impact, pushed to every server at once through group policy, after the shadow copies were deleted (Inhibit System Recovery). Pushing the task through a group policy is Group Policy Modification, ATT&CK T1484.001.',
       resp: [{label: 'Isolate the servers at the switch and keep them powered for memory capture, disable svc-scanbak, unlink the policy, keep the backup network sealed, preserve evidence', good: true},
              {label: 'Restore the file shares from last night now', good: false, why: 'Last night’s copies were taken after the policy went out at ' + RH_GPO + ': whole-server restores bring the scheduled task back. Contain first.'},
              {label: 'Pull the power on everything', good: false, disrupt: 1, why: 'Isolate at the switch first; power down only what you can’t disconnect. Memory evidence goes when the power does.'}],
@@ -538,8 +538,8 @@ function rhBossStages(picks, d) {
     s3: {kind: 'mal', threat: 'lapse', tech: 'T1078', tags: ['identity'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('identity') ? 8 : 14, dwell0: picks.includes('identity') ? 10 : 40,
       title: 'Stage 3: they still sign in', host: 'DIR-01 · directory', enemy: {spr: 'actor', pal: 'impostor'},
-      clues: ['At 07:20 adm-bk2, an admin account nobody on the team knows, signs in to the directory from FS-03, an old file server the hunt hadn’t reached: it had checked 9 of 31 servers when the encryption began.', 'adm-bk2 and svc-scanbak were both created on DIR-01 on Day ' + d.E + ', at 02:33 and 02:31, by hd-admin, from SCAN-01.', 'SCAN-01’s endpoint history: a remote-management tool installed under hd-admin on Day ' + d.E + ' at 02:12. The earliest sign of the attacker anywhere.'],
-      truth: 'Valid Accounts: a second admin account the attacker made days before anyone noticed them. Disabling the one you saw wasn’t enough: the directory itself is compromised, so identity is rebuilt before anything that trusts it.',
+      clues: ['At 07:20 adm-bk2, an admin account nobody on the team knows, signs in to the directory from FS-03, an old file server outside the policy’s group, so never encrypted or isolated, and one the hunt hadn’t reached: it had checked 9 of 31 servers when the encryption began.', 'adm-bk2 and svc-scanbak were both created on DIR-01 on Day ' + d.E + ', at 02:33 and 02:31, by hd-admin, from SCAN-01. The directory review from the PLAN-LT-04 case was booked behind the server hunt: one query (every account created, or added to an admin group, since hd-admin was first misused) would have found both on Day ' + d3 + '.', 'SCAN-01’s endpoint history: a remote-management tool installed under hd-admin on Day ' + d.E + ' at 02:12. The earliest sign of the attacker anywhere.'],
+      truth: 'Valid Accounts: a second admin account the attacker made days before anyone noticed them. Disabling the one you saw wasn’t enough: the directory itself is compromised, so identity is rebuilt before anything that trusts it. Making those accounts is Create Account: Domain Account, ATT&CK T1136.002.',
       resp: [{label: 'Disable adm-bk2 and every account created since Day ' + d.E + ', reset every privileged and service password from a clean admin workstation, isolate FS-03, and plan the directory’s restore from before Day ' + d.E + ' 02:12', good: true},
              {label: 'Disable adm-bk2 and close', good: false, why: 'That is the second account you have found, not the last one you can prove. Find everything created since Day ' + d.E + ', and plan to restore the directory from before it.'},
              {label: 'Reset hd-admin’s password again', good: false, why: 'hd-admin was disabled and reset on Day ' + d3 + '. The attacker made their own accounts: find and remove what they created.'},
@@ -570,7 +570,7 @@ function rhEvidenceHtml(d) {
   return '<div class="card small"><b>What the evidence says</b><br>' + [
     'Day ' + d.E + ' 02:12: a remote-management tool installed on SCAN-01 under hd-admin. The earliest known compromise.',
     'Day ' + d.E + ' 02:31 and 02:33: svc-scanbak and adm-bk2, two new domain admins, created on DIR-01 from SCAN-01.',
-    'Day ' + (d.B - 1) + ' ' + RH_GPO + ': svc-scanbak creates a group policy that adds a scheduled task to every server except the directory.',
+    'Day ' + (d.B - 1) + ' ' + RH_GPO + ': svc-scanbak creates a group policy that adds a scheduled task to every server except the directory and FS-03.',
     'Day ' + d.B + ' ' + RH_ENCRYPT + ': the task starts the encryptor on those servers. Nightly backups ran at 01:00.',
     'Golden images of every server build, checked last quarter, kept offline (game).'].map(esc).join('<br>') + '</div>';
 }
@@ -591,12 +591,12 @@ async function rhRestoreGame(d) {
     const prog = '<table class="sc"><tr><th>System</th><th>Needs</th><th>RTO</th><th>Status</th></tr>' + RH_SYS_ORDER.map(s => '<tr><td>' + esc(RH_SYS_NAME[s]) + '</td><td>' + esc(RH_RESTORE[s].deps.map(x => x.toUpperCase()).join(', ') || '—') + '</td><td>' + RH_OBJ[s].rto + ' h</td><td>' + (st.done[s] ? 'back at ' + st.done[s].end + ' h' : '—') + '</td></tr>').join('') + '</table>';
     const body = (last ? '<p><b>' + esc(last) + '</b></p>' : '<p>One restore crew, ' + RH_RESTORE_BUDGET + ' hours of crew time (game). Pick what to restore next, then which copy to restore it from. The clock starts when recovery starts.</p>') +
       '<p>Hour <b>' + st.clock + '</b> of ' + RH_RESTORE_BUDGET + ' · reinfections ' + st.reinfect + ' · out-of-order starts ' + st.depFail + '</p>' + prog + rhEvidenceHtml(d);
-    const items = left.map(s => ({label: RH_SYS_NAME[s], note: 'RTO ' + RH_OBJ[s].rto + ' h', meta: {good: s === next, sys: s}}));
+    const items = left.slice().sort((a, b) => RH_SYS_NAME[a].localeCompare(RH_SYS_NAME[b])).map(s => ({label: RH_SYS_NAME[s], note: 'RTO ' + RH_OBJ[s].rto + ' h', meta: {good: s === next, sys: s}}));
     const i = await UI.openModal('Restore order · hour ' + st.clock, body, items, {closable: false, cls: 'drill'});
     const sys = items[i].meta.sys;
     const S = RH_RESTORE[sys];
     const optItems = S.opts.map(o => ({label: rhFill(o.label, d), note: o.hrs + ' h', meta: {good: !!o.good, k: o.k}}));
-    const j = await UI.openModal('Restore point · ' + RH_SYS_NAME[sys], '<p>Which copy of <b>' + esc(RH_SYS_NAME[sys]) + '</b> do you restore? Its RPO is ' + RH_OBJ[sys].rpo + ' hours of lost data.</p>' + rhEvidenceHtml(d), optItems, {closable: false, cls: 'drill'});
+    const j = await UI.openModal('Restore point · ' + RH_SYS_NAME[sys], '<p>Which copy of <b>' + esc(RH_SYS_NAME[sys]) + '</b> do you restore? Its RPO is ' + RH_OBJ[sys].rpo + ' hours of lost data.</p>' + rhEvidenceHtml(d), optItems, {shuffle: true, closable: false, cls: 'drill'});
     const k = optItems[j].meta.k;
     st.order.push(sys + ':' + k);
     const r = rhRestoreStep(st, sys, k, d);
@@ -611,7 +611,7 @@ async function rhRestoreGame(d) {
   await UI.openModal('Recovery', '<p class="big">' + sum.rtoMet + ' of 5 within RTO · ' + sum.rpoMet + ' of 5 within RPO</p>' +
     '<p>Reinfections <b>' + sum.reinfect + '</b> · out-of-order starts <b>' + sum.depFail + '</b> · crew hours <b>' + sum.clock + '</b> (game)</p>' +
     '<table class="sc"><tr><th>System</th><th>Back at / RTO</th><th>Data lost / RPO</th></tr>' + rows + '</table>' +
-    '<p>Find the earliest known compromise first. The directory comes back from before it, and misses its RPO on purpose: the account changes since then are re-entered from the tickets. Everything else is rebuilt from golden images with only its data restored, newest first, in dependency order. Last night’s whole-server copies were the fastest, and they carried the attacker’s scheduled task.</p>',
+    '<p>Find the earliest known compromise first. The directory comes back from before it, and misses its RPO on purpose: the account changes since then are re-entered from the tickets. Everything else is rebuilt from golden images, patched, with only its data restored, newest first, in dependency order. That data was copied after the attacker arrived, so it is scanned for their tools before anyone uses it. Last night’s whole-server copies were the fastest, and they carried the attacker’s scheduled task.</p>',
     [{label: 'Declare recovery complete', meta: {good: true}}], {closable: false, cls: 'drill'});
   return sum;
 }
@@ -619,21 +619,21 @@ async function rhPayDecision() {
   const c = RH(), who = 'Odile Brennan';
   await say('The note wants 9 bitcoin for the key (game), and threatens to publish the planning files. Leadership will decide, with legal, and they want your recommendation.', who);
   const opts = [
-    {label: 'Recommend not paying: our locked and offline copies are intact and tested, so we can restore within the agreed RTOs. The FBI and CISA are already involved, and legal checks OFAC’s advisory before anyone talks payment', meta: {good: true, k: 'no'}},
+    {label: 'Recommend not paying, subject to the check now under way: the appliance’s copies are retention-locked and the weekly tapes are offsite with their key in escrow; we verify both before promising any RTO (the directory has never been test-restored). The FBI and CISA are already involved, and legal checks OFAC’s advisory before anyone talks payment', meta: {good: true, k: 'no'}},
     {label: 'Pay now: it’s faster than restoring', meta: {k: 'pay'}},
     {label: 'Pay only to keep the planning files from being published', meta: {k: 'publish'}},
     {label: 'Negotiate quietly, without telling the FBI', meta: {k: 'quiet'}}];
   while (true) {
-    const i = await choose('Your recommendation on the ransom.', opts);
+    const i = await choose('Your recommendation on the ransom.', opts, {shuffle: true});
     const k = opts[i].meta.k;
     if (!c.pay) c.pay = k;
     if (k === 'no') break;
     if (k === 'pay') await say('The FBI doesn’t support paying: it doesn’t guarantee you get anything back, and it encourages more attacks. OFAC can penalise a payment to a sanctioned party on strict liability, whatever you knew. And we have tested, clean copies.');
-    else if (k === 'publish') await say('There is no way to check that a criminal deleted anything. The 3.8 GB is already being handled as a breach, with legal and the people affected. Paying buys a promise from the people who stole it.');
+    else if (k === 'publish') await say('There is no way to check that a criminal deleted anything. The 3.8 GB is already being handled as a possible breach: legal decides who must be told, and we tell them from our own evidence. Paying buys a promise from the people who stole it.');
     else await say('OFAC treats prompt reporting to law enforcement and full cooperation as significant mitigating factors. Hiding it gives those up, and the FBI may know things about this crew that you don’t.');
   }
   unlock('fact', 'ofac'); unlock('fact', 'fbipay'); unlock('act', 'nopayplan'); touchCSF('Govern');
-  await say('Leadership agrees: no payment. Atlanta’s answer in 2018 was the same: the attackers asked for $51,000 in Bitcoin, and the city refused. Not every organisation is that lucky; without clean copies the choice gets much harder. The US government strongly discourages paying either way.', who);
+  await say('Leadership agrees: no payment. Atlanta refused too, in 2018, when the attackers asked for $51,000 in Bitcoin, and its mayor later told Congress that some files were destroyed for good. Refusing has a cost; tested, clean copies are what keep it small. The US government strongly discourages paying either way.', who);
 }
 async function rhBossScript() {
   const who = 'Odile Brennan', c = RH();
@@ -643,13 +643,13 @@ async function rhBossScript() {
   await say('Incident. At ' + RH_ENCRYPT + ' last night ransomware ran on almost every server we have: the file servers, the records database, the permits portal, DNS. Only the directory was left alone; the attacker still needed it. Ransom notes in every share.', who);
   await say('This is the City of Atlanta, March 2018, in outline. On 22 March ransomware took down city systems. The mayor later told Congress that fire, police, ambulances and water kept running, but the municipal court cancelled hearings, the 311 line went offline, and some files were destroyed for good. In November that year the Justice Department charged two Iranian men over SamSam, the ransomware behind it, which the indictment tied to more than 200 victims.', who);
   unlock('fact', 'atl2018'); unlock('fact', 'samsam');
-  await say('I’ve told leadership. The town has reported it to the FBI field office and CISA, as the #StopRansomware Guide advises. Residents get a notice on the radio and at the front desk: what’s down, and how to get services on paper meanwhile. Telling people is never optional, so it isn’t one of your cards.', who);
+  await say('I’ve told leadership, legal and our cyber insurer, whose policy asks for early notice (game). The town has reported it to the FBI field office and CISA, as the #StopRansomware Guide advises. Residents get a notice on the radio and at the front desk: what’s down, and how to get services on paper meanwhile. Telling people is never optional, so it isn’t one of your cards.', who);
   touchCSF('Respond'); G.rep += 5; toast('Leadership, the FBI and CISA told. Reputation up.');
   await say('Tabletop. Pick four response cards. Then we work it in three stages, and you own the recovery.', who);
-  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions, the #StopRansomware Guide and the NIST CSF. (Leadership, the FBI and CISA have been told.)</p>' +
-    RH_CARDS.map(x => '<div class="card"><b>' + esc(x.name) + '</b> <span class="tag">' + x.csf + '</span><br>' + esc(x.text) + '</div>').join('');
   const items = RH_CARDS.map(x => ({label: x.name, meta: {good: !!x.good}})).concat([{label: 'Play these four cards', done: true, meta: {done: true}}]);
-  const sel = await UI.openModal('Tabletop: the stacks go dark', body, items, {multi: 4, closable: false, cls: 'tabletop'});
+  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions, the #StopRansomware Guide and the NIST CSF. (Leadership, the FBI and CISA have been told.)</p>' +
+    shownOrder(RH_CARDS, items).map(x => '<div class="card"><b>' + esc(x.name) + '</b> <span class="tag">' + x.csf + '</span><br>' + esc(x.text) + '</div>').join('');
+  const sel = await UI.openModal('Tabletop: the stacks go dark', body, items, {shuffle: true, multi: 4, closable: false, cls: 'tabletop'});
   const picks = sel.map(i => RH_CARDS[i].id);
   G.f.rhCards = picks;
   for (const id of picks) { const x = RH_CARDS.find(y => y.id === id); touchCSF(x.csf); await say(x.name + ': ' + x.fx); }

@@ -275,7 +275,7 @@ async function crAdminTask() {
       {label: 'Remove staff from local admin; IT uses separate admin accounts, and every laptop gets its own rotated local admin password; exceptions go through a help-desk request that is checked, time-limited and logged', meta: {good: true}},
       {label: 'Remove everyone’s admin rights, no exceptions, ever'},
       {label: 'Keep admin rights, but buy better antivirus'},
-      {label: 'One shared admin password for IT across every laptop'}]);
+      {label: 'One shared admin password for IT across every laptop'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Real needs will come up. With no way to ask, people go around you. Have a process.');
     else if (i === 2) await say('Anything a clerk opens runs with the clerk’s rights. With admin rights, one click on a consent prompt lets it change anything on the laptop, including the antivirus settings.');
@@ -338,7 +338,7 @@ async function crAsrTask() {
     const i = await choose('How do you roll it out?', [
       {label: 'Rules and an app allow-list in audit mode first, review a week of hits, then block', meta: {good: true}},
       {label: 'Block mode on everything, today'},
-      {label: 'Skip it: antivirus already covers this'}]);
+      {label: 'Skip it: antivirus already covers this'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Some line-of-business tools will break, and people will ask for blanket exceptions. Audit first, then block.');
     else await say('Antivirus looks for known-bad files. These rules stop risky behaviour, like Word starting a script host, whatever the file is.');
@@ -358,7 +358,7 @@ async function crPslogVerify() {
     const i = await choose('Check it in…', [
       {label: 'The System log'},
       {label: 'Event 4104 in Microsoft-Windows-PowerShell/Operational', meta: {good: true}},
-      {label: 'The Security log'}]);
+      {label: 'The Security log'}], {shuffle: true});
     if (i === 1) break;
     if (i === 0) await say('Services and drivers report there. Script blocks don’t.');
     else await say('The Security log holds audit events such as sign-ins. Script blocks go to PowerShell’s own Operational log.');
@@ -451,7 +451,7 @@ async function crException() {
       {label: 'Log a help-desk request: IT checks it, installs the signed driver for him, and records it', meta: {good: true}},
       {label: 'Give Gus admin rights for one hour, logged, through the help desk'},
       {label: 'Make Gus a permanent admin: he’s trustworthy'},
-      {label: 'Tell Gus no, and to find a plotter that doesn’t need a driver'}]);
+      {label: 'Tell Gus no, and to find a plotter that doesn’t need a driver'}], {shuffle: true});
     if (i === 0) { await say('Arlo installs the signed driver from the bench. Gus never needs admin rights at all. Logged in the ticket.'); break; }
     if (i === 1) { c.admins++; c.tempAdmin = true; track(); await say('Checked, time-limited and logged: that works. It expires after the hour. Even better next time: IT installs it, and nobody needs admin rights.'); break; }
     if (i === 2) await say('Trust isn’t the question. Anything Gus opens could run as an admin too: one click on a consent prompt is all it takes.');
@@ -493,7 +493,7 @@ async function crDojoPuzzle(i) {
   const p = CR_DOJO[i], c = CR();
   if (c.dojo[i]) { await say('Solved. ' + p.explain); return; }
   while (true) {
-    const k = await UI.openModal('Forensics · ' + p.title, '<pre class="art">' + esc(p.art) + '</pre><p><b>' + esc(p.q) + '</b></p>', p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {closable: false, cls: 'drill'});
+    const k = await UI.openModal('Forensics · ' + p.title, '<pre class="art">' + esc(p.art) + '</pre><p><b>' + esc(p.q) + '</b></p>', p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {shuffle: true, closable: false, cls: 'drill'});
     if (k === p.good) break;
     await say('Not quite. What does that artefact actually record?');
   }
@@ -559,10 +559,10 @@ async function crBossScript() {
   await say('I’ve already told leadership: what is happening, what we are doing, and that they get an update every hour. That is never optional, so it isn’t one of your cards.', who);
   touchCSF(notify.csf); G.rep += 5; toast(notify.name + ': done. Reputation up.');
   await say('Tabletop. Pick four response cards. Then we work it in three stages, and you lead containment.', who);
-  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions and CISA’s WannaCry guidance. (Leadership has already been told.)</p>' +
-    cards.map(x => '<div class="card"><b>' + esc(x.name) + '</b> <span class="tag">' + x.csf + '</span><br>' + esc(x.text) + '</div>').join('');
   const items = cards.map(x => ({label: x.name, meta: {good: ['segment', 'smb', 'pz', 'patch'].includes(x.id)}})).concat([{label: 'Play these four cards', done: true, meta: {done: true}}]);
-  const sel = await UI.openModal('Tabletop: the worm', body, items, {multi: 4, closable: false, cls: 'tabletop'});
+  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions and CISA’s WannaCry guidance. (Leadership has already been told.)</p>' +
+    shownOrder(cards, items).map(x => '<div class="card"><b>' + esc(x.name) + '</b> <span class="tag">' + x.csf + '</span><br>' + esc(x.text) + '</div>').join('');
+  const sel = await UI.openModal('Tabletop: the worm', body, items, {shuffle: true, multi: 4, closable: false, cls: 'tabletop'});
   const picks = sel.map(i => cards[i].id);
   G.f.crCards = picks;
   for (const id of picks) { const x = CR_CARDS.find(y => y.id === id); touchCSF(x.csf); await say(x.name + ': ' + x.fx); }

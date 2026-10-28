@@ -263,10 +263,10 @@ async function mkInventory() {
   const c = MK(), first = !c.sources.length;
   const left = MK_SOURCES.filter(s => !c.sources.includes(s.id));
   const n = first ? 2 : 1;
-  const body = '<p>' + (first ? 'Build the inventory of everything the internet can reach. You have time for <b>two</b> sources today.' : 'The inventory has gaps. Pick <b>one</b> more source.') + '</p>' +
-    left.map(s => '<div class="card"><b>' + esc(s.name) + '</b><br><span class="small">' + esc(s.note) + '</span></div>').join('');
   const items = left.map(s => ({label: s.name, meta: {good: !!s.good || !first}})).concat([{label: 'Query these', done: true, meta: {done: true}}]);
-  const sel = await UI.openModal('Internet-facing asset inventory', body, items, {multi: Math.min(n, left.length), closable: false, cls: 'drill'});
+  const body = '<p>' + (first ? 'Build the inventory of everything the internet can reach. You have time for <b>two</b> sources today.' : 'The inventory has gaps. Pick <b>one</b> more source.') + '</p>' +
+    shownOrder(left, items).map(s => '<div class="card"><b>' + esc(s.name) + '</b><br><span class="small">' + esc(s.note) + '</span></div>').join('');
+  const sel = await UI.openModal('Internet-facing asset inventory', body, items, {shuffle: true, multi: Math.min(n, left.length), closable: false, cls: 'drill'});
   const picked = sel.map(i => left[i]);
   let h = '';
   for (const s of picked) {
@@ -306,7 +306,7 @@ async function mkWafDetect() {
       {label: 'Detection mode first: switch on the managed rules to log what they would block, read a day of real traffic, write exclusions for real residents, then block', meta: {good: true}},
       {label: 'Blocking mode now, at the highest paranoia level'},
       {label: 'Leave it as it is: having a WAF is enough'},
-      {label: 'Switch it off: the website will be patched'}]);
+      {label: 'Switch it off: the website will be patched'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('The strictest level catches the most, and blocks the most real residents too. Paying a bill shouldn’t trip an alarm. Detect, tune, then block.');
     else if (i === 2) await say('A WAF with no rules switched on is a box with lights. It blocks nothing and logs nothing useful.');
@@ -331,7 +331,7 @@ async function mkCmsPatch() {
       {label: 'Today: take a backup, apply it on staging and check the site, then production', meta: {good: true}},
       {label: 'At the quarterly maintenance window, next month'},
       {label: 'Never: a WAF rule can block the upload instead'},
-      {label: 'Turn off uploads forever'}]);
+      {label: 'Turn off uploads forever'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('It’s internet-facing and being exploited now. A month is a long time to leave the door open.');
     else if (i === 2) await say('A WAF rule can cover the gap for a day or two (a virtual patch). It’s a filter in front of the flaw, not a fix in it.');
@@ -353,7 +353,7 @@ async function mkTestConsole() {
       {label: 'Check its logs and keep a copy, put up a maintenance page, remove the DNS record, wait out the DNS cache time, then cancel the hosting', meta: {good: true}},
       {label: 'Cancel the hosting account now: it’s only a test'},
       {label: 'Leave it: nobody links to it'},
-      {label: 'Remove the DNS record and keep the site running, just in case'}]);
+      {label: 'Remove the DNS record and keep the site running, just in case'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Two problems. You lose its logs before anyone has read them, and the town’s name still points at a hosting account nobody owns. Someone else could claim it and serve anything from test.townhall.example: a subdomain takeover.');
     else if (i === 2) await say('The inventory found it, and so will every scanner on the internet. It runs a three-year-old CMS.');
@@ -394,7 +394,7 @@ async function mkPaymentPage() {
     const i = await choose('Before the scripts: where should residents type their card details?', [
       {label: 'On Northgate’s own hosted payment page (we redirect residents there): our code never touches card entry', meta: {good: true, k: 'redirect'}},
       {label: 'In Northgate’s form inside an iframe on our page', meta: {k: 'iframe'}},
-      {label: 'On our own page, as now: the WAF protects it'}]);
+      {label: 'On our own page, as now: the WAF protects it'}], {shuffle: true});
     if (i === 0) { c.scope = 'redirect'; break; }
     if (i === 1) { c.scope = 'iframe'; await say('Much better than today: the processor produces the form. But the page around the iframe is still ours, and it still has to be protected from scripts. A redirect takes our page out of card entry altogether.', who); break; }
     await say('The WAF sees requests to our server. It never sees what a script does inside a resident’s browser, and a page we produce is a page we must protect, script by script.');
@@ -424,7 +424,7 @@ async function mkPaymentPage() {
       {label: 'A Content Security Policy in report-only mode first (scripts only from us and Northgate, data sent only to Northgate), Subresource Integrity on files that never change, then enforce after a clean week', meta: {good: true}},
       {label: 'Subresource Integrity hashes on every script, Northgate’s included'},
       {label: 'Enforce a strict policy today, untested'},
-      {label: 'Nothing: the WAF covers the payment page'}]);
+      {label: 'Nothing: the WAF covers the payment page'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Northgate updates tokenize.js in place when they release. The browser would refuse the new file the moment it changed, and every payment would fail. Pin what never changes; track vendor changes through their notices and the tamper check.');
     else if (i === 2) await say('If you’ve missed one thing the page needs, payments break for everyone. Report-only shows you what would break, without breaking it.');
@@ -434,7 +434,7 @@ async function mkPaymentPage() {
   await say('Policy in report-only mode, reporting to Rafe’s inbox. Enforcement is booked for next week, after a clean run (game).', who);
   // The tamper check (PCI DSS 11.6.1).
   const keys = Object.keys(MK_CHECKS);
-  const k = await choose('Last piece: a check that compares the page, as browsers receive it, with the approved copy. How often?', keys.map(x => ({label: MK_CHECKS[x].label, meta: {good: !!MK_CHECKS[x].good, k: x}})));
+  const k = await choose('Last piece: a check that compares the page, as browsers receive it, with the approved copy. How often?', keys.map(x => ({label: MK_CHECKS[x].label, meta: {good: !!MK_CHECKS[x].good, k: x}})), {shuffle: true});
   c.check = keys[k];
   if (c.check === 'q15') await say('Every fifteen minutes. The standard asks for at least weekly, or what your own risk analysis says. For the page that takes residents’ cards, our analysis says often.', who);
   else if (c.check === 'week') await say('Weekly meets the minimum. It also means a skimmer added on Tuesday could run until next Monday. (Noted: game.)', who);
@@ -496,7 +496,7 @@ async function bramTalk() {
     const i = await choose('Your answer to the councillor.', [
       {label: 'Agree a plan: within the hour, payments move to the processor’s hosted page; our own page comes back only once it is proved clean', meta: {good: true, k: 'plan'}},
       {label: 'Promise our own page back within the hour, whatever happened', meta: {k: 'promise'}},
-      {label: 'Refuse: payments stay off until every investigation is finished', meta: {k: 'refuse'}}]);
+      {label: 'Refuse: payments stay off until every investigation is finished', meta: {k: 'refuse'}}], {shuffle: true});
     if (i === 0) { c.directive = 'plan'; break; }
     if (i === 1) await say('If the page was skimmed, bringing it back in an hour may bring the skimmer back with it, and every resident who pays in that hour is exposed. Fast and clean pull against each other; find a way to have both.');
     else await say('Residents still need to pay, and “off until we’re finished” can mean a week. Find a clean fallback instead of a long outage.');
@@ -556,7 +556,7 @@ async function mkDojoPuzzle(i) {
   const p = MK_DOJO[i], c = MK();
   if (c.dojo[i]) { await say('Solved. ' + p.explain); return; }
   while (true) {
-    const k = await UI.openModal('Web security · ' + p.title, '<pre class="art">' + esc(p.art) + '</pre><p><b>' + esc(p.q) + '</b></p>', p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {closable: false, cls: 'drill'});
+    const k = await UI.openModal('Web security · ' + p.title, '<pre class="art">' + esc(p.art) + '</pre><p><b>' + esc(p.q) + '</b></p>', p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {shuffle: true, closable: false, cls: 'drill'});
     if (k === p.good) break;
     await say('Not quite. What does the server check for itself, and what does it just trust from the request?');
   }
@@ -645,10 +645,10 @@ async function mkBossScript() {
   await say('Oona has already told Northgate, as our merchant agreement requires (game), and I’ve told leadership what we know, what we’re doing and when they’ll hear next. Telling people is never optional, so it isn’t one of your cards.', who);
   touchCSF('Respond'); G.rep += 5; toast('Processor and leadership told. Reputation up.');
   await say('Tabletop. Pick four response cards. Then we work it in three stages, and you lead containment.', who);
-  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions, PCI DSS and the ICO’s British Airways findings. (The processor and leadership have been told.)</p>' +
-    MK_CARDS.map(x => '<div class="card"><b>' + esc(x.name) + '</b> <span class="tag">' + x.csf + '</span><br>' + esc(x.text) + '</div>').join('');
   const items = MK_CARDS.map(x => ({label: x.name, meta: {good: !!x.good}})).concat([{label: 'Play these four cards', done: true, meta: {done: true}}]);
-  const sel = await UI.openModal('Tabletop: the skimmed checkout', body, items, {multi: 4, closable: false, cls: 'tabletop'});
+  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions, PCI DSS and the ICO’s British Airways findings. (The processor and leadership have been told.)</p>' +
+    shownOrder(MK_CARDS, items).map(x => '<div class="card"><b>' + esc(x.name) + '</b> <span class="tag">' + x.csf + '</span><br>' + esc(x.text) + '</div>').join('');
+  const sel = await UI.openModal('Tabletop: the skimmed checkout', body, items, {shuffle: true, multi: 4, closable: false, cls: 'tabletop'});
   const picks = sel.map(i => MK_CARDS[i].id);
   G.f.mkCards = picks;
   for (const id of picks) { const x = MK_CARDS.find(y => y.id === id); touchCSF(x.csf); await say(x.name + ': ' + x.fx); }
@@ -668,7 +668,7 @@ async function mkBossScript() {
     {label: 'When the CMS was last patched', meta: {k: 'cms'}},
     {label: 'The start of the month, to be safe', meta: {k: 'month'}}];
   const si = await UI.openModal('Exposure window: the start', '<p>Card entry is contained. Before residents are told who is affected: when did the exposure start?</p>' +
-    '<pre class="art">' + esc(['Deploy log      pay.js changed ' + MK_INJECT + ' by the web agency’s account (no ticket)', 'CSP reports     first send to metrics-cdn.example at ' + MK_INJECT + ':40', chk === 'q15' ? 'Tamper check    flagged at 01:27' : 'Processor call  three days later, fraud on cards used here']) + '</pre>', startOpts.map(o => ({label: o.label, meta: o.meta})), {closable: false, cls: 'drill'});
+    '<pre class="art">' + esc(['Deploy log      pay.js changed ' + MK_INJECT + ' by the web agency’s account (no ticket)', 'CSP reports     first send to metrics-cdn.example at ' + MK_INJECT + ':40', chk === 'q15' ? 'Tamper check    flagged at 01:27' : 'Processor call  three days later, fraud on cards used here']) + '</pre>', startOpts.map(o => ({label: o.label, meta: o.meta})), {shuffle: true, closable: false, cls: 'drill'});
   const startOk = startOpts[si].meta.k === 'inject';
   if (!startOk) await say(startOpts[si].meta.k === 'alert' ? 'That would leave out everyone skimmed before we noticed. The window starts at the first malicious change the evidence shows.' : startOpts[si].meta.k === 'month' ? 'That tells thousands of residents who weren’t affected to cancel their cards. Use the evidence: the deploy log and the first report agree on ' + MK_INJECT + '.' : 'The patch has nothing to do with this change. The deploy log does: ' + MK_INJECT + '.', who);
   const whoOpts = [
@@ -676,7 +676,7 @@ async function mkBossScript() {
     {label: 'Everyone who visited the payment page', meta: {k: 'visited'}},
     {label: 'Every resident with a portal account', meta: {k: 'all'}},
     {label: 'Nobody: the CSP reported it', meta: {k: 'none'}}];
-  const wi = await choose('Who was affected?', whoOpts);
+  const wi = await choose('Who was affected?', whoOpts, {shuffle: true});
   const whoOk = whoOpts[wi].meta.k === 'paid';
   if (!whoOk) await say(whoOpts[wi].meta.k === 'none' ? 'Report-only reports and lets everything through. Every card typed in the window went to the attacker.' : 'The skimmer read card fields as people typed. Visitors who never typed a card had nothing taken; everyone who typed one did, whether or not the payment went through. Northgate’s records show declined attempts as well as completed ones; people who gave up before pressing Pay never reached Northgate, so a public notice covers them.', who);
   unlock('act', 'exposurewin');
@@ -686,7 +686,7 @@ async function mkBossScript() {
     {label: 'Payments are back on Northgate’s hosted page; our own page stays off until it is proved clean', meta: {good: true, k: 'hosted'}},
     {label: 'Bring our own page back now: the hour is up', meta: {k: 'ours'}},
     {label: 'All online payments stay off for a week', meta: {k: 'off'}}];
-  const di = await choose('The councillor’s directive: payments back within one hour.', dOpts);
+  const di = await choose('The councillor’s directive: payments back within one hour.', dOpts, {shuffle: true});
   const dk = dOpts[di].meta.k;
   if (dk === 'ours') { restoreEarly = true; G.rep -= 2; await say('Our own page is back at 10:30. Nobody has proved it clean yet.'); }
   else if (dk === 'off') { bumpUptime(-0.02); G.rep -= 3; await say('Residents can’t pay online for a week. The payments office queue goes round the square.'); }

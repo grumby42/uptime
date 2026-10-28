@@ -14,7 +14,7 @@ require('fs').mkdirSync(OUT, { recursive: true });
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
     await p.goto(FILE); await p.waitForTimeout(300);
     await p.tap ? null : null;
-    await p.evaluate(() => { document.querySelector('#mopts [data-i="0"]').click(); });
+    await p.evaluate(() => { [...document.querySelectorAll('#mopts .opt')].find(e => /New game/.test(e.textContent)).click(); });
     await p.waitForTimeout(600);
     res[name] = await p.evaluate(() => {
       const W = innerWidth, H = innerHeight, out = [];

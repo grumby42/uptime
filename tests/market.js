@@ -16,6 +16,17 @@ require('fs').mkdirSync(OUT, { recursive: true });
 const KEY = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', a: 'z', b: 'x', start: 'Enter', select: 'Shift' };
 const DIR = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Tap a menu option by what it says (or by its meta.good flag), never by position: option order is shuffled.
+async function tapOpt(sess, test) {
+  const idx = await sess.page.evaluate(src => {
+    const u = __UPTIME.peek().ui; const opts = (u && u.options) || [];
+    if (src === '@good') return opts.findIndex(o => o.meta && o.meta.good && !o.disabled);
+    const r = new RegExp(src); return opts.findIndex(o => r.test(o.label) && !o.disabled);
+  }, test instanceof RegExp ? test.source : test);
+  if (idx < 0) throw new Error('no option matching ' + test);
+  await sess.page.tap('#mopts [data-i="' + idx + '"]');
+}
 const results = {};
 let failed = false;
 function check(name, ok, info) { results[name] = ok ? 'ok' : 'FAIL ' + (info !== undefined ? JSON.stringify(info).slice(0, 500) : ''); if (!ok) failed = true; }
@@ -528,11 +539,11 @@ function clerksDone(s, extra, party) {
   let lay = await fit();
   await ph.page.screenshot({ path: OUT + '/market-phone-waf.png' });
   check('phone: WAF review modal fits 360 px, no horizontal scroll', lay.sw <= 360 && lay.box[0] >= 0 && lay.box[1] <= 360.5 && lay.optsInside, lay);
-  await ph.page.tap('#mopts [data-i="0"]'); await sleep(450);
+  await tapOpt(ph, /^Block$/); await sleep(450);
   check('phone: tapping a choice moves to the next rule', /2 of 9/.test(await ph.modalText()));
-  for (let n = 1; n < 9; n++) { await ph.page.tap('#mopts [data-i="0"]'); await sleep(420); }
+  for (let n = 1; n < 9; n++) { await tapOpt(ph, /^Block$/); await sleep(420); }
   check('phone: the review summary fits too', /WAF review/.test(await ph.modalText()) && (await fit()).sw <= 360);
-  await ph.page.tap('#mopts [data-i="0"]'); await sleep(420);
+  await tapOpt(ph, /^Switch the WAF to blocking/); await sleep(420);
   await ph.settle();
   await ph.page.evaluate(() => { const G = __UPTIME.state(); G.f.mkDirective = true; G.x = 21; G.y = 5; run(mkDrill2); });
   await ph.untilChoice(); await sleep(400);

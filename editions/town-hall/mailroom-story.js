@@ -318,7 +318,7 @@ async function mrBooth() {
   for (const c of MR_CALLS) {
     while (true) {
       const items = c.opts.map(o => ({label: o.label, meta: {good: !!o.good}}));
-      const i = await UI.openModal('Phone booth · ' + c.caller, '<p class="sms">' + esc(c.open) + '</p>', items, {closable: false, cls: 'drill'});
+      const i = await UI.openModal('Phone booth · ' + c.caller, '<p class="sms">' + esc(c.open) + '</p>', items, {shuffle: true, closable: false, cls: 'drill'});
       if (c.opts[i].good) { await UI.openModal('Call-back', '<p>' + esc(c.result) + '</p><p class="small">A call-back proves something only when you dial a number you already had: the directory, the vendor file, the back of your card.</p>', [{label: 'Next', meta: {good: true}}], {closable: false}); break; }
       await UI.openModal('Not that', '<p>' + esc(c.opts[i].why) + '</p>', [{label: 'Try again', meta: {good: true}}], {closable: false});
     }
@@ -372,7 +372,7 @@ async function mrOsintPuzzle(i) {
   const p = MR_OSINT[i], m = MR();
   if (m.osint[i]) { await say('Solved. ' + p.explain); return; }
   while (true) {
-    const k = await UI.openModal('OSINT · ' + p.title, '<div class="mail">' + esc(p.art) + '</div><p><b>' + esc(p.q) + '</b></p>', p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {closable: false, cls: 'drill'});
+    const k = await UI.openModal('OSINT · ' + p.title, '<div class="mail">' + esc(p.art) + '</div><p><b>' + esc(p.q) + '</b></p>', p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {shuffle: true, closable: false, cls: 'drill'});
     if (k === p.good) break;
     await say('Not quite. Think like the attacker, then like the defender.');
   }
@@ -454,10 +454,10 @@ async function mrBossScript() {
   await surfaceMissed(true);
   await say('Incident: payment fraud. Harrow & Finch’s real mailbox is sending us invoices with new bank details, inside real threads. And Accounts thinks one payment already went out last week.', who);
   await say('Tabletop first. Pick four response cards. Then we work it in three stages.', who);
-  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions and FBI IC3 guidance.</p>' +
-    MR_CARDS.map(c => '<div class="card"><b>' + esc(c.name) + '</b> <span class="tag">' + c.csf + '</span><br>' + esc(c.text) + '</div>').join('');
   const items = MR_CARDS.map(c => ({label: c.name, meta: {good: !!c.good}})).concat([{label: 'Play these four cards', done: true, meta: {done: true}}]);
-  const sel = await UI.openModal('Tabletop: the hijacked supplier', body, items, {multi: 4, closable: false, cls: 'tabletop'});
+  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions and FBI IC3 guidance.</p>' +
+    shownOrder(MR_CARDS, items).map(c => '<div class="card"><b>' + esc(c.name) + '</b> <span class="tag">' + c.csf + '</span><br>' + esc(c.text) + '</div>').join('');
+  const sel = await UI.openModal('Tabletop: the hijacked supplier', body, items, {shuffle: true, multi: 4, closable: false, cls: 'tabletop'});
   const picks = sel.map(i => MR_CARDS[i].id);
   G.f.mrCards = picks;
   for (const id of picks) { const c = MR_CARDS.find(x => x.id === id); touchCSF(c.csf); await say(c.name + ': ' + c.fx); }

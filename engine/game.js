@@ -424,7 +424,7 @@ async function closeFlow() {
   if (verdict === 'fp') resp = [{label: 'Close and file a tuning request for the noisy rule', good: true, tune: true}, {label: 'Close as false positive', good: true}];
   else if (verdict === 'benign') resp = [{label: 'Close and note why it’s expected', good: true}, {label: 'Close', good: true}];
   else resp = s.resp;
-  const ri = await choose('Response?', resp.map(r => ({label: r.label, meta: {good: !!r.good}})).concat([{label: 'Back', meta: {back: true}}]), {cancel: true});
+  const ri = await choose('Response?', resp.map(r => ({label: r.label, meta: {good: !!r.good}})).concat([{label: 'Back', meta: {back: true}}]), {shuffle: true, cancel: true});
   if (ri < 0 || ri === resp.length) return 'back';
   const r = resp[ri];
   const correct = verdict === s.kind;

@@ -222,7 +222,7 @@ async function kioskTask() {
     const i = await choose('Change it to…', [
       {label: 'A long random passphrase, stored in the team password vault', meta: {good: true}},
       {label: '“Kiosk2026!”: it has a capital, a digit and a symbol'},
-      {label: 'Leave it: visitors never see the admin screen'}]);
+      {label: 'Leave it: visitors never see the admin screen'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Short and predictable: a year and a symbol are the first things spraying tools try. Length matters more than symbols.');
     else await say('Default passwords are public. Anyone who reads the manual has the keys.');
@@ -238,7 +238,7 @@ async function wifiTask() {
     const i = await choose('Fix it by…', [
       {label: 'Hiding the guest network’s name'},
       {label: 'Putting guest Wi-Fi on its own segment that can only reach the internet', meta: {good: true}},
-      {label: 'Changing the guest password every day'}]);
+      {label: 'Changing the guest password every day'}], {shuffle: true});
     if (i === 1) break;
     if (i === 0) await say('A hidden network name is still visible to anyone listening. It doesn’t separate anything.');
     else await say('A new password doesn’t stop a guest who is already on from reaching staff PCs.');
@@ -386,7 +386,7 @@ async function dojoPuzzle(i) {
   if (G.dojo[i]) { await say('Solved. ' + DOJO[i].explain); return; }
   const p = DOJO[i];
   while (true) {
-    const k = await choose(p.q, p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})));
+    const k = await choose(p.q, p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {shuffle: true});
     if (k === p.good) break;
     await say('Not quite. Think it through and try again.');
   }
@@ -465,10 +465,10 @@ async function bossScript() {
   await surfaceMissed(true);
   await say('Incident: “The sprayed admin”. fd-admin, the Front Desk admin account, had no MFA. It was sprayed overnight and someone is using it.', who);
   await say('Tabletop first. Pick three response cards. Then we work it in three stages.', who);
-  const body = '<p>Pick <b>three</b> cards. Each is written from public ATT&amp;CK / D3FEND-style actions.</p>' +
-    CARDS.map(c => '<div class="card"><b>' + esc(c.name) + '</b> <span class="tag">' + c.csf + '</span><br>' + esc(c.text) + '</div>').join('');
   const items = CARDS.map(c => ({label: c.name, meta: {good: ['reset', 'revoke', 'devices'].includes(c.id)}})).concat([{label: 'Play these three cards', done: true, meta: {done: true}}]);
-  const sel = await UI.openModal('Tabletop: the sprayed admin', body, items, {multi: 3, closable: false, cls: 'tabletop'});
+  const body = '<p>Pick <b>three</b> cards. Each is written from public ATT&amp;CK / D3FEND-style actions.</p>' +
+    shownOrder(CARDS, items).map(c => '<div class="card"><b>' + esc(c.name) + '</b> <span class="tag">' + c.csf + '</span><br>' + esc(c.text) + '</div>').join('');
+  const sel = await UI.openModal('Tabletop: the sprayed admin', body, items, {shuffle: true, multi: 3, closable: false, cls: 'tabletop'});
   const picks = sel.map(i => CARDS[i].id);
   G.f.cards = picks;
   for (const id of picks) {

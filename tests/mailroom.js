@@ -14,6 +14,17 @@ require('fs').mkdirSync(OUT, { recursive: true });
 const KEY = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', a: 'z', b: 'x', start: 'Enter', select: 'Shift' };
 const DIR = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Tap a menu option by what it says (or by its meta.good flag), never by position: option order is shuffled.
+async function tapOpt(sess, test) {
+  const idx = await sess.page.evaluate(src => {
+    const u = __UPTIME.peek().ui; const opts = (u && u.options) || [];
+    if (src === '@good') return opts.findIndex(o => o.meta && o.meta.good && !o.disabled);
+    const r = new RegExp(src); return opts.findIndex(o => r.test(o.label) && !o.disabled);
+  }, test instanceof RegExp ? test.source : test);
+  if (idx < 0) throw new Error('no option matching ' + test);
+  await sess.page.tap('#mopts [data-i="' + idx + '"]');
+}
 const results = {};
 let failed = false;
 function check(name, ok, info) { results[name] = ok ? 'ok' : 'FAIL ' + (info !== undefined ? JSON.stringify(info).slice(0, 400) : ''); if (!ok) failed = true; }
@@ -347,7 +358,7 @@ function frontDeskDone(s, extra) {
   await frontDeskDone(ph, { mrArrived: true, mrMet: true, mrInbox: true });
   await ph.page.evaluate(() => { const G = __UPTIME.state(); MR(); G.map = 'mail'; G.x = 13; G.y = 5; G.dir = 'up'; run(mrDrill1); });
   await ph.untilChoice();
-  await sleep(400); await ph.page.tap('#mopts [data-i="0"]'); await sleep(450);
+  await sleep(400); await tapOpt(ph, /^Start investigating/); await sleep(450);
   await ph.page.screenshot({ path: OUT + '/mailroom-phone-drill.png' });
   const lay = await ph.page.evaluate(() => {
     const W = innerWidth, H = innerHeight, box = document.querySelector('.mbox').getBoundingClientRect();
@@ -355,7 +366,7 @@ function frontDeskDone(s, extra) {
     return { sw: document.documentElement.scrollWidth, W, H, box: [box.left, box.right, box.top, box.bottom], optsInside: opts.every(r => r.left >= 0 && r.right <= W + 0.5) };
   });
   check('phone: drill modal fits 360 px, no horizontal scroll', lay.sw <= 360 && lay.box[0] >= 0 && lay.box[1] <= 360.5 && lay.optsInside, lay);
-  await ph.page.tap('#mopts [data-i="2"]'); await sleep(450);
+  await tapOpt(ph, /^Query: Proxy and DNS logs/); await sleep(450);
   check('phone: tapping a source opens its questions', /Which question do you put/.test(await ph.modalText()));
   results.phoneErrors = ph.errors; if (ph.errors.length || ph.requests.length) failed = true;
   await ph.ctx.close();

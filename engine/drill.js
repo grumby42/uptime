@@ -72,7 +72,7 @@ async function doDrill(D) {
     items.push({label: st.budget > 0 ? 'I have enough: decide' : 'Budget spent: decide', meta: {decide: true, good: st.budget <= 0 || keysLeft === 0}});
     const body = '<p>Budget left: <b>' + st.budget + '</b> · Focus <b>' + G.focus + '/' + G.focusMax + '</b></p>' +
       '<details><summary>Artefact</summary>' + D.artefact + '</details><p><b>Question:</b> ' + esc(D.question) + '</p><h3>Findings</h3>' + drillFindings(st);
-    const i = await UI.openModal('Drill · ' + D.title, body, items, {closable: false, cls: 'drill'});
+    const i = await UI.openModal('Drill · ' + D.title, body, items, {shuffle: true, closable: false, cls: 'drill'});
     const m = items[i].meta;
     if (m.decide) break;
     if (m.ai) { await drillAI(D, st); continue; }
@@ -80,7 +80,7 @@ async function doDrill(D) {
     const qs = src.qs.filter(q => !st.used.includes(q));
     const qi = qs.map(q => ({label: q.q, note: q.kind === 'broad' ? 'broad · 3 Focus' : '1 Focus', disabled: G.focus < DRILL_COST[q.kind], meta: {good: !!q.key}}));
     qi.push({label: 'Back', meta: {back: true}});
-    const k = await UI.openModal('Query: ' + src.name, '<p>Which question do you put to the <b>' + esc(src.name) + '</b>?</p>', qi, {closable: false, cls: 'drill'});
+    const k = await UI.openModal('Query: ' + src.name, '<p>Which question do you put to the <b>' + esc(src.name) + '</b>?</p>', qi, {shuffle: true, closable: false, cls: 'drill'});
     if (qi[k].meta.back) continue;
     const q = qs[k];
     st.used.push(q); st.budget--;
@@ -96,14 +96,14 @@ async function doDrill(D) {
   // ---- Verdict, reasoning, alternatives ----
   const ctx = '<h3>Findings</h3>' + drillFindings(st);
   const v = await UI.openModal('Verdict', '<p><b>' + esc(D.question) + '</b></p>' + ctx,
-    D.verdicts.map(x => ({label: x.label, meta: {good: !!x.good}})), {closable: false, cls: 'drill'});
+    D.verdicts.map(x => ({label: x.label, meta: {good: !!x.good}})), {shuffle: true, closable: false, cls: 'drill'});
   const r = await UI.openModal('Reasoning', '<p>Which reasoning supports your verdict best? Reason only from what your queries showed: reasoning about evidence you never looked at earns no credit.</p>' + ctx,
-    D.reasons.map(x => ({label: x.label, meta: {good: !!x.good}})), {closable: false, cls: 'drill'});
+    D.reasons.map(x => ({label: x.label, meta: {good: !!x.good}})), {shuffle: true, closable: false, cls: 'drill'});
   const pickN = D.altPick || 2;
   const altItems = D.alts.map(x => ({label: x.label, meta: {good: !!x.good}})).concat([{label: 'Done: these are my ' + pickN, done: true, meta: {done: true}}]);
   const alts = await UI.openModal('Alternative explanations',
     '<p>Bonus: pick the <b>' + pickN + '</b> alternative explanations a careful analyst should name and rule out before closing this.</p>',
-    altItems, {multi: pickN, closable: false, cls: 'drill'});
+    altItems, {shuffle: true, multi: pickN, closable: false, cls: 'drill'});
 
   // ---- Score (game) and debrief ----
   const verdictOk = !!D.verdicts[v].good, reasonOk = !!D.reasons[r].good;
