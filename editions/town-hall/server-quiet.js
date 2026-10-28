@@ -17,7 +17,7 @@
 
 Object.assign(QT_CLUES, {
   'sv-nesting': {tech: 'T1078.002', where: 'the service-account registry in the Server Room (Tessera, tracing the rights)',
-                 seen: 'Building the registry, you trace svc-print’s rights: it sits in PRN-Mgmt, which is nested in SRV-Ops-Legacy, which group policy puts in the local Administrators group of every member server and of the 2019 laptops. A printer’s service account has had local admin everywhere for years. The nesting was added in 2019 by a.kerr-adm, an admin account deleted when Alan Kerr left in 2021; the group-change record from then is long gone, and the only trace is the change ticket. Rae’s rule from the Basement still holds: nothing changes on svc-print without her. Added to the suspicion file. Not resolved.'}
+                 seen: 'Building the registry, you trace svc-print’s rights: it sits in PRN-Mgmt, which is nested in SRV-Ops-Legacy, which group policy puts in the local Administrators group of every member server and of the 2019 laptops. A printer’s service account has had local admin everywhere for years. The nesting was added in 2019 by a.kerr-adm, an admin account deleted when Alan Kerr left in 2021; the group-change record from then is long gone; the directory’s own metadata still dates the nesting to March 2019, but only the change ticket says who. Rae’s rule from the Basement still holds: nothing changes on svc-print without her. She agreed its password rotates with the other service accounts; its groups stay as they are. Added to the suspicion file. Not resolved.'}
 });
 
 // Found while registering svc-print: Tessera (or Keyling) traces the nested groups. Returns true when the clue is new.
@@ -26,7 +26,7 @@ async function svQtNesting() {
   await say('A printer’s service account, local admin across the town, for years. The nesting was added in 2019 by a.kerr-adm, an admin account deleted when Alan Kerr left in 2021. The only record of who did it is the change ticket: the group-change event is long gone.', 'Tamsin Fry');
   const fresh = qtNote('sv-nesting');
   await qtAfterNote(fresh);
-  if (fresh) await say('This is the account from Rae’s suspicion file. Her rule still stands: nothing changes on svc-print without her. It goes in the file. Not touched, not resolved.', 'Beatriz Solano');
+  if (fresh) await say('This is the account from Rae’s suspicion file. Her rule still stands: nothing changes on svc-print without her. I asked her: its password rotates with the other service accounts, as Records Hall’s reset did, because a password someone may know is a door left open. Its groups stay exactly as they are. It goes in the file. Not resolved.', 'Beatriz Solano');
   return fresh;
 }
 

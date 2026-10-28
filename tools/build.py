@@ -129,7 +129,7 @@ footer{margin-top:28px;font-size:12px;color:var(--muted)}
 <p class="sub">A security-analyst RPG in small offline editions. Each one runs in your browser, phone or desktop, with no network requests. Saves stay in this browser.</p>
 <ol>
 %(items)s
-<li class="soon">Next: the Server Room</li>
+<li class="soon">Next: the Water Plant</li>
 </ol>
 <footer>Build %(build_id)s &middot; %(build_ts)s &middot; Code under the MIT licence; framework data keeps its own terms (see CREDITS.md).</footer>
 </main>

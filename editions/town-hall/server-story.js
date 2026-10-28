@@ -16,7 +16,7 @@
 'use strict';
 
 if (typeof EDITION !== 'undefined') {
-  EDITION.creditsFacts += ' Server Room: MITRE ATT&CK v20 (T1558.003, T1098.007, T1021.002, T1550.002, T1550.003, T1003.006, T1558.001; Quiet Thread T1078.002). Microsoft Learn: AD DS tier model and the enterprise access model; Group Managed Service Accounts; Windows LAPS; Protected Users Security Group; Defender for Identity unconstrained-delegation assessment; Microsoft Entra Connect accounts and permissions; event 4769 (encryption type 0x17 RC4, 0x11/0x12 AES), 4768, 4624 logon types, 4728/4729, 4732/4733, 4756/4757, 5136, 4662, 4697. CISA Eviction Strategies CM0050 (reset krbtgt twice) and AR21-134A; joint advisory AA20-245A; ASD-led Detecting and Mitigating Active Directory Compromises (September 2024).';
+  EDITION.creditsFacts += ' Server Room: MITRE ATT&CK v20 (T1558.003, T1098.007, T1021.002, T1550.002, T1550.003, T1003.006, T1558.001; Quiet Thread T1078.002). Microsoft Learn: AD DS tier model and the enterprise access model; Group Managed Service Accounts; Windows LAPS; Protected Users Security Group; Defender for Identity unconstrained-delegation assessment; Microsoft Entra Connect accounts and permissions; event 4769 (encryption type 0x17 RC4, 0x11/0x12 AES), 4768, 4624 logon types, 4728/4729, 4732/4733, 4756/4757, 5136, 4662, 4697. CISA Eviction Strategies CM0050 (reset krbtgt twice, at least 10 hours apart), CM0058 (vulnerable drivers) and AR21-134A; Microsoft recommended driver block rules; Microsoft KB5073381 (the 2026 Kerberos RC4 default change); joint advisory AA20-245A; ASD-led Detecting and Mitigating Active Directory Compromises (September 2024).';
 }
 
 /* ---------- State ---------- */
@@ -167,7 +167,7 @@ async function svDesk() {
     await say('Day ' + G.day + ', 09:00. The replication rule fired: a server that isn’t a domain controller asked to replicate directory data. Tamsin’s at the registry.');
   } else if (f.svBoard && !f.svNight3) {
     f.svNight3 = true;
-    await say('Day ' + G.day + ', 03:05. Your phone: Beatriz. “A replication request from APP-03. It’s not a DC. Come down.”');
+    await say('Day ' + G.day + ', 03:05. Your phone: Beatriz, woken by the replication rule, the one rule that pages the identity on-call at night (game). “A replication request from APP-03. It’s not a DC. Come down.”');
   }
 }
 
@@ -175,7 +175,7 @@ async function svDesk() {
 async function svArrive() {
   const who = 'Beatriz Solano', f = G.f;
   SV(); G.sv.day0 = G.day;
-  await say('Day ' + G.day + '. The Server Room: the domain controllers in a locked cage, the admin workstations, a registry of service accounts nobody has read in years, and the whiteboard where we draw who controls what.');
+  await say('Day ' + G.day + '. The Server Room: the domain controllers, DC-01 and DC-02 (the SIEM has listed them together as DIR-01), in a locked cage, the admin workstations, a registry of service accounts nobody has read in years, and the whiteboard where we draw who controls what.');
   await say('You’re the Tier 3 who ran the Basement? Beatriz Solano, identity team. If the directory falls, everything falls: it decides who every other system trusts.', who);
   await say('Four problems. Everyday accounts are domain admins. Service accounts have old passwords and broad rights, and half have no owner. Admins read email on the same machines they administer servers from. And nothing audits the directory or Kerberos.', who);
   await say('You stay Tier 3. Clear the Server Board and the change is in what you answer for: you lead investigations end to end, incident commander for the technical scope.', who);
@@ -211,7 +211,7 @@ async function beatrizPriv() {
   await say('Seventeen accounts in Domain Admins and the other Tier 0 groups. Nine of them are people’s everyday accounts: the ones they also read email with.', who);
   while (true) {
     const i = await choose('How do you bring Tier 0 down to what it needs?', [
-      {label: 'Give each admin a separate Tier 0 account and remove the everyday ones; the break-glass account stays; svc-permits waits on the directive', meta: {good: true}},
+      {label: 'Give each admin a separate Tier 0 account and drop the everyday ones, because an email account must not hold Tier 0; svc-permits waits', meta: {good: true}},
       {label: 'Make everyone in Tier 0 use a longer password and turn on MFA, but leave the memberships, so nobody loses the access they rely on day to day'},
       {label: 'Remove everyone except two senior admins today, so the group is as small as possible, and let the rest ask for access back when something breaks'},
       {label: 'Leave the memberships as they are and just watch Tier 0 closely, with these trusted staff and the tiering work left for a later phase'}], {shuffle: true});
@@ -262,7 +262,7 @@ async function svRegistryBuild() {
   await svQtNesting();
   c.owned = SV_SVC_TOTAL - 2; track();   // all 21 kept get owners; 2 retired
   G.f.svSvc = true; unlock('act', 'svcreg'); unlock('fact', 'svgmsa'); touchCSF('Identify'); touchCSF('Protect');
-  await say('Owners for all twenty-one kept accounts; two retired. Nine moved to gMSAs, twelve on long vault passwords, rotated, svc-permits excepted. ' + svOwnPct() + '% owned. (game)', who);
+  await say('Owners for all twenty-one kept accounts; two retired, disabled, and counted as unowned until they are deleted after a month’s watch. Nine moved to gMSAs, twelve on long vault passwords, rotated, svc-permits excepted. ' + svOwnPct() + '% owned. (game)', who);
   await say('Now the admins’ workstations. The room to the north.', who);
 }
 
@@ -311,12 +311,12 @@ async function svCage() {
 async function svAudit() {
   const who = 'Beatriz Solano';
   const rows = SV_AUDIT.map(a => '<tr><td>' + esc(a.id) + '</td><td>' + esc(a.name) + '</td></tr>').join('');
-  await UI.openModal('Directory and Kerberos audit policy', '<p>The events to turn on, so a change to the directory leaves a record (game). Before now, there were none of the 5136/4662 object events, so what changed a domain object last month cannot be recovered.</p>' +
+  await UI.openModal('Directory and Kerberos audit policy', '<p>The events to turn on, so a change to the directory leaves a record (game). Before now, there were none of the 5136/4662 object events, so who changed a domain object last month, and to what, cannot be recovered: the directory keeps only when each attribute last changed.</p>' +
     '<table class="sc"><tr><th>Event</th><th>What it records</th></tr>' + rows + '</table>' +
-    '<p class="small">5136 and 4662 need a SACL on the object; 4769 shows the ticket encryption type (0x17 RC4, 0x11/0x12 AES).</p>', [{label: 'Turn it on', meta: {good: true}}], {closable: false, cls: 'drill'});
+    '<p class="small">5136 and 4662 need a SACL on the object; 4769 shows the ticket encryption type (0x17 RC4, 0x11/0x12 AES). Only domain controllers write 4768, 4769, 5136 and 4662; 4624, 4697 and the group-change events are turned on for every member server too, with file auditing on FS-04’s HR shares. (game)</p>', [{label: 'Turn it on', meta: {good: true}}], {closable: false, cls: 'drill'});
   while (true) {
     const i = await choose('Which rules do you write on top of the audit?', [
-      {label: 'Alert on privileged-group changes (add and remove), on replication requests from any non-DC, and on RC4 (0x17) service tickets', meta: {good: true}},
+      {label: 'Alert on privileged-group changes, on replication from any non-DC not on the sync list, and on RC4 (0x17) service tickets', meta: {good: true}},
       {label: 'Alert on every 4624 logon, so no sign-in anywhere goes unseen and the picture is always complete'},
       {label: 'Alert only on failed sign-ins, since a successful one with a real password is normal and a failure is the real sign of an attack'},
       {label: 'Alert on every 5136 directory change and review each edit to each object by hand the next morning'}], {shuffle: true});
@@ -353,7 +353,7 @@ async function svTiering() {
   }
   c.cross = 0; track();
   G.f.svTier = true; unlock('act', 'tiering'); unlock('fact', 'svtier'); touchCSF('Protect'); touchCSF('Identify');
-  await say('Five crossings closed: PAWs for admins, the help desk off Server Admins, the backup account split along the tier line, the sync server treated as Tier 0, the DC monitoring on its own collector. Tier-crossing sign-ins a day: ' + SV_TIER_BEFORE + ' → 0. (game)', who);
+  await say('Five crossings closed: PAWs for admins, the help desk’s resets kept to staff accounts, the backup account split along the tier line, the sync server treated as Tier 0, the DC monitoring on its own collector. Tier-crossing sign-ins a day: ' + SV_TIER_BEFORE + ' → 0. (game)', who);
   await say('That’s the fieldwork. Your desk is by the terminals. Tonight the directory keeps a record, and the admins have one way in.', who);
 }
 
@@ -365,12 +365,12 @@ async function hugoTalk() {
   await say('The permits system is how residents pay. I can’t have it down. So it stays exactly as it is.', who);
   while (true) {
     const i = await choose('How do you answer Hugo?', [
-      {label: 'Test the vendor’s documented rights in staging with a rollback, move svc-permits out of Domain Admins to those rights, and have Hugo sign a risk acceptance', meta: {good: true, k: 'test'}},
+      {label: 'Test the vendor’s documented rights in staging with a rollback, rotate the roasted 2019 password today in a window Hugo picks, then leave Domain Admins; Hugo signs', meta: {good: true, k: 'test'}},
       {label: 'Agree: leave svc-permits a domain admin with its 2019 password, since permits must stay up and the vendor hasn’t confirmed anything else works'},
       {label: 'Overrule Hugo: pull svc-permits out of Domain Admins today, because a domain-admin service account is a risk the town can’t carry whatever Permits wants'},
       {label: 'Leave the rights, but rotate the 2019 password tonight in a short window to fix at least the oldest problem even if the access stays'}], {shuffle: true});
     if (i === 0) { c.directive = 'test'; break; }
-    if (i === 1) await say('A domain-admin account with a six-year-old password is the single worst thing in this room. Keeping it because it once broke isn’t a decision, it’s a deferral. Test the smaller rights.');
+    if (i === 1) await say('A domain-admin account whose 2019 password was roasted last night is the single worst thing in this room. Keeping it because it once broke isn’t a decision, it’s a deferral. Test the smaller rights.');
     else if (i === 2) await say('Pulling it blind is how it broke last time. You’re the analyst; the risk is Hugo’s to own. Give him a tested smaller set and a rollback, and let him accept what’s left.');
     else await say('Rotating the password in an agreed window is right, and you’ll do it. But leaving domain-admin rights on a vendor app is the bigger risk. Test the smaller set too.');
   }
@@ -413,7 +413,7 @@ async function svDrill3() {
   await say('A server that isn’t a domain controller asked DC-01 to replicate directory data, and two gigabytes came back. Attack, or the new identity sync on its first run?', who);
   const r = await svDrill('replica');
   G.f.svDrill3 = true; unlock('fact', 'svsync'); unlock('act', 'replaudit'); touchCSF('Detect');
-  await say(r.verdictOk ? 'Legitimate: the Entra Connect connector, from SYNC-02, our own Tier 0 sync server, on its first full run. We kept the rule and documented the account.' : 'The documented sync connector, not an attacker: SYNC-02 is ours, in Tier 0, and the MSOL_ account holds replication rights for password-hash sync. Rule kept; now it alerts on any OTHER account that replicates.', who);
+  await say(r.verdictOk ? 'Legitimate: the Entra Connect connector, from SYNC-02, our own Tier 0 sync server, on its first full run. We kept the rule and put the account on its list.' : 'The documented sync connector, not an attacker: SYNC-02 is ours, in Tier 0, and the MSOL_ account holds replication rights for password-hash sync. Rule kept; now it alerts on any OTHER account that replicates.', who);
   await say('The documented list still doesn’t include every account that could replicate, mind. That’s a lesson for later.', who);
 }
 
@@ -422,7 +422,7 @@ async function sanaTalk() {
   const who = 'Sana Okoro', f = G.f;
   if (!f.svFindMet) {
     f.svFindMet = true;
-    await say('Assessment Findings. These came from an authorised assessment, the National Cyber League’s Enumeration & Exploitation work: what an assessor found that an attacker could use.', who);
+    await say('Assessment Findings. These came from the town’s own authorised assessment, laid out like an Enumeration & Exploitation exercise: what an assessor found that an attacker could use. (game)', who);
     await say('Three findings on the terminals. No methods, no tools: just the finding, and your job, which is the fix and who owns it. Read all three and your identity tool levels up.', who);
     return;
   }
@@ -496,27 +496,27 @@ function svBossStages(picks) {
     s1: {kind: 'mal', threat: 'mirror', tech: 'T1003.006', tags: ['identity'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('scope') ? 9 : 14, dwell0: 20,
       title: 'Stage 1: a request only a DC should make', host: 'DC-01 · domain controller', enemy: {spr: 'scrub', pal: 'mirror'},
-      clues: ['At 03:02 DC-01 logged a replication request (event 4662 with the replication rights) from APP-03, an application server, not a domain controller.', 'The account that asked is k.hale, a Parks account whose owner has been on leave since July. It holds “Replicating Directory Changes (All)” on the domain object: a right no group grants it, an entry added directly to the ACL.', 'The right was granted on Day S-6 at 03:12, by a-rmenon from Ravi’s old laptop, while directory-change auditing (5136) was still off, so nothing recorded what was changed. a-rmenon’s password was reset when it moved to its PAW, so that copy is dead, but the ACL entry it left survived.'],
-      truth: 'A DCSync-style replication from a host that is not a domain controller, by an account quietly given replication rights weeks ago. The directory’s password data is out: this is a domain compromise.',
-      resp: [{label: 'Treat every credential as exposed, preserve DC-01 and APP-03, disable k.hale, remove its ACL entry, tell leadership out of band', good: true},
-             {label: 'Block APP-03 from the domain controllers and close the case, since with the one host blocked no more password data can be replicated out of the domain tonight', good: false, why: 'The replication already happened: every hash is out. A block can’t recall them. Scope the domain.'},
+      clues: ['At 03:02 DC-01 logged a replication request (event 4662 with the replication rights) from APP-03, an application server, not a domain controller.', 'The account that asked is k.hale, a Parks account whose owner has been on leave since July. It holds “Replicating Directory Changes (All)” on the domain object: a right no group grants it, an entry added directly to the ACL.', 'Nothing recorded the grant: 5136 was still off, and the domain object’s change metadata keeps only its latest edit, the audit settings you added. The likeliest moment is Day ' + Math.max(1, SV().day0 - 2) + ' at 03:12, the week’s only night-time admin sign-in to a DC: a-rmenon, by NTLM from Ravi’s old laptop, IT-WS-03. k.hale’s password was last set a minute later. a-rmenon’s password was reset when it moved to its PAW, so that copy is dead; the ACL entry survived.'],
+      truth: 'A DCSync-style replication from a host that is not a domain controller, by an account quietly given replication rights two nights before you came down. The directory’s password data is out: this is a domain compromise. Cutting k.hale off now stops further pulls but shows them they are seen: worth it while replication is live, and why the scoping must move fast.',
+      resp: [{label: 'Treat every credential as exposed, because the replication pulled them all; preserve DC-01 and APP-03, disable k.hale, remove its ACL entry, tell leadership', good: true},
+             {label: 'Block APP-03 from the domain controllers, since with the one host blocked no more password data can be replicated out of the domain tonight', good: false, why: 'The replication already happened: every hash is out. A block can’t recall them. Scope the domain.'},
              {label: 'Reset k.hale and remove its ACL entry, then reopen the directory now the rogue account and its rights are gone', good: false, disrupt: 1, why: 'k.hale is one way in. The hashes they already pulled, krbtgt included, are the compromise. Scope before you reset anything else.'}],
       chain: [{at: 40, text: 'k.hale’s session reaches a second domain controller.'}, {at: 75, text: 'A privileged account’s hash is used on a server.'}]},
     s2: {kind: 'mal', threat: 'relay', tech: 'T1550.002', tags: ['lateral'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('scope') ? 9 : 13, dwell0: picks.includes('scope') ? 15 : 40,
       title: 'Stage 2: scoping the blast radius', host: 'FS-04 and DB-01 · servers', enemy: {spr: 'smuggle', pal: 'relay'},
-      clues: ['From APP-03, NTLM network sign-ins (4624 type 3) as svc-sql to FS-04 and DB-01 at 03:10–03:25: svc-sql’s hash came out with the replication at 03:02.', 'APP-03 itself: at 02:44 a new service was installed (4697), a kernel driver on Microsoft’s vulnerable-driver blocklist, which the servers ran in audit mode only (game), so it was logged, not blocked; the EDR agent stopped reporting at 02:46. The driver came in on IT-WS-03, Ravi’s old laptop, side-loaded through a signed updater on Day S-12.', 'The hunt finds nothing linking the earlier drills (PK-WS-11, HD-WS-02) to k.hale or IT-WS-03: those were separate cases.'],
+      clues: ['From APP-03, NTLM network sign-ins (4624 type 3) as svc-sql to FS-04 and DB-01 at 03:10–03:25: svc-sql’s hash came out with the replication at 03:02.', 'APP-03 itself: at 02:44 a new service was installed (4697), a kernel driver on Microsoft’s vulnerable-driver blocklist, which the servers ran in audit mode only (game), so it was logged, not blocked; the EDR agent stopped reporting at 02:46. The session that installed it came from IT-WS-03, Ravi’s old laptop, where a signed updater has loaded a planted library from its own folder since Day ' + Math.max(1, SV().day0 - 12) + '. k.hale could install a driver because it is in APP-03’s local Administrators group: a direct entry with no ticket, found in the scoping.', 'The hunt finds nothing linking the earlier drills (PK-WS-11, HD-WS-02) to k.hale or IT-WS-03: those were separate cases.'],
       truth: 'Pass-the-hash with a hash taken in the replication: the intruder moving to the file and database servers. Scoping finds the origin (IT-WS-03) and the silenced agent (the vulnerable driver), and marks every host and account to reset.',
-      resp: [{label: 'Scope every affected account and host, isolate them, and build the full reset list first', good: true},
-             {label: 'Reset svc-sql now and close FS-04 and DB-01, since those are the servers it reached and stopping it there should contain the move for now', good: false, why: 'Reset svc-sql alone and you tip the intruder off while they still hold other hashes. Scope first, reset together.'},
-             {label: 'Reimage APP-03 immediately from a clean image and put it straight back into service', good: false, disrupt: 1, why: 'Preserve APP-03 first: it holds the evidence of the driver and the origin. Reimage in the eviction, from a known-good image.'}],
+      resp: [{label: 'Scope every affected account and host and build the full reset list first, because a reset that misses one tips them off', good: true},
+             {label: 'Reset svc-sql now and cut FS-04 and DB-01 off, since those are the servers it reached and stopping it there should contain the move for now', good: false, why: 'Reset svc-sql alone and you tip the intruder off while they still hold other hashes. Scope first, reset together.'},
+             {label: 'Reimage APP-03 immediately from the clean golden image and put it straight back into service before the morning shift starts', good: false, disrupt: 1, why: 'Preserve APP-03 first: it holds the evidence of the driver and the origin. Reimage in the eviction, from a known-good image.'}],
       chain: [{at: 60, text: 'svc-sql’s hash is tried on a third server.'}]},
     s3: {kind: 'mal', threat: 'harvest', tech: 'T1558.001', tags: ['identity'], story: true, group: 'c', ev0: ev0,
       rate: evicted ? 8 : 14, dwell0: evicted ? 8 : 40,
       title: 'Stage 3: evict, all at once', host: 'the domain', enemy: {spr: 'burrow', pal: 'harvest'},
-      clues: ['Because the krbtgt hash came out in the replication, the intruder can forge ticket-granting tickets: forged tickets would survive an ordinary password reset. The krbtgt must be reset twice, the first allowed to replicate before the second.', 'The eviction runs from the Tier 0 PAWs, in one window at 22:00: every privileged account and all 21 service accounts reset, k.hale disabled and its ACL entry removed, APP-03 and IT-WS-03 rebuilt from clean images, and the driver blocklist moved from audit to enforce on the servers.', 'Day S+4, 03:40: from IT-WS-07, a laptop the scoping missed (the same side-loaded updater), an NTLM sign-in as svc-sql with the old hash fails: the password changed. The watch rule catches it; IT-WS-07 is isolated and the scope extended. That is the return the monitoring is for.'],
-      truth: 'Eviction: scope, then reset every credential and the krbtgt twice in one coordinated window from clean workstations, so no surviving ticket or hash rides back in. A forged-ticket risk is why the krbtgt is reset twice (Golden Ticket).',
-      resp: [{label: 'Evict in one window from the PAWs: reset every account and the krbtgt twice, remove k.hale’s ACL entry, rebuild the two hosts, watch for the return', good: true},
+      clues: ['Because the krbtgt hash came out in the replication, the intruder can forge ticket-granting tickets: forged tickets would survive an ordinary password reset. The krbtgt must be reset twice, the first allowed to replicate before the second.', 'The eviction runs from the Tier 0 PAWs from 22:00: the first krbtgt reset at 22:05; every privileged account and all 21 service accounts reset, then every staff and computer account; LAPS rotates every local and DSRM password; k.hale disabled and its ACL entry removed; APP-03 and IT-WS-03 rebuilt from clean images; the driver blocklist moved from audit to enforce. The second krbtgt reset follows at 08:10, once the first has replicated and ten hours have passed.', 'At 03:40 that night, inside the ten-hour wait: from IT-WS-07, a laptop the scoping missed (the same side-loaded updater), an NTLM sign-in as svc-sql with the old hash fails: the password changed. The watch rule catches it; IT-WS-07 is isolated and the scope extended. That is the return the monitoring is for.'],
+      truth: 'Eviction: scope, then reset every credential, and the krbtgt twice, in one coordinated operation from clean workstations, so no surviving ticket or hash rides back in. A forged-ticket risk is why the krbtgt is reset twice (Golden Ticket).',
+      resp: [{label: 'Evict as one planned operation from the PAWs: reset every account, the krbtgt twice ten hours apart, remove k.hale’s ACL entry, rebuild the two hosts, watch', good: true},
              {label: 'Reset the accounts you have confirmed so far and reset the krbtgt once, then restore service and keep resetting the rest over the week as you confirm them', good: false, why: 'Piecemeal resets tip the intruder off and leave a credential to return on, and one krbtgt reset leaves forged tickets working. Reset together, krbtgt twice.'},
              {label: 'Reset every account and the krbtgt twice, but do it from the usual admin laptops to move faster, since speed matters and the eviction really has to land tonight', good: false, disrupt: 1, why: 'A reset typed on a machine that may be compromised hands the new credential straight back. Do it from clean PAWs.'}],
       chain: [{at: 60, text: 'A forged ticket is tried before the second krbtgt reset lands.'}]}
@@ -543,7 +543,7 @@ async function svBossScript() {
   if (picks.includes('krbonce')) G.rep -= 2;
   if (picks.includes('watchonly')) { G.rep -= 2; bumpUptime(-0.01); }
   if (picks.includes('blockone')) G.rep -= 1;
-  await say('Debrief: scope the whole blast radius before you touch anything, then reset every credential and the krbtgt twice in one window, from clean PAWs, so nothing half-reset lets them ride back in. A directory compromise is an all-at-once eviction, not a cleanup.', who);
+  await say('Debrief: scope the whole blast radius before you touch anything, then reset every credential in one coordinated operation, the krbtgt twice and ten hours apart, from clean PAWs, so nothing half-reset lets them ride back in. A directory compromise is an all-at-once eviction, not a cleanup.', who);
   const S = svBossStages(picks);
   await fightStory(S.s1, 'Beatriz: Regroup. Same stage, again.');
   await fightStory(S.s2, 'Beatriz: Regroup. Same stage, again.');
@@ -553,8 +553,8 @@ async function svBossScript() {
   G.f.svBoss = true;
   touchCSF('Recover'); unlock('tech', 'T1550.002'); unlock('tech', 'T1558.001'); unlock('act', 'evictall'); unlock('tech', 'T1021.002');
   bumpUptime(0.01); track();
-  await say('Evicted: k.hale disabled and its ACL entry removed, every privileged and service account reset and the krbtgt reset twice in one window from the PAWs, APP-03 and IT-WS-03 rebuilt, the driver blocklist enforced on the servers.', who);
-  await say('Day S+4, the watch rule caught the return: a failed sign-in as svc-sql with the old hash, from a laptop the scoping had missed. Isolated, scope extended. That is what the monitoring is for.', who);
+  await say('Evicted: k.hale disabled and its ACL entry removed; every account’s password changed, privileged and service first; the krbtgt reset twice, ten hours apart; all from the PAWs. APP-03 and IT-WS-03 rebuilt, the driver blocklist enforced on the servers.', who);
+  await say('At 03:40 that night, the watch rule caught the return: a failed sign-in as svc-sql with the old hash, from a laptop the scoping had missed. Isolated, scope extended. That is what the monitoring is for.', who);
   await say('Rae came down. She wants to talk about something the registry turned up that isn’t tonight’s intruder: svc-print.', who);
 }
 
@@ -564,14 +564,14 @@ async function raeServerTalk() {
   if (G.f.svFile) { await say('On the file, with the rest. The same account, the same patience. We watch, and we don’t touch it without a plan. It continues.', who); return; }
   await say('The registry found how svc-print held rights everywhere: a group nested in a group, local admin across the town, added in 2019 by an account that’s been gone since 2021.', who);
   while (true) {
-    const i = await UI.openModal('svc-print on the suspicion file', '<p>Tamsin traced svc-print’s rights: PRN-Mgmt, nested in SRV-Ops-Legacy, in the local Administrators group of every member server and the 2019 laptops. Added in 2019 by a.kerr-adm, an account deleted in 2021. The group-change event is long gone; the only record is the change ticket. It is the account from the Basement suspicion file. (game)</p>', [
+    const i = await UI.openModal('svc-print on the suspicion file', '<p>Tamsin traced svc-print’s rights: PRN-Mgmt, nested in SRV-Ops-Legacy, in the local Administrators group of every member server and the 2019 laptops. Added in 2019 by a.kerr-adm, an account deleted in 2021. The group-change event is long gone; the directory’s own metadata dates the nesting to 2019, and only the change ticket says who. It is the account from the Basement suspicion file. (game)</p>', [
       {label: 'Add it to the suspicion file and keep Rae’s rule: nothing changes on svc-print without her. Note what the nesting grants; don’t touch it yet', meta: {good: true, k: 'file'}},
-      {label: 'Strip svc-print out of SRV-Ops-Legacy tonight and reset it: it has local admin everywhere it shouldn’t, and every night it keeps that is a night of exposure', meta: {k: 'strip'}},
+      {label: 'Strip svc-print out of SRV-Ops-Legacy tonight and disable it: it has local admin everywhere it shouldn’t, and every night it keeps that is a night of exposure', meta: {k: 'strip'}},
       {label: 'File it as legacy cruft: a 2019 printer rollout left it over-privileged, there’s no sign it’s been used, and the account that made it is long gone', meta: {k: 'cruft'}},
       {label: 'Rebuild SRV-Ops-Legacy’s membership from scratch across every server, so the nesting is cleaned up everywhere at once tonight', meta: {k: 'rebuild'}}], {shuffle: true, closable: false, cls: 'drill'});
     const k = [0, 1, 2, 3][i];
     if (k === 0) break;
-    if (k === 1) await say('It ties to tonight’s compromise and to months of quiet clues. Pulling it before we know how it’s used can warn whoever is behind it, and it breaks the printers and the 2019 laptops on the way. That’s a planned change, Rae’s call.', who);
+    if (k === 1) await say('It ties to months of quiet clues, not to tonight’s intruder as far as we can see. Pulling it before we know how it’s used can warn whoever is behind it, and it breaks the printers and the 2019 laptops on the way. That’s a planned change, Rae’s call.', who);
     else if (k === 2) await say('Maybe it is cruft. But it’s the same account, the same rights-it-should-never-have, that the whole suspicion file is built on. You don’t close that as cruft. You add it to the file.', who);
     else await say('Rebuilding every server’s group membership overnight is a town-wide change with no plan and no scope. Write it up; don’t improvise it at three in the morning.', who);
   }
@@ -595,7 +595,7 @@ async function svSummary() {
     scorecardHtml() +
     '<p>Investigation drills (game scores): ' + dl + '.</p>' +
     '<p>Tier 0 accounts: <b>' + c.priv + '</b> (was ' + SV_PRIV0 + ') · service accounts owned: <b>' + svOwnPct() + '%</b> · tier-crossing sign-ins a day: <b>' + c.cross + '</b> (was ' + SV_TIER_BEFORE + ') · investigations led: <b>' + c.led + '</b>.</p>' +
-    (c.boss ? '<p>The domain compromise: ' + (c.boss.evicted ? 'evicted in one window, krbtgt reset twice, the return caught' : 'contained, with gaps the debrief named') + '. Cards: ' + esc(c.boss.picks.map(id => SV_CARDS.find(x => x.id === id).name).join(', ')) + '.</p>' : '') +
+    (c.boss ? '<p>The domain compromise: ' + (c.boss.evicted ? 'evicted as one planned operation, krbtgt reset twice ten hours apart, the return caught' : 'contained, with gaps the debrief named') + '. Cards: ' + esc(c.boss.picks.map(id => SV_CARDS.find(x => x.id === id).name).join(', ')) + '.</p>' : '') +
     '<p>Missed attacks found in review: <b>' + G.m.surfaced + '</b>.</p>' +
     svQtSummaryHtml() +
     '<p class="big">Next: the Water Plant.</p>';

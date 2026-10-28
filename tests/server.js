@@ -381,6 +381,16 @@ async function basementDone(s, extra, party) {
     TECH['T1558.001'].name === 'Steal or Forge Kerberos Tickets: Golden Ticket'));
   check('benign cases: the monitoring server, an approved two-person group change, the documented Entra Connect sync', await s.page.evaluate(() => /monitoring server’s nightly/.test(ALERTS.harvest.benign.truth) && /two-person-approved|approved.*change/.test(ALERTS.elevate.benign.truth) && /identity sync product’s documented replication|documented.*replication/.test(ALERTS.mirror.benign.truth)));
 
+  check('length tell: the right answer is the longest option in at most 40% of the Server Room’s graded lists', await s.page.evaluate(() => {
+    const L = [];
+    Object.values(SV_DRILLS).forEach(D => { L.push(D.verdicts, D.reasons); });
+    SV_HOME.forEach(t => L.push(ALERTS[t].mal.resp));
+    SV_BOARD_SPECS().forEach(b => L.push(b.resp));
+    SV_FINDINGS.forEach(x => { L.push(x.opts.map((o, j) => ({label: o, good: j === x.good}))); L.push(x.owner.map((o, j) => ({label: o, good: j === x.ownerGood}))); });
+    SV_TIER_CROSS.forEach(c => L.push([{label: c.fix, good: true}].concat(c.bad.map(b => ({label: b})))));
+    const tell = L.filter(l => { const m = Math.max(...l.map(x => x.label.length)); return l.some(x => x.good && x.label.length === m); }).length;
+    return tell / L.length <= 0.4;
+  }));
   // ---- Assessment Findings (one wrong answer, then all three) ----
   await s.goTo('server', 10, 11); await s.settle();
   await s.goTo('server', 3, 11);
