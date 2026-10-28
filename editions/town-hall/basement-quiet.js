@@ -28,7 +28,7 @@ const BM_QT_LINE = {
   'th-router':    {t: '03:10', where: 'Front Desk closet router', who: 'FD-STAFF-11 ↔ an outside address', district: 'Front Desk'},
   'th-schtask':   {t: '03:10', where: 'FD-STAFF-11', who: 'a task called PrinterHealthCheck', district: 'Front Desk'},
   'th-signin':    {t: '03:12', where: 'FD-STAFF-11', who: 'svc-print', district: 'Front Desk'},
-  'th-logclear':  {t: '03:40', where: 'FD-STAFF-14', who: 'unknown (event 1102)', district: 'Front Desk'},
+  'th-logclear':  {t: '03:40', where: 'FD-STAFF-14', who: 'not in the note: the 1102 entry names the account that cleared the log; read it', district: 'Front Desk'},
   'mk-dmzhop':    {t: '03:09', where: 'WEB-01 (DMZ)', who: 'svc-print, from the closet router', district: 'Market Square'},
   'rh-vault':     {t: '03:14', where: 'backup console', who: 'svc-print, from the closet router', district: 'Records Hall'},
   'bm-anyany':    {t: '03:09', where: 'edge firewall (any-to-any rule)', who: 'the closet router', district: 'IT Basement'}

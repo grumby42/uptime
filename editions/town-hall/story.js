@@ -262,7 +262,7 @@ async function pcTask(x) {
     addTool('ledger', 3);
     await say('Tomas: I set up an open-source log collector for those logs. Download done; it’s on your console now. Meet Ledger.', 'Tomas Reyes');
   } else {
-    const t = G.party.find(p => p.id === 'ledger'); t.lvl++;
+    const t = G.party.find(p => p.id === 'ledger' || EVOLVED_FROM[p.id] === 'ledger'); t.lvl++;
     await say('Ledger has real logs to read now. Ledger reached Lv ' + t.lvl + '.');
   }
 }

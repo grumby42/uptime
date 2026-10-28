@@ -16,7 +16,7 @@
 'use strict';
 
 if (typeof EDITION !== 'undefined') {
-  EDITION.creditsFacts += ' IT Basement: MITRE ATT&CK v20 (T1685.005, T1685.006, T1686.002, T1046, T1071.004, T1572, T1110.001, T1078; Volt Typhoon G1017; Quiet Thread T1090). ASD’s ACSC with CISA, FBI, NSA and partners, Best practices for event logging and threat detection (August 2024). NIST SP 800-92 (2006) and SP 800-41 Rev. 1 (2009). IETF RFC 5905 (NTPv4). OMB M-26-14 (May 2026), which rescinded M-21-31 (US federal agencies only). NIST CSWP 29 (CSF 2.0: PR.PS-04, DE.CM-01, DE.AE-03). Microsoft Learn: Security event 1102; Sysinternals Sysmon (event ID 22). Nmap Reference Guide (port states, SYN and connect scans). Apache HTTP Server log files documentation.';
+  EDITION.creditsFacts += ' IT Basement: MITRE ATT&CK v20 (T1685.005, T1685.006, T1686.002, T1046, T1071.004, T1572, T1571, T1110.001, T1078, T1552; Volt Typhoon G1017; Quiet Thread T1090). ASD’s ACSC with CISA, FBI, NSA and partners, Best practices for event logging and threat detection (August 2024). NIST SP 800-92 (2006) and SP 800-41 Rev. 1 (2009). IETF RFC 5905 (NTPv4) and RFC 8633 (NTP best current practices). OMB M-26-14 (May 2026), which rescinded M-21-31 (US federal agencies only). NIST CSWP 29 (CSF 2.0: PR.PS-04, DE.CM-01, DE.AE-03). Microsoft Learn: Security event 1102 and Eventlog event 1100; Sysinternals Sysmon (event ID 22). Nmap Reference Guide (port states, SYN and connect scans). Apache HTTP Server log files documentation.';
 }
 
 /* ---------- State ---------- */
@@ -65,7 +65,7 @@ editionMetricVals = function () {
 };
 EDITION_METRICS.push(
   {k: 'bmCov', label: 'Log source coverage', unit: '%', higher: true, when: bmOn},
-  {k: 'bmSkew', label: 'Largest clock skew between devices (seconds)', unit: ' s', higher: false, lower: true, when: bmOn},
+  {k: 'bmSkew', label: 'Largest clock skew from the reference time (seconds)', unit: ' s', higher: false, lower: true, when: bmOn},
   {k: 'bmPrec', label: 'Detection precision (the tuned scan rule)', unit: '%', higher: true, when: bmOn},
   {k: 'bmFwOwn', label: 'Firewall rules with a named owner', unit: '%', higher: true, when: bmOn},
   {k: 'bmMttd', label: 'Mean time to detect, modelled (game hours)', unit: ' h', higher: false, lower: true, when: bmOn}
@@ -259,7 +259,7 @@ async function bmCollector() {
   }
   goods.forEach(id => { c.src[id] = true; });
   G.f.bmCover = true; unlock('act', 'coverage'); unlock('fact', 'asdlog'); unlock('fact', 'csflog'); touchCSF('Protect'); touchCSF('Identify'); track();
-  await say('Onboarding: VPN-01, the edge firewall (traffic and its configuration audit), DNS-01’s query log and process creation on every server. Forwarded as events are written, not once a day. Coverage ' + bmCovPct() + '%.', who);
+  await say('Onboarding: VPN-01 (with the 14 days of log it still held), the edge firewall (traffic and its configuration audit), DNS-01’s query log and process creation on every server. Forwarded as events are written, not once a day. Coverage ' + bmCovPct() + '%.', who);
   await say('Still not collected: the web proxy and the building-management controllers. Next quarter. Now, the clocks: if they disagree, joining these sources gives you nonsense.', who);
 }
 
@@ -274,10 +274,10 @@ async function bmClock() {
     '<p>FS-02 is seven minutes slow. A timeline that joins FS-02 and the firewall puts events in the wrong order. NIST SP 800-92 makes the same point: if a host’s clock is inaccurate, the timestamps in its logs are too.</p>', [{label: 'Fix it', meta: {good: true}}], {closable: false, cls: 'drill'});
   while (true) {
     const i = await choose('How do you make the clocks agree?', [
-      {label: 'Two internal NTP servers that sync to traceable outside sources; every host, appliance and the collector syncs to them; logs written in UTC with ISO 8601 timestamps; alert when a device stops syncing or drifts', meta: {good: true}},
-      {label: 'Set every clock by hand on the first of each month'},
-      {label: 'Leave each device in local time; the SIEM converts'},
-      {label: 'Point every device straight at an internet time server'}], {shuffle: true});
+      {label: 'Two internal NTP servers, each fed by four or more independent traceable sources; every device syncs to both; logs in UTC with ISO 8601 timestamps; alert on drift, lost sync, or the two disagreeing', meta: {good: true}},
+      {label: 'Set every clock by hand from a trusted reference on the first of each month, checked by a second person, so nothing depends on a network time service an attacker could spoof'},
+      {label: 'Leave each device in local time, as staff read it, and let the SIEM convert every source to one zone when it parses it'},
+      {label: 'Point every device straight at a public internet time server, so each one syncs to a traceable source and there is nothing internal to maintain'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Clocks drift between settings, and a month is a long time to be minutes out.');
     else if (i === 2) await say('Then every analyst converts time zones, and daylight-saving changes, at three in the morning. The ASD-led guide calls UTC the preferred standard and recommends ISO 8601.');
@@ -285,7 +285,7 @@ async function bmClock() {
   }
   c.skew = 0.4;
   G.f.bmTime = true; unlock('act', 'timesync'); unlock('fact', 'sp80092'); unlock('fact', 'rfc5905'); touchCSF('Protect'); track();
-  await say('NTP-01 and NTP-02 are up (NTP version 4, RFC 5905). Every device that reports in now sits within half a second of them. Largest skew: 0.4 s. (game)', 'Devraj Sood');
+  await say('NTP-01 and NTP-02 are up (NTP version 4, RFC 5905), each checking four outside sources, so one bad source is outvoted; RFC 8633 says at least four. A device with only our two can’t tell which is wrong if they disagree, so we alert when they do. Every device that reports in now sits within half a second of them. Largest skew: 0.4 s. (game)', 'Devraj Sood');
   await say('“Every device that reports in.” Remember that. Next: how long we keep any of this. The SIEM console.', 'Lena Mortimer');
 }
 
@@ -303,10 +303,10 @@ async function bmRetention() {
   await say('Seven days. Anything older rolls off. It was the licence default, and nobody changed it.', 'Lena Mortimer');
   while (true) {
     const i = await choose('How long should the town keep its logs?', [
-      {label: 'From a risk assessment with the service owners: 90 days searchable in the SIEM, 18 months in a cheaper archive we can search when we need to (game numbers), reviewed every year', meta: {good: true}},
-      {label: '7 days is plenty: alerts fire within minutes'},
-      {label: 'Everything searchable, forever'},
-      {label: 'Copy the US federal rule in OMB memo M-21-31'}], {shuffle: true});
+      {label: 'From a risk assessment with the owners and legal: 90 days searchable, 18 months in a cheap archive we can still search (game numbers), longer if a records law says so, reviewed yearly', meta: {good: true}},
+      {label: '7 days is plenty: alerts fire within minutes, and anything worth keeping is exported into the case file when an alert fires'},
+      {label: 'Everything searchable in the SIEM, forever, so no investigation ever hits a wall, nobody has to decide what to drop, and nothing an intruder did is ever out of reach'},
+      {label: 'Copy the US federal tiers in OMB memo M-21-31: a published government standard is easier to defend to the council than numbers of our own, and auditors already know how to check it line by line'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Alerts fire on what you thought to detect. Intrusions are often found weeks or months later, and then you need the logs from when they arrived. The ASD-led guide notes some incidents take up to 18 months to discover.');
     else if (i === 2) await say('Searchable storage is the expensive kind. Keep what investigations use searchable, and the rest archived where it costs little and can still be searched when you need it.');
@@ -321,7 +321,7 @@ async function bmRetention() {
 async function bmBinder() {
   const f = G.f;
   if (!f.bmMet) { await say('A rule binder. Magda should show you around first.'); return; }
-  if (!f.bmRet) { await say('The firewall rule binder, thick as a phone book. Logs, clocks and retention first: you’ll want the firewall’s hit counts in the SIEM to review it.'); return; }
+  if (!f.bmRet) { await say('The firewall rule binder, thick as a phone book. Logs, clocks and retention first: you’ll want the firewall’s traffic log in the SIEM next to its hit counters to review it.'); return; }
   if (!f.bmFw) { await bmFwReview(); return; }
   await say('The rule binder: ' + bmFwOwnPct() + '% of rules with a named owner, a reason and an expiry for anything temporary. The last line: deny everything else, both ways, and log it.');
 }
@@ -334,7 +334,7 @@ async function devrajTalk() {
 }
 async function bmFwReview() {
   const who = 'Devraj Sood', c = BM();
-  await say('Eight rules, at the top of a list nobody reads. Now the firewall’s logs reach the SIEM, we have ninety days of hits for each. Owner, reason, hits: let’s go through them.', who);
+  await say('Eight rules, at the top of a list nobody reads. The firewall keeps its own hit counter for each rule, and ninety days of its traffic log on the box; since this morning that log reaches the SIEM too. Owner, reason, hits: let’s go through them.', who);
   for (const r of BM_RULES) {
     const body = '<div class="card"><b>' + esc(r.id) + ': ' + esc(r.text) + '</b><br>Owner: ' + esc(r.owner || 'nobody') + '<br>Reason on file: ' + esc(r.why) + '<br>Hits, last 90 days: ' + esc(r.hits) + '</div>';
     const keys = ['keep', 'narrow', 'remove', 'replace'];
@@ -352,13 +352,13 @@ async function bmFwReview() {
     }
     await say(BM_RULE_ACTS[r.good].why);
     if (r.id === 'R3') await bmQtAnyAny();
-    if (r.id === 'R4') await say('Change CHG-6031 raised: VPN users get the four services they actually use. Booked for Friday’s maintenance window. (game)', who);
+    if (r.id === 'R4') await say('Change CHG-6031 raised: VPN users get the four services they actually use. Booked for Friday’s maintenance window; Magda signed off on carrying the risk until then. (game)', who);
   }
   while (true) {
     const i = await choose('The last rule, at the bottom of the list, is “allow everything else”. What replaces it?', [
       {label: 'Deny everything not expressly permitted, inbound and outbound, and log the denials', meta: {good: true}},
-      {label: 'Block everything inbound, allow everything outbound: staff need the internet'},
-      {label: 'Leave it: the rules above it do the work'}], {shuffle: true});
+      {label: 'Block everything inbound, allow everything outbound: staff need the internet, and the proxy already inspects their web traffic on the way out'},
+      {label: 'Leave it: the rules above already allow only what each owner asked for, so the last line never matches anything that matters'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Outbound is how stolen data and command channels leave. NIST SP 800-41 says firewalls should block all inbound and outbound traffic that hasn’t been expressly permitted. R2 already permits staff browsing.');
     else await say('Then anything the rules above don’t mention is allowed. That’s how R3 lived for seven years.');
@@ -366,7 +366,7 @@ async function bmFwReview() {
   c.rules = {owned: 100, removed: ['R6', 'R7', 'R3'], narrowed: ['R4'], defaultDeny: true};
   G.f.bmFw = true; unlock('act', 'fwreview'); unlock('act', 'defaultdeny'); unlock('fact', 'sp80041'); touchCSF('Protect'); track();
   await say('R3 is replaced by two narrow rules with owners (printers to the print server; the badge reader to the directory). R6 and R7 are gone. Default deny, logged. Every rule left has an owner. (game)', who);
-  await say('The closet router’s 03:09 connections are dropped and logged now. Tomas has had that router on his replacement list for a year.', who);
+  await say('The closet router’s 03:09 connections are dropped and logged now. I told Rae before R3 went: blocking something nobody understands can warn whoever is behind it. Her call was to close it anyway, because an any-to-any rule is worse, and to watch the denials. Tomas has had that router on his replacement list for a year.', who);
   await say('One more: Lena’s scan rule. She’s in the SIEM room, and she has a week of alerts for you.', 'Magda Petrov');
 }
 
@@ -416,8 +416,8 @@ async function bmTuning() {
   while (true) {
     const i = await choose('How do you record the exclusions?', [
       {label: 'Each one in the rule’s change history, with the reason, an owner and an expiry date, reviewed when it expires', meta: {good: true}},
-      {label: 'No need: they’re obvious'},
-      {label: 'In my notes'}], {shuffle: true});
+      {label: 'No need: each exclusion names its host and window in the rule itself, which is documentation enough for anyone who reads the rule'},
+      {label: 'In my own case notes, with the reason for each, so I can answer for every exclusion when anyone asks about it later'}], {shuffle: true});
     if (i === 0) break;
     await say('In a year nobody will remember why VS-01 is excluded, or whether it still should be. An exclusion without a reason and an expiry becomes a blind spot nobody owns.');
   }
@@ -427,7 +427,7 @@ async function bmTuning() {
     while (true) {
       const i = await choose('One alert you kept, MGMT-01 at Sat 02:10, was closed last week as “IT admin activity”, with no ticket. What now?', [
         {label: 'Reopen it: no ticket, no “benign”. Ask IT who ran it and why', meta: {good: true, k: 'reopen'}},
-        {label: 'Leave it closed: triage already decided', meta: {k: 'leave'}}], {shuffle: true});
+        {label: 'Leave it closed: the on-call analyst triaged it at the time, with more context than we have a week later', meta: {k: 'leave'}}], {shuffle: true});
       if (i === 0) { reopened = true; break; }
       await say('A triage label is someone’s guess on a busy night. “Admin activity” with no ticket and no named admin hasn’t been checked.');
     }
@@ -454,13 +454,13 @@ async function audraTalk() {
   await say('DNS is forty percent of the volume. Drop it. Nobody reads DNS logs.', who);
   while (true) {
     const i = await choose('How do you cut the SIEM licence by 30%?', [
-      {label: 'Keep DNS: send its raw log to the cheap archive tier, and the SIEM only what detections and hunts use (lookups of new domains, long names, failures by host); cut what nobody queries, such as debug logs and duplicate “allowed” records for backup traffic, each with a written reason', meta: {good: true, k: 'tier'}},
-      {label: 'Drop DNS: it’s the noisiest', meta: {k: 'dns'}},
-      {label: 'Drop the firewall logs instead', meta: {k: 'fw'}},
-      {label: 'Keep a random 10% of every source', meta: {k: 'sample'}}], {shuffle: true});
+      {label: 'Keep DNS: raw log to the archive, to the SIEM what detections use; drop debug logs; total up repeated backup flows', meta: {good: true, k: 'tier'}},
+      {label: 'Drop DNS: it’s 40% of the volume and nobody has searched it once since we onboarded it; the endpoint tool already sees which program made each connection, and the firewall already sees where every one of them went', meta: {k: 'dns'}},
+      {label: 'Drop the firewall’s traffic log and keep only its configuration audit: endpoint and DNS logs show the same connections from the inside', meta: {k: 'fw'}},
+      {label: 'Keep a random 10% of every source: it cuts the bill by far more than 30%, and every source still shows its trends and baselines', meta: {k: 'sample'}}], {shuffle: true});
     if (i === 0) { c.directive = 'tier'; break; }
     if (i === 1) await say('DNS is how you see a command channel, a phishing domain or a tunnel, often first. The ASD-led guide puts DNS on its priority list. Without it, “which hosts asked for this domain?” has no answer.');
-    else if (i === 2) await say('Edge devices such as firewalls are on the same list. The firewall is how you know what crossed the boundary, and who changed a rule.');
+    else if (i === 2) await say('Edge devices such as firewalls are on the same list. The traffic log is how you know what crossed the boundary: endpoint logs miss every device without an agent, and DNS logs miss every connection made straight to an address.');
     else await say('Sampling keeps the shape and loses the one event that matters. A 1102, or the only lookup of a bad domain, is one line.');
   }
   G.f.bmDirective = true; touchCSF('Govern'); track();
@@ -501,7 +501,7 @@ async function bmDrill3() {
   const r = await bmDrill('dns');
   G.f.bmDrill3 = true; unlock('fact', 'sysmon22'); unlock('act', 'dnscheck'); touchCSF('Respond');
   BM().mttd.push(6);
-  await say(r.verdictOk ? 'PL-WS-07 is isolated, the domain is sinkholed, and the DNS logs say nobody else ever asked for it. Audra wanted to drop those logs last week.' : 'The program on PL-WS-07, not the security agent: Devraj traced it. Isolated, sinkholed, and the DNS logs say nobody else asked for it.', who);
+  await say(r.verdictOk ? 'PL-WS-07 is isolated, the domain is sinkholed, and the DNS logs say nobody else has asked for it since we started keeping them. Audra wanted to drop those logs yesterday.' : 'The program on PL-WS-07, not the security agent: Devraj traced it. Isolated, sinkholed, and the DNS logs say nobody else has asked for it since we started keeping them.', who);
 }
 
 /* ---------- Dojos ---------- */
@@ -601,30 +601,30 @@ function bmBossStages(picks, t) {
     s1: {kind: 'mal', threat: 'scrub', tech: 'T1685.005', tags: ['logs', 'host'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('timeline') ? 9 : 14, dwell0: 20,
       title: 'Stage 1: a log that starts at 02:41', host: 'MGMT-01 · management server', enemy: {spr: 'scrub', pal: 'scrub'},
-      clues: ['MGMT-01’s Security log starts at 02:41 with event 1102: cleared by svc-vpnldap.', 'The collector holds MGMT-01’s events up to 02:40:52. Forwarded as they were written, they survived the clearing: svc-vpnldap signed in at 02:20 over remote desktop from 10.20.200.14, an address in the VPN pool.', 'svc-vpnldap is the account VPN-01 uses to look users up in the directory. It has never signed in to anything before; its password lives in the appliance’s settings.'],
+      clues: ['MGMT-01’s Security log starts at 02:41 with event 1102: cleared by svc-vpnldap.', 'The collector holds MGMT-01’s events up to 02:40:52. Forwarded as they were written, they survived the clearing: svc-vpnldap signed in at 02:20 over remote desktop from 10.20.200.14, an address in the VPN pool.', 'svc-vpnldap is the account VPN-01 uses to look users up in the directory: it has no reason to sign in anywhere. The directory’s sign-in log shows its first ever sign-in last Saturday at 02:04, to MGMT-01, and more on the nights since, always after 02:00. Nobody had a rule for it. Its password lives in the appliance’s settings.'],
       truth: 'Clear Windows Event Logs (T1685.005), to hide the session. The forwarded copies and the synchronised clocks put it back in order. Signing in with the appliance’s service account is Valid Accounts (T1078).',
-      resp: [{label: 'Preserve the collector’s copies and MGMT-01’s disk and memory, isolate MGMT-01 but keep it powered, disable svc-vpnldap and revoke its sessions', good: true},
-             {label: 'Restore MGMT-01’s log from last night’s backup and close', good: false, why: 'The backup ran before the intruder arrived. It holds nothing about them, and they still have the account.'},
-             {label: 'Reimage MGMT-01 now', good: false, disrupt: 1, why: 'Preserve first: the disk and memory are the evidence of what they did.'}],
+      resp: [{label: 'Preserve the collector’s copies and MGMT-01’s disk and memory; isolate MGMT-01, powered; disable svc-vpnldap, revoke its sessions, and tell leadership the VPN is down', good: true},
+             {label: 'Restore MGMT-01’s Security log from last night’s backup so the record is whole again, then close: the forwarded copies already show the 02:20 session', good: false, why: 'Last night’s backup predates tonight’s session, so it can’t show it, and the intruder still has the account. (A copy read in the lab is still useful: MGMT-01 has been theirs since last Saturday.)'},
+             {label: 'Reimage MGMT-01 now from the golden image and put it back in service: the collector already holds every event it forwarded, so nothing on its disk is still needed for the case', good: false, disrupt: 1, why: 'Preserve first: the disk and memory are the evidence of what they did.'}],
       chain: [{at: 40, text: 'svc-vpnldap opens a second remote-desktop session.'}, {at: 75, text: 'Another server’s Security log is cleared.'}]},
     s2: {kind: 'mal', threat: 'hinge', tech: 'T1686.002', tags: ['edge'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('rule') ? 8 : 13, dwell0: picks.includes('rule') ? 10 : 40,
       title: 'Stage 2: a way out, and a way in', host: 'FW-EDGE · edge firewall', enemy: {spr: 'hinge', pal: 'hinge'},
-      clues: ['VPN-01’s own log, collected since the fieldwork: at 01:52 on the Saturday before you came down, a crash in its web interface, then an admin session nobody started. (game)', 'Last night at 02:55 a rule appeared at the top of the edge firewall: VPN-01 → any outside address, TCP 443. Made with fw-svc-vpn, the firewall account the VPN integration uses, from VPN-01’s own address. No ticket.', 'Through it, MGMT-01 sent 600 MB to 203.0.113.50 between 03:01 and 03:20. And the way in was R4, “VPN pool → internal network, ANY”, whose narrowing was booked for Friday.'],
+      clues: ['VPN-01’s own log, which the appliance keeps for 14 days before it rolls over; the fieldwork copied what it held when forwarding began: at 01:52 on the Saturday before you came down, a crash in its web interface, then an admin session nobody started. (game)', 'Last night at 02:55 a rule appeared at the top of the edge firewall: VPN-01 → any outside address, TCP 443. Made with fw-svc-vpn, the firewall account the VPN integration uses, from VPN-01’s own address. No ticket.', 'Through it, 600 MB left between 03:01 and 03:20, relayed by VPN-01: the inside flows show a session from the VPN pool to MGMT-01, allowed by R4, carrying 600 MB out of MGMT-01, and the edge log shows VPN-01 sending the same 600 MB to 203.0.113.50. R4, “VPN pool → internal network, ANY”, whose narrowing was booked for Friday, was the way in.'],
       truth: 'Modifying a network device firewall (T1686.002): the intruder opened its own way out. The way in was a rule far broader than anyone needed.',
-      resp: [{label: 'Delete the new rule, narrow R4 today under an emergency change, take VPN-01 off the network and rebuild it following the vendor’s advisory, rotate every credential it stored (svc-vpnldap, fw-svc-vpn), block 203.0.113.50, keep VPN-01’s logs', good: true},
-             {label: 'Delete the new rule and close', good: false, why: 'VPN-01 is still the intruder’s, and R4 still lets the VPN pool reach everything.'},
-             {label: 'Switch every firewall rule off until morning', good: false, disrupt: 2, why: 'That stops the town, not the intruder, who is already inside.'}],
+      resp: [{label: 'Delete the new rule, narrow R4 today by emergency change, isolate and image VPN-01, then rebuild it per the vendor’s advisory; rotate what it stored, reset its users since Saturday, block 203.0.113.50', good: true},
+             {label: 'Delete the new rule, block 203.0.113.50 at the edge and close: default deny already stops anything else going out, and R4’s narrowing is booked for Friday', good: false, why: 'VPN-01 is still the intruder’s, and R4 still lets the VPN pool reach everything.'},
+             {label: 'Set every firewall rule to deny until morning, VPN included, so nothing moves in or out while we work out what VPN-01 did, then restore the rules one at a time from the reviewed binder, with owners signing each one back on', good: false, disrupt: 2, why: 'That stops the town, not the intruder, who is already inside.'}],
       chain: [{at: 60, text: 'A second outbound rule appears.'}]},
     s3: {kind: 'mal', threat: 'sweep', tech: 'T1046', tags: ['recon'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('hunt') ? 8 : 14, dwell0: Math.max(0, (picks.includes('hunt') ? 10 : 35) + (hidden ? 15 : 0) - (reopened ? 5 : 0)),
       title: 'Stage 3: the same behaviour, elsewhere', host: 'APP-02 · application server', enemy: {spr: 'sweep', pal: 'sweep'},
-      clues: [hidden ? 'The scan detection stayed silent tonight: MGMT-01 is inside an exclusion you shipped when you tuned the rule. The rule saw everything; your exclusion hid it.' : 'The tuned scan detection fired at 03:24: MGMT-01 touched 52 hosts on TCP 445 and 3389 in five minutes.',
+      clues: [hidden ? 'The scan detection stayed silent tonight: MGMT-01 is inside an exclusion you shipped when you tuned the rule. The rule saw everything; your exclusion hid it.' : 'The tuned scan detection fired at 03:24: MGMT-01 touched 52 hosts on TCP 445 and 3389 in five minutes. It sat in the queue until morning: nobody is on call for the SIEM after midnight. (game)',
         'Last week’s alert from MGMT-01 at Sat 02:10, closed as “IT admin activity” with no ticket, was this intruder’s first look around.' + (reopened ? ' Your reopened ticket had MGMT-01 on tomorrow’s review list.' : ' Nobody had reopened it.'),
         'The hunt (event 1102 and svc-vpnldap sign-ins, on every server) finds one more: svc-vpnldap signed in to APP-02 at 03:29, and APP-02’s Security log was cleared at 03:31.'],
       truth: 'Network Service Discovery (T1046): mapping what the stolen account could reach. Hunting for the same behaviour found the second server.',
       resp: [{label: 'Isolate APP-02 too, preserve its disk, scope what svc-vpnldap touched on both servers, and keep hunting until no server shows the pattern', good: true},
-             {label: 'Close: the scan found nothing it could use', good: false, why: 'It found APP-02.'},
+             {label: 'Close: svc-vpnldap is disabled and MGMT-01 isolated, so whatever the scan of 52 hosts found, the intruder can no longer use it', good: false, why: 'It found APP-02.'},
              {label: 'Exclude MGMT-01 from the scan rule: it’s a management server', good: false, why: 'That is how its first scan went unseen.'}],
       chain: [{at: 60, text: 'svc-vpnldap tries a third server.'}]}
   };
@@ -634,7 +634,7 @@ async function bmBossScript() {
   await surfaceMissed(true);
   c.boss = {day: G.day};
   await say('MGMT-01, the management server. Its Security log starts at 02:41 this morning with event 1102. Someone cleared it, and they didn’t want us to know who.', who);
-  await say('This one is ours, not a retelling: a game-original case. Its outline follows what ATT&CK records for living-off-the-land intruders such as Volt Typhoon: an exploited internet-facing appliance, valid accounts, selectively cleared logs, scanning with tools already on the systems.', who);
+  await say('This one is ours, not a retelling: a game-original case. Its outline follows what ATT&CK records for living-off-the-land intruders such as Volt Typhoon: an exploited internet-facing appliance, valid accounts, selectively cleared logs, scanning with commercial tools and utilities already present, and credentials taken from where an appliance stored them.', who);
   unlock('fact', 'g1017'); unlock('fact', 'ev1102');
   await say('Leadership is told, and the town has reported it to CISA. Telling people is never optional, so it isn’t one of your cards.', who);
   touchCSF('Respond'); G.rep += 5; toast('Leadership told; reported to CISA. Reputation up.');
@@ -674,20 +674,20 @@ async function raeBasementTalk() {
   const line = bmQtTimeline();
   const rows = line.map(x => '<tr><td>' + esc(x.t) + '</td><td>' + esc(x.district) + '</td><td>' + esc(x.where) + '</td><td>' + esc(x.who) + '</td><td>' + esc(x.tech + ' ' + (QT_TECH[x.tech] ? QT_TECH[x.tech].name : '')) + '</td></tr>').join('');
   const svc = line.filter(x => /svc-print/.test(x.who)).length, router = line.filter(x => /router/.test(x.where + ' ' + x.who)).length;
-  const body = '<p>Your Unexplained notes, in clock order (' + line.length + ' of them; local time as each device recorded it):</p>' +
+  const body = '<p>Your Unexplained notes, in order of time of night (' + line.length + ' of them, from different nights; local time as each device recorded it). This is a pattern, not a sequence: it shows when, not what came first.</p>' +
     '<table class="sc"><tr><th>Time</th><th>District</th><th>Where</th><th>Who</th><th>ATT&amp;CK</th></tr>' + rows + '</table>' +
     '<p>Every one falls between 03:00 and 03:40. ' + (svc ? svc + ' name svc-print, the printer’s service account. ' : '') + (router ? router + ' point at the router in the Front Desk closet. ' : '') + 'No alert fired for any of them.</p>' +
-    '<p class="small">Caveat: before this week’s NTP fix the clocks behind these notes were not synchronised, so the order inside one night is uncertain by minutes. The pattern is not. (game)</p>';
+    '<p class="small">Caveat: before this week’s NTP fix the clocks behind these notes were not synchronised, so the order inside one night is uncertain by minutes, and each note needs its date before anyone reads a sequence into them. The time-of-night pattern holds either way. (game)</p>';
   while (true) {
     const i = await UI.openModal('Suspicion file', body, [
       {label: 'Hand it to Rae as a suspicion file: what was seen, where and when (with the clock caveat), what it might mean, and what would confirm or rule it out. No conclusions; nothing done to svc-print or the router without her', meta: {good: true, k: 'file'}},
-      {label: 'Disable svc-print and pull the router tonight, and close it', meta: {k: 'act'}},
-      {label: 'File it as noise: each one has an innocent explanation', meta: {k: 'noise'}},
-      {label: 'Post the timeline in the all-staff chat, so everyone watches for it', meta: {k: 'post'}}], {shuffle: true, closable: false, cls: 'drill'});
+      {label: 'Disable svc-print and pull the router tonight, and close it: this many notes are enough to act on, every night it stays is another night of access, and the printers can use a local account until a new router arrives', meta: {k: 'act'}},
+      {label: 'File it as noise: each note has an innocent explanation (print jobs, router reboots, an old mailbox), and no alert has fired for any of them', meta: {k: 'noise'}},
+      {label: 'Post the timeline in the all-staff chat, so every team that owns one of these systems watches for it tonight and reports anything after 03:00', meta: {k: 'post'}}], {shuffle: true, closable: false, cls: 'drill'});
     const k = [0, 1, 2, 3][i];
     if (k === 0) break;
     if (k === 1) await say('Acting alone on something you can’t yet scope can warn whoever is behind it before anyone knows how far it reaches, and it breaks the printers on the way. That decision is Rae’s, with a plan.', who);
-    else if (k === 2) await say('Each one alone, maybe. Twelve doors, one account, one router, the same half hour every night: that pattern is the finding. Write it down.', who);
+    else if (k === 2) await say('Each one alone, maybe. Note after note, the same service account, the same router, the same forty minutes after three: that pattern is the finding. Write it down.', who);
     else await say('If someone is inside, they may read the chat too. A suspicion goes to the person who owns the decision, need to know.', who);
   }
   c.file = {clues: line.map(x => x.id), day: G.day};

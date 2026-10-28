@@ -365,7 +365,7 @@ async function crPslogVerify() {
   }
   G.f.crPslog = true; unlock('act', 'pslog'); unlock('fact', 'pslog4104'); touchCSF('Detect');
   await say('There it is: event 4104, with your test command in full. (PowerShell 7, where installed, writes to PowerShellCore/Operational instead.) Ledger now collects 4104 from every laptop.');
-  if (hasTool('ledger')) { const t = G.party.find(p => p.id === 'ledger'); t.lvl++; await say('Ledger has script blocks to read. Ledger reached Lv ' + t.lvl + '.'); }
+  if (hasTool('ledger')) { const t = G.party.find(p => p.id === 'ledger' || EVOLVED_FROM[p.id] === 'ledger'); t.lvl++; await say('Ledger has script blocks to read. Ledger reached Lv ' + t.lvl + '.'); }
 }
 
 /* ---------- Laptops: status, isolation (Shield Badge), the Quiet Thread laptop ---------- */
