@@ -12,7 +12,7 @@
 'use strict';
 
 if (typeof EDITION !== 'undefined') {
-  EDITION.creditsFacts += ' Mail Room: FBI IC3 2025 Internet Crime Report (business email compromise complaints and losses; Financial Fraud Kill Chain). IETF RFC 9989 (DMARC, May 2026), RFC 7208 (SPF), RFC 6376 (DKIM), RFC 8601 (Authentication-Results), RFC 5321 (SMTP trace fields). CISA fact sheet on number matching (October 2022). FTC text-scam data (April 2025). Chromium page-transition types (browser history).';
+  EDITION.creditsFacts += ' Mail Room: FBI IC3 2025 Internet Crime Report (business email compromise complaints and losses; Financial Fraud Kill Chain). IETF RFC 9989 (DMARC, May 2026), RFC 7208 (SPF), RFC 6376 (DKIM), RFC 8601 (Authentication-Results), RFC 5321 (SMTP trace fields). CISA fact sheet on number matching (October 2022). FTC text-scam data (April 2025). Chromium page-transition types (browser history). Microsoft Threat Intelligence on adversary-in-the-middle phishing (July 2022) and Microsoft Learn on token theft and token revocation. IETF RFC 6238 (TOTP). UK NCSC phishing guidance (reporting culture). Microsoft Learn on external email forwarding. NIST CSF 2.0.';
   EDITION.creditsInspiration = 'The investigation drills are inspired by Chris Sanders’s Investigation Path posts. Every case in this game is original; none of his material is reproduced.';
 }
 
@@ -35,6 +35,14 @@ function alertWeight(t, w) {
   return w;
 }
 function alertHost() { return inMail() ? pick(MR_HOSTS) + ' · Mail Room' : null; }
+// Staff report suspicious mail some of the time (game rates: 30%, 60% once the one-tap Report button exists).
+// The report is a staff event the player sees on the alert. Benign and false-positive mail gets reported too,
+// at the same rate, so the tag never gives the verdict away (and a report of safe mail is never a mistake).
+function alertDecorate(spec) {
+  if (!mrOn() || !MR_PHISH.includes(spec.threat)) return;
+  spec.staffReport = rnd() < (hasTool('reportbird') ? 0.6 : 0.3);
+  if (spec.staffReport) spec.host += ' · reported by staff';
+}
 function briefList() { return G.f.mrMet ? BRIEFS.concat(MR_BRIEFS) : BRIEFS; }
 function onAbility(k, b) {
   if (!mrOn() || b.tqDone || !['quarantine', 'purge'].includes(k) || !(b.spec.tags || []).includes('mail')) return;
@@ -44,11 +52,14 @@ function onAbility(k, b) {
 }
 async function onAlertClosed(s, verdict, correct, r) {
   if (!mrOn() || s.story) return;
+  // Report rate counts staff reports only: a phishing alert counts as reported when a staff member reported it
+  // (decided when the alert arrived, and shown on it), never because the analyst closed it.
   if (MR_PHISH.includes(s.threat) && s.kind === 'mal') {
     const rep = MR().rep; rep.seen++;
-    if (hasTool('reportbird') || rnd() < 0.3) rep.reported++;
+    if (s.staffReport) rep.reported++;
   }
   if (s.threat === 'payee' && s.kind === 'mal' && correct && r.good) { MR().bec++; toast('BEC payment stopped'); }
+  if (s.threat === 'grant' && s.kind === 'mal' && correct && r.good) unlock('act', 'appconsent');
   track();
 }
 function editionMetricVals() {
@@ -218,7 +229,7 @@ async function mrInboxRoom() {
       const all = {sender: 1, link: 1, tone: 1, auth: 1};
       const why = mrMailHtml(msg, all);
       if (!ok) {
-        await UI.openModal('Not this one', '<p>' + (k === 'trust' ? 'This one should be reported.' : 'This one is fine; reporting it costs the security team time.') + ' Here are all the cues:</p>' + why, [{label: 'Try again', meta: {good: true}}], {closable: false, cls: 'drill'});
+        await UI.openModal('Not this one', '<p>' + (k === 'trust' ? 'This one should be reported.' : 'This one is fine. Reporting it wouldn’t have been a mistake (when in doubt, report), but learn the cues that make it safe.') + ' Here are all the cues:</p>' + why, [{label: 'Try again', meta: {good: true}}], {closable: false, cls: 'drill'});
         continue;
       }
       m.inbox[n] = true;
@@ -245,8 +256,9 @@ async function mrDrill(key) {
 }
 async function mrDrill1() {
   const who = 'Priya Natarajan';
-  await say('I got a ShareBox link, “Permit_Fees.pdf”. I clicked Open and it asked me to sign in again, so I did. Then it bounced me to our normal sign-in page. Was that… bad?', who);
+  await say('I got a ShareBox link, “Permit_Fees.pdf”. I clicked Open and it asked me to sign in again, so I did, and I approved the prompt on my phone like always. It said “Verifying…” for a few seconds, then bounced me to our normal sign-in page. Was that… bad?', who);
   await say('New on your console: Tally, an AI assistant. It’s fast and it can be wrong. Treat it like a sharp new colleague: ask specific questions, check the answers.');
+  await say('Tally is approved for town data. Never paste logs into an assistant the town hasn’t approved: that is a data leak of its own.');
   const r = await mrDrill('link');
   G.f.mrDrill1 = true;
   if (r.verdictOk) await say('Thank you. I’ll sit with Kofi and re-enrol my authenticator in person.', who);
@@ -326,7 +338,7 @@ async function mrDrill2() {
   unlock('act', 'paymenthold'); track();
   if (!G.f.mrDirective) {
     G.f.mrDirective = true; G.targets.report = 70; touchCSF('Govern');
-    await say('Rae (radio): Directive from leadership: phishing report rate target goes to 70% by quarter end. (game) Reports you can act on beat a pretty number; don’t ask people to report everything.');
+    await say('Rae (radio): Directive from leadership: phishing report rate target goes to 70% by quarter end. (game) A target can be gamed: watch whether real phish get reported, and how fast the first report arrives, not just the rate. And thank people for every report, even the ones that turn out fine.');
   }
 }
 
@@ -337,7 +349,7 @@ async function mrDrill3() {
   const r = await mrDrill('push');
   G.f.mrDrill3 = true;
   unlock('fact', 'cisa_nm'); unlock('act', 'numbermatch');
-  if (!r.ai || r.ai !== 'everything') await say('Kofi pasted the whole night’s log into Tally this morning. It only read the first 60 lines and never said so: the approval was line 187. (game) Ask it specific questions, and check.', 'Bea Lindqvist');
+  if (!r.ai || r.ai !== 'everything') await say('Kofi pasted the whole night’s log into Tally this morning. The export was bigger than Tally’s context limit, so the console kept the first 60 lines and never said so: the approval was line 187. (game) Ask it specific questions, and check.', 'Bea Lindqvist');
   await say(r.verdictOk ? 'I approved it to make the buzzing stop. Never again. Number matching goes on for everyone today.' : 'Bea says the 02:14 approval was the attacker’s sign-in. I approved it to make the buzzing stop. Number matching goes on for everyone today.', who);
 }
 
@@ -403,7 +415,7 @@ async function mrGauntlet() {
     const g = MR_GAUNTLET[n];
     while (true) {
       const items = [{label: 'A · Trust', meta: {k: 'trust', good: g.good === 'trust'}}, {label: 'B · Report', meta: {k: 'report', good: g.good === 'report'}}];
-      const i = await UI.openModal('Round 1 · triage gauntlet ' + (n + 1) + '/5', '<div class="mail">' + esc(g.line) + '</div>', items, {closable: false, cls: 'drill'});
+      const i = await UI.openModal('Round 1 · triage gauntlet ' + (n + 1) + '/' + MR_GAUNTLET.length, '<div class="mail">' + esc(g.line) + '</div>', items, {closable: false, cls: 'drill'});
       if (items[i].meta.k === g.good) break;
       mistakes++;
       await UI.openModal('Miss', '<p>' + esc(g.why) + '</p>', [{label: 'Again', meta: {good: true}}], {closable: false});
@@ -411,7 +423,9 @@ async function mrGauntlet() {
   }
   const s = Math.round((performance.now() - t0) / 1000);
   MR().gauntlet = {s: s, mistakes: mistakes};
-  await say('Ines: Five messages, ' + s + ' s, ' + mistakes + ' miss' + (mistakes === 1 ? '' : 'es') + '. (game) Speed is nice; the right call is the point.');
+  unlock('tech', 'T1528'); unlock('act', 'appconsent');
+  await say('Ines: The app request was consent phishing (T1528). It never asks for a password, and a password reset may not cut off the token the app already holds: an admin has to revoke the app’s consent and its tokens.');
+  await say('Ines: ' + MR_GAUNTLET.length + ' messages, ' + s + ' s, ' + mistakes + ' miss' + (mistakes === 1 ? '' : 'es') + '. (game) Speed is nice; the right call is the point.');
 }
 async function mrBoardScript() {
   const who = 'Ines Calloway', f = G.f;
@@ -427,6 +441,7 @@ async function mrBoardScript() {
   addTool('sieve', 5); G.focusMax = Math.max(G.focusMax, 36); G.focus = G.focusMax; track();
   await say('You cleared the Mail Board. This is the Seal Badge.', who);
   await say('Its power: messages you quarantine are pulled from every inbox on the map, and link-phishing (Lure) alerts drop by half. Watch the unsorted mail piles shrink. (game)', who);
+  await say('And with the badge, the town moves townhall.example from DMARC p=none to p=reject: mail that fakes our own domain is now refused at the door. Of all the DMARC settings in the world, that is the one we own.', who);
   await say('And Sieve joins your console: a mail-gateway tool. It reads headers, sandboxes attachments, blocks and quarantines.', who);
   touchCSF('Protect');
   await evolveCheck();
@@ -468,7 +483,7 @@ async function mrBossScript() {
      title: 'Stage 3: the spread', host: 'six staff mailboxes', enemy: {spr: 'lure', pal: 'bossSpray'},
      clues: ['This morning the same mailbox sent six staff a “shared invoice” link.', 'The link opens a look-alike of our sign-in page.', 'One person entered a password before the page was blocked.'],
      truth: 'Spearphishing links from a trusted supplier mailbox, to harvest more accounts.',
-     resp: [{label: 'Search and purge every copy, block the link, reset the one account that entered a password', good: true}, {label: 'Block harrowfinch.example forever and stop paying them', good: false, disrupt: 1, why: 'They’re a victim too, and the town still needs its roads paved. Block the attacker, not the supplier.'}, {label: 'Wait for more reports', good: false}],
+     resp: [{label: 'Search and purge every copy, block the link; for the one account that entered a password: reset it, revoke its sessions, check its sign-ins', good: true}, {label: 'Block harrowfinch.example forever and stop paying them', good: false, disrupt: 1, why: 'They’re a victim too, and the town still needs its roads paved. Block the attacker, not the supplier.'}, {label: 'Wait for more reports', good: false}],
      chain: [{at: 60, text: 'A harvested password is tried on our sign-in page.'}]}
   ];
   for (const s of stages) await fightStory(s, 'Bea: Regroup. Same stage, again.');

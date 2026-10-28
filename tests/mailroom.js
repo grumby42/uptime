@@ -172,7 +172,7 @@ function frontDeskDone(s, extra) {
   check('drill: budget spent after two queries', dec.some(o => /Budget spent/.test(o.label)) && dec.filter(o => /^Query/.test(o.label)).every(o => o.disabled));
   await s.pickLabel(/Budget spent/);
   await s.pickLabel(/Credentials were submitted and used/);
-  await s.pickLabel(/New sign-in from an unfamiliar hosting IP/);
+  await s.pickLabel(/sign-in from an unfamiliar hosting IP one second after/);
   await s.pickLabel(/VPN or a hotspot/); await s.pickLabel(/help desk re-enrolled/); await s.pickLabel(/Done: these are my 2/);
   await s.waitUI('modal');
   const deb = await s.modalText();
@@ -282,6 +282,61 @@ function frontDeskDone(s, extra) {
   await s.settle();
   p = await s.peek();
   check('time to quarantine recorded; phishing alert counted in the report rate', p.metrics.tq !== null && p.extra.mr.tq === 1 && p.extra.mr.rep.seen === 31, { m: p.metrics, mr: p.extra.mr });
+
+  // ---- Report rate comes only from staff report events (never from the analyst closing an alert) ----
+  const rr = await s.page.evaluate(async () => {
+    const G = __UPTIME.state(), rep = G.mr.rep;
+    if (!G.party.some(t => t.id === 'reportbird')) G.party.push({ id: 'reportbird', lvl: 5, xp: 0, tuned: false });
+    const gen = (kind, want) => { let a; do { a = genAlert(kind); } while (!(a.threat === 'clasp' && a.staffReport === want)); return a; };
+    const r0 = rep.reported, s0 = rep.seen;
+    await onAlertClosed(gen('mal', false), 'mal', true, { good: true });
+    const afterUnreported = { reported: rep.reported - r0, seen: rep.seen - s0 };
+    await onAlertClosed(gen('mal', true), 'mal', true, { good: true });
+    const afterReported = { reported: rep.reported - r0, seen: rep.seen - s0 };
+    // the tag must not give the verdict away: benign mail is reported at the same rate, and the host shows the report
+    const rate = kind => { let n = 0, r = 0, tagOk = true; for (let i = 0; i < 4000; i++) { const a = genAlert(kind); if (!MR_PHISH.includes(a.threat)) continue; n++; if (a.staffReport) r++; if (/reported by staff/.test(a.host) !== !!a.staffReport) tagOk = false; } return { p: r / n, tagOk }; };
+    return { afterUnreported, afterReported, mal: rate('mal'), benign: rate('benign') };
+  });
+  check('report rate: closing an unreported phish adds to seen, not reported', rr.afterUnreported.reported === 0 && rr.afterUnreported.seen === 1, rr);
+  check('report rate: a staff report event is what counts', rr.afterReported.reported === 1 && rr.afterReported.seen === 2, rr);
+  check('report rate: Report button lifts staff reports to ~60%, not 100%, and the tag matches the event', Math.abs(rr.mal.p - 0.6) < 0.05 && rr.mal.tagOk && rr.benign.tagOk, rr);
+  check('report rate: benign mail is reported at the same rate (the tag never reveals the verdict)', Math.abs(rr.benign.p - rr.mal.p) < 0.06, rr);
+
+  // ---- Drill 1 is a consistent adversary-in-the-middle timeline ----
+  const L = JSON.parse(await s.page.evaluate(() => JSON.stringify(MR_DRILLS.link)));
+  const all = JSON.stringify(L), sec = t => { const [h, m, x] = t.split(':').map(Number); return h * 3600 + m * 60 + x; };
+  const hist = L.artefact, idp = L.sources.find(x => x.id === 'idp').qs.find(q => q.key).res.join('\n');
+  const proxy = L.sources.find(x => x.id === 'proxy').qs.find(q => q.kind === 'focus').res.join('\n');
+  const tSubmit = sec(/(\d\d:\d\d:\d\d)\s+\S+\s+“Verifying…”\s+FORM_SUBMIT/.exec(hist)[1]);
+  const tRedirect = sec(/(\d\d:\d\d:\d\d)\s+login\.townhall\.example\/\s+“Town Hall Sign In”\s+client redirect/.exec(hist)[1]);
+  const tPw = sec(/(\d\d:\d\d:\d\d)\s+password correct\s+203\.0\.113\.77/.exec(idp)[1]);
+  const tOk = sec(/(\d\d:\d\d:\d\d)\s+success\s+203\.0\.113\.77\s+MFA: push approved/.exec(idp)[1]);
+  const tReuse = sec(/(\d\d:\d\d:\d\d)\s+session reused\s+203\.0\.113\.77/.exec(idp)[1]);
+  const postStatus = +/POST\s+townhall-sso\.example\/login\/verify\s+(\d{3})/.exec(proxy)[1];
+  const aitm = { tSubmit, tPw, tOk, tRedirect, tReuse, postStatus };
+  check('AiTM: relay sign-in starts within seconds of the form submit, before the push approval', tPw - tSubmit >= 0 && tPw - tSubmit <= 2 && tOk > tPw, aitm);
+  check('AiTM: the client redirect comes after the approval; the POST was not an HTTP redirect', tRedirect > tOk && postStatus === 200 && !/POST[^\n]*\b30[1278]\b/.test(proxy) && /client redirect/.test(proxy), aitm);
+  check('AiTM: the later sign-in reuses the session with no new MFA, and nothing relies on a captured one-time code', tReuse > tRedirect && /no MFA prompt/.test(idp) && !/one-time code/.test(all), aitm);
+  check('AiTM: chain markers sit on the right rows (one-visit share page; Open click starts the redirect chain)', /“Permit_Fees\.pdf · ShareBox”\s+LINK \(chain start, chain end\)/.test(hist) && /“Opening…”\s+LINK \(chain start\)/.test(hist), hist.slice(0, 400));
+  check('AiTM: Tally\'s specific answer quotes the same times as the sign-in log', ['09:42:31', '09:42:39', '09:44:52', '09:47:10'].every(t => L.ai.specific.text.includes(t) && (idp.includes(t))), L.ai.specific.text);
+  check('AiTM: Priya says she approved the push', await s.page.evaluate(() => /approved the prompt on my phone/.test(mrDrill1.toString())));
+
+  // ---- No-query guessing scores low; Tally praise only when verified ----
+  await s.page.evaluate(() => { const G = __UPTIME.state(); G.focus = G.focusMax; window.__guess = null; run(async () => { const D = Object.assign({}, MR_DRILLS.bec); D.artefact = mrDay(D.artefact); window.__guess = await doDrill(D); }); });
+  await s.untilChoice();
+  await s.pickLabel(/Start investigating/);
+  await s.pickLabel(/Ask Tally/); await s.pickLabel(/Ask Tally: “Does a DMARC pass/); await s.pickLabel(/Back to the investigation/);
+  await s.pickLabel(/I have enough/);
+  await s.pickLabel(/BEC from a compromised supplier mailbox/);
+  await s.pickLabel(/Authentication proves which domain sent it/);
+  await s.pickLabel(/really changed banks/); await s.pickLabel(/Jonah’s own mailbox/); await s.pickLabel(/Done: these are my 2/);
+  await s.waitUI('modal');
+  const debG = await s.modalText();
+  await s.settle();
+  const guess = await s.page.evaluate(() => window.__guess);
+  check('guessing: right verdict, right reasoning and both alternatives with no query scores low (40)', guess && guess.score === 40 && guess.supported === false && /Score 40 \/ 100/.test(debG), guess);
+  check('guessing: the debrief calls it unsupported and gives reasoning no credit', /Unsupported:/.test(debG) && /evidence you never queried \(no credit\)/.test(debG), debG.slice(0, 500));
+  check('guessing: Tally debrief does not praise verification that never happened', /never confirmed its answer/.test(debG) && !/checked it against the evidence/.test(debG), debG.slice(-900));
   results.errors = s.errors; results.requests = s.requests;
   if (s.errors.length || s.requests.length) failed = true;
   await s.ctx.close();

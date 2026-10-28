@@ -251,7 +251,7 @@ function genAlert(forceKind) {
   const t = weighted(wts).t;
   const th = THREATS[t], tpl = ALERTS[t], v = tpl[kind];
   const chain = ALERT_CHAINS[t];
-  return {
+  const spec = {
     kind: kind, threat: t, tech: th.tech, tags: th.tags, story: false, group: 'a',
     title: tpl.rule, host: (typeof alertHost === 'function' && alertHost()) || pick(HOSTS) + ' · Front Desk',
     enemy: kind === 'mal' ? {spr: th.spr, pal: th.pal} : kind === 'fp' ? {spr: 'noise', pal: 'noise'} : {spr: 'player', pal: 'staffer'},
@@ -259,6 +259,8 @@ function genAlert(forceKind) {
     rate: kind === 'mal' ? 12 + Math.floor(rnd() * 5) : 8,
     chain: [{at: 40, text: chain[0]}, {at: 75, text: chain[1]}]
   };
+  if (typeof alertDecorate === 'function') alertDecorate(spec);
+  return spec;
 }
 async function randomAlert(src) {
   if (!G.party.length) { await say('No tool on your console yet. Talk to Rae.'); return; }

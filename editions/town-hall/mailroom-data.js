@@ -180,7 +180,7 @@ const MR_PHISH = ['lure', 'caller', 'clasp', 'chirp', 'grant', 'payee'];
 
 Object.assign(ALERTS, {
   clasp: {
-    rule: 'Email with an HTML attachment opened',
+    rule: 'Suspicious email attachment opened',
     mal: {clues: ['“Remittance_0927.html” came from an outside address that has never written to us before.', 'In the sandbox, the file draws a copy of our sign-in page and sends whatever you type to another site.', 'Two more staff received it; one of them opened it.'],
           truth: 'Spearphishing attachment: an HTML file that opens a fake sign-in page.',
           resp: [{label: 'Quarantine every copy, reset the opener’s password, revoke sessions, block the sender', good: true}, {label: 'Isolate every PC that received it', good: false, disrupt: 2}, {label: 'Delete it from one inbox and move on', good: false}]},
@@ -261,7 +261,7 @@ const MR_INBOX = [
    body: 'Your mailbox will stop receiving mail in 24 hours. Sign in to keep your messages.', linkText: 'townhall.example/mail/keep', linkHref: 'townhaII-mail.example/login',
    auth: 'spf=pass · dkim=pass (townhaII.example) · dmarc=pass (townhaII.example)', good: 'report',
    cues: {sender: 'townhaII.example has two capital I’s where the l’s should be: a look-alike domain someone else registered.',
-          link: 'The link text shows our address; hovering shows the real target, a different domain. Link text can say anything.',
+          link: 'The link text shows our address; hovering shows the real target, a different domain (on a phone, press and hold to preview). Link text can say anything.',
           tone: 'A deadline and a threat: “stop receiving mail”.',
           auth: 'All pass, for the look-alike domain. DMARC checks that the From domain lines up with what SPF or DKIM verified, and the attacker owns that domain.'}},
   {display: 'Town Hall HR', addr: 'hr@townhall.example', subject: 'Benefits enrolment opens Monday',
@@ -300,7 +300,7 @@ const MR_SMS = [
   {from: 'Unknown sender', text: 'TOLL NOTICE: You have an unpaid toll of $4.15. Avoid a late fee today: tollpay-notice.example', good: 'report',
    why: 'Unpaid-toll texts with payment links are one of the most common text scams. A toll agency’s real site is one you look up yourself.'},
   {from: 'Town Hall sign-in', text: 'Your Town Hall sign-in code is 482913. Do not share it with anyone.', good: 'report',
-   why: 'You didn’t just sign in, so someone else typed your password. Don’t share the code; report it and change your password now.'},
+   why: 'You didn’t just sign in, so someone else is trying to. If the code is your second step, they probably have your password. Don’t share the code; report it and change your password from a device you trust.'},
   {from: 'Unknown number', text: 'Hi, it’s Bea. New number! Stuck in a meeting. Can you grab 3 gift cards for the team and text me the codes?', good: 'report',
    why: 'A “new number” plus gift cards is a pretext. Check with Bea on the number you already have for her.'},
   {from: 'Town Alerts', text: 'Elm St closed 9–11 am today for a water main repair. No reply needed.', good: 'none',
@@ -339,39 +339,39 @@ const MR_OSINT = [
    art: 'A public post from a finance staffer: “Two weeks off-grid in the mountains! Jonah’s approving payments alone, good luck 😄” (game)',
    q: 'What does an attacker learn?',
    opts: ['When an approver is away and who is covering: perfect timing for a fake urgent invoice', 'Only where the staffer is going on holiday', 'Nothing about work'], good: 0,
-   explain: 'Social media gives attackers roles, schedules and relationships for a believable pretext (T1593.001). Defence: a short staff guide on what not to post about work, and a payment rule that holds no matter who is away: every bank change is verified by call-back.'}
+   explain: 'Social media gives attackers roles, schedules and relationships for a believable pretext (T1593.001). Defence: a short staff guide on what not to post about work, and a payment rule that holds no matter who is away: every bank change is verified by call-back, and no one person approves payments alone.'}
 ];
 
 /* ---------- Investigation drills (all cases original; artefacts are invented, fields are real-world kinds of evidence) ---------- */
 const MR_DRILLS = {
   link: {
     id: 'link', title: 'The shared-file link', budget: 2,
-    intro: '<p>Priya clicked a link in an email that looked like a ShareBox share. Her browser went somewhere else. Her browser history is the one artefact you start with.</p>',
+    intro: '<p>Priya clicked a link in an email that looked like a ShareBox share. Her browser went somewhere else. She has push MFA. Her browser history is the one artefact you start with.</p>',
     artefact: '<pre class="art">Browser history · MR-PERMITS-01 · user priya.natarajan · Day {D} (local time)\n' +
-      '09:41:07  files.sharebox.example/s/7Qk2      “Permit_Fees.pdf · ShareBox”   LINK (chain start)\n' +
-      '09:41:31  files.sharebox.example/v/7Qk2/open  “Opening…”                    LINK\n' +
+      '09:41:07  files.sharebox.example/s/7Qk2      “Permit_Fees.pdf · ShareBox”   LINK (chain start, chain end)\n' +
+      '09:41:31  files.sharebox.example/v/7Qk2/open  “Opening…”                    LINK (chain start)\n' +
       '09:41:32  townhall-sso.example/login         “Town Hall Sign In”            LINK, server redirect (chain end)\n' +
       '09:42:30  townhall-sso.example/login/verify  “Verifying…”                   FORM_SUBMIT\n' +
-      '09:42:33  login.townhall.example/            “Town Hall Sign In”            client redirect</pre>' +
-      '<p class="small">Transition names follow Chromium’s history types: LINK = followed a link; server redirect = an HTTP redirect; client redirect = script or meta refresh; FORM_SUBMIT = a form was submitted (Chromium notes this is not always recorded). History never records what was typed.</p>',
+      '09:42:41  login.townhall.example/            “Town Hall Sign In”            client redirect</pre>' +
+      '<p class="small">Transition names follow Chromium’s history types: LINK = followed a link; server redirect = an HTTP redirect; client redirect = script or meta refresh; FORM_SUBMIT = a form was submitted (Chromium notes this is not always recorded). History doesn’t record what was typed into a POST form (a GET form puts its fields in the URL; saved passwords and autofill live in other browser files).</p>',
     question: 'Did Priya submit her credentials, and were they used?',
     sources: [
       {id: 'hist', name: 'Browser history', qs: [
         {q: 'Every page this browser visited in the last 30 days', kind: 'broad', rows: 4812,
          wall: ['{t}  intranet.townhall.example/permits/queue   LINK', '{t}  mail.townhall.example/inbox             TYPED', '{t}  news.example/local                       LINK', '{t}  maps.example/?q=elm+st                   LINK']},
         {q: 'What did the browser do after the FORM_SUBMIT at 09:42:30?', kind: 'focus',
-         res: ['09:42:33  login.townhall.example/  client redirect', '09:43:10  intranet.townhall.example/permits  LINK', '(After harvesting, many kits bounce the victim to the real sign-in page so nothing looks wrong.)']}]},
+         res: ['09:42:41  login.townhall.example/  client redirect (11 seconds after the submit, while the page said “Verifying…”)', '09:43:10  intranet.townhall.example/permits  LINK', '(Relay kits hold the victim on a “verifying” page while they use her sign-in, then send her to the real site so nothing looks wrong.)']}]},
       {id: 'proxy', name: 'Proxy and DNS logs', qs: [
         {q: 'All DNS lookups from the office today', kind: 'broad', rows: 8930,
          wall: ['{t}  MR-AP-02         A     update.vendor.example', '{t}  MR-INBOX-03      A     mail.townhall.example', '{t}  FD-STAFF-11      AAAA  cdn.example', '{t}  MR-LAPTOP-07     A     time.example'],
          buried: '09:41:32  MR-PERMITS-01  A  townhall-sso.example'},
         {q: 'Did MR-PERMITS-01 send anything to townhall-sso.example after 09:41?', kind: 'focus',
-         res: ['09:41:32  GET   townhall-sso.example/login          200  bytes out 610', '09:42:30  POST  townhall-sso.example/login/verify   302  bytes out 1,184', '(A POST went out. It shows that data was sent, not what it was.)']}]},
+         res: ['09:41:32  GET   townhall-sso.example/login          200  bytes out 610', '09:42:30  POST  townhall-sso.example/login/verify   200  bytes out 1,184', '09:42:31–09:42:40  GET  townhall-sso.example/login/status   200  ×5 (the “Verifying…” page checking in every two seconds)', '09:42:41  GET   login.townhall.example/   200  (no 3xx answer before it: the page’s own script sent her there, matching the history’s client redirect)', '(Our proxy inspects TLS, so it sees the method and path; without that you would only see a connection and byte counts. A POST went out: data was sent, but the log doesn’t show what.)']}]},
       {id: 'idp', name: 'Identity provider sign-in log', qs: [
         {q: 'Every sign-in for every account this week', kind: 'broad', rows: 21406,
          wall: ['{t}  dee.marsh        success  198.51.100.20 (office)  MFA: push approved', '{t}  tomas.reyes      success  198.51.100.20 (office)  MFA: push approved', '{t}  svc-backup       success  192.0.2.40 (data centre)  MFA: n/a (service)', '{t}  lin.zhao         failure  198.51.100.20 (office)  bad password']},
         {q: 'Sign-ins and MFA changes for priya.natarajan after 09:41', kind: 'focus', key: true,
-         res: ['09:15:02  success  198.51.100.20 (office)  MR-PERMITS-01  MFA: push approved   ← her normal', '09:44:52  success  203.0.113.77 (hosting provider, another country)  unknown browser  MFA: one-time code accepted', '09:47:10  security info changed: new authenticator app registered (device “Pixel-7a”)  from 203.0.113.77']}]},
+         res: ['09:15:02  success  198.51.100.20 (office)  MR-PERMITS-01  MFA: push approved   ← her normal', '09:42:31  password correct  203.0.113.77 (hosting provider, another country)  MFA: push sent to her phone', '09:42:39  success  203.0.113.77  MFA: push approved (she approved the prompt the phishing page’s sign-in triggered)  session issued', '09:44:52  session reused  203.0.113.77  a different browser  no MFA prompt (the 09:42:39 session already satisfied it)', '09:47:10  security info changed: new authenticator app registered (device “Pixel-7a”)  from 203.0.113.77']}]},
       {id: 'mbx', name: 'Mailbox audit (rules and forwarding)', qs: [
         {q: 'Export everything in Priya’s mailbox', kind: 'broad', rows: 3377,
          wall: ['{t}  Inbox      “Permit #{n} approved”', '{t}  Inbox      “Re: fee schedule”', '{t}  Sent       “Re: site visit Tuesday”', '{t}  Archive    “Newsletter #{n}”']},
@@ -379,23 +379,23 @@ const MR_DRILLS = {
          res: ['09:49:31  New inbox rule “.”  created from 203.0.113.77', '          if subject or body contains “invoice” or “payment” or “password”', '          → move to folder “RSS Subscriptions”, mark as read', '          external forwarding: none']}]}
     ],
     ai: {everything: {text: 'Priya visited a phishing page and submitted a form at 09:42:30. Recommend a password reset. Nothing else of note.', wrong: false,
-                      reveal: 'Tally was not wrong, just shallow: it summarised the artefact you already had. It never asked whether the password was used, so a reset alone would leave the attacker’s authenticator and inbox rule in place.'},
-         specific: {q: 'Did priya.natarajan sign in from a new IP after 09:41, and did anything change on her account?', text: 'Yes. 09:44:52 from 203.0.113.77 (hosting provider) with a one-time code, then a new authenticator app registered at 09:47:10. Check her mailbox rules next.'}},
+                      reveal: 'Tally was not wrong, just shallow: it summarised the artefact you already had. It never asked whether the sign-in was used, or why MFA didn’t stop it, so a reset alone would leave the attacker’s session, authenticator and inbox rule in place.'},
+         specific: {q: 'Did priya.natarajan sign in from a new IP after 09:41, and did anything change on her account?', text: 'Yes. A sign-in from 203.0.113.77 (hosting provider) started at 09:42:31; the push she approved at 09:42:39 was for that sign-in. The session was reused at 09:44:52 with no new prompt, and a new authenticator app was registered at 09:47:10. Check her mailbox rules next.'}},
     verdicts: [
-      {label: 'Credentials were submitted and used: account takeover in progress', good: true, why: 'A sign-in from an unfamiliar hosting address three minutes after the form, then a new authenticator and a hiding inbox rule from the same address.'},
-      {label: 'She clicked, but nothing was submitted: close it', why: 'The sign-in log shows the account used from 203.0.113.77 minutes later.'},
+      {label: 'Credentials were submitted and used: account takeover in progress', good: true, why: 'A sign-in from an unfamiliar hosting address one second after the form, approved with her own push, then a new authenticator and a hiding inbox rule from the same address.'},
+      {label: 'She clicked, but nothing was submitted: close it', why: 'The sign-in log shows the account used from 203.0.113.77 seconds later.'},
       {label: 'Submitted but not used yet: a password reset is enough', why: 'It was used, and the attacker added their own authenticator and an inbox rule; a reset alone leaves both.'}],
     reasons: [
-      {label: 'New sign-in from an unfamiliar hosting IP minutes after the visit, then a new MFA method and a hiding rule from the same IP', good: true, why: 'Each fact is independent evidence that the password (and a one-time code) reached someone else.'},
+      {label: 'A sign-in from an unfamiliar hosting IP one second after her form, approved by her own push, then a new MFA method and a hiding rule from the same IP', good: true, why: 'Each fact is independent evidence that her password, and her MFA approval, were relayed to someone else.'},
       {label: 'The history shows FORM_SUBMIT, which proves she typed her password', why: 'History records that a form was submitted, not what was in it. Use proves compromise; the form only suggests it.'},
       {label: 'The page was on a look-alike domain, so the account must be compromised', why: 'Visiting a phishing page is not compromise. You need evidence that something was entered and used.'}],
     alts: [
-      {label: 'Priya signed in herself through a VPN or a hotspot', good: true, why: 'Ruled out: her own session stayed on the office address, and she denies the 09:44 sign-in.'},
+      {label: 'Priya signed in herself through a VPN or a hotspot', good: true, why: 'Ruled out: her own session stayed on the office address, and she made no sign-in from 203.0.113.77.'},
       {label: 'The help desk re-enrolled her authenticator', good: true, why: 'Ruled out: no help-desk ticket, and the change came from 203.0.113.77.'},
       {label: 'ShareBox itself was hacked', why: 'The share link was abused, but that doesn’t explain the sign-in from 203.0.113.77.'},
       {label: 'The sign-in log’s clock is wrong', why: 'The proxy and the sign-in log agree on the sequence.'}],
-    path: '<p>Two focused queries answer it: the identity provider’s sign-ins for <b>that account after the visit time</b> (new address, MFA result, a new MFA method), then the <b>mailbox rules and forwarding</b> check. Proxy logs could confirm a POST went out, but not what it held.</p>',
-    response: ['Revoke Priya’s sessions and reset her password', 'Remove the rogue authenticator and the inbox rule, then re-enrol MFA with her in person', 'Check her Sent items for phishing sent as her', 'Block townhall-sso.example and purge the email from other inboxes'],
+    path: '<p>This is adversary-in-the-middle phishing: the page relayed her password to the real sign-in page as she signed in, her push approval completed the attacker’s sign-in, and the kit kept the session. Two focused queries answer it: the identity provider’s sign-ins for <b>that account after the visit time</b> (new address, MFA result, a new MFA method), then the <b>mailbox rules and forwarding</b> check. Proxy logs could confirm a POST went out (half the question), but not what it held. The sign-in log answers both halves at once, because use proves submission, which frees your second query for what the attacker did next.</p>',
+    response: ['Revoke Priya’s sessions first: the session the kit stole works without her password. Then reset her password', 'Remove the rogue authenticator and the inbox rule, then re-enrol MFA with her in person', 'Check her Sent items for phishing sent as her', 'Block townhall-sso.example and purge the email from other inboxes', 'Plan phishing-resistant MFA (passkeys / FIDO2): they are bound to the real site, so a look-alike page can’t relay them'],
     techs: ['T1566.002', 'T1078', 'T1098.005', 'T1564.008'], acts: ['mailrules']
   },
   bec: {
@@ -418,7 +418,7 @@ const MR_DRILLS = {
         {q: 'Every header of every message from harrowfinch.example this year', kind: 'broad', rows: 2214,
          wall: ['{t}  Received: from mail.mailhost.example (192.0.2.25) by mx.townhall.example', '{t}  Authentication-Results: mx.townhall.example; spf=pass …', '{t}  DKIM-Signature: v=1; a=rsa-sha256; d=harrowfinch.example; …', '{t}  Message-ID: <{n}@harrowfinch.example>']},
         {q: 'Read this message’s Received chain bottom-up and its Authentication-Results', kind: 'focus',
-         res: ['It was submitted to Harrow & Finch’s own mail provider by an authenticated user, mara@harrowfinch.example, from 203.0.113.140.', 'SPF, DKIM and DMARC pass and align with harrowfinch.example.', 'So it really came from that mailbox. That doesn’t say who was using it.']}]},
+         res: ['Our mx received it from Harrow & Finch’s own mail provider (192.0.2.25, which their SPF allows). The provider’s line below says an authenticated user, mara@harrowfinch.example, sent it from 203.0.113.140. We can’t verify a line we didn’t add, but it is a lead for their IT.', 'SPF, DKIM and DMARC pass and align with harrowfinch.example.', 'So it really came from that mailbox. That doesn’t say who was using it.']}]},
       {id: 'thread', name: 'Thread history', qs: [
         {q: 'Compare this message with the earlier messages in the Inv 2291 thread', kind: 'focus', key: true,
          res: ['Earlier messages: signed “Mara Finch, Accounts”, plain wording, never urgent.', 'Last Monday Mara wrote: “I’m on leave from Wednesday; Sam covers billing.”', 'This message (Wednesday): “Kindly process today”, a bank change, “any open balance”, and no mention of Sam.']},
@@ -447,12 +447,12 @@ const MR_DRILLS = {
       {label: 'Our SPF record is misconfigured', why: 'Irrelevant: SPF checked their domain, and passed.'},
       {label: 'It’s a newsletter', why: 'It asks for a specific payment change.'}],
     path: '<p>The focused path is the <b>thread history</b> (what changed in tone and timing, and the note that Mara is on leave) and a <b>call-back on a number you already had</b>. Headers are worth reading, but they can only tell you the mailbox was real, which in a hijack it is. Replying on the thread asks the attacker.</p>',
-    response: ['Hold the payment and keep the old bank details', 'Tell Harrow & Finch, on the known number, that their mailbox is compromised', 'Preserve the message with full headers', 'Search every inbox for mail from harrowfinch.example since Monday', 'Make call-back verification mandatory for every bank change'],
+    response: ['Hold the payment and keep the old bank details', 'Tell Harrow & Finch, on the known number, that their mailbox is compromised', 'Preserve the message with full headers', 'Search every inbox for mail from harrowfinch.example since Monday', 'Check whether any earlier payment already went to new details; if so, call our bank now to request a recall and file at ic3.gov', 'Make call-back verification mandatory for every bank change'],
     techs: ['T1586.002', 'T1684.001', 'T1657'], acts: ['outofband']
   },
   push: {
     id: 'push', title: 'Twenty-six no’s and a yes', budget: 2,
-    intro: '<p>Overnight alert. Kofi’s phone got push prompts for an hour. Then one was approved.</p>',
+    intro: '<p>Overnight alert. Kofi’s phone got push prompts for over twenty minutes. Then one was approved.</p>',
     artefact: '<pre class="art">Identity provider · MFA push log · kofi.mensah · Day {D} (local time)\n' +
       '01:51:02  push sent   result: denied\n' +
       '01:53:40  push sent   result: denied\n' +
@@ -464,13 +464,13 @@ const MR_DRILLS = {
     sources: [
       {id: 'idp', name: 'Identity provider sign-in log', qs: [
         {q: 'Every sign-in tonight, all users', kind: 'broad', rows: 6120,
-         wall: ['{t}  svc-backup   success  192.0.2.40 (data centre)  MFA: n/a (service)', '{t}  svc-print    success  198.51.100.31 (office)   MFA: n/a (service)', '{t}  kofi.mensah  failure  198.51.100.143           MFA: denied', '{t}  night-ops    success  198.51.100.20 (office)   MFA: push approved'],
-         buried: '02:14:07  kofi.mensah  success  198.51.100.143  MFA: push approved'},
+         wall: ['{t}  svc-backup   success  192.0.2.40 (data centre)  MFA: n/a (service)', '{t}  svc-print    success  198.51.100.31 (office)   MFA: n/a (service)', '{t}  kofi.mensah  failure  203.0.113.143           MFA: denied', '{t}  night-ops    success  198.51.100.20 (office)   MFA: push approved'],
+         buried: '02:14:07  kofi.mensah  success  203.0.113.143  MFA: push approved'},
         {q: 'Sign-in attempts for kofi.mensah 01:45–02:30: address, location, device, MFA result', kind: 'focus', key: true,
-         res: ['27 attempts from 198.51.100.143 (a hosting provider in another country), browser on an unregistered Windows device', 'Password correct every time · MFA: denied ×26 · approved 02:14:07', '02:14:09 session and refresh token issued to 198.51.100.143']}]},
+         res: ['27 attempts from 203.0.113.143 (a hosting provider in another country), browser on an unregistered Windows device', 'Password correct every time · MFA: denied ×26 · approved 02:14:07', '02:14:09 session and refresh token issued to 203.0.113.143']}]},
       {id: 'reg', name: 'MFA and device registrations', qs: [
         {q: 'New MFA methods or devices on kofi.mensah after 02:14', kind: 'focus', key: true,
-         res: ['02:16:40  new authenticator app registered (“iPhone 15”, not Kofi’s phone)', '02:18:02  new device registered in the directory: DESKTOP-7QK2', 'Both from 198.51.100.143']}]},
+         res: ['02:16:40  new authenticator app registered (“iPhone 15”, not Kofi’s phone)', '02:18:02  new device registered in the directory: DESKTOP-7QK2', 'Both from 203.0.113.143']}]},
       {id: 'sess', name: 'Session and token activity', qs: [
         {q: 'Everything every session did tonight', kind: 'broad', rows: 18044,
          wall: ['{t}  night-ops    mailbox read   “Shift handover”', '{t}  svc-backup   file read      /backups/{n}', '{t}  night-ops    calendar read', '{t}  svc-print    printer status']},
@@ -481,10 +481,10 @@ const MR_DRILLS = {
          res: ['Kofi: “My phone wouldn’t stop buzzing at two in the morning. I hit Approve to make it stop. I thought it was a glitch.”']}]}
     ],
     ai: {everything: {text: 'I reviewed the full MFA log. All 26 prompts were denied or timed out. No successful sign-in. The controls worked; suggest closing this as a blocked attack.', wrong: true,
-                      reveal: 'Tally was wrong, and it didn’t say why. The pasted logs ran to 214 lines; Tally only read the first 60 (its context limit) and answered as if that was everything. The approval at 02:14:07 was line 187. (game) Assistants can drop input silently: ask specific questions and check the answer against the evidence.'},
-         specific: {q: 'Was any MFA prompt for kofi.mensah approved between 01:45 and 02:30? If so, from which address?', text: 'Yes, one: 02:14:07, for a sign-in from 198.51.100.143. A new authenticator was registered on the account at 02:16:40.'}},
+                      reveal: 'Tally was wrong, and it didn’t say why. Kofi pasted the night’s full sign-in export: 214 lines, one verbose JSON record per line, a few thousand tokens each. That is more than Tally’s context limit, so the console kept the first 60 lines, dropped the rest without a warning, and Tally answered as if that was everything. The approval at 02:14:07 was line 187. (game: the sizes are invented) Real assistants fail quietly in similar ways: input cut by a tool or a token limit, long logs skimmed, a confident summary of the wrong part. Ask specific questions and check the answer against the evidence.'},
+         specific: {q: 'Was any MFA prompt for kofi.mensah approved between 01:45 and 02:30? If so, from which address?', text: 'Yes, one: 02:14:07, for a sign-in from 203.0.113.143. A new authenticator was registered on the account at 02:16:40.'}},
     verdicts: [
-      {label: 'MFA fatigue worked: the attacker had Kofi’s password and got one approval. Account compromised.', good: true, why: 'The approved prompt matches the attacker’s sign-in from 198.51.100.143, and an attacker authenticator followed.'},
+      {label: 'MFA fatigue worked: the attacker had Kofi’s password and got one approval. Account compromised.', good: true, why: 'The approved prompt matches the attacker’s sign-in from 203.0.113.143, and an attacker authenticator followed.'},
       {label: 'Blocked attack: 26 of 27 prompts were denied', why: 'It only takes one. The 27th was approved and a session was issued.'},
       {label: 'Benign: the approval came from Kofi’s real phone, so it was Kofi', why: 'Kofi’s finger, the attacker’s sign-in. That’s how fatigue works.'}],
     reasons: [
@@ -493,11 +493,11 @@ const MR_DRILLS = {
       {label: 'The approval came from Kofi’s phone, so it’s fine', why: 'Push approves whatever sign-in is waiting. Number matching exists to stop exactly this.'}],
     alts: [
       {label: 'Kofi was signing in himself on a new laptop late at night', good: true, why: 'Ruled out: the attempts came from a hosting provider abroad, and Kofi says he wasn’t.'},
-      {label: 'An app with a saved old password kept retrying', good: true, why: 'Plausible for repeated prompts, ruled out by the foreign address, the interactive browser and the new authenticator.'},
+      {label: 'A phone or mail app with his saved password kept signing in', good: true, why: 'Plausible for repeated prompts, ruled out by the foreign address, the interactive browser and the new authenticator.'},
       {label: 'The identity provider double-logged the prompts', why: 'Doesn’t explain the issued session or the new device.'},
       {label: 'A daylight-saving change shifted the times', why: 'No clock change tonight, and order matters more than the hour.'}],
     path: '<p>Focused: the <b>sign-in attempts for that account in that window</b> (address, device, MFA result), then <b>new MFA methods or devices</b> registered after the approval (ATT&amp;CK T1098.005). Asking Kofi on his known number confirms it. The broad sign-in query does contain the approval, on row 16 of 6,120.</p>',
-    response: ['Revoke all of Kofi’s sessions and refresh tokens; reset his password', 'Remove the rogue authenticator and the DESKTOP-7QK2 device registration', 'Turn on number matching for push (CISA calls it a good interim step), and plan phishing-resistant MFA', 'Find what the session read (“Helpdesk runbook.docx”) and treat its contents as exposed'],
+    response: ['Revoke all of Kofi’s sessions and refresh tokens; reset his password', 'Remove the rogue authenticator and the DESKTOP-7QK2 device registration', 'Turn on number matching for push (CISA calls it a good interim step), and plan phishing-resistant MFA', 'Find what the session read (“Helpdesk runbook.docx”) and treat its contents as exposed: warn the help desk to expect calls that use it', 'Check his mailbox for new rules or forwarding', 'Find out how the attacker had his password (a phish, reuse from a breach, or malware on his devices), or the next reset will leak too'],
     techs: ['T1621', 'T1078', 'T1098.005'], acts: ['numbermatch']
   }
 };
@@ -507,8 +507,9 @@ const MR_GAUNTLET = [
   {line: '“Payroll” <payroll@townhall-hr.example> · “Update your direct deposit before Friday” · link to townhall-hr.example/deposit', good: 'report', why: 'A look-alike HR domain asking about pay details.'},
   {line: '“Lin Zhao” <lin.zhao@townhall.example> · “Agenda for Thursday” · no link, no attachment, aligned DMARC pass', good: 'trust', why: 'Our domain, an expected topic, nothing asked.'},
   {line: '“DocuSafe” <sign@docusafe-review.example> · “Contract awaiting your signature” · attachment Contract.htm', good: 'report', why: 'An HTML “contract” from a domain we’ve never dealt with.'},
-  {line: '“Town Hall IT” <it@townhall.example> · Reply-To: it-support@quickhelp.example · “Confirm your password”', good: 'report', why: 'Replies go elsewhere, and IT never asks for passwords.'},
-  {line: '“Library Services” <events@library.townhall.example> · “Book sale this Saturday” · link to library.townhall.example/sale', good: 'trust', why: 'Our own subdomain, link text and target match, nothing asked.'}
+  {line: '“Town Hall IT” <it@townhall.example> · Reply-To: it-support@quickhelp.example · “Confirm your password” · dmarc=fail (townhall.example, p=none)', good: 'report', why: 'Replies go elsewhere, IT never asks for passwords, and DMARC fails for our own domain. At p=reject (our policy is still p=none) it would never have arrived.'},
+  {line: '“Library Services” <events@library.townhall.example> · “Book sale this Saturday” · link to library.townhall.example/sale', good: 'trust', why: 'Our own subdomain, link text and target match, nothing asked.'},
+  {line: 'A link in an email opens our real sign-in page, then: “Docu Viewer (unverified publisher) wants to: read and send your mail, read your files, keep access to data you’ve given it access to” · Accept / Cancel', good: 'report', why: 'Consent phishing (T1528): the app never needs your password; one Accept gives it a token to your mail that a password reset may not cut off. An unknown app asking to read and send mail gets reported, never accepted.'}
 ];
 
 /* ---------- Boss tabletop cards (our own) ---------- */
@@ -516,9 +517,10 @@ const MR_CARDS = [
   {id: 'callback', name: 'Call the vendor back', csf: 'Respond', good: true, text: 'Phone Harrow & Finch on the number in the vendor master file, not the one in the email.', fx: 'Stage 1 starts with the truth: the vendor never asked.'},
   {id: 'hold', name: 'Hold the payment', csf: 'Respond', good: true, text: 'Stop today’s transfer and keep the old bank details.', fx: 'Stage 2 starts with less attacker progress.'},
   {id: 'bank', name: 'Call our bank now', csf: 'Respond', good: true, text: 'Ask our bank to recall last week’s transfer and alert the receiving bank. Hours matter.', fx: 'Stage 2: the money trail moves slower.'},
-  {id: 'preserve', name: 'Preserve mail evidence', csf: 'Detect', good: true, text: 'Keep the original messages with full headers, the invoices and the payment records. Delete nothing.', fx: 'Every stage starts with more evidence.'},
+  {id: 'preserve', name: 'Preserve mail evidence', csf: 'Respond', good: true, text: 'Keep the original messages with full headers, the invoices and the payment records. Delete nothing.', fx: 'Every stage starts with more evidence.'},
   {id: 'search', name: 'Search every inbox', csf: 'Detect', good: true, text: 'Find every message from the vendor’s address in the last 30 days, in every mailbox.', fx: 'Stage 3 becomes much easier.'},
-  {id: 'ic3', name: 'Report to FBI IC3', csf: 'Govern', good: true, text: 'File a complaint at ic3.gov with the transaction details, and tell leadership.', fx: 'Reputation up; the report supports the recovery effort.'},
+  {id: 'twoapprove', name: 'Two approvers for bank changes', csf: 'Govern', good: true, text: 'From now on no one person approves a payment or a bank-detail change alone, whoever is on leave.', fx: 'A single hijacked request can no longer move money on one person’s say-so.'},
+  {id: 'ic3', name: 'Report to FBI IC3', csf: 'Respond', good: true, text: 'File a complaint at ic3.gov with the transaction details, and tell leadership.', fx: 'Reputation up; the report supports the recovery effort.'},
   {id: 'reply', name: 'Reply to the vendor email', csf: 'Respond', text: 'Ask them by email whether the new details are real.', fx: 'Doesn’t help: the attacker controls that mailbox and answers yes.'},
   {id: 'delete', name: 'Delete the email', csf: 'Respond', text: 'Get rid of it so nobody else pays.', fx: 'Destroys evidence, and copies in other inboxes stay.'}
 ];
@@ -539,11 +541,11 @@ Object.assign(FACTS, {
   dmarc: {name: 'What a DMARC pass proves', desc: 'A message passes DMARC when SPF (which checks the envelope sender, MAIL FROM) or DKIM (a signature by the d= domain) passes for a domain aligned with the visible From domain: relaxed alignment means the same organisational domain, strict means identical. DMARC does not check the display name or look-alike domains, and a pass by itself does not make a message safe. A failure does not prove abuse either. RFC 9989 (May 2026) replaced RFC 7489.', src: 'IETF RFC 9989 (DMARC), RFC 7208 (SPF), RFC 6376 (DKIM)'},
   headers: {name: 'Reading mail headers', desc: 'Every mail server that accepts a message adds a Received line at the top, so the chain reads newest first: read it bottom-up. Authentication-Results (RFC 8601) is added by the receiving server that ran the checks; a copy claiming to be yours from outside your own servers can be forged and should be ignored.', src: 'IETF RFC 5321 (SMTP), RFC 8601 (Authentication-Results)'},
   cisa_nm: {name: 'Number matching', desc: 'CISA (October 2022) recommends number matching in push MFA as one of the best interim mitigations against MFA fatigue for organisations that cannot yet use phishing-resistant MFA: the user must type the number shown on the sign-in screen, so a blind tap does nothing.', src: 'CISA fact sheet, Implementing Number Matching in MFA Applications (October 2022)'},
-  ftc_text: {name: 'Text scams (2024)', desc: 'The US Federal Trade Commission reported $470 million in losses to text-message scams in 2024. Common lures: fake delivery problems, unpaid tolls and fake bank fraud alerts. In the US you can forward spam texts to 7726 (SPAM).', src: 'FTC press release, April 2025'}
+  ftc_text: {name: 'Text scams (2024)', desc: 'People told the US Federal Trade Commission they lost $470 million to scams that started with a text message in 2024. The top lures: fake package delivery problems, bogus job offers, fake fraud alerts, unpaid tolls and “wrong number” texts. In the US you can forward spam texts to 7726 (SPAM).', src: 'FTC press release, April 2025'}
 });
 GAME_NOTES.push(
   'Mail Room threats (Clasp, Chirp, Buzzer, Grant, Payee) join the alert mix with weights 6/3/5/3/3 once you reach the Mail Room; inside it, its home threats (these plus Lure and Caller) are three times as likely. (game)',
   'Phishing report rate starts from a simulated quarterly test (3 of 30 staff reported). Report rate, time to quarantine, drill scores and the Seal Badge are game models. (game)',
-  'Tally, the AI assistant, its 60-line limit and its mistakes are invented to make a real point: assistants can drop input without saying so. (game)',
+  'Tally, the AI assistant, the size of Kofi’s export, the point where the console cut it (60 lines) and Tally’s mistakes are invented to make a real point: when input runs past a token or context limit, tools and assistants can drop it without saying so. (game)',
   'All Mail Room people, companies, products, domains (.example), IP addresses (documentation ranges) and times are invented. (game)'
 );

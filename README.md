@@ -56,7 +56,8 @@ Need Node and Playwright (Chromium).
                                    #   scoping question, ATT&CK licence in Credits
     node tests/quiet.js            # Quiet Thread: scripted clue path, saves across reload / New game / export-import, summary lines
     node tests/mailroom.js         # Mail Room: Key Badge door, inbox room, drills (broad vs focused, Tally), save/reload,
-                                   #   Quiet Thread mailbox clues, alert mix (home x3, Seal Badge), time to quarantine, phone drill layout
+                                   #   Quiet Thread mailbox clues, alert mix (home x3, Seal Badge), time to quarantine, report rate only from
+                                   #   staff report events, AiTM timeline consistency, no-query guessing scores low, phone drill layout
 
 The bots also check: zero console errors, zero network requests, mid-game save/reload (including the series save), the export-code round trip, no horizontal scroll, and that no Quiet Thread technique ever appears as an ordinary alert. Set `UPTIME_FILE=file:///path/to/build.html` to test another build.
 
@@ -81,5 +82,5 @@ Code: MIT (see LICENSE). Framework data keeps its own terms (see CREDITS.md).
 
 ## The Mail Room (district 2)
 
-Reached from the plaza after the Identity Board (Key Badge door east of the records office). Bea Lindqvist's problem: phishing gets through and nobody reports it. Inbox room (trust or report, escape-room framing), text stream (smishing), phone booth (vishing: call back on a known number), three investigation drills (a phished ShareBox link, a BEC invoice from a hijacked supplier mailbox, MFA push fatigue), Tally the AI assistant (specific questions help; "everything" gets silently truncated and is wrong once), the OSINT Dojo (defensive), the Mail Board (Seal Badge + Sieve, which evolves to Sifter), and a payment-fraud incident (tabletop + three stages). New Tier 1 metrics: phishing report rate, time to quarantine, BEC payments stopped. Drillbit evolves into Reportbird when one-click reporting arrives. Two more Quiet Thread clues sit on the old shared-mailbox console.
+Reached from the plaza after the Identity Board (Key Badge door east of the records office). Bea Lindqvist's problem: phishing gets through and nobody reports it. Inbox room (trust or report, escape-room framing), text stream (smishing), phone booth (vishing: call back on a known number), three investigation drills (an adversary-in-the-middle ShareBox phish that relays the password and the push approval, a BEC invoice from a hijacked supplier mailbox, MFA push fatigue), Tally the AI assistant (specific questions help; "everything" runs past its context limit, gets silently truncated and is wrong once). Drill credit needs evidence: a right verdict with no decisive query scores as a guess. The report rate counts staff report events only, and a report of safe mail is never a mistake, the OSINT Dojo (defensive), the Mail Board (Seal Badge + Sieve, which evolves to Sifter), and a payment-fraud incident (tabletop + three stages). New Tier 1 metrics: phishing report rate, time to quarantine, BEC payments stopped. Drillbit evolves into Reportbird when one-click reporting arrives. Two more Quiet Thread clues sit on the old shared-mailbox console.
 

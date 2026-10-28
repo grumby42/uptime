@@ -5,8 +5,10 @@
    question) pairs. Focused questions return a short, exact snippet for 1 Focus;
    broad ones return a wall of rows for 3 Focus; trap questions spend the budget
    and mislead. Then a verdict, the reasoning behind it, and alternative
-   explanations the player ruled out (bonus). An optional AI helper answers
-   specific questions well and quietly truncates "everything".
+   explanations the player ruled out (bonus). Credit needs evidence: with no
+   decisive (key) query, a right verdict scores half and reasoning scores nothing,
+   because that is a guess. An optional AI helper answers specific questions well
+   and quietly truncates "everything".
    Inspired by Chris Sanders's Investigation Path posts (see CREDITS.md); every
    case is original. Drill data lives with each edition.
 
@@ -95,7 +97,7 @@ async function doDrill(D) {
   const ctx = '<h3>Findings</h3>' + drillFindings(st);
   const v = await UI.openModal('Verdict', '<p><b>' + esc(D.question) + '</b></p>' + ctx,
     D.verdicts.map(x => ({label: x.label, meta: {good: !!x.good}})), {closable: false, cls: 'drill'});
-  const r = await UI.openModal('Reasoning', '<p>Which reasoning supports your verdict best?</p>' + ctx,
+  const r = await UI.openModal('Reasoning', '<p>Which reasoning supports your verdict best? Reason only from what your queries showed: reasoning about evidence you never looked at earns no credit.</p>' + ctx,
     D.reasons.map(x => ({label: x.label, meta: {good: !!x.good}})), {closable: false, cls: 'drill'});
   const pickN = D.altPick || 2;
   const altItems = D.alts.map(x => ({label: x.label, meta: {good: !!x.good}})).concat([{label: 'Done: these are my ' + pickN, done: true, meta: {done: true}}]);
@@ -108,18 +110,20 @@ async function doDrill(D) {
   const altOk = alts.filter(a => D.alts[a] && D.alts[a].good).length;
   const keyTotal = D.sources.reduce((n, s) => n + s.qs.filter(q => q.key).length, 0);
   const keyScore = Math.round(20 * Math.min(st.keys, Math.min(keyTotal, D.budget || 2)) / Math.min(keyTotal, D.budget || 2));
-  let score = (verdictOk ? 40 : 0) + (reasonOk ? 20 : 0) + keyScore + altOk * 10 - st.broad * 5 - st.trap * 5;
+  const supported = st.keys > 0;
+  let score = (verdictOk ? (supported ? 40 : 20) : 0) + (reasonOk && supported ? 20 : 0) + keyScore + altOk * 10 - st.broad * 5 - st.trap * 5;
   score = clamp(score, 0, 100);
   const aiWrong = st.aiMode === 'everything' && D.ai && D.ai.everything.wrong;
   let h = '<p class="big">Score ' + score + ' / 100 <span class="small">(game)</span></p>';
   h += '<p><b>Verdict:</b> ' + esc(D.verdicts[v].label) + ' — ' + (verdictOk ? 'correct. ' : 'not supported. ') + esc(D.verdicts[v].why || '') + '</p>';
   if (!verdictOk) h += '<p><b>Better verdict:</b> ' + esc(D.verdicts.find(x => x.good).label) + '</p>';
-  h += '<p><b>Reasoning:</b> ' + (reasonOk ? 'sound. ' : 'weak. ') + esc(D.reasons[r].why || '') + '</p>';
+  h += '<p><b>Reasoning:</b> ' + (reasonOk ? (supported ? 'sound. ' : 'sound in principle, but it rests on evidence you never queried (no credit). ') : 'weak. ') + esc(D.reasons[r].why || '') + '</p>';
+  if (verdictOk && !supported) h += '<p><b>Unsupported:</b> the right answer, but none of your queries reached the decisive evidence. In a real case that is a guess, and a guess can’t be defended in a report.</p>';
   h += '<p><b>Alternatives:</b> ' + altOk + ' of ' + pickN + ' worth ruling out.</p><ul>' +
     D.alts.filter(x => x.good).map(x => '<li>' + esc(x.label) + ': ' + esc(x.why) + '</li>').join('') + '</ul>';
   h += '<p><b>Queries:</b> ' + st.keys + ' focused on the decisive evidence' + (st.broad ? ', ' + st.broad + ' broad (a wall of rows costs time and Focus)' : '') + (st.trap ? ', ' + st.trap + ' that could only mislead' : '') + '.</p>';
   h += '<h3>The focused path</h3>' + D.path;
-  if (st.aiMode) h += '<h3>About Tally</h3><p>' + esc(st.aiMode === 'everything' ? D.ai.everything.reveal : 'You asked a specific question and checked it against the evidence. That is how an assistant helps.') + '</p>';
+  if (st.aiMode) h += '<h3>About Tally</h3><p>' + esc(st.aiMode === 'everything' ? D.ai.everything.reveal : (st.keys ? 'You asked a specific question and checked it against the evidence. That is how an assistant helps.' : 'You asked a specific question, which is how an assistant helps. Tally was right this time, but you never confirmed its answer in the evidence yourself.')) + '</p>';
   h += '<h3>Response</h3><ul>' + D.response.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
   h += '<p class="small">ATT&amp;CK: ' + D.techs.map(t => esc(t + ' ' + TECH[t].name)).join(' · ') + '</p>';
   D.techs.forEach(t => unlock('tech', t));
@@ -127,7 +131,7 @@ async function doDrill(D) {
   unlock('act', 'drill');
   await UI.openModal('Debrief · ' + D.title, h, [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'drill'});
   await gainXP(Math.round(score / 4));
-  return {score: score, verdictOk: verdictOk, reasonOk: reasonOk, alts: altOk, keys: st.keys, broad: st.broad, trap: st.trap, ai: st.aiMode, aiWrong: aiWrong};
+  return {score: score, supported: supported, verdictOk: verdictOk, reasonOk: reasonOk, alts: altOk, keys: st.keys, broad: st.broad, trap: st.trap, ai: st.aiMode, aiWrong: aiWrong};
 }
 
 async function drillAI(D, st) {

@@ -35,7 +35,7 @@ async function mrOldBox() {
     await qtAfterNote(qtNote('mr-legacy'));
   } else if (k === 'rules') {
     await say('Rules on facilities-bms@: one, created at 03:17 two nights ago. Forward a copy of anything that mentions “HVAC”, “controller” or “building management” to an outside address.');
-    await say('No alert fired: creating a rule is something users do every day. And a rule keeps forwarding even if the password changes.');
+    await say('No alert fired: nobody set one up for rules that forward outside, and this old mailbox was never covered by the policy that blocks outside forwarding. And a rule keeps forwarding even if the password changes.');
     await qtAfterNote(qtNote('mr-fwdrule'));
   }
 }
