@@ -165,7 +165,7 @@ pre.art.ai{border-left-color:var(--gold)}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261028-0851Z', BUILD_TS = '2026-10-28 08:51 UTC';
+const BUILD_ID = 'ARCD-20261028-0950Z', BUILD_TS = '2026-10-28 09:50 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -734,7 +734,9 @@ const QT_TECH = {
   'T1053.005': {name: 'Scheduled Task/Job: Scheduled Task', tactic: ['Execution', 'Persistence', 'Privilege Escalation'],
                 plain: 'Using the Windows Task Scheduler to run a program at set times, so it keeps coming back without anyone starting it.'},
   'T1584.008': {name: 'Compromise Infrastructure: Network Devices', tactic: ['Resource Development'],
-                plain: 'Taking over routers and similar network gear, often old small-office models, to use as infrastructure such as relays.'}
+                plain: 'Taking over routers and similar network gear, often old small-office models, to use as infrastructure such as relays.'},
+  'T1555':     {name: 'Credentials from Password Stores', tactic: ['Credential Access'],
+                plain: 'Reading passwords from the places software keeps them (credential vaults, password managers, saved logins) instead of guessing them.'}
 };
 const QT_FIELD_NOTES = 'Field notes: the Quiet Thread is a composite (game). Its real-world basis is joint Cybersecurity Advisory AA24-038A ' +
   '(CISA, NSA and FBI with partner agencies, February 2024) on Volt Typhoon, a PRC state-sponsored group. The advisory reports access to some US ' +
@@ -1194,6 +1196,7 @@ function editionTile(d, ch, x, y) {
   if (typeof mrTile === 'function') d = mrTile(d, ch, x, y);
   if (typeof crTile === 'function') d = crTile(d, ch, x, y);
   if (typeof mkTile === 'function') d = mkTile(d, ch, x, y);
+  if (typeof rhTile === 'function') d = rhTile(d, ch, x, y);
   return d;
 }
 async function introScript() {
@@ -1229,6 +1232,7 @@ function triggers() {
   if (typeof mrTriggers === 'function' && mrTriggers()) return true;
   if (typeof crTriggers === 'function' && crTriggers()) return true;
   if (typeof mkTriggers === 'function' && mkTriggers()) return true;
+  if (typeof rhTriggers === 'function' && rhTriggers()) return true;
   if (G.map === 'hub' && G.y >= 11) {
     if (!G.f.portDone || G.day < 2) {
       run(async () => {
@@ -1254,6 +1258,7 @@ function interact() {
   if (typeof mrInteract === 'function' && mrInteract(ch, tx, ty)) return;
   if (typeof crInteract === 'function' && crInteract(ch, tx, ty)) return;
   if (typeof mkInteract === 'function' && mkInteract(ch, tx, ty)) return;
+  if (typeof rhInteract === 'function' && rhInteract(ch, tx, ty)) return;
   if (ch === 'k') run(kioskTask);
   else if (ch === 'n') run(wifiTask);
   else if (ch === 'p') run(() => pcTask(tx));
@@ -1309,7 +1314,7 @@ async function talk(npc) {
     case 'vex': await vexScript(); break;
     case 'marisol': await boardScript(); break;
     case 'imani': await dojoIntro(); break;
-    default: if (typeof mrTalk === 'function') await mrTalk(npc); if (typeof crTalk === 'function') await crTalk(npc); if (typeof mkTalk === 'function') await mkTalk(npc);
+    default: if (typeof mrTalk === 'function') await mrTalk(npc); if (typeof crTalk === 'function') await crTalk(npc); if (typeof mkTalk === 'function') await mkTalk(npc); if (typeof rhTalk === 'function') await rhTalk(npc);
   }
   await mfaMeet(npc);
 }
@@ -1547,6 +1552,7 @@ async function evolveCheck() {
   if (typeof mrEvolveCheck === 'function') await mrEvolveCheck();
   if (typeof crEvolveCheck === 'function') await crEvolveCheck();
   if (typeof mkEvolveCheck === 'function') await mkEvolveCheck();
+  if (typeof rhEvolveCheck === 'function') await rhEvolveCheck();
   if (!G.items.guide) return;
   const t = G.party.find(p => p.lvl >= 5 && !p.tuned);
   if (!t) return;
@@ -4871,6 +4877,7 @@ function mkObjective() {
   }
   if (!f.mkBoard) return at('Take the Web Board challenge (Sol Achebe, through the east gate).', 9, 2, 'wboard');
   if (!f.mkBoss) return at('Paz needs you: something is wrong with the payment page.', 17, 7);
+  if (typeof rhObjective === 'function') return rhObjective();
   return {text: 'Market Square secured. Next: Records Hall.', done: true, district: 'market'};
 }
 
@@ -5439,6 +5446,1315 @@ async function mkSummary() {
     '<p class="big">Next: Records Hall.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true});
   const i = await UI.openModal('End of Market Square', body, [{label: 'Keep exploring Market Square', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  storeSet(encodeSave(G));
+  if (i === 1) { started = false; titleScreen(); }
+}
+
+/* ---- editions/town-hall/records-data.js ---- */
+/* ============================================================
+   UPTIME · editions/town-hall/records-data.js
+   Town Hall district 5, Records Hall (backup and recovery): art, map, people,
+   ATT&CK techniques met here, threats, alert templates, briefings, the restore
+   tests, the business impact analysis, the restore-order mini-game, three
+   investigation drills, the Cryptography Dojo, the Records Board and the
+   ransomware-incident cards, Field Manual text. It extends the earlier
+   districts' tables; the only change to their data is a building on the plaza
+   (marked).
+   People, hosts, domains (.example), addresses (RFC 5737), tickets, restore
+   times, recovery objectives, costs and numbers are invented (game). Real facts
+   are cited in CREDITS.md, section "Records Hall".
+   ATT&CK IDs verified on attack.mitre.org on 28 October 2026 (ATT&CK v20.0).
+   ============================================================ */
+'use strict';
+
+/* ---------- Art (original) ---------- */
+Object.assign(S, {
+  gloam: ["0000000000000000","0011111111100000","0013333333310000","0013444444311000","0013333333313100","0013444444311110","0013333333333310","0013444411111110","0013333122222100","0013344121112100","0013333122222100","0013444121112100","0013333122222100","0011111111111100","0000000000000000","0000000000000000"],
+  shredwick: ["0000000000000000","0000333333300000","0000322222300000","0000322222300000","0111111111111100","0122222222222100","0124444444442100","0122222222222100","0111111111111100","0030303030303000","0030303030303000","0003030303030000","0003030303030000","0000303030300000","0000000000000000","0000000000000000"],
+  sluice: ["0000000000000000","0000001111000000","0000012222100000","0011122222211000","0122222442222100","1222224444222210","1222244444422210","0111111441111100","0000000440000000","0000000440000000","0000000440000000","0000033333300000","0000322222230000","0000033333300000","0000000000000000","0000000000000000"],
+  lapse: ["0000000000000000","0000011111100000","0001122222211000","0012222422222100","0122222422222210","0122222422222210","1222222444442221","1222222222222221","1222222222222221","0122223333222210","0122232222322210","0012322222232100","0001122222211000","0000011111100000","0000000000000000","0000000000000000"],
+  cairn: ["0000000000000000","0000000110000000","0000001221000000","0000001331000000","0000011111100000","0000122222210000","0000123333210000","0001111111111000","0012222222222100","0012333333332100","0111111111111110","1222222222222221","1233334433333321","1222222222222221","0111111111111110","0000000000000000"],
+  bulwark: ["0004000000004000","0011101111011100","0012101221012100","0012111221112100","0012222222222100","0012333443332100","0012334444332100","0012333443332100","0112222222222110","1222333333332221","1233344444433321","1233344444433321","1222333333332221","1222222222222221","0111111111111110","0000000000000000"],
+  tapes: ["1111111111111111","1333133313331331","1343134313431341","1333133313331331","1111111111111111","1222222222222221","1111111111111111","1333133313331331","1323132313231321","1333133313331331","1111111111111111","1222222222222221","1111111111111111","1000000000000001","1000000000000001","1111111111111111"],
+  dust: ["3333333333333333","3323333333332333","3332333333323333","3333333443333333","3333334443333333","3333333333333333","3233333333333323","3333333333333333","3333443333333333","3334433333323333","3333333333332333","3333333333333333","3323333333333333","3333333334433333","3333333344333333","3333333333333333"]
+});
+Object.assign(PAL, {
+  gloam: ['#141414', '#3a4a6b', '#d7dbe4', '#ff4d6d'],
+  shredwick: ['#141414', '#5b4a42', '#8c7b70', '#f2e3c6'],
+  sluice: ['#141414', '#c8d6e8', '#f4f7fb', '#2f74b5'],
+  lapse: ['#141414', '#f2e3c6', '#b8432f', '#1b2233'],
+  cairn: ['#1b2233', '#6e7a8a', '#b9c2cf', '#ffd96a'],
+  bulwark: ['#1b2233', '#4a5a74', '#c8d0dc', '#9ff0c8'],
+  tapes: ['#1b2233', '#5b4a42', '#2f4f8a', '#ffd96a'],
+  dust: ['#2a2523', '#3b3330', '#6e625a', '#4a403b'],
+  recordsDark: ['#2a2523', '#3a4a6b', '#5b4a42', '#6e7a8a'],
+  recordsBld: ['#1b2233', '#2f6e3e', '#a6d96a', '#ffd96a'],
+  stacks: ['#1b2233', '#3a4a6b', '#6e7a8a', '#9ff0c8'],
+  vault: ['#1b2233', '#4a1414', '#8c7b70', '#e58a5c'],
+  vaultOk: ['#1b2233', '#2f4f8a', '#9fc4f0', '#9ff0c8'],
+  offsite: ['#1b2233', '#5b3a26', '#a8703f', '#ffd96a'],
+  restoreLab: ['#1b2233', '#2f4f8a', '#7fa2d6', '#ffd96a'],
+  archDesk: ['#3b2418', '#7a4a2c', '#c98a54', '#f2e3c6'],
+  cryptoDojo: ['#1b2233', '#2b1d16', '#7cc6c4', '#ff9f43'],
+  rboard: ['#1b2233', '#2f6e3e', '#a6d96a', '#ffd96a'],
+  odile: ['#1a1a2e', '#2b1d16', '#a8703f', '#2f4f8a'],
+  nico: ['#1a1a2e', '#c0a040', '#f2c7a0', '#5b4a42'],
+  hester: ['#1a1a2e', '#d7dbe4', '#f0c8a0', '#5a2a6e'],
+  deshawn: ['#1a1a2e', '#141414', '#7a4a2c', '#b8432f'],
+  leona: ['#1a1a2e', '#8a4b2f', '#f2c7a0', '#3a4a6b'],
+  tobias: ['#1a1a2e', '#5b4a42', '#e0b088', '#7cc6c4'],
+  margit: ['#1a1a2e', '#c8d0dc', '#f2c7a0', '#2f6e3e']
+});
+Object.assign(TILES, {
+  'P': {spr: 'B', pal: 'recordsDark', solid: true},                // Records Hall building (hub); lit after the Vault Badge
+  'L': {spr: 'K', pal: 'stacks', solid: true},                     // the stacks: department file servers
+  'm': {spr: 'K', pal: 'vault', solid: true},                      // the backup appliance and its console (vault)
+  'y': {spr: 'tapes', pal: 'tapes', solid: true},                  // the tape shelf (offline copies)
+  '4': {spr: 'door', pal: 'offsite', solid: true},                 // the courier's door to the offsite store
+  '5': {spr: 'pc', pal: 'restoreLab', solid: true, under: ','},    // restore lab benches (an isolated network)
+  '6': {spr: 'counter', pal: 'archDesk', solid: true},             // the archivist's desk
+  '7': {spr: 'pc', pal: 'cryptoDojo', solid: true, under: ','},    // Cryptography Dojo terminals
+  '8': {spr: 'K', pal: 'rboard', solid: true},                     // Records Board racks
+  '0': {spr: 'dust', pal: 'dust', grass: true}                     // unindexed corners of the stacks: trip alerts
+});
+
+/* ---------- Tools: the Cairn line (backup and recovery) ---------- */
+// A new tool class. Recovery tools are strong against Impact techniques and threats aimed at backups. (game)
+CLASSES.recovery = {label: 'Recovery', strong: ['Impact'], strongTags: ['backup'], weakTags: ['voice', 'recon'], strongLabel: 'Impact (encryption, destruction, inhibited recovery) and attacks on backups'};
+Object.assign(TOOLS, {
+  cairn: {name: 'Cairn', cls: 'recovery', sub: 'backup and recovery', spr: 'cairn', blurb: 'A pile of stones that marks the way back. Knows every copy you have, and which ones no one can delete.',
+          abil: ['rpcheck', 'lockret', 'bkcut', 'labrestore']},
+  bulwark: {name: 'Bulwark', cls: 'recovery', sub: 'recovery + clean points', spr: 'bulwark', blurb: 'Cairn walled in. It lines the evidence up against the restore points and finds the newest copy from before the attacker arrived.',
+            abil: ['rpcheck', 'lockret', 'bkcut', 'cleanpt']}
+});
+Object.assign(ABIL, {
+  rpcheck: {name: 'Check restore points', type: 'inv', cost: 2, ev: 22, desc: 'List the backups and snapshots for the affected system: which exist, which were deleted, when, and by which account.'},
+  lockret: {name: 'Lock retention', type: 'con', cost: 2, dw: 20, ev: 4, desc: 'Put the backup copies under a retention lock, so no account, an administrator’s included, can delete them before they expire.'},
+  bkcut: {name: 'Cut backup access', type: 'con', cost: 2, dw: 24, ev: 4, disrupt: 1, desc: 'Block the affected hosts and accounts from the backup network while you work. Tonight’s jobs for those hosts won’t run.'},
+  labrestore: {name: 'Restore to the lab', type: 'inv', cost: 3, ev: 26, desc: 'Restore a copy into the isolated lab network and compare it with production, without touching production.'},
+  cleanpt: {name: 'Find the clean point', type: 'inv', cost: 2, ev: 28, desc: 'Line up the evidence (the earliest sign of the attacker on each system) with the restore points, and pick the newest copy from before it.'}
+});
+
+/* ---------- Map: Records Hall, the Records Board, and a building on the plaza ---------- */
+// The stacks (file servers) are north-west, the backup vault north-east (appliance, tape shelf, the offsite door),
+// the restore lab south-west, the archivist's office in the middle, the Cryptography Dojo south-east.
+Object.assign(MAPS, {
+  records: {
+    name: 'Records Hall',
+    rows: [
+      "wwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+      "w0LL0LL0LL0,,,,,,,,w,mm,,yyy4w",
+      "w0LL0LL0LL0,,,,,,,,w,,,,,,,,,w",
+      "w0LL0LL0LL0,,,,,,,,,,,,,,,,,,w",
+      "w0000000000,,,,,,,,wwwwwwwwwww",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,D",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "wwwwwww,wwwww,,,,,wwwwww,wwwww",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "w,,5,5,5,,,,,,6,,,,,,,7,7,7,,w",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,Y,,,,,,,,,,,,,,,,,,,,w",
+      "wwwwwwwwwwwwwwEwwwwwwwwwwwwwww"
+    ],
+    doors: {'14,15': {to: 'hub', x: 15, y: 18, dir: 'down'}, '29,7': {to: 'rboard', x: 9, y: 9, dir: 'up'}}
+  },
+  rboard: {
+    name: 'Records Board',
+    rows: [
+      "wwwwwwwwwwwwwwwwwwww",
+      "w88,,,,,,,,,,,,,,88w",
+      "w88,,,,,,,,,,,,,,88w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "wwwwwwwwwEwwwwwwwwww"
+    ],
+    doors: {'9,10': {to: 'records', x: 28, y: 7, dir: 'left'}}
+  }
+});
+// The one change to earlier data: a Records Hall building in the south of the plaza, between the Identity Board
+// and the Dojo, out among the cabling. Its door opens with the Lantern Badge.
+MAPS.hub.rows[15] = MAPS.hub.rows[15].slice(0, 13) + 'PPPP' + MAPS.hub.rows[15].slice(17);
+MAPS.hub.rows[16] = MAPS.hub.rows[16].slice(0, 13) + 'PPPP' + MAPS.hub.rows[16].slice(17);
+MAPS.hub.rows[17] = MAPS.hub.rows[17].slice(0, 13) + 'PPDP' + MAPS.hub.rows[17].slice(17);
+MAPS.hub.doors['15,17'] = {to: 'records', x: 14, y: 14, dir: 'up',
+  get locked() { return (typeof G !== 'undefined' && G && G.f.mkLantern) ? undefined : 'Records Hall. A note on the door: “Staff with a Lantern Badge only.”'; }};
+
+const RH_MAPS = ['records', 'rboard'];
+const RH_HOSTS = ['FS-01 · file server', 'FS-02 · file server', 'FS-03 · old file server', 'DB-01 · records database', 'BKP-01 · backup server'];
+
+/* ---------- People ---------- */
+NPCS.push(
+  {id: 'odile', name: 'Odile Brennan', role: 'records and infrastructure lead', map: 'records', x: 14, y: 6, dir: 'down', pal: 'odile'},
+  {id: 'nico', name: 'Nico Varga', role: 'backup administrator', map: 'records', x: 24, y: 2, dir: 'down', pal: 'nico'},
+  {id: 'hester', name: 'Hester Quayle', role: 'town archivist', map: 'records', x: 16, y: 11, dir: 'left', pal: 'hester'},
+  {id: 'deshawn', name: 'Deshawn Pruitt', role: 'permits manager', map: 'records', x: 5, y: 13, dir: 'up', pal: 'deshawn', cond: G => !!G.f.rhTest},
+  {id: 'leona', name: 'Leona Ferraro', role: 'finance director', map: 'records', x: 18, y: 7, dir: 'left', pal: 'leona', cond: G => !!G.f.rhDrill1},
+  {id: 'tobias', name: 'Tobias Lund', role: 'cryptography coach', map: 'records', x: 27, y: 12, dir: 'left', pal: 'tobias'},
+  {id: 'margit', name: 'Margit Halloran', role: 'recovery lead', map: 'rboard', x: 9, y: 2, dir: 'down', pal: 'margit'}
+);
+const RH_NPC_IDS = ['odile', 'nico', 'hester', 'deshawn', 'leona', 'tobias', 'margit'];
+
+/* ---------- ATT&CK techniques met in Records Hall (verified on attack.mitre.org, 28 Oct 2026, ATT&CK v20.0) ---------- */
+// T1490 Inhibit System Recovery and T1486 Data Encrypted for Impact are already in the table (Clerks' Row).
+Object.assign(TECH, {
+  'T1485': {name: 'Data Destruction', tactic: ['Impact'], desc: 'Destroying data and files, on one system or many, so they can’t be used or recovered, often by overwriting them rather than just deleting them. Backups are an obvious target.'},
+  'T1567.002': {name: 'Exfiltration Over Web Service: Exfiltration to Cloud Storage', tactic: ['Exfiltration'], desc: 'Sending stolen data to a cloud storage service instead of over the attacker’s own command channel. Common before ransomware encrypts, so the attacker can threaten to publish as well (double extortion).'},
+  'T1560.001': {name: 'Archive Collected Data: Archive via Utility', tactic: ['Collection'], desc: 'Packing collected files with an ordinary compression or archiving utility, often with a password, before taking them out.'}
+});
+
+/* ---------- Threats (wild alerts) ---------- */
+Object.assign(THREATS, {
+  gloam: {name: 'Gloam', tech: 'T1486', spr: 'gloam', pal: 'gloam', tags: ['files'], bucket: 'other', district: 'records'},
+  shredwick: {name: 'Shredwick', tech: 'T1485', spr: 'shredwick', pal: 'shredwick', tags: ['files', 'backup'], bucket: 'other', district: 'records'},
+  sluice: {name: 'Sluice', tech: 'T1567.002', spr: 'sluice', pal: 'sluice', tags: ['files'], bucket: 'other', district: 'records'},
+  lapse: {name: 'Lapse', tech: 'T1490', spr: 'lapse', pal: 'lapse', tags: ['backup', 'host'], bucket: 'other', district: 'records'}
+});
+// (game) base weights for the Records Hall threats; they only enter the mix once you reach Records Hall.
+MAL_WEIGHTS.push({t: 'gloam', w: 3}, {t: 'shredwick', w: 2}, {t: 'sluice', w: 3}, {t: 'lapse', w: 2});
+const RH_HOME = ['gloam', 'shredwick', 'sluice', 'lapse'];
+// Threats the Vault Badge halves: anything that destroys data or the ways back (T1490, T1485). (game)
+const RH_VAULT_TECHS = ['T1490', 'T1485'];
+
+Object.assign(ALERTS, {
+  gloam: {
+    rule: 'Mass file rename spike on a file share',
+    mal: {clues: ['4,800 files on \\\\FS-03\\Finance renamed in six minutes, each with a new extension.', 'The writer is a domain admin account, from a server that never touches that share.', 'Opened in the lab, a renamed file is unreadable noise, and every volume shadow copy on FS-03 was deleted two minutes before.'],
+          truth: 'Data Encrypted for Impact: ransomware, and it started by removing the ways back.',
+          resp: [{label: 'Isolate FS-03 and the writing server at the switch, disable the account, protect the backup copies, preserve evidence, hunt for the same tool elsewhere', good: true},
+                 {label: 'Restore the folder from last night and close', good: false, why: 'The attacker is still in, with an admin account. Contain first, then restore from a copy you know is clean.'},
+                 {label: 'Shut down every server in town', good: false, disrupt: 2}]},
+    benign: {clues: ['The writer is svc-dmsimport, from DMS-01, the new document system’s server.', 'A change ticket covers tonight’s import of the Finance archive.', 'Renamed files open normally; the shadow copies are untouched.'],
+             truth: 'Benign: the records migration renaming files it has imported. The volume looks like ransomware; the writer and the files say otherwise.'},
+    fp: {clues: ['The “renames” are the scanner’s temporary files: .tmp to .pdf as each scan finishes.', 'Same account, same folder, every weekday.', 'The rule counts every rename as suspicious.'],
+         truth: 'False positive: the scanner finishing its own files.'}
+  },
+  shredwick: {
+    rule: 'Bulk deletion on a file share',
+    mal: {clues: ['Files on the old NAS backup share are being overwritten, then deleted.', 'The account is the NAS’s local admin, whose password was the same as a domain admin’s.', 'The retention-locked copies on the appliance refuse every delete; the NAS copies don’t.'],
+          truth: 'Data Destruction aimed at the backups, the way back.',
+          resp: [{label: 'Cut the NAS off, give it a unique admin password with MFA, confirm the locked and offline copies are intact, restore the share from them', good: true},
+                 {label: 'Restore the NAS share from itself', good: false, why: 'Those copies are the ones being destroyed. Restore from copies the attacker can’t reach.'},
+                 {label: 'Switch off the deletion alerts: too noisy', good: false, why: 'That alert is the only reason you know.'}]},
+    benign: {clues: ['The deletions follow the town’s records retention schedule: files past their keep-until date.', 'Hester signed off the disposal list last week.', 'The run is the scheduled disposal job, at its usual time.'],
+             truth: 'Benign: approved disposal under the retention schedule.'},
+    fp: {clues: ['The “deletions” are a sync tool moving files to a new folder.', 'Every deleted file reappears one folder over.', 'The rule sees the delete half of a move.'],
+         truth: 'False positive: moves counted as deletions.'}
+  },
+  sluice: {
+    rule: 'Large upload to cloud storage',
+    mal: {clues: ['9 GB left FS-03 for a cloud storage service the town has never used, between 03:41 and 03:55.', 'A compression utility packed the files into password-protected parts first.', 'The account is a help-desk admin signed in from another server at 03:30.'],
+          truth: 'Exfiltration to Cloud Storage: data taken before encryption, so the attacker can threaten to publish it.',
+          resp: [{label: 'Block the destination, isolate the host, disable the account, preserve the logs, and scope exactly which files left', good: true},
+                 {label: 'Block the destination and close', good: false, why: 'The account and the host are still the attacker’s, and you don’t yet know what left.'},
+                 {label: 'Wait for the ransom note', good: false, why: 'Data theft usually comes before encryption. This is the warning.'}]},
+    benign: {clues: ['Hester is copying the 1960s council minutes to the regional archive’s storage.', 'The transfer is ticketed and the destination is on the approved list.', 'It runs under her own account, in working hours, file by file.'],
+             truth: 'Benign: the archivist’s approved migration to the regional archive.'},
+    fp: {clues: ['The “upload” is the backup appliance replicating to its own second site.', 'The destination is ours, on the firewall’s list.', 'The rule doesn’t know the backup network.'],
+         truth: 'False positive: our own backup replication.'}
+  },
+  lapse: {
+    rule: 'Backup job failures',
+    mal: {clues: ['Every backup job for FS-03 has failed since 04:30.', 'At 04:28 wbadmin deleted the Windows backup catalog on FS-03, run by a domain admin account.', 'A minute later the same account tried to sign in to the backup console.'],
+          truth: 'Inhibit System Recovery: removing the backups and catalogs that let you restore. Ransomware often comes next.',
+          resp: [{label: 'Isolate FS-03, disable the account, lock retention on its copies, check the offline copy, hunt for the encryptor before it runs', good: true},
+                 {label: 'Rerun the jobs and close', good: false, why: 'The jobs failed because someone removed the way back on purpose. They’re still in.'},
+                 {label: 'Wait to see what happens tonight', good: false, why: 'This is the warning. Act now.'}]},
+    benign: {clues: ['The appliance’s disk is 100% full.', 'Every job that wrote after 01:40 failed with “no space”.', 'Nico’s dashboard warned about space last week.'],
+             truth: 'Benign: a full disk. Real, needs fixing today, and not an attack. (An expired service-account password gives the same symptom.)'},
+    fp: {clues: ['The “failures” are jobs cancelled by the maintenance window.', 'They restarted and finished an hour later.', 'The rule counts a cancellation as a failure.'],
+         truth: 'False positive: cancelled and rerun jobs.'}
+  }
+});
+Object.assign(ALERT_CHAINS, {
+  gloam: ['A second share starts being renamed.', 'Ransom notes appear in every folder.'],
+  shredwick: ['The next backup folder is overwritten.', 'The NAS’s own snapshots are deleted.'],
+  sluice: ['A second batch starts uploading.', 'The upload moves on to the HR share.'],
+  lapse: ['The backup catalog on a second server disappears.', 'Files start being renamed on FS-03.']
+});
+
+/* ---------- Morning briefing items (Records Hall) ---------- */
+const RH_BRIEFS = [
+  {t: 'gloam', text: 'Ransomware crews are deploying encryptors through group policy to every server at once.', act: 'Alert on new group policies that create scheduled tasks'},
+  {t: 'shredwick', text: 'Attackers are wiping backup shares reachable with reused admin passwords.', act: 'Give every backup device its own admin password and MFA'},
+  {t: 'sluice', text: 'Data is being taken to cloud storage before encryption, for double extortion.', act: 'Alert on large uploads to storage services we don’t use'},
+  {t: 'lapse', text: 'Backup catalogs and shadow copies are being deleted hours before encryption.', act: 'Alert on backup deletions and catalog changes, success or not'}
+];
+
+/* ---------- Fieldwork: restore tests, the business impact analysis, copies, credentials ---------- */
+// The first timed restore tests, into the isolated restore lab (game). Hours are game hours.
+const RH_TESTS = [
+  {sys: 'fs', name: 'FS-01 file shares (the Planning folder)', hours: 0.6, ok: true, note: 'Files open; the planning team checked a sample against production.'},
+  {sys: 'db', name: 'DB-01 records database (permits)', hours: 5.5, ok: true, note: 'Restored and started; Deshawn checked twenty permits against the paper files.'},
+  {sys: 'app', name: 'APP-01 permits portal', hours: 2.5, ok: false, note: 'Restored, but it won’t start: its settings and licence file live on a second disk the job never selected.'}
+];
+const RH_RETEST = {sys: 'app', name: 'APP-01 permits portal (retest, second disk added)', hours: 2.5, ok: true, note: 'Starts; Deshawn issued a test permit in the lab.'};
+// The critical list from the business impact analysis. The last two aren't critical.
+const RH_SERVICES = [
+  {id: 'db', name: 'Records database (permits, deeds, licences)', crit: true, owner: 'Deshawn: “Inspections stop after a day without it.”'},
+  {id: 'app', name: 'Permits portal (residents apply online)', crit: true, owner: 'Deshawn: “Residents can apply on paper for a day or two. Not a week.”'},
+  {id: 'fs', name: 'Department file shares (the stacks)', crit: true, owner: 'Odile: “Every department works from them. Two days, at most.”'},
+  {id: 'dir', name: 'Directory (staff sign-in, identity)', crit: true, owner: 'Nico: “Nothing above signs anyone in without it.”'},
+  {id: 'dns', name: 'Name service (DNS)', crit: true, owner: 'Nico: “Nothing finds anything without it.”'},
+  {id: 'intranet', name: 'The staff intranet news page', crit: false, owner: 'Odile: “Nobody would notice for a week.”'},
+  {id: 'scanarc', name: 'The 1990s scanned-image archive', crit: false, owner: 'Hester: “Researchers can wait. It’s read-only and on tape anyway.”'}
+];
+// Recovery objectives agreed with the owners (game hours). RTO: how long until it must be back. RPO: how much
+// data (in hours of work) can be lost. MTD is the owner's limit before real harm; RTO must be shorter.
+const RH_OBJ = {
+  dir: {rto: 8, rpo: 24, mtd: 12}, dns: {rto: 8, rpo: 24, mtd: 12}, db: {rto: 16, rpo: 12, mtd: 24},
+  app: {rto: 24, rpo: 24, mtd: 48}, fs: {rto: 48, rpo: 24, mtd: 72}
+};
+const RH_SYS_ORDER = ['dir', 'dns', 'db', 'app', 'fs'];
+const RH_SYS_NAME = {dir: 'DIR-01 directory', dns: 'DNS-01 name service', db: 'DB-01 records database', app: 'APP-01 permits portal', fs: 'FS-01/FS-02 file shares'};
+
+/* ---------- The restore-order mini-game (played during the ransomware incident) ---------- */
+// Each system: what it needs first, how long each way of restoring takes (game hours), and the restore points.
+// "at": hours of data lost (restore point to the start of encryption). "tainted": the copy holds something the
+// attacker planted, so the restored system is reinfected (game rule). Nothing in the labels says which is which:
+// the player reads the evidence list.
+const RH_RESTORE = {
+  dir: {deps: [], opts: [
+    {k: 'last', label: 'Whole server from last night (Day {B} 01:00)', hrs: 4, atH: 1.7, tainted: true,
+     why: 'Last night’s copy of the directory still holds svc-scanbak, adm-bk2 and the encryptor’s group policy. All three came back with it.'},
+    {k: 'mid', label: 'Whole server from Day {R} 01:00, the day you arrived', hrs: 4, atD: 'R', tainted: true,
+     why: 'svc-scanbak and adm-bk2 were created on Day {E} at 02:31 and 02:33. Every copy since then holds them.'},
+    {k: 'clean', label: 'Whole server from Day {E} 01:00', hrs: 4, atD: 'E', good: true,
+     why: 'The newest copy from before the earliest known compromise (Day {E} 02:12). Account changes since then are re-entered from the tickets: an agreed exception to the directory’s RPO. Every privileged password is reset again once it is back, because this copy holds the old ones.'}]},
+  dns: {deps: ['dir'], opts: [
+    {k: 'last', label: 'Whole server from last night (Day {B} 01:00)', hrs: 1, atH: 1.7, tainted: true,
+     why: 'The group policy reached the server at 23:52 the night before: last night’s whole-server copy carries the scheduled task, which ran again.'},
+    {k: 'gold', label: 'Rebuild from the golden image, then restore its zone data from last night', hrs: 2, atH: 1.7, good: true,
+     why: 'A known-good build, plus only the data. Nothing the attacker planted in the system comes back.'},
+    {k: 'old', label: 'Whole server from Day {E} 01:00', hrs: 1, atD: 'E',
+     why: 'Clean, but every DNS change since Day {E} is lost: far past its RPO, when a clean rebuild with last night’s data loses almost nothing.'}]},
+  db: {deps: ['dir', 'dns'], opts: [
+    {k: 'last', label: 'Whole server from last night (Day {B} 01:00)', hrs: 5, atH: 1.7, tainted: true,
+     why: 'The scheduled task came back with the server and ran again.'},
+    {k: 'gold', label: 'Rebuild from the golden image, then restore the database from last night', hrs: 6, atH: 1.7, good: true,
+     why: 'Clean system, the newest data, and Deshawn checks a sample of permits before anyone uses it.'},
+    {k: 'old', label: 'Whole server from Day {E} 01:00', hrs: 5, atD: 'E',
+     why: 'Clean, but days of permits are lost, far past the 12-hour RPO you agreed with Deshawn.'}]},
+  app: {deps: ['db'], opts: [
+    {k: 'last', label: 'Whole server from last night (Day {B} 01:00)', hrs: 2, atH: 1.7, tainted: true,
+     why: 'The scheduled task came back with the server and ran again.'},
+    {k: 'gold', label: 'Rebuild from the golden image, then restore its settings and files from last night', hrs: 3, atH: 1.7, good: true,
+     why: 'Clean system and both of its disks: the restore test found the second one.'},
+    {k: 'old', label: 'Whole server from Day {E} 01:00', hrs: 2, atD: 'E',
+     why: 'Clean, but days of applications are lost.'}]},
+  fs: {deps: ['dir', 'dns'], opts: [
+    {k: 'last', label: 'Whole servers from last night (Day {B} 01:00)', hrs: 11, atH: 1.7, tainted: true,
+     why: 'The scheduled task came back with both servers and encrypted them again.'},
+    {k: 'gold', label: 'Rebuild from the golden image, then restore the shares from last night', hrs: 12, atH: 1.7, good: true,
+     why: 'Clean servers, and every file as it was at 01:00, an hour and forty minutes before encryption began.'},
+    {k: 'old', label: 'Whole servers from Day {E} 01:00', hrs: 11, atD: 'E',
+     why: 'Clean, but every department loses days of work.'}]}
+};
+const RH_RESTORE_BUDGET = 48;     // game hours of restore-crew time before the vendor's emergency team takes over (game)
+const RH_DEP_WASTE = 1;           // hours lost when a system is restored before what it needs (game)
+const RH_REINFECT_WASTE = 1;      // extra hours to spot and clean a reinfection (game)
+
+/* ---------- Investigation drills (all cases original; artefacts are invented, fields are real-world kinds of evidence) ---------- */
+const RH_DRILLS = {
+  rename: {
+    id: 'rename', title: 'Twelve thousand renamed files', budget: 2,
+    intro: '<p>Overnight the file-share rule fired on FS-02 (game): thousands of files in the Planning share renamed in under an hour, each with a new extension. Odile wants to know before nine whether she has a ransomware incident or a busy night.</p>',
+    artefact: '<pre class="art">File-share alert · \\\\FS-02\\Planning · Day {D} 01:10–01:48 (game data)\n' +
+      'Renamed     12,406 files   e.g. minutes-1987-03.pdf → minutes-1987-03.pdf.migrated\n' +
+      'Rate        about 326 a minute\n' +
+      'Rule        more than 500 renames in 10 minutes on one share</pre>' +
+      '<p class="small">A rename spike says many files changed name quickly. Ransomware does that. So does a migration, a sync tool or a clean-up script.</p>',
+    question: 'Ransomware, or something the town is doing on purpose?',
+    sources: [
+      {id: 'audit', name: 'File-server audit log', qs: [
+        {q: 'Which account, process and host renamed the files?', kind: 'focus', key: true,
+         res: ['All 12,406 renames: account svc-dmsimport, process dmsimport.exe, from DMS-01 (the new document system’s server)', 'First rename 01:10:04, last 01:48:31; nothing else wrote to the share in that time', 'CHG-5120 (game): “Document system import, phase 2: Planning share, Day {D} 01:00–03:00, as svc-dmsimport from DMS-01”']},
+        {q: 'Every file event on FS-02 overnight', kind: 'broad', rows: 41870,
+         wall: ['{t}  READ    \\\\FS-02\\Planning\\minutes-19{n}.pdf   svc-dmsimport', '{t}  RENAME  …\\minutes-19{n}.pdf → .pdf.migrated   svc-dmsimport', '{t}  READ    \\\\FS-02\\Planning\\Maps\\ward-{n}.tif   svc-backup', '{t}  WRITE   \\\\FS-02\\Planning\\~$draft-{n}.docx   j.osei']}]},
+      {id: 'vss', name: 'Shadow copies, backups and process history, FS-02', qs: [
+        {q: 'Are the shadow copies still there? Was any deleted overnight?', kind: 'focus', key: true,
+         res: ['14 shadow copies on the Planning volume, the newest Day {D} 00:00; none deleted overnight', 'No vssadmin, wmic or wbadmin runs on FS-02 in the last 30 days', 'Last night’s backup of FS-02 ran at 00:30 and read its usual amount', '(Ransomware usually removes the ways back before it encrypts: ATT&CK T1490.)']}]},
+      {id: 'count', name: 'The rename counter', qs: [
+        {q: 'How many files changed, and how fast?', kind: 'trap',
+         res: ['12,406 files in 38 minutes, about 326 a minute.', '(Volume and speed fit ransomware and fit any bulk migration. They don’t tell you which.)']}]},
+      {id: 'ext', name: 'Extension lookup', qs: [
+        {q: 'Is “.migrated” a known ransomware extension?', kind: 'trap',
+         res: ['It isn’t on any list you have.', '(Ransomware can use any extension, harmless-looking ones included. An unfamiliar name proves nothing, and neither does a familiar one.)']}]},
+      {id: 'file', name: 'Open a renamed file in the lab', qs: [
+        {q: 'Is minutes-1987-03.pdf.migrated readable?', kind: 'focus',
+         res: ['It opens as an ordinary PDF: the March 1987 minutes. Its hash matches the copy now in the document system.', '(Useful: encrypted files don’t open. But one file is one file; the writer and the shadow copies speak for all 12,406.)']}]},
+      {id: 'hester', name: 'Ask Hester (archivist)', qs: [
+        {q: 'Was anything running on the Planning share last night?', kind: 'focus',
+         res: ['Hester: “The import, phase 2. Nico scheduled it. The tool renames each file once it’s safely in the new system.”', '(A good lead. Memory isn’t a record: the audit log and the change ticket are.)']}]}
+    ],
+    ai: {everything: {text: '12,406 files renamed in 38 minutes is consistent with ransomware. Recommend isolating FS-02 immediately.', wrong: true,
+                      reveal: 'Tally matched the volume and speed to ransomware and stopped there. It never asked who wrote the files or whether the shadow copies were touched, and isolating FS-02 would have stopped the whole Planning department for a migration. Ask specific questions, and check the answer against the evidence.'},
+         specific: {q: 'Which account and host renamed the files on FS-02 last night?', text: 'svc-dmsimport, from DMS-01: every one of the 12,406.'}},
+    verdicts: [
+      {label: 'The approved records migration: its own service account, from its own server, inside its change window, with the shadow copies untouched', good: true, why: 'The audit log names svc-dmsimport on DMS-01 for every rename, CHG-5120 covers it, and nothing touched the ways back.'},
+      {label: 'Ransomware: twelve thousand files in under an hour', why: 'Volume and speed fit both. The writer and the shadow copies decide.'},
+      {label: 'Ransomware: an extension nobody has seen', why: 'Extensions are chosen by whoever renames the files. They decide nothing.'}],
+    reasons: [
+      {label: 'Every rename came from the migration’s service account on DMS-01 inside its change window, and no shadow copy was deleted (ransomware usually removes them first)', good: true, why: 'Who did it, from where, under what approval, and whether the ways back were touched, from two independent records.'},
+      {label: 'The extension sounds harmless', why: 'An attacker can choose any extension.'},
+      {label: 'Hester said a migration was running', why: 'Memory isn’t a record. The audit log and the ticket are.'}],
+    alts: [
+      {label: 'Ransomware using a harmless-looking extension', good: true, why: 'Ruled out: the writer is the migration’s service account on DMS-01, the shadow copies are intact, and a renamed file opens normally.'},
+      {label: 'An attacker using the migration’s service account', good: true, why: 'Ruled out: it signed in only from DMS-01, only inside the change window, and the tool’s own job log lists the same 12,406 files.'},
+      {label: 'A disk fault renaming files', why: 'Disks don’t append extensions.'},
+      {label: 'The alert rule is broken', why: 'It fired correctly on a real bulk change.'}],
+    path: '<p>A rename spike is decided by <b>who wrote the files</b> (the file-server audit log: account, process and host, matched to a change ticket) and by <b>whether the ways back were touched</b> (shadow copies, backup catalogs: ransomware usually deletes them first). The count and the extension are the two things every rename spike has, so they can’t tell one from another.</p>',
+    response: ['Close it as the approved migration, and record why', 'Tune the rule narrowly: an exception for svc-dmsimport from DMS-01 inside approved change windows only, never for the account everywhere', 'Keep alerting on shadow-copy and catalog deletion, and on mass renames by any other account', 'Ask for migrations to be announced: change tickets copied to the security queue'],
+    techs: ['T1486', 'T1490'], acts: ['renamecheck']
+  },
+  shrink: {
+    id: 'shrink', title: 'A backup that succeeded', budget: 2,
+    intro: '<p>Nico’s morning report (game): last night’s backup of FS-01 says Success. It also says 41 GB, where FS-01 is normally about 2.3 TB. Data lost, a deduplication change, or someone tampering with the job?</p>',
+    artefact: '<pre class="art">Backup job FS-01-nightly · Day {D} 01:00–01:22 (game data)\n' +
+      'Status        Success · warnings 0 · errors 0\n' +
+      'Data read     41 GB      (7-night average 2.31 TB)\n' +
+      'Repository    BKP-01 appliance, retention-locked copy</pre>' +
+      '<p class="small">“Success” means the job finished what it was told to do. It doesn’t say whether it was told to do the right thing.</p>',
+    question: 'Why is last night’s backup of FS-01 so small?',
+    sources: [
+      {id: 'job', name: 'Backup job log (detail)', qs: [
+        {q: 'What did the job select, process, skip and exclude?', kind: 'focus', key: true,
+         res: ['Selection list: FS-01 volume E: (unchanged since the job was set up on Day {U})', 'Processed 61,204 files, 41 GB · skipped 0 · excluded 0 · errors 0', 'FS-01 volumes now: E: 41 GB used · F: 2.27 TB used, created Day {D-1} 16:30, not in the selection list']}]},
+      {id: 'audit', name: 'Backup console audit log', qs: [
+        {q: 'Who changed the job or the backup settings, and when?', kind: 'focus', key: true,
+         res: ['No change to FS-01-nightly since Day {U} (created by nico.v)', 'Sign-ins this week: only the two backup admin accounts, each with MFA', 'No deletions, no retention changes, no new admins']},
+        {q: 'Every console event this month', kind: 'broad', rows: 6120,
+         wall: ['{t}  job.run      FS-0{i}-nightly  scheduler', '{t}  login.ok     bkadm-nico  MFA', '{t}  job.verify   DB-01-nightly  scheduler', '{t}  report.sent  morning summary']}]},
+      {id: 'dash', name: 'Storage dashboard', qs: [
+        {q: 'Total repository use and the deduplication ratio', kind: 'trap',
+         res: ['Repository 61.2 TB used (down 0.1%) · deduplication 4.1 : 1 (unchanged).', '(Totals across every job hide one job’s drop, and deduplication changes what is stored, not what a job reads. Neither tells you what this job backed up.)']}]},
+      {id: 'chg', name: 'Change records', qs: [
+        {q: 'Any change to FS-01 this week?', kind: 'focus',
+         res: ['CHG-5097 (game), Day {D-1} 16:30: the storage team moved the department shares from E: to a new volume, F:, on FS-01.', 'The ticket has no step for the backup job. (Useful: it explains why. The job log is what shows the gap.)']}]},
+      {id: 'nico', name: 'Ask Nico', qs: [
+        {q: 'Did you change the job?', kind: 'focus',
+         res: ['Nico: “No. I haven’t touched it since I set it up.”', '(Probably true. The console’s audit log is what proves it.)']}]}
+    ],
+    ai: {everything: {text: 'The FS-01 backup completed successfully with 0 warnings. The size difference is likely due to deduplication. No action needed.', wrong: true,
+                      reveal: 'Tally read “Success” as “protected” and guessed at deduplication. The job log shows it backed up the wrong volume: the data moved to F:, which the job never selects. Ask specific questions, and check the answer against the evidence.'},
+         specific: {q: 'Which FS-01 volumes are in the job’s selection list, and how much is on each?', text: 'Only E: (41 GB used). F: holds 2.27 TB and isn’t selected.'}},
+    verdicts: [
+      {label: 'A coverage gap: the shares moved to a new volume the job never selects, so it backed up the leftovers. Not tampering, not deduplication', good: true, why: 'The job read everything on E:, skipped nothing, and nobody changed it; the data is on F:.'},
+      {label: 'Tampering: someone shrank the job', why: 'The console audit log shows no change, and only the backup admins signed in.'},
+      {label: 'Deduplication: the data is still protected', why: 'The job read 41 GB. Deduplication can’t make it read less than it was given.'},
+      {label: 'Data loss: FS-01’s files are gone', why: 'F: holds 2.27 TB, and the departments are working normally.'}],
+    reasons: [
+      {label: 'The job log shows it read only E:, now nearly empty, skipping nothing; the console audit shows nobody changed it; and the data now lives on F:, which it never selects', good: true, why: 'What the job did, and who changed it, from the two records that say so.'},
+      {label: 'The job says Success', why: 'It succeeded at the wrong thing.'},
+      {label: 'The repository total barely moved', why: 'Totals hide one job’s drop.'}],
+    alts: [
+      {label: 'An attacker edited the job to leave the shares out', good: true, why: 'Ruled out: no change to the job since Day {U}, and only the two backup admins signed in, with MFA.'},
+      {label: 'The files were deleted from FS-01', good: true, why: 'Ruled out: F: holds 2.27 TB and the departments are working from it.'},
+      {label: 'Deduplication improved overnight', why: 'The job read 41 GB: that is before deduplication.'},
+      {label: 'The appliance is faulty', why: 'Every other job read its usual amount.'}],
+    path: '<p>A small “successful” backup is a question for the <b>job log’s detail</b> (what was selected, processed, skipped and excluded) and the <b>backup console’s audit log</b> (who changed the job or the settings, and when). The storage dashboard’s totals and deduplication ratio describe the whole repository, not one job. Success means the job did what it was told; a restore test is what proves it was told the right thing.</p>',
+    response: ['Add the shares on F: to the job, select them by what they are (the department shares) rather than by drive letter, and run a full backup today', 'Restore a sample from the new job into the lab', 'Alert when any job’s size moves far from its average, success or not', 'Add “check the backups” to the storage team’s change checklist', 'Until today’s full backup finishes, the newest copy of the shares is from Day {D-1} 01:00: tell the departments, and keep that copy'],
+    techs: ['T1490'], acts: ['sizealert']
+  },
+  stolen: {
+    id: 'stolen', title: 'Was anything taken?', budget: 3,
+    intro: '<p>At 02:21 last night the endpoint protection on PLAN-LT-04, a planner’s laptop, stopped a program encrypting files (game). 312 files were encrypted before it was stopped. A ransom note on the desktop says: “We have 200 GB of your town’s files. Pay, or we publish.” By eight, a forum post was claiming the town’s data was for sale.</p>',
+    artefact: '<pre class="art">PLAN-LT-04 · Day {D} (game data)\n' +
+      '02:19  encryptor started   (blocked 02:21; 312 files encrypted, the laptop isolated)\n' +
+      '02:21  README-RESTORE.txt  “200 GB … all departments … pay or we publish”\n' +
+      '08:05  forum post          “townhall.example data for sale”, no sample</pre>' +
+      '<p class="small">Many ransomware crews steal data before they encrypt, so they can threaten to publish it as well. Whether this crew did is a question for your own records, not for theirs.</p>',
+    question: 'Was data stolen before the encryption, and how much?',
+    sources: [
+      {id: 'net', name: 'Firewall flow records', qs: [
+        {q: 'Outbound volume to destinations the town has never used, 00:00–03:00, by host', kind: 'focus', key: true,
+         res: ['PLAN-LT-04 → 198.51.100.77 (a cloud storage service the town doesn’t use), HTTPS, 02:06–02:17: 3.8 GB out', 'No other host sent more than 50 MB to a new destination overnight', 'FS-02 → PLAN-LT-04 (file sharing, inside the network), 01:40–02:01: 3.9 GB read']},
+        {q: 'Every flow through the firewall overnight', kind: 'broad', rows: 88412,
+         wall: ['{t}  10.20.4.{n} → 192.0.2.10:443   12 KB  (update service)', '{t}  10.20.1.{n} → 10.20.9.5:445   (file sharing)', '{t}  10.20.6.{n} → 198.51.100.12:443  40 KB', '{t}  10.20.2.{n} → 10.20.9.30:53  (DNS)']}]},
+      {id: 'edr', name: 'Endpoint history, PLAN-LT-04', qs: [
+        {q: 'What ran on PLAN-LT-04 before the encryptor, and under which account?', kind: 'focus', key: true,
+         res: ['01:31  hd-admin, a help-desk admin account, signs in remotely from SCAN-01, the document scanning server', '01:40–02:01  files copied from \\\\FS-02\\Planning to a temp folder; 02:03 a portable compression utility packs them into password-protected 500 MB parts', '02:06  a sync command-line tool uploads the parts; 02:18 the parts are deleted; 02:19 the encryptor starts']}]},
+      {id: 'fs', name: 'File-server audit log, FS-02', qs: [
+        {q: 'Which files did hd-admin read on FS-02 last night?', kind: 'focus',
+         res: ['01:40–02:01: \\\\FS-02\\Planning\\Applications 2024–2026: 3.9 GB, 2,640 files (planning applications: names, addresses, drawings)', 'No reads by hd-admin on any other share', '(Useful for scoping exactly what left. The flow records and the endpoint history are what show it left.)']}]},
+      {id: 'note', name: 'The ransom note', qs: [
+        {q: 'What does the note say was taken?', kind: 'trap',
+         res: ['“200 GB of all departments’ files.”', '(A ransom note is the attacker’s sales pitch. It proves nothing about what left.)']}]},
+      {id: 'forum', name: 'The forum rumour', qs: [
+        {q: 'Is the town’s data on the leak site?', kind: 'trap',
+         res: ['A post says “townhall.example data for sale”, with no sample.', '(Rumours aren’t evidence. Posts can be bluffs, or old data. Check your own records.)']}]}
+    ],
+    ai: {everything: {text: 'The ransom note states that 200 GB of data from all departments was stolen. Recommend treating this as a 200 GB breach of every department.', wrong: true,
+                      reveal: 'Tally took the attacker’s note at its word. The flow records and the endpoint history show 3.8 GB of Planning files left, from one laptop, in eleven minutes. Ask specific questions, and check the answer against the evidence.'},
+         specific: {q: 'How much data left PLAN-LT-04 for destinations the town has never used last night?', text: '3.8 GB to 198.51.100.77, between 02:06 and 02:17.'}},
+    verdicts: [
+      {label: 'Yes: about 3.8 GB of Planning files, packed on PLAN-LT-04 and uploaded to a cloud storage service before the encryptor started', good: true, why: 'Copied 01:40–02:01, packed at 02:03, uploaded 02:06–02:17, encryption at 02:19: all from your own records.'},
+      {label: 'Yes: 200 GB from every department, as the note says', why: 'The note is a sales pitch. Your records show 3.8 GB from one share.'},
+      {label: 'No: the encryption was stopped, so nothing was taken', why: 'The theft finished before the encryptor started. Stopping one doesn’t undo the other.'}],
+    reasons: [
+      {label: 'A compression utility packed the files at 02:03, a sync tool uploaded them, and the firewall shows 3.8 GB to a cloud storage address the town never uses, 02:06–02:17, before the encryptor ran', good: true, why: 'What was packed and what left, each from its own record, in time order.'},
+      {label: 'The forum post says the data is for sale', why: 'A rumour with no sample.'},
+      {label: 'Ransomware crews always steal data first', why: 'Many do; this question is about this crew, and your records answer it.'}],
+    alts: [
+      {label: 'A planner backing up their own work to a personal cloud', good: true, why: 'Ruled out: it ran under hd-admin, signed in from SCAN-01 at 01:31, at night, into password-protected parts that were deleted after upload.'},
+      {label: 'More data left through another host', good: true, why: 'Ruled out: no other host sent more than 50 MB to a new destination overnight, and hd-admin read only the Planning applications on FS-02.'},
+      {label: 'The encryptor itself sent the files', why: 'The upload finished before it started.'},
+      {label: 'The note’s 200 GB is right, because notes are usually accurate', why: 'Notes are written to frighten. Your records decide.'}],
+    path: '<p>“Was anything taken?” is answered by <b>outbound volume to destinations you never use</b> (firewall flow records, by host, around the timeline) and by <b>what ran on the staging host before the encryptor</b> (an archiving utility, then an upload tool). The file-server audit log then scopes exactly which files. The note and the leak-site rumour are the attacker’s words; they set the stakes, not the facts.</p>',
+    response: ['Keep PLAN-LT-04 isolated and isolate SCAN-01, where hd-admin came from; disable hd-admin, reset it and revoke its sessions', 'Preserve the laptop’s disk image and memory, the endpoint history and the flow records', 'Scope exactly which files left (3.8 GB of planning applications: names, addresses, drawings) and take it to legal: US state breach laws differ on what data counts and on deadlines and who must be told', 'Report it to the FBI and CISA', 'Start a hunt on every server for the same tools, and for any account hd-admin created or changed', 'Answer the note from your own evidence, never from its numbers'],
+    techs: ['T1560.001', 'T1567.002', 'T1486'], acts: ['exfilscope']
+  }
+};
+
+/* ---------- Cryptography Dojo (NCL-style) ---------- */
+const RH_DOJO = [
+  {title: 'Encoded, hashed or encrypted?',
+   art: 'A vendor’s backup agent keeps its password in a settings file (game):\n  backup_password = "VGFsbG93LUZlcm4tMjAyNg=="\nThe vendor’s note says: “Passwords are stored encrypted.”',
+   q: 'Is that password protected?',
+   opts: ['No: it’s Base64, an encoding. Anyone can turn it back (it says Tallow-Fern-2026). Keep it in a secrets vault instead', 'Yes: it’s encrypted, as the vendor says', 'Yes: it’s hashed, so it can’t be reversed'], good: 0,
+   explain: 'Encoding changes how data is written so systems can carry it; anyone can reverse it. RFC 4648, which defines Base64, says base encoding visually hides information but provides no computational confidentiality. A hash (such as SHA-256 in FIPS 180-4) is one-way: it shows whether data changed, and can’t be turned back. Encryption (such as AES in FIPS 197) can be reversed only with the key.'},
+  {title: 'Why both kinds?',
+   art: 'A ransom note (game): “Your files are encrypted with AES-256 and RSA-2048. Only our private key can unlock them.”',
+   q: 'Why would ransomware use both kinds of encryption?',
+   opts: ['Symmetric encryption is fast enough for every file; each file’s key is then locked with the attacker’s public key, so only their private key, which never touches your network, can unlock them', 'RSA is for speed and AES is for safety', 'Two layers make it twice as hard; it’s mostly for show'], good: 0,
+   explain: 'Symmetric ciphers like AES use one key to encrypt and decrypt, and are fast enough for bulk data. Asymmetric ciphers like RSA use a public key to lock and a private key to unlock. ATT&CK’s Data Encrypted for Impact (T1486) records families that combine them, for example AES with RSA. The private key stays with the attacker: that is why a clean backup, not a clever decryption, is the way back.'},
+  {title: 'Lost key, lost backup',
+   art: 'The weekly tapes are encrypted (good). The only copy of the tape key is in BKP-01’s local settings. Tonight ransomware encrypts BKP-01. (game)',
+   q: 'Can you restore from the tapes?',
+   opts: ['No: without the key the tapes are unreadable. Keep the key in a key vault with an escrowed copy offline and offsite, and test a restore using only the escrowed key', 'Yes: the tape drive can decrypt them by itself', 'Yes: try every possible AES-256 key'], good: 0,
+   explain: 'Encrypting backups protects them if a tape is lost; it also means the key is now part of the backup. NIST SP 800-57 Part 1 treats key backup and key recovery (retrieving a key from key backups or archives) as part of every key’s life. Trying every AES-256 key is not a plan. Store the key apart from the data, and prove you can recover it.'}
+];
+
+/* ---------- Records Board (original) ---------- */
+const RH_BOARD_SPECS = () => [
+  {kind: 'mal', threat: 'lapse', tech: 'T1490', tags: ['backup', 'host'], story: true, rate: 12, group: 'c',
+   title: 'Round 1: the ways back disappear', host: 'FS-03 · old file server', enemy: {spr: 'lapse', pal: 'lapse'},
+   clues: ['vssadmin deleted every volume shadow copy on FS-03 at 04:12.', 'The account is a domain admin signed in from a server nobody uses at night.', 'A minute later wbadmin deleted FS-03’s Windows backup catalog.'],
+   truth: 'Inhibit System Recovery: removing the ways back before encrypting.',
+   resp: [{label: 'Isolate FS-03, disable the account, confirm the separate backup copies are locked and intact, and hunt for the encryptor before it runs', good: true},
+          {label: 'Recreate the shadow copies and close', good: false, why: 'The attacker is still there, with an admin account, and will delete them again.'},
+          {label: 'Shut down every server in town', good: false, disrupt: 2}],
+   chain: [{at: 40, text: 'The same account reaches a second file server.'}, {at: 75, text: 'Files on FS-03 start being renamed.'}]},
+  {kind: 'mal', threat: 'sluice', tech: 'T1567.002', tags: ['files'], story: true, rate: 12, group: 'c',
+   title: 'Round 2: gigabytes to the cloud at 2 a.m.', host: 'HR-01 · HR file share', enemy: {spr: 'sluice', pal: 'sluice'},
+   clues: ['A compression utility packs the HR share into password-protected parts.', 'A sync tool uploads 9 GB to a storage service the town has never used.', 'The account is a domain admin, signed in from a workstation at 00:50.'],
+   truth: 'Exfiltration to Cloud Storage: data taken first, so the attacker can threaten to publish it.',
+   resp: [{label: 'Block the destination, isolate the host, disable the account, preserve the logs, and scope exactly which files left', good: true},
+          {label: 'Block the destination and close', good: false, why: 'The account and the host are still the attacker’s.'},
+          {label: 'Wait for the ransom note', good: false, why: 'This is the warning. Act now.'}],
+   chain: [{at: 40, text: 'A second batch starts uploading.'}, {at: 75, text: 'The upload moves on to the payroll folder.'}]},
+  {kind: 'mal', threat: 'shredwick', tech: 'T1485', tags: ['files', 'backup'], story: true, rate: 11, group: 'c',
+   title: 'Round 3: the backup share is being wiped', host: 'NAS-02 · old backup share', enemy: {spr: 'shredwick', pal: 'shredwick'},
+   clues: ['Files on the old NAS backup share are being overwritten, then deleted.', 'The account is the NAS’s local admin, whose password was the same as a domain admin’s.', 'The retention-locked copies on the appliance refuse every delete; the NAS copies don’t.'],
+   truth: 'Data Destruction aimed at the backups.',
+   resp: [{label: 'Cut the NAS off, give it a unique admin password with MFA, confirm the locked and offline copies are intact, and restore the share from them', good: true},
+          {label: 'Restore the NAS share from itself', good: false, why: 'Those are the copies being destroyed.'},
+          {label: 'Switch off the deletion alerts', good: false, why: 'They are the only reason you know.'}],
+   chain: [{at: 40, text: 'The next backup folder is overwritten.'}, {at: 75, text: 'The NAS’s own snapshots are deleted.'}]}
+];
+
+/* ---------- Boss tabletop cards (our own) ---------- */
+const RH_CARDS = [
+  {id: 'isolate', name: 'Isolate at the switch, keep them powered', csf: 'Respond', good: true, text: 'Cut the affected servers off at the switch. Keep them powered on, so memory can still be captured.', fx: 'Stage 1: the encryption stops spreading faster.'},
+  {id: 'preserve', name: 'Preserve the evidence', csf: 'Respond', good: true, text: 'Disk images and memory from a sample of affected servers, the encryptor, the ransom note, the logs, before anything is cleaned.', fx: 'Every stage starts with more evidence, and the earliest compromise can be proved.'},
+  {id: 'verify', name: 'Verify the copies before restoring', csf: 'Recover', good: true, text: 'Check the retention-locked and offline copies are intact and unchanged before anything is restored from them.', fx: 'Stage 2: the backups are confirmed clean faster.'},
+  {id: 'identity', name: 'Take identity back', csf: 'Respond', good: true, text: 'Disable unknown and recently created admin accounts, and reset every privileged and service password, from a clean admin workstation.', fx: 'Stage 3 becomes much easier.'},
+  {id: 'latest', name: 'Restore last night’s backup now', csf: 'Recover', text: 'Everything from the newest copy, straight away.', fx: 'Fast, and last night’s copies were taken after the attacker’s group policy went out.'},
+  {id: 'reconnect', name: 'Bring the tapes online to speed things up', csf: 'Recover', text: 'Load the offline tapes into the library on the backup network now.', fx: 'The offline copy is online again while the attacker still holds a domain admin account.'},
+  {id: 'poweroff', name: 'Pull the power on every server', csf: 'Respond', text: 'Everything off, now.', fx: 'Memory evidence is gone, and nothing can be examined running.'},
+  {id: 'wipe', name: 'Wipe and reinstall everything tonight', csf: 'Recover', text: 'Clean slate, before anyone has looked.', fx: 'The evidence goes with it, and nobody yet knows when the attacker arrived.'}
+];
+const RH_ENCRYPT = '02:40';    // when the encryptor's scheduled task ran on every server (game)
+const RH_GPO = '23:52';        // when the attacker's group policy was created, the night before (game)
+
+/* ---------- Field Manual additions ---------- */
+Object.assign(EXTRA_ACTIONS, {
+  restoretest: {name: 'Timed restore test', desc: 'Restore a real system into an isolated lab, time it end to end, and have its owner check the data. A backup nobody has restored is a hope, not a backup. Restore tests find what job reports can’t: a missing disk, a missing key, the wrong volume.'},
+  rtorpo: {name: 'Agree RTO and RPO with the owner', desc: 'The service owner, not IT, says how long the service can be down before real harm (the maximum tolerable downtime) and how much work can be lost. The recovery time objective must be shorter than that limit; the recovery point objective sets how often you back up.'},
+  bia: {name: 'Business impact analysis (lite)', desc: 'Ask each owner what stops when their service stops, and how soon it hurts. The answers give the critical list and the recovery order, including the systems everything else depends on (directory, DNS), which no resident ever sees.'},
+  offline321: {name: '3-2-1, and one copy offline', desc: 'Keep at least three copies, on two kinds of storage, one of them offsite: a common rule of thumb. It doesn’t require any copy to be offline, so add one that ransomware can’t reach: disconnected (tapes that leave the building) or immutable (a retention lock nobody can lift early).'},
+  backupcreds: {name: 'Separate backup credentials', desc: 'Back-up systems get their own admin accounts, not domain accounts, with MFA on anything that changes or deletes backups, and alerts on mass deletes and retention changes whether they succeed or not. Then a stolen domain admin password can’t reach the way back.'},
+  keyescrow: {name: 'Escrow the backup keys', desc: 'Encrypted backups need their key. Keep it in a key vault, with an escrowed copy offline and offsite, and test a restore using only the escrowed key.'},
+  goldimage: {name: 'Golden images', desc: 'Known-good, regularly updated builds of critical systems, kept where an attacker can’t change them. Rebuild from them, then restore only the data: nothing the attacker planted in the system comes back.'},
+  cleanpoint: {name: 'Restore from a clean point', desc: 'Find the earliest known compromise first. Anything the attacker could change (above all the directory) comes back from the newest copy taken before it; other servers are rebuilt from golden images with their data restored. A newer copy that holds the attacker’s foothold brings the attacker back with it.'},
+  restoreorder: {name: 'Restore in dependency order', desc: 'Identity first, then name service, then the databases, then the applications that use them, then everything else, inside each system’s RTO. Restoring something before what it depends on wastes the hours you have least of.'},
+  retention: {name: 'Retention, cost and RPO', desc: 'Cheaper backups usually mean fewer copies, kept for less time, taken less often. Keep enough history to reach back before an intruder arrived, keep the offline copy, and match how often each system is backed up to the RPO its owner agreed. Tier it: daily, weekly and monthly copies, and stop backing up what nobody needs.'},
+  sizealert: {name: 'Alert on backup size, not just failure', desc: 'A job can succeed at backing up the wrong thing. Alert when a job reads far more or far less than usual, and check coverage after every storage change.'},
+  renamecheck: {name: 'Check a rename spike', desc: 'Find the account, process and host that wrote the files, match them to a change, and check whether shadow copies or backup catalogs were touched. Count and extension decide nothing.'},
+  exfilscope: {name: 'Scope data theft from your own records', desc: 'Outbound volume to destinations you never use, archiving tools run before the encryptor, and the file-server audit log for exactly what was read. The ransom note’s numbers are a sales pitch.'},
+  nopayplan: {name: 'Decide on payment before you need to', desc: 'Leadership and legal decide, with the FBI and CISA told early. The US government strongly discourages paying; a payment can breach sanctions if the recipient is sanctioned; and paying doesn’t guarantee anything comes back. Tested, clean backups are what make “no” possible.'}
+});
+Object.assign(FACTS, {
+  sp80034: {name: 'RTO, RPO, MTD and the BIA (NIST SP 800-34 Rev. 1)', desc: 'Recovery time objective: the overall length of time a system’s components can be in the recovery phase before negatively affecting the mission or business processes. Recovery point objective: the point in time to which data must be recovered after an outage. Maximum tolerable downtime: how long a mission or business process can be disrupted without significant harm; the RTO must normally be shorter. A business impact analysis determines mission and business processes and recovery criticality, identifies resource requirements, and identifies recovery priorities.', src: 'NIST SP 800-34 Rev. 1 (May 2010) and the NIST CSRC glossary'},
+  srguide: {name: 'CISA #StopRansomware Guide', desc: 'Maintain offline, encrypted backups of critical data, and regularly test their availability and integrity; keep golden images of critical systems. If hit: determine which systems were affected and isolate them immediately; if several appear affected, take the network offline at the switch level; power devices down only if they can’t be disconnected. Report to CISA and the local FBI field office. Restore from offline, encrypted backups based on a prioritised list of critical services and the systems they depend on.', src: 'CISA and MS-ISAC, #StopRansomware Guide (September 2023)'},
+  rule321: {name: 'The 3-2-1 rule', desc: 'The UK’s NCSC describes 3-2-1 as at least 3 copies, on 2 devices, and 1 offsite, and notes that it doesn’t require any copy to be offline: hence its own advice to keep at least one backup offline at any time, and to test backups regularly.', src: 'NCSC (UK), Offline backups in an online world (August 2019)'},
+  ncscbk: {name: 'Ransomware-resistant backups (NCSC)', desc: 'The NCSC’s principles for on-premises backups: use admin accounts and credentials separate from those used for the rest of the network; require MFA for requests to alter or destroy data; block deletion or alteration of a backup; keep backups for a fixed time period; and raise an alert on mass deletes, retention or encryption changes and admin account changes, whether or not the attempt succeeds.', src: 'NCSC (UK), Principles for ransomware-resistant on-premises backups (November 2024)'},
+  csfbk: {name: 'Backups in the NIST CSF 2.0', desc: 'PR.DS-11: backups of data are created, protected, maintained and tested. RC.RP-03: the integrity of backups and other restoration assets is verified before using them for restoration. RC.RP-05: the integrity of restored assets is verified, systems and services are restored, and normal operating status is confirmed.', src: 'NIST CSWP 29, The NIST Cybersecurity Framework (CSF) 2.0 (February 2024)'},
+  cryptostd: {name: 'Encoding, hashing, encryption', desc: 'RFC 4648 (October 2006) defines Base64 and says base encoding visually hides information but provides no computational confidentiality. FIPS 180-4 (August 2015) specifies hash algorithms whose digests detect whether a message has changed. FIPS 197 (2001, updated May 2023) specifies AES-128, AES-192 and AES-256, which encrypt 128-bit blocks.', src: 'IETF RFC 4648; NIST FIPS 180-4; NIST FIPS 197'},
+  keymgmt: {name: 'Key recovery', desc: 'NIST SP 800-57 Part 1 Rev. 5 (May 2020) defines key recovery as a function in a key’s lifecycle: mechanisms and processes that let authorised entities retrieve or reconstruct the key from key backups or archives.', src: 'NIST SP 800-57 Part 1 Rev. 5, via the NIST CSRC glossary'},
+  atl2018: {name: 'City of Atlanta, 2018', desc: 'In the early morning of 22 March 2018 ransomware hit the City of Atlanta. Mayor Keisha Lance Bottoms told a House subcommittee in June 2019 that fire, police, ambulance and water services were not affected, but the municipal court had to cancel and reschedule hearings, ATL311 went offline, and some files were destroyed for good. The attackers demanded $51,000 in Bitcoin, which the city refused to pay. Recovery had cost about $7.2 million by then, with more expected; some was reimbursed by cyber insurance. Lessons she named: manual processes for mission-critical services, and cyber-specific recovery and continuity plans ready to use.', src: 'Testimony of Mayor Keisha Lance Bottoms, House Homeland Security Subcommittee on Cybersecurity, Infrastructure Protection and Innovation, 25 June 2019'},
+  samsam: {name: 'SamSam', desc: 'On 28 November 2018 the US Department of Justice announced the indictment of two Iranian men for the SamSam scheme: more than 200 victims, including the City of Atlanta, over $6 million in ransom payments and over $30 million in losses. The same day the US Treasury designated two Iran-based men who helped exchange SamSam’s bitcoin ransom payments: the first time OFAC publicly attributed digital currency addresses to designated individuals. CISA and the FBI reported that SamSam actors first exploited vulnerable JBoss applications and, from mid-2016, mostly used remote desktop access, by brute force or with stolen credentials.', src: 'DOJ press release, 28 November 2018; US Treasury press release sm556; CISA alert AA18-337A (December 2018)'},
+  ofac: {name: 'Ransom payments and sanctions', desc: 'OFAC’s updated advisory (21 September 2021, superseding 1 October 2020): the US government strongly discourages paying ransom; OFAC may impose civil penalties for sanctions violations based on strict liability; prompt reporting to law enforcement or agencies such as CISA, and full cooperation, are significant mitigating factors, as are steps such as offline backups and incident response plans.', src: 'US Treasury OFAC, Updated Advisory on Potential Sanctions Risks for Facilitating Ransomware Payments'},
+  fbipay: {name: 'The FBI on paying', desc: 'The FBI does not support paying a ransom: paying doesn’t guarantee you get any data back, and it encourages perpetrators to target more victims.', src: 'FBI Memphis Field Office, ransomware advice (undated web page)'}
+});
+GAME_NOTES.push(
+  'Records Hall threats (Gloam, Shredwick, Sluice, Lapse) join the alert mix with weights 3/2/3/2 once you reach Records Hall; inside it they are three times as likely. The Vault Badge halves every threat that destroys data or the ways back (T1490 and T1485, including Clerks’ Row’s Shade). Recovery tools are strong against Impact and attacks on backups. (game)',
+  'Hostnames, accounts, tickets, restore times, recovery objectives (RTO, RPO and MTD hours), the finance figures, the restore budget and every incident timing in Records Hall are invented. (game)',
+  'Restore-order rules: one restore crew, 48 hours of crew time; a system restored before what it depends on fails and wastes an hour; a copy that holds something the attacker planted reinfects the system, wasting its restore time plus an hour. Measured recovery time counts from the start of recovery. RPO met compares data lost (restore point to the start of encryption) with each system’s RPO. (game)',
+  'All Records Hall people, systems and numbers are invented. The ransomware incident is retold in outline from the City of Atlanta, March 2018; its details here are invented. (game)'
+);
+
+/* ---- editions/town-hall/records-quiet.js ---- */
+/* ============================================================
+   UPTIME · editions/town-hall/records-quiet.js
+   The Quiet Thread in Records Hall: one faint clue, consistent with the earlier
+   ones (svc-print, activity just after 03:00, relaying through the old router
+   in the Front Desk closet). It sits in the backup console's audit log and in
+   the backup server's process history, and needs the right capability: Ledger
+   with logging on, or an endpoint tool. It is recorded in the series save
+   exactly like the earlier clues. The situation is invented (game); the
+   technique ID is real (QT_TECH: T1555 Credentials from Password Stores,
+   verified on attack.mitre.org, 28 Oct 2026, ATT&CK v20.0). Never in the alert mix.
+   ============================================================ */
+'use strict';
+
+Object.assign(QT_CLUES, {
+  'rh-vault': {tech: 'T1555', where: 'the backup console in the Records Hall vault (Ledger or an endpoint tool)',
+               seen: 'At 03:14 on the day you arrived in Records Hall, before the backup accounts were separated, svc-print signed in to the backup console from the address of the old router in the Front Desk closet and exported the stored credentials the backup server uses to reach every server it copies. The console still accepted domain accounts then, and nothing alerted.'}
+});
+
+function rhQtReady() { return !!(G.f.rhCreds && G.f.rhNight1); }
+async function rhQtVault() {
+  const opts = [];
+  if (hasTool('ledger') && G.f.logs) opts.push({label: 'Ledger: the backup console’s audit log, before the separation', meta: {k: 'log'}});
+  if (G.party.some(t => TOOLS[t.id].cls === 'endpoint')) opts.push({label: 'Endpoint tool: BKP-01’s process history', meta: {k: 'proc'}});
+  if (!opts.length) { await say('The backup console’s old audit log. Reading it would take a log tool or an endpoint tool.'); return; }
+  opts.push({label: 'Leave it', meta: {k: 'leave'}});
+  const i = await choose('The backup console. Its audit log goes back a year.', opts);
+  const k = opts[i].meta.k;
+  if (k === 'leave') return;
+  const day = RH().day0;
+  if (k === 'log') await say('Ledger: Day ' + day + ', 03:14. svc-print signs in to the backup console, from the address of the Front Desk closet router, and exports the stored credentials. Right password, first try. svc-print was in the old domain group the console trusted. (game)');
+  else await say('Endpoint history on BKP-01: Day ' + day + ', 03:14. The console’s export runs under svc-print and writes the stored-credentials file to a temp folder; at 03:15 the file is read over the network from the Front Desk closet router’s address, then deleted. (game)');
+  await say('A printer’s service account has no reason to read the passwords the backup server uses. It happened before you separated the accounts, and Nico rotated every one of those passwords when you did. No rule fired: the account had the rights.');
+  await qtAfterNote(qtNote('rh-vault'));
+}
+
+function rhQtSummaryHtml() {
+  const mine = qtFound('rh-vault');
+  if (qtCount() >= QT_SUSPECT) return '<p class="big">Something quiet is moving in the network.</p><p class="small">' + (mine ? 'It went for the keys to the backups, through the same old router, as the same service account. ' : '') + 'Hunt mode opens later. Your Unexplained notes carry over.</p>';
+  if (mine) return '<p class="small">A printer account read the backup server’s passwords at three in the morning. Probably nothing.</p>';
+  return '<p class="small">In the backup console’s old audit log, one sign-in at 03:14 points back toward the Front Desk.</p>';
+}
+
+/* ---- editions/town-hall/records-story.js ---- */
+/* ============================================================
+   UPTIME · editions/town-hall/records-story.js
+   Town Hall district 5, Records Hall (backup and recovery): state, objectives,
+   interactions, talk, the fieldwork (a timed restore test, a business impact
+   analysis with recovery objectives agreed with an owner, 3-2-1 with an
+   offline copy and escrowed keys, separate backup credentials), the finance
+   directive, three investigation drills, the Cryptography Dojo, the Records
+   Board (Vault Badge, Cairn), the ransomware incident with its restore-order
+   mini-game, scorecard metrics and the end-of-district summary.
+   The Front Desk story calls in through small guarded hooks (rhObjective via
+   mkObjective, rhTriggers, rhInteract, rhTalk, rhTile, rhEvolveCheck). The
+   engine hooks the earlier districts define (alertWeight, briefList,
+   alertDecorate, onAbility, onAlertClosed, editionMetricVals, editionScoreHtml,
+   peekExtra) are wrapped here: each wrapper calls the previous version first,
+   then adds Records Hall.
+   ============================================================ */
+'use strict';
+
+if (typeof EDITION !== 'undefined') {
+  EDITION.creditsFacts += ' Records Hall: MITRE ATT&CK v20 (T1486, T1490, T1485, T1567.002, T1560.001, T1078; Quiet Thread T1555). NIST SP 800-34 Rev. 1 and the NIST CSRC glossary (RTO, RPO, MTD, business impact analysis). NIST CSWP 29 (CSF 2.0: PR.DS-11, RC.RP-03, RC.RP-05). CISA and MS-ISAC #StopRansomware Guide (September 2023). CISA alert AA18-337A (SamSam). NCSC (UK): Offline backups in an online world (2019) and Principles for ransomware-resistant on-premises backups (2024). IETF RFC 4648; NIST FIPS 180-4, FIPS 197 and SP 800-57 Part 1 Rev. 5. US Department of Justice SamSam indictment (November 2018); US Treasury designation sm556 (November 2018); OFAC Updated Advisory on Potential Sanctions Risks for Facilitating Ransomware Payments (September 2021). FBI Memphis Field Office ransomware advice. Testimony of Atlanta Mayor Keisha Lance Bottoms to the House Homeland Security Committee’s cybersecurity subcommittee (June 2019).';
+}
+
+/* ---------- State ---------- */
+function RH() {
+  if (!G.rh) G.rh = {day0: G.day, tests: [], crit: [], obj: false, dbTwice: false, offline: 0, keyEscrow: false, drills: {}, ttc: [],
+    dojo: [false, false, false], directive: null, d3Day: null, boss: null, bossT0: null, restore: null, pay: null};
+  return G.rh;
+}
+function rhOn() { return !!(G && G.f && G.f.rhMet && G.rh); }
+function inRecords() { return RH_MAPS.includes(G.map); }
+function rhTestRate() { const t = RH().tests; return t.length ? Math.round(t.filter(x => x.ok).length / t.length * 100) : null; }
+// Before the incident: critical systems whose latest passing restore test fits inside the agreed RTO. Untested counts as unknown.
+function rhRtoPct() {
+  const c = RH();
+  if (c.restore) return Math.round(c.restore.rtoMet / RH_SYS_ORDER.length * 100);
+  if (!c.obj) return null;
+  const ok = RH_SYS_ORDER.filter(s => { const t = c.tests.filter(x => x.sys === s && x.ok).pop(); return t && t.hours <= RH_OBJ[s].rto; }).length;
+  return Math.round(ok / RH_SYS_ORDER.length * 100);
+}
+// Before the incident: critical systems backed up at least as often as their RPO needs. After it: data actually lost vs RPO.
+function rhRpoPct() {
+  const c = RH();
+  if (c.restore) return Math.round(c.restore.rpoMet / RH_SYS_ORDER.length * 100);
+  if (!c.obj) return null;
+  const ok = RH_SYS_ORDER.filter(s => (s === 'db' ? (c.dbTwice ? 12 : 24) : 24) <= RH_OBJ[s].rpo).length;
+  return Math.round(ok / RH_SYS_ORDER.length * 100);
+}
+function rhDays() { const c = RH(); return {R: c.day0, E: Math.max(1, c.day0 - 2), B: c.boss ? c.boss.day : G.day}; }
+function rhFill(s, d) { d = d || rhDays(); return String(s).replace(/\{B\}/g, String(d.B)).replace(/\{R\}/g, String(d.R)).replace(/\{E\}/g, String(d.E)); }
+
+/* ---------- Engine hooks (wrapping the Market Square versions) ---------- */
+const _rhPrevAlertWeight = alertWeight, _rhPrevBriefList = briefList, _rhPrevDecorate = alertDecorate,
+  _rhPrevOnAbility = onAbility, _rhPrevOnAlertClosed = onAlertClosed, _rhPrevMetricVals = editionMetricVals, _rhPrevScoreHtml = editionScoreHtml, _rhPrevPeekExtra = peekExtra;
+alertWeight = function (t, w) {
+  w = _rhPrevAlertWeight(t, w);
+  if (THREATS[t].district === 'records' && !(G.f && G.f.rhMet)) return 0;
+  if (G.f.rhMet && inRecords() && RH_HOME.includes(t)) w *= 3;
+  // Vault Badge: the backups can't be deleted from the map, so threats that destroy data or the ways back come half as often. (game)
+  if (G.f.rhVault && RH_VAULT_TECHS.includes(THREATS[t].tech)) w *= 0.5;
+  return w;
+};
+briefList = function () { const L = _rhPrevBriefList(); return G.f.rhMet ? L.concat(RH_BRIEFS) : L; };
+// Records Hall threats in Records Hall name a Records Hall server.
+alertDecorate = function (spec) {
+  _rhPrevDecorate(spec);
+  if (G.f && G.f.rhMet && inRecords() && RH_HOME.includes(spec.threat)) spec.host = pick(RH_HOSTS) + ' · Records Hall';
+};
+onAbility = function (k, b) {
+  _rhPrevOnAbility(k, b);
+  if (!rhOn() || !RH_HOME.includes(b.spec.threat) || b.spec.kind !== 'mal' || b.rhTtcDone || ABIL[k].type !== 'con') return;
+  b.rhTtcDone = true;
+  const c = RH();
+  c.ttc.push(Math.round((performance.now() - b.t0) / 100) / 10);
+  if (c.ttc.length > 20) c.ttc.shift();
+};
+onAlertClosed = async function (s, verdict, correct, r) {
+  await _rhPrevOnAlertClosed(s, verdict, correct, r);
+  if (!rhOn() || s.story) return;
+  if (correct && s.kind === 'mal' && r.good) {
+    if (s.threat === 'sluice') unlock('act', 'exfilscope');
+    if (s.threat === 'gloam') unlock('act', 'renamecheck');
+    if (s.threat === 'shredwick' || s.threat === 'lapse') unlock('act', 'backupcreds');
+  }
+  track();
+};
+editionMetricVals = function () {
+  const v = _rhPrevMetricVals();
+  if (!rhOn()) return v;
+  const c = RH();
+  return Object.assign(v, {
+    rhTest: rhTestRate(), rhRto: rhRtoPct(), rhRpo: rhRpoPct(), rhOffline: c.offline,
+    rhTtc: c.ttc.length ? +(c.ttc.reduce((a, b) => a + b, 0) / c.ttc.length).toFixed(1) : null
+  });
+};
+EDITION_METRICS.push(
+  {k: 'rhTest', label: 'Restore test success rate', unit: '%', higher: true, when: rhOn},
+  {k: 'rhRto', label: 'Critical systems with a measured recovery time within RTO', unit: '%', higher: true, when: rhOn},
+  {k: 'rhRpo', label: 'Critical systems recoverable within RPO', unit: '%', higher: true, when: rhOn},
+  {k: 'rhOffline', label: 'Critical systems with an offline copy', unit: '%', higher: true, when: rhOn},
+  {k: 'rhTtc', label: 'Mean time to contain, Records Hall (game seconds)', unit: ' s', higher: false, lower: true, when: rhOn}
+);
+editionScoreHtml = function () {
+  let h = _rhPrevScoreHtml();
+  if (!rhOn()) return h;
+  const c = RH(), t = c.tests;
+  if (G.f.rhDirective) h += '<p class="dir">Directive: backup storage costs down 40% this year, by tiering retention with the service owners. (game)</p>';
+  h += '<p>Records Hall: Vault Badge <b>' + (G.f.rhVault ? 'yes' : 'not yet') + '</b> · restore tests passed <b>' + t.filter(x => x.ok).length + ' of ' + t.length + '</b>' +
+    ' · backup console <b>' + (G.f.rhCreds ? 'separate accounts with MFA' : 'domain admin') + '</b> · offline copy <b>' + (G.f.rhOffline ? 'weekly encrypted tapes, key in escrow' : 'none') + '</b>' +
+    (c.restore ? ' · recovery: reinfections <b>' + c.restore.reinfect + '</b>, out-of-order restores <b>' + c.restore.depFail + '</b>' : '') + ' (game)</p>';
+  return h;
+};
+peekExtra = function () {
+  const e = _rhPrevPeekExtra();
+  e.rhSummary = !!G.f.rhSummary;
+  e.rh = G.rh ? {tests: G.rh.tests.length, testRate: rhTestRate(), crit: G.rh.crit, obj: G.rh.obj, offline: G.rh.offline, keyEscrow: G.rh.keyEscrow, directive: G.rh.directive,
+    drills: G.rh.drills, ttc: G.rh.ttc.length, dojo: G.rh.dojo, boss: G.rh.boss, restore: G.rh.restore, pay: G.rh.pay} : null;
+  return e;
+};
+function rhTile(d, ch, x, y) {
+  if (ch === 'P' && G.f.rhVault) { d.spr = 'L'; d.pal = 'recordsBld'; }
+  if (ch === '0' && G.f.rhVault && (x + y) % 2 === 0) d = Object.assign({ch: ','}, TILES[',']);
+  if (ch === 'm' && G.f.rhCreds) d.pal = 'vaultOk';
+  return d;
+}
+
+/* ---------- Objective ---------- */
+function rhObjective() {
+  const f = G.f, at = (text, x, y, map) => ({text: text, map: map || 'records', x: x, y: y, district: 'records'});
+  if (!f.rhMet) return at('Next: Records Hall. Its door is south of the plaza, among the cabling between the Identity Board and the Dojo; your Lantern Badge opens it.', 14, 6);
+  if (!f.rhTest) return at('Fieldwork: nobody has ever restored a backup. Run a timed restore test at the restore lab.', 5, 11);
+  if (!f.rhBia) return at('Fieldwork: no recovery objectives agreed. Deshawn, the permits manager, is by the restore lab.', 5, 13);
+  if (!f.rhOffline) return at('Fieldwork: copies an attacker can’t reach. The backup appliance is in the vault.', 21, 1);
+  if (!f.rhCreds) return at('Fieldwork: the backup console still takes domain admin. Back to the appliance.', 22, 1);
+  if (!f.rhNight1) return at('End your shift at your Records Hall desk.', 8, 14);
+  if (!f.rhDrill1) return at('Odile has a question about the Planning share.', 14, 6);
+  if (!f.rhDirective) return at('Leona Ferraro from finance wants a word.', 18, 7);
+  if (!f.rhDrill2) return at('Nico’s morning report looks odd. He’s in the vault.', 24, 2);
+  if (!f.rhNight2) return at('End your shift at your desk.', 8, 14);
+  if (!f.rhDrill3) return at('A laptop in Planning was hit overnight. See Odile.', 14, 6);
+  if (!f.rhDojoDone) {
+    if (!f.rhDojoMet) return at('(Optional) Train at the Cryptography Dojo with Tobias.', 27, 12);
+    const i = RH().dojo.findIndex(x => !x);
+    return at('(Optional) Cryptography puzzle ' + (i + 1) + ' of 3.', [22, 24, 26][i], 11);
+  }
+  if (!f.rhBoard) return at('Take the Records Board challenge (Margit Halloran, through the east door).', 9, 2, 'rboard');
+  if (!f.rhNight3) return at('End your shift at your desk.', 8, 14);
+  if (!f.rhBoss) return at('Odile needs you: the stacks have gone dark.', 14, 6);
+  return {text: 'Records Hall recovered. Next: IT Basement.', done: true, district: 'records'};
+}
+
+/* ---------- Triggers and interactions ---------- */
+let rhEarlyWarned = false;
+function rhTriggers() {
+  if (G.map !== 'records') return false;
+  if (!G.f.mkBoss) {
+    if (rhEarlyWarned) return false;
+    rhEarlyWarned = true;
+    run(async () => { await say('Lantern Badge? Then you know your way around. But Paz says Market Square isn’t finished: the payment page first. The archive will keep.', 'Odile Brennan'); });
+    return true;
+  }
+  if (!G.f.rhMet) { run(rhArrive); return true; }
+  return false;
+}
+function rhInteract(ch, tx, ty) {
+  if (!inRecords()) return false;
+  if (ch === 'L') { run(async () => { await say(G.f.rhBoss ? 'The stacks: rebuilt from golden images, their files restored and checked by each department.' : 'The stacks: the department file servers. Planning, Finance, Permits, every department’s documents.'); }); return true; }
+  if (ch === 'm') { run(rhVaultTile); return true; }
+  if (ch === 'y') { run(async () => { await say(G.f.rhOffline ? 'The tape shelf. Weekly copies of every critical system, encrypted, labelled, waiting for Monday’s courier. Their key is in escrow, not here.' : 'An empty tape shelf, and a tape drive nobody has switched on in two years.'); }); return true; }
+  if (ch === '4') { run(async () => { await say(G.f.rhOffline ? 'The courier’s door. The tapes leave for the offsite store every Monday (game). Out of the building, off the network.' : 'The courier’s door, for the offsite store. Nothing has gone through it in two years.'); }); return true; }
+  if (ch === '5') { run(rhRestoreLab); return true; }
+  if (ch === '6') { run(async () => { await say('The archivist’s desk: a card index, a magnifier, and the retention schedule, annotated in three colours of ink.'); }); return true; }
+  if (ch === '7') { run(() => rhDojoPuzzle([22, 24, 26].indexOf(tx))); return true; }
+  if (ch === '8') { run(async () => { await say('Records Board racks: every backup, every restore point, every deletion request, and who asked.'); }); return true; }
+  if (ch === 'Y') { run(rhDesk); return true; }
+  return false;
+}
+async function rhTalk(npc) {
+  if (!RH_NPC_IDS.includes(npc.id)) return;
+  const who = npc.name, f = G.f;
+  if (!f.rhMet && npc.map === 'records') { await say('Odile is the one to talk to first.', who); return; }
+  switch (npc.id) {
+    case 'odile': await odileTalk(); break;
+    case 'nico': await nicoTalk(); break;
+    case 'hester': await hesterTalk(); break;
+    case 'deshawn': await deshawnTalk(); break;
+    case 'leona': await leonaTalk(); break;
+    case 'tobias': await tobiasTalk(); break;
+    case 'margit': await rhBoardScript(); break;
+  }
+}
+async function rhDesk() {
+  const f = G.f;
+  const ready = (f.rhCreds && !f.rhNight1) || (f.rhDrill2 && !f.rhNight2) || (f.rhBoard && !f.rhNight3) || f.rhBoss;
+  if (!ready) { await say('Your desk in the corner of the restore lab. Too early to go home.'); return; }
+  const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
+  const i = await choose('Your Records Hall desk. End your shift?', opts);
+  if (opts[i].meta.k !== 'end') return;
+  await endShift('desk');
+  if (f.rhCreds && !f.rhNight1) {
+    f.rhNight1 = true;
+    await say('Day ' + G.day + ', 07:35. The file-share rule fired overnight on FS-02: thousands of renamed files in the Planning share. Odile wants you.');
+  } else if (f.rhDrill2 && !f.rhNight2) {
+    f.rhNight2 = true;
+    await say('Day ' + G.day + ', 07:52. The endpoint protection on PLAN-LT-04, a planner’s laptop, stopped an encryptor at 02:21. There’s a ransom note on the desktop. Odile is on her way in.');
+  } else if (f.rhBoard && !f.rhNight3) {
+    f.rhNight3 = true;
+    await say('Day ' + G.day + ', 06:55. Your phone: Odile. “The stacks are dark. Everything is dark. Come in.”');
+  }
+}
+
+/* ---------- Arrival ---------- */
+async function rhArrive() {
+  const who = 'Odile Brennan', f = G.f;
+  RH(); G.rh.day0 = G.day;
+  await say('Day ' + G.day + '. Records Hall: the stacks of file servers, a vault with a backup appliance and an empty tape shelf, a restore lab nobody uses, and two centuries of town records.');
+  await say('You’re the Tier 2 from Market Square? Odile Brennan, records and infrastructure. Everything the town has ever written down lives in this building, one way or another.', who);
+  await say('Three problems. Every night the backups say Success, and nobody has ever restored one. The backups open with the same domain admin password as everything else. And nobody has agreed with the people who own these services how long they can be down, or how much they can lose.', who);
+  await say('You stay Tier 2, and you get a new responsibility: you own the recovery decisions here. What comes back, in what order, from which copy.', who);
+  G.targets.rhTest = 100; G.targets.rhRto = 100; G.targets.rhRpo = 100; G.targets.rhOffline = 100; G.targets.rhTtc = 30;
+  f.rhMet = true; track();
+  touchCSF('Recover');
+  await say('New on your scorecard: restore test success, recovery times against the agreed objectives, data loss against them, offline copies, and mean time to contain. Start (Enter) shows them.', who);
+  await say('First, find out whether the backups work at all. Nico is setting up the restore lab, south-west.', who);
+}
+async function odileTalk() {
+  const f = G.f, who = 'Odile Brennan';
+  if (!f.rhTest) { await say('The restore lab, south-west. Find out whether a backup actually restores, and how long it takes.', who); return; }
+  if (!f.rhBia) { await say('Deshawn owns permits. Ask him what “down” means to him, in hours.', who); return; }
+  if (!f.rhOffline || !f.rhCreds) { await say('The vault, north-east. Nico has the keys.', who); return; }
+  if (!f.rhNight1) { await say('Go home. The backups run at one, as they always have. This time we know they restore.', who); return; }
+  if (!f.rhDrill1) { await rhDrill1(); return; }
+  if (!f.rhDirective) { await say('Leona from finance is looking for you. Budget season.', who); return; }
+  if (!f.rhDrill2) { await say('Nico has his morning report, in the vault.', who); return; }
+  if (!f.rhNight2) { await say('Go home. Tomorrow will come soon enough.', who); return; }
+  if (!f.rhDrill3) { await rhDrill3(); return; }
+  if (!f.rhBoard) { await say('Margit runs the Records Board, through the east door. Tobias’s Dojo first, if you want it.', who); return; }
+  if (!f.rhNight3) { await say('The hunt has checked 9 of our 31 servers for the tools from PLAN-LT-04 (game). It goes on tomorrow. Go home.', who); return; }
+  if (!f.rhBoss) { await rhBossScript(); return; }
+  await say('Every system back, from copies we proved clean, in the order we planned. The IT Basement is next.', who);
+  await rhSummary();
+}
+
+/* ---------- Fieldwork: the timed restore test ---------- */
+async function rhRestoreLab() {
+  const f = G.f;
+  if (!f.rhMet) { await say('A restore lab: three benches on their own network. Odile should show you around first.'); return; }
+  if (!f.rhTest) { await rhRestoreTest(); return; }
+  const t = RH().tests;
+  await say('The restore lab, on its own isolated network. Restore tests so far: ' + t.filter(x => x.ok).length + ' of ' + t.length + ' passed.' + (f.rhBoss ? ' The next test is booked for next month, on the directory.' : ''));
+}
+async function rhRestoreTest() {
+  const who = 'Nico Varga', c = RH();
+  await say('Every backup here has said Success for three years. Not one has ever been restored. I’d like to know before I need to.', who);
+  while (true) {
+    const i = await choose('How do you test the backups?', [
+      {label: 'Restore real systems into the isolated lab, time each one end to end, and have its owner check the data', meta: {good: true}},
+      {label: 'Read the job reports: green means it works'},
+      {label: 'Restore over the live permits server tonight, to make it real'},
+      {label: 'Restore one small file from each job'}]);
+    if (i === 0) break;
+    if (i === 1) await say('Green means the job finished. It doesn’t say you can restore from it, or how long it takes.');
+    else if (i === 2) await say('If it fails, you’ve caused the outage you were testing for. That’s what the isolated lab is for.');
+    else await say('A file proves the file. A service also needs its settings, its disks, its database, and the clock running.');
+  }
+  RH_TESTS.forEach(t => c.tests.push(Object.assign({}, t)));
+  const rows = RH_TESTS.map(t => '<tr><td>' + esc(t.name) + '</td><td>' + t.hours + ' h</td><td>' + (t.ok ? 'pass' : '<b>fail</b>') + '</td></tr><tr><td colspan="3" class="small">' + esc(t.note) + '</td></tr>').join('');
+  await UI.openModal('Restore tests', '<p class="big">' + RH_TESTS.filter(t => t.ok).length + ' of ' + RH_TESTS.length + ' passed</p><table class="sc"><tr><th>System</th><th>Time</th><th>Result</th></tr>' + rows + '</table>' +
+    '<p>Every one of those jobs said Success. A restore test finds what a job report can’t. (Times are game hours.)</p>', [{label: 'Fix it and test again', meta: {good: true}}], {closable: false, cls: 'drill'});
+  c.tests.push(Object.assign({}, RH_RETEST));
+  G.f.rhTest = true; unlock('act', 'restoretest'); touchCSF('Protect'); track();
+  await say('Second disk added to the APP-01 job, restored again: it starts. Restore test success rate: ' + rhTestRate() + '%. The failure goes on the scorecard too: that one would have hurt.', who);
+  await say('And 5.5 hours for the permits database: is that fine? Nobody can say. Nobody ever agreed how long it may be down. Deshawn owns permits; he’s just come in.', who);
+}
+
+/* ---------- Fieldwork: business impact analysis, RTO and RPO ---------- */
+async function deshawnTalk() {
+  const who = 'Deshawn Pruitt', f = G.f;
+  if (!f.rhBia) { await rhBia(); return; }
+  if (f.rhBoss) { await say('Permits came back inside sixteen hours, and I checked the records myself. Two days of paper forms, re-entered. I can live with that.', who); return; }
+  await say('Twice-a-day backups for the permits database now. Twelve hours of paper is the most my clerks can re-enter.', who);
+}
+async function rhBia() {
+  const who = 'Deshawn Pruitt', c = RH();
+  await say('Permits, deeds, licences: if the database is down, inspections stop and nobody can build anything. Ask me what you need.', who);
+  // 1. The critical list: owners say what stops; the dependencies count too.
+  const body = '<p>A business impact analysis, lite: what stops when each service stops, and how soon it hurts. Pick the <b>five</b> that go on the critical list.</p>' +
+    RH_SERVICES.map(s => '<div class="card"><b>' + esc(s.name) + '</b><br><span class="small">' + esc(s.owner) + '</span></div>').join('');
+  const items = RH_SERVICES.map(s => ({label: s.name, meta: {good: s.crit}})).concat([{label: 'This is the critical list', done: true, meta: {done: true}}]);
+  const sel = await UI.openModal('Business impact analysis', body, items, {multi: 5, closable: false, cls: 'drill'});
+  const picked = sel.map(i => RH_SERVICES[i].id), right = picked.filter(id => RH_SERVICES.find(s => s.id === id).crit).length;
+  if (right < 5) await say('Close. The directory and DNS: no resident ever sees them, and nothing on the list restores without them. A critical list includes the systems the critical services depend on.', 'Odile Brennan');
+  c.crit = RH_SERVICES.filter(s => s.crit).map(s => s.id);
+  // 2. Recovery objectives for the permits database, agreed with its owner.
+  while (true) {
+    const i = await choose('The permits database: how long may it be down, and how much may it lose?', [
+      {label: 'Ask Deshawn when the harm starts (a day without inspections), set the RTO under that at 16 hours, and an RPO of 12 hours: back it up twice a day', meta: {good: true}},
+      {label: 'Zero downtime and zero data loss, for everything'},
+      {label: 'IT decides: 72 hours is what we can do'},
+      {label: 'Whatever the nightly job gives us: up to a day of lost work'}]);
+    if (i === 0) break;
+    if (i === 1) await say('Possible, for a price nobody here would pay, and not needed: Deshawn can run on paper for a day. Objectives come from what the business can bear.');
+    else if (i === 2) await say('Then IT has decided how long inspections stop, without asking. And 72 hours is far past the day Deshawn can bear.');
+    else await say('That lets the backup schedule decide the business’s risk. Deshawn’s clerks can re-enter half a day from paper, not a whole day: the schedule should follow that.');
+  }
+  c.obj = true; c.dbTwice = true;
+  const rows = RH_SYS_ORDER.map(s => '<tr><td>' + esc(RH_SYS_NAME[s]) + '</td><td>' + RH_OBJ[s].mtd + ' h</td><td>' + RH_OBJ[s].rto + ' h</td><td>' + RH_OBJ[s].rpo + ' h</td></tr>').join('');
+  await UI.openModal('Recovery objectives', '<p>Agreed with each owner (game hours). The RTO sits inside the owner’s limit; the RPO sets how often each system is backed up.</p>' +
+    '<table class="sc"><tr><th>System</th><th>Owner’s limit (MTD)</th><th>RTO</th><th>RPO</th></tr>' + rows + '</table>' +
+    '<p>NIST SP 800-34 Rev. 1: the recovery time objective is how long a system can be in recovery before it harms the mission; the recovery point objective is the point in time to which data must be recovered; and because the RTO must not let the maximum tolerable downtime be exceeded, it is normally shorter.</p>' +
+    '<p>Measured against these, your restore tests cover three of the five within their RTOs. The directory and DNS have never been tested.</p>', [{label: 'Agreed', meta: {good: true}}], {closable: false, cls: 'drill'});
+  G.f.rhBia = true; unlock('act', 'rtorpo'); unlock('act', 'bia'); unlock('fact', 'sp80034'); touchCSF('Identify'); touchCSF('Govern'); track();
+  await say('Sixteen hours. I can tell my inspectors that. Nobody’s ever asked me before.', who);
+}
+
+/* ---------- Fieldwork: copies the attacker can't reach, and separate credentials ---------- */
+async function rhVaultTile() {
+  const f = G.f;
+  if (!f.rhMet) { await say('A backup appliance. Odile should show you around first.'); return; }
+  if (!f.rhBia) { await say('The backup appliance. Restore tests and recovery objectives first: you can’t decide what to protect, or how, until you know what matters.'); return; }
+  if (!f.rhOffline) { await rhOfflineCopy(); return; }
+  if (!f.rhCreds) { await rhCredsStep(); return; }
+  if (rhQtReady()) { await rhQtVault(); return; }
+  await say('The backup console: separate admin accounts, MFA on every change or deletion, retention locked. Last night’s jobs: all green, and all the usual sizes.');
+}
+async function nicoTalk() {
+  const f = G.f, who = 'Nico Varga';
+  if (!f.rhTest) { await say('The restore lab first. I’ll meet you there.', who); return; }
+  if (!f.rhOffline || !f.rhCreds) { await say('The appliance is beside me. Let’s fix what an attacker would go for first.', who); return; }
+  if (f.rhDirective && !f.rhDrill2) { await rhDrill2(); return; }
+  if (f.rhDrill2 && !f.rhBoss) { await say('Every job now alerts if it reads far more or far less than usual. And the storage team’s checklist has a line for me.', who); return; }
+  if (f.rhBoss) { await say('Two attacker accounts tried the console that night, and the lock refused every delete. I’ve never been so glad to be refused.', who); return; }
+  await say('Backups at one, alerts on anything odd. The rest is restore tests.', who);
+}
+async function rhOfflineCopy() {
+  const who = 'Nico Varga', c = RH();
+  await say('One appliance, one copy, in this room, reachable from the network with a domain admin password. That’s our whole backup.', who);
+  while (true) {
+    const i = await choose('How many copies, and where?', [
+      {label: 'Three copies on two kinds of storage, one offsite, and one the network can’t reach: production, the appliance with a retention lock, and weekly encrypted tapes for the offsite store', meta: {good: true}},
+      {label: 'A second copy on the same appliance'},
+      {label: 'Copy everything to cloud storage mapped as a drive on the file server'},
+      {label: 'One copy is enough: the appliance has redundant disks'}]);
+    if (i === 0) break;
+    if (i === 1) await say('Same box, same room, same password. One fire or one stolen password takes both.');
+    else if (i === 2) await say('Anything the file server can write to, ransomware on the file server can encrypt. A backup the network can always reach is not the one that saves you.');
+    else await say('Redundant disks survive a dead disk. They copy a deletion or an encryption faithfully.');
+  }
+  await say('3-2-1 is the old rule of thumb: three copies, two kinds of storage, one offsite. It never said “offline”, so we add that: one copy ransomware can’t reach.', who);
+  c.offline = 80; track();
+  while (true) {
+    const i = await choose('The tapes will be encrypted. Where does the key live?', [
+      {label: 'In the key vault, with an escrowed copy sealed in the offsite store, and a test restore using only the escrowed key', meta: {good: true}},
+      {label: 'In the backup server’s settings, where the software can find it'},
+      {label: 'Nowhere: don’t encrypt the tapes, they’re offsite anyway'}]);
+    if (i === 0) break;
+    if (i === 1) await say('If ransomware takes the backup server, it takes the only key with it, and every tape becomes noise.');
+    else await say('Tapes travel, and tapes get lost. CISA’s #StopRansomware Guide asks for offline, encrypted backups of critical data.');
+  }
+  c.keyEscrow = true;
+  while (true) {
+    const i = await choose('Coverage check: 4 of the 5 critical systems are on the weekly tapes. The directory’s job writes to the appliance only.', [
+      {label: 'Add the directory’s backup to the weekly tapes', meta: {good: true}},
+      {label: 'Leave it: the directory is small and easy to rebuild'}]);
+    if (i === 0) break;
+    await say('Every account, group and policy the town has is in it, and nothing else signs anyone in without it. Rebuilding it from memory takes weeks.');
+  }
+  c.offline = 100;
+  G.f.rhOffline = true; unlock('act', 'offline321'); unlock('act', 'keyescrow'); unlock('fact', 'rule321'); unlock('fact', 'srguide'); touchCSF('Protect'); track();
+  await say('First tapes are writing. They leave on Monday’s courier, and the key’s escrow envelope goes with them, in a separate bag. (game)', who);
+}
+async function rhCredsStep() {
+  const who = 'Nico Varga';
+  await say('Last one, and the worst. The backup console signs in with domain accounts. Any domain admin can delete every backup we have, including one an attacker has stolen.', who);
+  while (true) {
+    const i = await choose('How should the backup system be run?', [
+      {label: 'Separate backup admin accounts that exist only on the backup system, MFA on any change or deletion, alerts on mass deletes and retention changes, and no domain accounts at all', meta: {good: true}},
+      {label: 'Change the domain admin password'},
+      {label: 'Move the console to an unusual port'},
+      {label: 'Give backup rights to fewer domain admins'}]);
+    if (i === 0) break;
+    if (i === 1) await say('A new password is stolen the same way as the old one. The point is that a domain password shouldn’t open the backups at all.');
+    else if (i === 2) await say('Attackers scan every port. Hiding the door isn’t a lock.');
+    else await say('Fewer, but still domain accounts. Steal one and you have the backups.');
+  }
+  G.f.rhCreds = true; unlock('act', 'backupcreds'); unlock('fact', 'ncscbk'); touchCSF('Protect'); track();
+  await say('Done. Two backup admin accounts, both on hardware keys. The old domain group is gone from the console. And I’ve rotated every password the backup server uses to reach the servers it copies: the old ones lived in the console for anyone with a domain account to read.', who);
+  await say('That’s the fieldwork. Long day: your desk is in the corner of the restore lab.', 'Odile Brennan');
+}
+
+/* ---------- Hester (the archivist) ---------- */
+async function hesterTalk() {
+  const who = 'Hester Quayle', f = G.f;
+  if (!f.rhDrill1) { await say('The new document system arrives a department at a time. Nico keeps the schedule; I keep the retention schedule. Between us, nothing gets thrown away by accident.', who); return; }
+  if (!f.rhBoss) { await say('Phase 3 is Finance, next week. The change ticket goes to your queue this time, so nobody panics at a few thousand renamed files.', who); return; }
+  await say('Two centuries of minutes, and the only copies that survived that night were the ones nobody could reach. I’ve put that in the minutes.', who);
+}
+
+/* ---------- The directive (game): cut backup storage costs by 40% ---------- */
+async function leonaTalk() {
+  const who = 'Leona Ferraro', c = RH(), f = G.f;
+  if (f.rhDirective) { await say('Forty percent, and the tapes stay. I can defend that to the council.', who); return; }
+  await say('Finance. Backup storage is the fastest-growing line in the IT budget, and the council wants it down by forty percent this year. (game)', who);
+  while (true) {
+    const i = await choose('How do you cut backup storage costs by 40%?', [
+      {label: 'Tier it with the owners: 14 nightly, 8 weekly and 12 monthly copies (the monthlies on the offline tapes), stop backing up scratch space and duplicates, and keep enough history to reach back before an intruder arrived', meta: {good: true, k: 'tier'}},
+      {label: 'Keep only 7 days of backups', meta: {k: 'week'}},
+      {label: 'Drop the offline tapes: the appliance has copies', meta: {k: 'tapes'}},
+      {label: 'Back up weekly instead of nightly', meta: {k: 'weekly'}}]);
+    if (i === 0) { c.directive = 'tier'; break; }
+    if (i === 1) await say('If an intruder has been in for longer than a week, every copy you keep contains them, and there is no clean copy to go back to.');
+    else if (i === 2) await say('The offline copy is the one ransomware can’t reach. It’s the last thing to cut, not the first.');
+    else await say('The permits database’s RPO is twelve hours. Weekly backups could lose a week of permits.');
+  }
+  G.f.rhDirective = true; unlock('act', 'retention'); touchCSF('Govern'); track();
+  await say('Fewer copies of what nobody needs, and the same protection for what we do. Forty percent. Fine.', who);
+  await say('(Retention, cost and RPO pull against each other. Keep history longer than an intruder is likely to hide, keep the offline copy, match the schedule to each owner’s RPO, and cut what nobody needs.)');
+}
+
+/* ---------- Drills ---------- */
+async function rhDrill(key) {
+  const c = RH(), up = Math.max(1, c.day0 - 8);
+  const raw = JSON.stringify(RH_DRILLS[key]).replace(/\{D-1\}/g, String(G.day - 1)).replace(/\{D\}/g, String(G.day)).replace(/\{U\}/g, String(up));
+  const D = JSON.parse(raw);
+  const r = await doDrill(D);
+  c.drills[key] = {score: r.score, verdictOk: r.verdictOk, supported: r.supported, keys: r.keys, ai: r.ai, aiWrong: r.aiWrong};
+  return r;
+}
+async function rhDrill1() {
+  const who = 'Odile Brennan';
+  await say('Twelve thousand renamed files in the Planning share overnight. Do I wake up the whole town, or is this something we did?', who);
+  const r = await rhDrill('rename');
+  G.f.rhDrill1 = true; touchCSF('Detect');
+  await say(r.verdictOk ? 'The migration. Good: I didn’t wake anyone. Hester’s next phase goes to your queue before it runs.' : 'Nico checked: the migration tool, its own account, its own server, under the ticket, and every shadow copy still there. Hester’s next phase goes to your queue first.', who);
+  await say('Leona from finance has been asking for you. Budget season.', who);
+}
+async function rhDrill2() {
+  const who = 'Nico Varga';
+  await say('Last night’s FS-01 job: Success, 41 GB. It’s normally over two terabytes. Have we lost data, or has someone been at the job?', who);
+  const r = await rhDrill('shrink');
+  G.f.rhDrill2 = true; unlock('fact', 'csfbk'); touchCSF('Detect');
+  await say(r.verdictOk ? 'A coverage gap, not an attack. F: is in the job, a full backup is running, and every job now alerts when its size jumps or drops.' : 'Odile walked me through it: the shares moved to F:, the job only ever read E:. F: is in the job now, and every job alerts on its size.', who);
+}
+async function rhDrill3() {
+  const who = 'Odile Brennan', c = RH();
+  await say('PLAN-LT-04. The encryption was stopped at 312 files. The note says they have 200 GB of ours, and a forum is already talking. Before I call anyone: did they take anything?', who);
+  c.d3Day = G.day;
+  const r = await rhDrill('stolen');
+  G.f.rhDrill3 = true; touchCSF('Respond');
+  await say(r.verdictOk ? 'Three point eight gigabytes of planning applications, not two hundred of everything. Legal has the list; the FBI and CISA have the report; hd-admin is disabled, SCAN-01 is isolated, and the hunt for the rest of their tools has started.'
+    : 'Nico traced it: 3.8 GB of planning applications, packed and uploaded from PLAN-LT-04 before the encryptor ran. Legal has the list; the FBI and CISA have the report; hd-admin is disabled, SCAN-01 is isolated, and the hunt has started.', who);
+}
+
+/* ---------- Cryptography Dojo ---------- */
+async function tobiasTalk() {
+  const who = 'Tobias Lund', f = G.f;
+  if (!f.rhDojoMet) {
+    f.rhDojoMet = true;
+    await say('Cryptography Dojo. National Cyber League-style puzzles, about the maths that protects backups, and the maths that holds them hostage.', who);
+    await say('Three terminals: encoding, hashing and encryption; why ransomware uses two kinds of cipher; and what happens to an encrypted backup when you lose its key. Solve all three and your identity tool levels up.', who);
+    return;
+  }
+  if (f.rhDojoDone) { await say('Encoding hides nothing. Hashes don’t reverse. Keys are part of the backup.', who); return; }
+  await say('Puzzles solved: ' + RH().dojo.filter(Boolean).length + ' of 3. Terminals to my left.', who);
+}
+async function rhDojoPuzzle(i) {
+  if (!G.f.rhDojoMet) { await say('A cryptography practice terminal. Talk to Tobias first.'); return; }
+  const p = RH_DOJO[i], c = RH();
+  if (c.dojo[i]) { await say('Solved. ' + p.explain); return; }
+  while (true) {
+    const k = await UI.openModal('Cryptography · ' + p.title, '<pre class="art">' + esc(p.art) + '</pre><p><b>' + esc(p.q) + '</b></p>', p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {closable: false, cls: 'drill'});
+    if (k === p.good) break;
+    await say('Not quite. Who can turn it back, and with what?');
+  }
+  await say('Correct. ' + p.explain);
+  c.dojo[i] = true; unlock('fact', i === 2 ? 'keymgmt' : 'cryptostd'); if (i === 2) unlock('act', 'keyescrow'); touchCSF('Protect');
+  if (c.dojo.every(Boolean)) {
+    G.f.rhDojoDone = true;
+    const t = G.party.find(p2 => TOOLS[p2.id].cls === 'identity');
+    if (t) { t.lvl++; await say('All three. ' + TOOLS[t.id].name + ' reached Lv ' + t.lvl + '.', 'Tobias Lund'); }
+    else await say('All three. You can read a ransom note’s maths now. That’s rarer than it should be.', 'Tobias Lund');
+    await evolveCheck();
+  }
+}
+
+/* ---------- Evolution: Cairn -> Bulwark once you have restored from a clean point ---------- */
+async function rhEvolveCheck() {
+  if (!G.f || !G.f.rhBoss || !G.rh) return;
+  const t = G.party.find(p => p.id === 'cairn');
+  if (!t) return;
+  t.id = 'bulwark'; t.lvl = Math.max(t.lvl, 6); touchCSF('Recover');
+  await say('Cairn is evolving! Cairn learns to line the evidence up against the restore points → Bulwark. New ability: Find the clean point.');
+}
+
+/* ---------- Records Board ---------- */
+async function rhBoardScript() {
+  const who = 'Margit Halloran', f = G.f;
+  if (f.rhBoard) { await say('The Vault Badge means the way back holds, whatever they take. Test it anyway. Every month.', who); return; }
+  if (!f.rhDrill3) { await say('The Records Board is for people who have worked a few real recovery cases. Finish with Odile’s team first.', who); return; }
+  await say('Margit Halloran, recovery lead. Attackers who want a ransom go for your way back first. Here you meet them.', who);
+  await say('Three rounds: the ways back disappear, gigabytes leave for the cloud at two in the morning, and the backup share is wiped. Ready?', who);
+  for (const s of RH_BOARD_SPECS()) await fightStory(s, 'Margit: Again. Protect the way back before you chase anything else.');
+  f.rhBoard = true; f.rhVault = true;
+  G.focusMax = Math.max(G.focusMax, 42); G.focus = G.focusMax;
+  unlock('tech', 'T1490'); unlock('tech', 'T1567.002'); unlock('tech', 'T1485');
+  track();
+  await say('You cleared the Records Board. This is the Vault Badge.', who);
+  await say('Its power: the backups can’t be deleted by attackers on the map, so threats that destroy data or the ways back (Inhibit System Recovery, Data Destruction) come half as often, and the unindexed corners of the stacks shrink as they’re catalogued. (game)', who);
+  addTool('cairn', 5);
+  await say('One more thing: Cairn, a backup and recovery tool you can take into an investigation. It knows every copy you have, and which ones no one can delete. (Cairn Lv 5)', who);
+  await say('Your rank stays Tier 2 incident responder. What changes is what you answer for: when it all goes dark, the recovery is yours.', who);
+  touchCSF('Recover');
+  await evolveCheck();
+}
+
+/* ---------- Boss: the stacks go dark (retold in outline from the City of Atlanta, March 2018) ---------- */
+function rhBossStages(picks, d) {
+  const ev0 = picks.includes('preserve') ? 20 : 0;
+  const d3 = RH().d3Day || (d.B - 1);
+  return {
+    s1: {kind: 'mal', threat: 'gloam', tech: 'T1486', tags: ['files'], story: true, group: 'c', ev0: ev0,
+      rate: picks.includes('isolate') ? 9 : 14, dwell0: 20,
+      title: 'Stage 1: the stacks go dark', host: 'FS-01, FS-02 and every server the policy reached', enemy: {spr: 'gloam', pal: 'gloam'},
+      clues: ['At ' + RH_ENCRYPT + ' a scheduled task started the same program on every server except the directory. Files are renamed and turned to noise, and a ransom note sits in every share.', 'At 02:38 every volume shadow copy on the file servers was deleted, by svc-scanbak, a domain admin account nobody on the team created.', 'The task came from a new group policy, “Printer Mapping Update”, created by svc-scanbak at ' + RH_GPO + ' last night.'],
+      truth: 'Data Encrypted for Impact, pushed to every server at once through group policy, after the shadow copies were deleted (Inhibit System Recovery).',
+      resp: [{label: 'Isolate the servers at the switch and keep them powered for memory capture, disable svc-scanbak, unlink the policy, keep the backup network sealed, preserve evidence', good: true},
+             {label: 'Restore the file shares from last night now', good: false, why: 'Last night’s copies were taken after the policy went out at ' + RH_GPO + ': whole-server restores bring the scheduled task back. Contain first.'},
+             {label: 'Pull the power on everything', good: false, disrupt: 1, why: 'Isolate at the switch first; power down only what you can’t disconnect. Memory evidence goes when the power does.'}],
+      chain: [{at: 40, text: 'Another share fills with ransom notes.'}, {at: 75, text: 'The encryptor reaches the scanned-image archive.'}]},
+    s2: {kind: 'mal', threat: 'lapse', tech: 'T1490', tags: ['backup', 'host'], story: true, group: 'c', ev0: ev0,
+      rate: picks.includes('verify') ? 8 : 13, dwell0: picks.includes('reconnect') ? 40 : 15,
+      title: 'Stage 2: they come for the backups', host: 'BKP-01 · backup appliance and console', enemy: {spr: 'lapse', pal: 'lapse'},
+      clues: ['At 02:44 svc-scanbak tried to sign in to the backup console. Refused: it isn’t a backup account. Before the fieldwork, any account in the old domain group could.', 'At 02:46 it tried to delete the appliance’s copies over the network. The retention lock refused every request, and every refusal raised an alert.', picks.includes('reconnect') ? 'The tapes were loaded into the library this morning to speed things up: the one copy they couldn’t reach is on the network now.' : 'The weekly tapes are in the offsite store, offline. Their key is in escrow.'],
+      truth: 'Inhibit System Recovery: going after the backups before the ransom demand. The separate credentials and the retention lock held.',
+      resp: [{label: 'Keep the backup network sealed, check the locked and offline copies are intact and unchanged before any restore, and keep the tapes offline until identity is ours again', good: true},
+             {label: 'Bring the tapes in now to check them', good: false, why: 'Not while svc-scanbak still works. The offline copy is the one thing they can’t reach: keep it that way until identity is yours again.'},
+             {label: 'Clear the alerts: they’re only refusals', good: false, why: 'The refusals are the attacker telling you what they want. Keep every one.'}],
+      chain: [{at: 60, text: 'svc-scanbak tries a second way into the appliance.'}]},
+    s3: {kind: 'mal', threat: 'lapse', tech: 'T1078', tags: ['identity'], story: true, group: 'c', ev0: ev0,
+      rate: picks.includes('identity') ? 8 : 14, dwell0: picks.includes('identity') ? 10 : 40,
+      title: 'Stage 3: they still sign in', host: 'DIR-01 · directory', enemy: {spr: 'actor', pal: 'impostor'},
+      clues: ['At 07:20 adm-bk2, an admin account nobody on the team knows, signs in to the directory from FS-03, an old file server the hunt hadn’t reached: it had checked 9 of 31 servers when the encryption began.', 'adm-bk2 and svc-scanbak were both created on DIR-01 on Day ' + d.E + ', at 02:33 and 02:31, by hd-admin, from SCAN-01.', 'SCAN-01’s endpoint history: a remote-management tool installed under hd-admin on Day ' + d.E + ' at 02:12. The earliest sign of the attacker anywhere.'],
+      truth: 'Valid Accounts: a second admin account the attacker made days before anyone noticed them. Disabling the one you saw wasn’t enough: the directory itself is compromised, so identity is rebuilt before anything that trusts it.',
+      resp: [{label: 'Disable adm-bk2 and every account created since Day ' + d.E + ', reset every privileged and service password from a clean admin workstation, isolate FS-03, and plan the directory’s restore from before Day ' + d.E + ' 02:12', good: true},
+             {label: 'Disable adm-bk2 and close', good: false, why: 'That is the second account you have found, not the last one you can prove. Find everything created since Day ' + d.E + ', and plan to restore the directory from before it.'},
+             {label: 'Reset hd-admin’s password again', good: false, why: 'hd-admin was disabled and reset on Day ' + d3 + '. The attacker made their own accounts: find and remove what they created.'},
+             {label: 'Restore the directory from last night', good: false, why: 'Last night’s directory holds svc-scanbak and the policy. Go back to before the earliest compromise.'}],
+      chain: [{at: 60, text: 'adm-bk2 lists every admin group.'}]}
+  };
+}
+// The restore-order mini-game. Pure helpers first (tested directly), then the UI.
+function rhLossHours(o, d) { return o.atH !== undefined ? o.atH : Math.round(((d.B - d[o.atD]) * 24 + 1.67) * 10) / 10; }
+function rhNextGood(done) { return RH_SYS_ORDER.find(s => !done[s] && RH_RESTORE[s].deps.every(x => done[x])); }
+// One restore step: returns what happened and the hours it used (game rules, see GAME_NOTES).
+function rhRestoreStep(st, sys, optK, d) {
+  const S = RH_RESTORE[sys], o = S.opts.find(x => x.k === optK);
+  const missing = S.deps.filter(x => !st.done[x]);
+  if (missing.length) { st.clock += RH_DEP_WASTE; st.depFail++; return {kind: 'dep', missing: missing}; }
+  if (o.tainted) { st.clock += o.hrs + RH_REINFECT_WASTE; st.reinfect++; return {kind: 'reinfect', why: o.why}; }
+  st.clock += o.hrs;
+  const loss = rhLossHours(o, d), ob = RH_OBJ[sys];
+  st.done[sys] = {end: st.clock, opt: optK, loss: loss, rtoOk: st.clock <= ob.rto, rpoOk: loss <= ob.rpo};
+  return {kind: 'ok', end: st.clock, loss: loss};
+}
+function rhRestoreSummary(st) {
+  const sys = RH_SYS_ORDER.map(s => st.done[s]).filter(Boolean);
+  return {clock: st.clock, reinfect: st.reinfect, depFail: st.depFail, rtoMet: sys.filter(x => x.rtoOk).length, rpoMet: sys.filter(x => x.rpoOk).length,
+    order: st.order.slice(), done: st.done, overrun: !!st.overrun};
+}
+function rhEvidenceHtml(d) {
+  return '<div class="card small"><b>What the evidence says</b><br>' + [
+    'Day ' + d.E + ' 02:12: a remote-management tool installed on SCAN-01 under hd-admin. The earliest known compromise.',
+    'Day ' + d.E + ' 02:31 and 02:33: svc-scanbak and adm-bk2, two new domain admins, created on DIR-01 from SCAN-01.',
+    'Day ' + (d.B - 1) + ' ' + RH_GPO + ': svc-scanbak creates a group policy that adds a scheduled task to every server except the directory.',
+    'Day ' + d.B + ' ' + RH_ENCRYPT + ': the task starts the encryptor on those servers. Nightly backups ran at 01:00.',
+    'Golden images of every server build, checked last quarter, kept offline (game).'].map(esc).join('<br>') + '</div>';
+}
+async function rhRestoreGame(d) {
+  const st = {done: {}, clock: 0, reinfect: 0, depFail: 0, order: [], overrun: false};
+  let last = '';
+  for (let guard = 0; guard < 60; guard++) {
+    const left = RH_SYS_ORDER.filter(s => !st.done[s]);
+    if (!left.length) break;
+    if (st.clock >= RH_RESTORE_BUDGET) {
+      // Out of crew time: the vendor's emergency team finishes the rest, cleanly, late. (game)
+      st.overrun = true;
+      for (const s of RH_SYS_ORDER.filter(x => !st.done[x])) { const g = RH_RESTORE[s].opts.find(o => o.good); st.clock += g.hrs; st.done[s] = {end: st.clock, opt: g.k, loss: rhLossHours(g, d), rtoOk: false, rpoOk: rhLossHours(g, d) <= RH_OBJ[s].rpo}; }
+      await say('Your crew is out of hours. The vendor’s emergency team finishes the rest overnight, from clean copies, and well past every RTO. (game)');
+      break;
+    }
+    const next = rhNextGood(st.done);
+    const prog = '<table class="sc"><tr><th>System</th><th>Needs</th><th>RTO</th><th>Status</th></tr>' + RH_SYS_ORDER.map(s => '<tr><td>' + esc(RH_SYS_NAME[s]) + '</td><td>' + esc(RH_RESTORE[s].deps.map(x => x.toUpperCase()).join(', ') || '—') + '</td><td>' + RH_OBJ[s].rto + ' h</td><td>' + (st.done[s] ? 'back at ' + st.done[s].end + ' h' : '—') + '</td></tr>').join('') + '</table>';
+    const body = (last ? '<p><b>' + esc(last) + '</b></p>' : '<p>One restore crew, ' + RH_RESTORE_BUDGET + ' hours of crew time (game). Pick what to restore next, then which copy to restore it from. The clock starts when recovery starts.</p>') +
+      '<p>Hour <b>' + st.clock + '</b> of ' + RH_RESTORE_BUDGET + ' · reinfections ' + st.reinfect + ' · out-of-order starts ' + st.depFail + '</p>' + prog + rhEvidenceHtml(d);
+    const items = left.map(s => ({label: RH_SYS_NAME[s], note: 'RTO ' + RH_OBJ[s].rto + ' h', meta: {good: s === next, sys: s}}));
+    const i = await UI.openModal('Restore order · hour ' + st.clock, body, items, {closable: false, cls: 'drill'});
+    const sys = items[i].meta.sys;
+    const S = RH_RESTORE[sys];
+    const optItems = S.opts.map(o => ({label: rhFill(o.label, d), note: o.hrs + ' h', meta: {good: !!o.good, k: o.k}}));
+    const j = await UI.openModal('Restore point · ' + RH_SYS_NAME[sys], '<p>Which copy of <b>' + esc(RH_SYS_NAME[sys]) + '</b> do you restore? Its RPO is ' + RH_OBJ[sys].rpo + ' hours of lost data.</p>' + rhEvidenceHtml(d), optItems, {closable: false, cls: 'drill'});
+    const k = optItems[j].meta.k;
+    st.order.push(sys + ':' + k);
+    const r = rhRestoreStep(st, sys, k, d);
+    if (r.kind === 'dep') last = RH_SYS_NAME[sys] + ' started, then stopped: it can’t work without ' + r.missing.map(x => RH_SYS_NAME[x]).join(' and ') + '. An hour lost.';
+    else if (r.kind === 'reinfect') last = RH_SYS_NAME[sys] + ' came back, and then went dark again. ' + rhFill(r.why, d) + ' Its restore time is lost.';
+    else last = RH_SYS_NAME[sys] + ' is back at hour ' + r.end + ', with ' + r.loss + ' hours of data lost.';
+  }
+  const sum = rhRestoreSummary(st);
+  const rows = RH_SYS_ORDER.map(s => { const x = st.done[s], ob = RH_OBJ[s], o = RH_RESTORE[s].opts.find(y => y.k === x.opt);
+    return '<tr><td>' + esc(RH_SYS_NAME[s]) + '</td><td>' + x.end + ' h / ' + ob.rto + ' h ' + (x.rtoOk ? '✓' : '✗') + '</td><td>' + x.loss + ' h / ' + ob.rpo + ' h ' + (x.rpoOk ? '✓' : '✗') + '</td></tr>' +
+      '<tr><td colspan="3" class="small">' + esc(rhFill(o.why, d)) + '</td></tr>'; }).join('');
+  await UI.openModal('Recovery', '<p class="big">' + sum.rtoMet + ' of 5 within RTO · ' + sum.rpoMet + ' of 5 within RPO</p>' +
+    '<p>Reinfections <b>' + sum.reinfect + '</b> · out-of-order starts <b>' + sum.depFail + '</b> · crew hours <b>' + sum.clock + '</b> (game)</p>' +
+    '<table class="sc"><tr><th>System</th><th>Back at / RTO</th><th>Data lost / RPO</th></tr>' + rows + '</table>' +
+    '<p>Find the earliest known compromise first. The directory comes back from before it, and misses its RPO on purpose: the account changes since then are re-entered from the tickets. Everything else is rebuilt from golden images with only its data restored, newest first, in dependency order. Last night’s whole-server copies were the fastest, and they carried the attacker’s scheduled task.</p>',
+    [{label: 'Declare recovery complete', meta: {good: true}}], {closable: false, cls: 'drill'});
+  return sum;
+}
+async function rhPayDecision() {
+  const c = RH(), who = 'Odile Brennan';
+  await say('The note wants 9 bitcoin for the key (game), and threatens to publish the planning files. Leadership will decide, with legal, and they want your recommendation.', who);
+  const opts = [
+    {label: 'Recommend not paying: our locked and offline copies are intact and tested, so we can restore within the agreed RTOs. The FBI and CISA are already involved, and legal checks OFAC’s advisory before anyone talks payment', meta: {good: true, k: 'no'}},
+    {label: 'Pay now: it’s faster than restoring', meta: {k: 'pay'}},
+    {label: 'Pay only to keep the planning files from being published', meta: {k: 'publish'}},
+    {label: 'Negotiate quietly, without telling the FBI', meta: {k: 'quiet'}}];
+  while (true) {
+    const i = await choose('Your recommendation on the ransom.', opts);
+    const k = opts[i].meta.k;
+    if (!c.pay) c.pay = k;
+    if (k === 'no') break;
+    if (k === 'pay') await say('The FBI doesn’t support paying: it doesn’t guarantee you get anything back, and it encourages more attacks. OFAC can penalise a payment to a sanctioned party on strict liability, whatever you knew. And we have tested, clean copies.');
+    else if (k === 'publish') await say('There is no way to check that a criminal deleted anything. The 3.8 GB is already being handled as a breach, with legal and the people affected. Paying buys a promise from the people who stole it.');
+    else await say('OFAC treats prompt reporting to law enforcement and full cooperation as significant mitigating factors. Hiding it gives those up, and the FBI may know things about this crew that you don’t.');
+  }
+  unlock('fact', 'ofac'); unlock('fact', 'fbipay'); unlock('act', 'nopayplan'); touchCSF('Govern');
+  await say('Leadership agrees: no payment. Atlanta’s answer in 2018 was the same: the attackers asked for $51,000 in Bitcoin, and the city refused. Not every organisation is that lucky; without clean copies the choice gets much harder. The US government strongly discourages paying either way.', who);
+}
+async function rhBossScript() {
+  const who = 'Odile Brennan', c = RH();
+  await surfaceMissed(true);
+  c.boss = {day: G.day};
+  const d = rhDays();
+  await say('Incident. At ' + RH_ENCRYPT + ' last night ransomware ran on almost every server we have: the file servers, the records database, the permits portal, DNS. Only the directory was left alone; the attacker still needed it. Ransom notes in every share.', who);
+  await say('This is the City of Atlanta, March 2018, in outline. On 22 March ransomware took down city systems. The mayor later told Congress that fire, police, ambulances and water kept running, but the municipal court cancelled hearings, the 311 line went offline, and some files were destroyed for good. In November that year the Justice Department charged two Iranian men over SamSam, the ransomware behind it, which the indictment tied to more than 200 victims.', who);
+  unlock('fact', 'atl2018'); unlock('fact', 'samsam');
+  await say('I’ve told leadership. The town has reported it to the FBI field office and CISA, as the #StopRansomware Guide advises. Residents get a notice on the radio and at the front desk: what’s down, and how to get services on paper meanwhile. Telling people is never optional, so it isn’t one of your cards.', who);
+  touchCSF('Respond'); G.rep += 5; toast('Leadership, the FBI and CISA told. Reputation up.');
+  await say('Tabletop. Pick four response cards. Then we work it in three stages, and you own the recovery.', who);
+  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions, the #StopRansomware Guide and the NIST CSF. (Leadership, the FBI and CISA have been told.)</p>' +
+    RH_CARDS.map(x => '<div class="card"><b>' + esc(x.name) + '</b> <span class="tag">' + x.csf + '</span><br>' + esc(x.text) + '</div>').join('');
+  const items = RH_CARDS.map(x => ({label: x.name, meta: {good: !!x.good}})).concat([{label: 'Play these four cards', done: true, meta: {done: true}}]);
+  const sel = await UI.openModal('Tabletop: the stacks go dark', body, items, {multi: 4, closable: false, cls: 'tabletop'});
+  const picks = sel.map(i => RH_CARDS[i].id);
+  G.f.rhCards = picks;
+  for (const id of picks) { const x = RH_CARDS.find(y => y.id === id); touchCSF(x.csf); await say(x.name + ': ' + x.fx); }
+  if (picks.includes('poweroff')) { G.rep -= 2; bumpUptime(-0.01); }
+  if (picks.includes('wipe')) { G.rep -= 3; bumpUptime(-0.02); }
+  if (picks.includes('latest')) { G.rep -= 3; bumpUptime(-0.03); await say('Nico restored three servers from last night’s copies before anyone stopped him. Within the hour the scheduled task ran on them again, and they went dark a second time.'); }
+  if (picks.includes('reconnect')) { G.rep -= 2; }
+  await say('Debrief: isolate at the switch and keep machines powered, preserve before you clean, verify every copy before you trust it, and take identity back before you restore anything that trusts it. Restoring fast from last night would have brought the attacker’s policy back with it: last night’s copies were made after it went out.', who);
+  c.bossT0 = G.playMs;
+  const S = rhBossStages(picks, d);
+  await fightStory(S.s1, 'Odile: Regroup. Same stage, again.');
+  c.ttc.push(Math.round((G.playMs - c.bossT0) / 100) / 10); if (c.ttc.length > 20) c.ttc.shift();
+  touchCSF('Respond');
+  await rhPayDecision();
+  await fightStory(S.s2, 'Odile: Regroup. Same stage, again.');
+  await fightStory(S.s3, 'Odile: Regroup. Same stage, again.');
+  await say('Identity is ours again: svc-scanbak, adm-bk2 and one more account made since Day ' + d.E + ' are disabled, every privileged and service password is new, FS-03 is isolated. Now the recovery: you decide what comes back, in what order, from which copy.', who);
+  unlock('act', 'cleanpoint'); unlock('act', 'goldimage'); unlock('act', 'restoreorder');
+  const sum = await rhRestoreGame(d);
+  c.restore = sum;
+  c.boss = {day: d.B, picks: picks, rtoMet: sum.rtoMet, rpoMet: sum.rpoMet, reinfect: sum.reinfect, depFail: sum.depFail, clock: sum.clock, pay: c.pay};
+  G.f.rhBoss = true;
+  touchCSF('Recover');
+  bumpUptime(sum.reinfect ? 0 : 0.01); G.rep += sum.reinfect ? 0 : 3; track();
+  await say('Recover: each owner checked their system before it went back into use (Deshawn read twenty permits against the paper files). The copies were verified before we restored from them; the restored systems were verified after. Recovery is declared complete, and residents hear it from the same places they heard the bad news.', who);
+  await say('The cost goes on the record too. Atlanta’s mayor put theirs at about $7.2 million by the time she testified, more than a year later. Ours is smaller because the way back held. (game)', who);
+  await evolveCheck();
+  await say('That’s Records Hall. Next stop: the IT Basement.', who);
+  await rhSummary();
+}
+
+/* ---------- End of district ---------- */
+async function rhSummary() {
+  await surfaceMissed(true);
+  G.f.rhSummary = true;
+  const c = RH(), d = c.drills;
+  const dl = ['rename', 'shrink', 'stolen'].map(k => esc(RH_DRILLS[k].title) + ' <b>' + (d[k] ? d[k].score : '—') + '</b>').join(' · ');
+  const r = c.restore;
+  const body = '<p class="big">Records Hall district: recovered.</p>' +
+    '<p>Rank <b>' + G.rank + '</b> · Badges <b>Key Badge, Seal Badge, Shield Badge, Lantern Badge' + (G.f.rhVault ? ', Vault Badge' : '') + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b></p>' +
+    scorecardHtml() +
+    '<p>Investigation drills (game scores): ' + dl + '. Restore tests passed: <b>' + c.tests.filter(x => x.ok).length + ' of ' + c.tests.length + '</b>.</p>' +
+    (r ? '<p>Ransomware recovery: <b>' + r.rtoMet + ' of 5</b> systems within RTO, <b>' + r.rpoMet + ' of 5</b> within RPO (the directory restored from before the compromise, by design), reinfections <b>' + r.reinfect + '</b>, out-of-order starts <b>' + r.depFail + '</b> (game). Ransom: <b>' + ({no: 'not paid; recommended from tested backups', pay: 'not paid (you first said pay)', publish: 'not paid (you first said pay to stop publication)', quiet: 'not paid (you first said negotiate quietly)'}[c.pay] || '—') + '</b>.</p>' : '') +
+    '<p>Missed attacks found in review: <b>' + G.m.surfaced + '</b>.</p>' +
+    rhQtSummaryHtml() +
+    '<p class="big">Next: IT Basement.</p>';
+  Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true, recordsHall: true});
+  const i = await UI.openModal('End of Records Hall', body, [{label: 'Keep exploring Records Hall', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

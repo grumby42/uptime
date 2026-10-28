@@ -156,6 +156,7 @@ function mkObjective() {
   }
   if (!f.mkBoard) return at('Take the Web Board challenge (Sol Achebe, through the east gate).', 9, 2, 'wboard');
   if (!f.mkBoss) return at('Paz needs you: something is wrong with the payment page.', 17, 7);
+  if (typeof rhObjective === 'function') return rhObjective();
   return {text: 'Market Square secured. Next: Records Hall.', done: true, district: 'market'};
 }
 

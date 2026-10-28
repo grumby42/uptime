@@ -1,5 +1,5 @@
 // Uptime Town Hall — Playwright playthrough bot + checks.
-// Plays from New game through the Front Desk, the Mail Room, Clerks' Row and Market Square to the end-of-district screen using real inputs:
+// Plays from New game through the Front Desk, the Mail Room, Clerks' Row, Market Square and Records Hall to the end-of-district screen using real inputs:
 //   desktop: keyboard (arrows, Z, X, Enter, Shift); phone: taps on the on-screen pad and on menu options.
 // Usage: node bot.js desktop|phone [outdir]   (UPTIME_FILE=file:///... to test another build)
 // Also checks: no Quiet Thread technique ever shows up as an ordinary alert, and the series save
@@ -162,7 +162,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -199,7 +199,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (sig !== lastSig) { lastSig = sig; lastProgress = Date.now(); }
     if (p.battle && !p.battle.story) stats.alertTechs[p.battle.tech] = (stats.alertTechs[p.battle.tech] || 0) + 1;
     else if (Date.now() - lastProgress > 15000) throw new Error('stuck: ' + sig);
-    if (p.extra && p.extra.mkSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (p.extra && p.extra.rhSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (p.extra && p.extra.mkSummary && !stats.mkSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.mkSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-market'); }
+    if (p.map === 'records' && !p.ui && !stats.shots.records && p.started && p.f.rhTest) { stats.shots.records = 1; await shot('records'); }
+    if (p.ui && p.ui.type === 'modal' && !stats.shots.restore && /Restore order ·/.test(await page.textContent('#modal'))) { stats.shots.restore = 1; await shot('restore-order'); }
     if (p.extra && p.extra.crSummary && !stats.crSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.crSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-clerks'); }
     if (p.map === 'market' && !p.ui && !stats.shots.market && p.started && p.f.mkInv) { stats.shots.market = 1; await shot('market'); }
     if (p.ui && p.ui.type === 'modal' && !stats.shots.waf && /WAF rule review ·/.test(await page.textContent('#modal'))) { stats.shots.waf = 1; await shot('waf-review'); }
@@ -227,6 +230,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     // Same in Market Square, so its web alert templates get played.
     if (p.map === 'market' && p.f.mkMet && !p.f.mkBoss && p.queue > 0 && p.focus > 12 && (stats.marketQueue || 0) < 8) { stats.marketQueue = (stats.marketQueue || 0) + 1; await press('select'); await sleep(30); continue; }
     if (!savedCheckMarket && p.map === 'market' && p.f.mkDrill1 && !p.f.mkWafBlock) { savedCheckMarket = await saveReload(); continue; }
+    // Same in Records Hall, once the fieldwork is done, so its backup and ransomware templates get played.
+    if (p.map === 'records' && p.f.rhCreds && !p.f.rhBoss && p.queue > 0 && p.focus > 12 && (stats.recordsQueue || 0) < 8) { stats.recordsQueue = (stats.recordsQueue || 0) + 1; await press('select'); await sleep(30); continue; }
+    if (!savedCheckRecords && p.map === 'records' && p.f.rhDrill1 && !p.f.rhDirective) { savedCheckRecords = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -240,11 +246,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const result = {
     quietTechInAlertMix: quietInAlerts,
     mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter,
-    errors, requests, saveReload: savedCheck, saveReloadMailRoom: savedCheckMail, saveReloadClerks: savedCheckClerks, saveReloadMarket: savedCheckMarket, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll,
-    final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, party: fin.party, m: fin.m, mfa: fin.mfa, insider: fin.f.insider, cards: fin.f.cards, mrCards: fin.f.mrCards, mr: fin.extra && fin.extra.mr, crCards: fin.f.crCards, cr: fin.extra && fin.extra.cr, mkCards: fin.f.mkCards, mk: fin.extra && fin.extra.mk, objective: fin.objective },
+    errors, requests, saveReload: savedCheck, saveReloadMailRoom: savedCheckMail, saveReloadClerks: savedCheckClerks, saveReloadMarket: savedCheckMarket, saveReloadRecords: savedCheckRecords, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll,
+    final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, party: fin.party, m: fin.m, mfa: fin.mfa, insider: fin.f.insider, cards: fin.f.cards, mrCards: fin.f.mrCards, mr: fin.extra && fin.extra.mr, crCards: fin.f.crCards, cr: fin.extra && fin.extra.cr, mkCards: fin.f.mkCards, mk: fin.extra && fin.extra.mk, rhCards: fin.f.rhCards, rh: fin.extra && fin.extra.rh, objective: fin.objective },
     stats
   };
   console.log(JSON.stringify(result, null, 1));
   await browser.close();
-  process.exit(errors.length || requests.length || !savedCheck || !savedCheck.restored || !savedCheckMail || !savedCheckMail.restored || !savedCheckMail.exportRoundTrip || !savedCheckClerks || !savedCheckClerks.restored || !savedCheckClerks.exportRoundTrip || !savedCheckMarket || !savedCheckMarket.restored || !savedCheckMarket.exportRoundTrip || quietInAlerts.length ? 1 : 0);
+  process.exit(errors.length || requests.length || !savedCheck || !savedCheck.restored || !savedCheckMail || !savedCheckMail.restored || !savedCheckMail.exportRoundTrip || !savedCheckClerks || !savedCheckClerks.restored || !savedCheckClerks.exportRoundTrip || !savedCheckMarket || !savedCheckMarket.restored || !savedCheckMarket.exportRoundTrip || !savedCheckRecords || !savedCheckRecords.restored || !savedCheckRecords.exportRoundTrip || quietInAlerts.length ? 1 : 0);
 })().catch(async e => { console.error('BOT FAILED:', e.message); process.exit(2); });

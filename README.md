@@ -8,8 +8,8 @@ Planned home: GitHub Pages at `grumby42/uptime` (open `index.html` for the serie
 
 | # | Edition | District | Status |
 |---|---|---|---|
-| 1 | Town Hall | Front Desk, the Mail Room, Clerks' Row, then Market Square | playable (about 30 minutes each) |
-| | | Records Hall | next |
+| 1 | Town Hall | Front Desk, the Mail Room, Clerks' Row, Market Square, then Records Hall | playable (about 30 minutes each) |
+| | | IT Basement | next |
 
 ## Layout
 
@@ -36,6 +36,9 @@ editions/town-hall/
   market-data.js            Market Square (district 4): art, map, people, techniques, threats, alerts, inventory, WAF rules, scripts, drills, dojo, cards, facts
   market-quiet.js           Quiet Thread clue found in Market Square
   market-story.js           Market Square objectives, fieldwork, WAF review, directive, drills, Web Board, skimming incident, metrics, summary
+  records-data.js           Records Hall (district 5): art, map, people, techniques, threats, alerts, restore tests, BIA, restore-order rules, drills, dojo, cards, facts
+  records-quiet.js          Quiet Thread clue found in Records Hall
+  records-story.js          Records Hall objectives, fieldwork, directive, drills, Records Board, ransomware incident and restore-order mini-game, metrics, summary
   index.html                the built game (generated)
 tools/build.py              builds every edition and the menu
 tests/                      Playwright checks
@@ -54,7 +57,7 @@ Every build is stamped `ARCD-YYYYMMDD-HHMMZ` with a UTC timestamp from the clock
 
 Need Node and Playwright (Chromium).
 
-    node tests/bot.js desktop      # plays New game -> Front Desk -> Mail Room -> Clerks' Row -> Market Square -> end-of-district with the keyboard
+    node tests/bot.js desktop      # plays New game -> Front Desk -> Mail Room -> Clerks' Row -> Market Square -> Records Hall -> end-of-district with the keyboard
     node tests/bot.js phone        # same with taps on the on-screen pad (360x800)
     GAMER=1 node tests/bot.js desktop   # closes everything as a false positive; hidden missed attacks must surface
     node tests/layout.js           # pad and screen fit in phone portrait/landscape and desktop; series menu fits a phone
@@ -74,6 +77,12 @@ Need Node and Playwright (Chromium).
                                    #   check (11.6.1), drills (guessing 40, trap + Tally 88, focused 100), save/reload, WAF review false-positive
                                    #   cost (residents can't pay), directive, Quiet Thread DMZ clue, alert mix, Dojo, Web Board (Lantern Badge,
                                    #   Shroud -> Mirrorcoat), time to contain, exposure-window logic, skimming incident, summary, phone layout
+    node tests/records.js          # Records Hall: Lantern Badge door, timed restore test (a Success job fails to restore), BIA (directory and DNS
+                                   #   critical) and RTO/RPO with the owner, 3-2-1 + offline copy + escrowed key, separate backup credentials,
+                                   #   Quiet Thread backup-console clue (T1555), drills (guessing 40, focused 100, Tally + trap 95), save/reload,
+                                   #   finance directive, alert mix and Vault Badge halving, Dojo, Records Board (Vault Badge, Cairn -> Bulwark),
+                                   #   time to contain, restore-order rules (dependencies, reinfection), ransomware incident (pay decision, three
+                                   #   stages, recovery from clean points), summary, phone layout
 
 The bots also check: zero console errors, zero network requests, mid-game save/reload (including the series save), the export-code round trip, no horizontal scroll, and that no Quiet Thread technique ever appears as an ordinary alert. Set `UPTIME_FILE=file:///path/to/build.html` to test another build.
 
@@ -109,3 +118,8 @@ Reached from the plaza after the Mail Room (Seal Badge door east of the Mail Roo
 ## Market Square (district 4)
 
 Reached from the plaza after Clerks' Row (Shield Badge door by the firewall, north-east). The only district that faces the internet: everything arrives through the WAF gate. You are Tier 2 and lead containment. Paz Delgado's problem: nobody knows what is exposed, the WAF was never tuned, the CMS has flaws, and the payment page loads third-party scripts. Fieldwork: an internet-facing asset inventory (pick sources; no single one finds all seven assets, including a forgotten test site at an outside host and the WAF's own admin page), the WAF in detection mode first, the CMS patched the same day and then checked for signs of earlier use (a WAF rule is a filter, not a fix), the test site retired in order (logs first, DNS record before the hosting, or someone can take over the name), and the payment page (move card entry to the processor's hosted page, cut the scripts to the two it needs with a written reason each per PCI DSS 6.4.3, CSP in report-only first, SRI only on files that never change, and a tamper check per 11.6.1). The WAF rule review is the mini-game: nine rules with what each matched in detection mode; block, log only or switch off; blocking apostrophes or non-GET payments locks residents out of paying bills, and the false-positive rate stays on the scorecard. A councillor's directive (payments back within an hour, game) teaches recovery time against a clean recovery. Three drills: did the injection work (status codes, response sizes and the database log, not the WAF count or GeoIP), a new script on the payment page (change records and the vendor's notice checked on its portal: a legitimate change), and an admin nobody made (audit log, access log and the uploads folder: a web shell from before the patch replayed Rafe's open session on the server itself, where the WAF can't see; budget 3). The Web Application Security Dojo covers parameterised queries, IDOR and why validation alone isn't enough (OWASP Top 10:2025). The Web Board gives the Lantern Badge and Shroud (a WAF tool), which becomes Mirrorcoat after the incident. The skimming incident is retold in outline from British Airways (ICO, 2018 breach, 2020 penalty): processor and leadership told automatically, four tabletop cards, three stages, and an exposure window built from evidence (the tamper check's frequency and how fast card entry moves to the hosted page decide it; bringing our own page back early adds a second stretch unless an enforced CSP blocks the re-injected skimmer's sends, a game simplification: CSP narrows a skimmer's exits, it doesn't seal them; and everyone who typed a card in the window is affected, paid or not). New Tier 2 metrics: internet-facing assets inventoried, WAF false-positive rate, mean time to contain, exposure window. One Quiet Thread clue sits in the DMZ log: the Front Desk closet router signing in to the web server at 03:09, as svc-print.
+
+
+## Records Hall (district 5)
+
+Reached from the plaza after Market Square (Lantern Badge door, south of the plaza between the Identity Board and the Dojo). Backup and recovery. You stay Tier 2 and own the recovery decisions. Odile Brennan's problem: backups say Success every night and nobody has restored one; the backup console opens with any domain admin password; nobody has agreed recovery objectives with the people who own the services. Fieldwork: a timed restore test in an isolated lab (a job that said Success fails: the portal's second disk was never selected), a business impact analysis lite (the directory and DNS go on the critical list because everything depends on them) and RTO/RPO agreed with the permits owner (NIST SP 800-34 Rev. 1 definitions; RTO inside the owner's limit, backups twice a day for a 12-hour RPO), 3-2-1 taught as a rule of thumb plus one copy ransomware can't reach (retention-locked appliance, weekly encrypted tapes offsite, the key escrowed apart from the data), and separate backup admin accounts with MFA and alerts on deletes (NCSC principles). A finance directive (cut backup storage 40%, game) teaches retention against cost and RPO. Three drills: twelve thousand renamed files (the migration's own account and untouched shadow copies decide; count and extension are traps), a backup that succeeded at 41 GB (job log detail and the console audit log: the shares moved to a volume the job never selected; the storage dashboard is the trap), and a ransom note claiming 200 GB (flow records and the endpoint history show 3.8 GB packed with a compression utility and uploaded to cloud storage; the note and a forum rumour are traps; budget 3). The Cryptography Dojo covers encoding vs hashing vs encryption (Base64 is not encryption), why ransomware uses symmetric and asymmetric ciphers, and why an encrypted backup needs its key escrowed. The Records Board gives the Vault Badge (T1490/T1485 threats halved, game) and Cairn, a recovery tool, which becomes Bulwark after the incident. The incident is retold in outline from the City of Atlanta (22 March 2018; SamSam): leadership, the FBI and CISA told automatically, four tabletop cards, a pay decision framed by the FBI's position and OFAC's 2021 advisory, three stages (encryption pushed by group policy, the attack on the backups that the separate credentials and retention lock refuse, and a second attacker account that means the directory itself must be rebuilt), then the restore-order mini-game: one crew, 48 game hours, dependencies, and restore points where any copy holding the attacker's foothold reinfects; the directory comes back from before the earliest compromise and misses its RPO by design. New Tier 2 metrics: restore test success rate, measured recovery time within RTO, RPO, critical systems with an offline copy, mean time to contain. One Quiet Thread clue sits in the backup console's old audit log: svc-print, from the Front Desk closet router, exporting the backup server's stored credentials at 03:14.

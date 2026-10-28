@@ -61,7 +61,9 @@ const QT_TECH = {
   'T1053.005': {name: 'Scheduled Task/Job: Scheduled Task', tactic: ['Execution', 'Persistence', 'Privilege Escalation'],
                 plain: 'Using the Windows Task Scheduler to run a program at set times, so it keeps coming back without anyone starting it.'},
   'T1584.008': {name: 'Compromise Infrastructure: Network Devices', tactic: ['Resource Development'],
-                plain: 'Taking over routers and similar network gear, often old small-office models, to use as infrastructure such as relays.'}
+                plain: 'Taking over routers and similar network gear, often old small-office models, to use as infrastructure such as relays.'},
+  'T1555':     {name: 'Credentials from Password Stores', tactic: ['Credential Access'],
+                plain: 'Reading passwords from the places software keeps them (credential vaults, password managers, saved logins) instead of guessing them.'}
 };
 const QT_FIELD_NOTES = 'Field notes: the Quiet Thread is a composite (game). Its real-world basis is joint Cybersecurity Advisory AA24-038A ' +
   '(CISA, NSA and FBI with partner agencies, February 2024) on Volt Typhoon, a PRC state-sponsored group. The advisory reports access to some US ' +

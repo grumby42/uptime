@@ -508,7 +508,7 @@ function clerksDone(s, extra, party) {
     /Market Square district: secured/.test(sum) && /Lantern Badge/.test(sum) && /Tier 2 incident responder/.test(sum) && /Next: Records Hall/.test(sum) && /72\.5 hours/.test(sum) && /Exposure window on the payment page/.test(sum) && /Did the injection work\?/.test(sum), sum.slice(0, 400));
   await s.pickLabel(/Keep exploring/); await s.settle();
   p = await s.peek();
-  check('after recovery: objective done (Next: Records Hall); series save marks Market Square done', p.objective.done && /Records Hall/.test(p.objective.text) && await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).editions['town-hall'].marketSquare === true), p.objective);
+  check('after recovery: objective points to Records Hall (done, or the Records Hall district); series save marks Market Square done', (p.objective.done || p.objective.district === 'records') && /Records Hall/.test(p.objective.text) && await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).editions['town-hall'].marketSquare === true), p.objective);
   check('Credits list the Market Square sources', /PCI DSS v4\.0\.1/.test(await s.page.evaluate(() => creditsHtml())) && /OWASP Top 10:2025/.test(await s.page.evaluate(() => creditsHtml())));
   results.errors = s.errors; results.requests = s.requests;
   if (s.errors.length || s.requests.length) failed = true;
