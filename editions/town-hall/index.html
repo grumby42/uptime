@@ -165,7 +165,7 @@ pre.art.ai{border-left-color:var(--gold)}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261028-0519Z', BUILD_TS = '2026-10-28 05:19 UTC';
+const BUILD_ID = 'ARCD-20261028-0533Z', BUILD_TS = '2026-10-28 05:33 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -345,7 +345,7 @@ const ABIL = {
   timeline: {name:'Timeline', type:'inv', cost:2, ev:18, desc:'Put events in time order to see what happened first and what followed.'},
   baseline: {name:'Baseline', type:'inv', cost:1, ev:14, fpBonus:true, desc:'Compare activity against what is normal for this user, host or time of day.'},
   signins:  {name:'Check sign-ins', type:'inv', cost:2, ev:22, desc:'Review an account’s recent sign-ins, failures and MFA prompts.'},
-  reset:    {name:'Reset password', type:'con', cost:2, dw:25, ev:6, disrupt:1, desc:'Force a new password on an account so a stolen one stops working.'},
+  reset:    {name:'Reset password', type:'con', cost:2, dw:25, ev:6, disrupt:1, desc:'Force a new password on an account so a stolen one stops working. Sessions already signed in can survive a reset: revoke them too.'},
   revoke:   {name:'Revoke sessions', type:'con', cost:2, dw:25, ev:6, disrupt:1, desc:'Sign an account out everywhere, ending sessions an attacker may hold.'},
   mfa:      {name:'Enforce MFA', type:'con', cost:3, dw:40, ev:4, disrupt:0, desc:'Require a second factor for an account, so a password alone is not enough.'}
 };
@@ -722,7 +722,7 @@ const Series = {
 };
 function qtStageFor(n) { return n >= QT_SUSPECT ? 2 : n >= 1 ? 1 : 0; }
 
-/* ATT&CK techniques behind the Quiet Thread clues (verified on attack.mitre.org, Oct 2026, ATT&CK v19).
+/* ATT&CK techniques behind the Quiet Thread clues (verified on attack.mitre.org, Oct 2026; re-checked against ATT&CK v20.0 on 28 Oct 2026).
    Kept apart from each edition's TECH table: they never appear in alerts, and they are not counted in Field Manual %. */
 const QT_TECH = {
   'T1078':     {name: 'Valid Accounts', tactic: ['Initial Access', 'Persistence', 'Privilege Escalation', 'Stealth'],
@@ -866,7 +866,7 @@ const MAPS = {
   }
 };
 
-/* ---------- Building groups (patch state) ---------- */
+/* ---------- Building groups (hardening: one baseline fix each) ---------- */
 const GROUPS = {
   a: {name:'Front Desk', fix:'kiosk'},
   b: {name:'Guest lounge', fix:'wifi'},
@@ -891,7 +891,7 @@ const NPCS = [
 ];
 const ACCOUNTS_TOTAL = 12; // (game) staff accounts in the district, including the front-desk admin account
 
-/* ---------- ATT&CK techniques (verified against attack.mitre.org, Oct 2026) ---------- */
+/* ---------- ATT&CK techniques (verified against attack.mitre.org, Oct 2026; re-checked against ATT&CK v20.0 on 28 Oct 2026) ---------- */
 const TECH = {
   'T1110.003': {name:'Brute Force: Password Spraying', tactic:['Credential Access'], desc:'Trying one or a few common passwords against many accounts, to stay under lockout limits.'},
   'T1566.004': {name:'Phishing: Spearphishing Voice', tactic:['Initial Access'], desc:'Phone calls, often posing as IT or a trusted company, that talk someone into giving access or running something.'},
@@ -900,7 +900,7 @@ const TECH = {
   'T1133':     {name:'External Remote Services', tactic:['Initial Access','Persistence'], desc:'Using remote-access services reachable from the internet (remote desktop, VPN) to get in or stay in.'},
   'T1190':     {name:'Exploit Public-Facing Application', tactic:['Initial Access'], desc:'Abusing a flaw in an internet-facing app or device to get into the network.'},
   'T1621':     {name:'Multi-Factor Authentication Request Generation', tactic:['Credential Access'], desc:'Flooding a user with MFA approval prompts, hoping one gets approved.'},
-  'T1684.001': {name:'Social Engineering: Impersonation', tactic:['Stealth'], desc:'Posing as a trusted person (an executive, a colleague, a help-desk agent) to get someone to act. The older ID T1656 now redirects here.'},
+  'T1684.001': {name:'Social Engineering: Impersonation', tactic:['Stealth'], desc:'Posing as a trusted person (an executive, a colleague, a help-desk agent) to get someone to act. The older ID T1656 now redirects here. Its tactic, Stealth (TA0005), was called Defense Evasion before ATT&CK v19.'},
   'T1078':     {name:'Valid Accounts', tactic:['Initial Access','Persistence','Privilege Escalation','Stealth'], desc:'Signing in with real credentials that were stolen or guessed, so the activity looks legitimate.'},
   'T1078.001': {name:'Valid Accounts: Default Accounts', tactic:['Initial Access','Persistence','Privilege Escalation','Stealth'], desc:'Using built-in accounts and factory-default passwords that nobody changed.'},
   'T1098.005': {name:'Account Manipulation: Device Registration', tactic:['Persistence','Privilege Escalation'], desc:'Enrolling an attacker-controlled device (for example as an MFA device) on a compromised account to keep access.'}
@@ -915,9 +915,12 @@ const THREATS = {
   pry:     {name:'Pry', tech:'T1190', spr:'pry', pal:'pry', tags:[], bucket:'vuln'},
   jamb:    {name:'Jamb', tech:'T1133', spr:'jamb', pal:'jamb', tags:['remote'], bucket:'story'}
 };
-// (game) malicious entry weights, from the 2025 Verizon DBIR initial-access shares: credentials 22, exploited vulnerability 20, phishing 16, other 42.
+// (game) Weights for MALICIOUS alerts only (false-positive and benign alerts pick a rule evenly; see genAlert).
+// The three real ways in keep the 2025 Verizon DBIR initial-access proportions, credentials 22 : exploited
+// vulnerability 20 : phishing 16 (10 link, 6 call), scaled to 85. Scanning (Prober) is reconnaissance, not a way in,
+// and gets a fixed 15: a Prober alert is only malicious when login attempts follow the scan.
 const MAL_WEIGHTS = [
-  {t:'sprayer', w:22}, {t:'pry', w:20}, {t:'lure', w:10}, {t:'caller', w:6}, {t:'prober', w:42}
+  {t:'sprayer', w:32}, {t:'pry', w:29}, {t:'lure', w:15}, {t:'caller', w:9}, {t:'prober', w:15}
 ];
 
 /* Alert templates: per threat, three possible truths. Clues are revealed by investigation. */
@@ -928,8 +931,8 @@ const ALERTS = {
     mal:{clues:['Failures hit 40 different accounts in six minutes, two tries each: just under the lockout limit.','Every attempt comes from one hosting-provider address range never seen here before.','After the burst, one account (reception-02) signed in successfully from that range.'],
          truth:'Password spraying: one common password tried against many accounts. One account fell.',
          resp:[{label:'Reset reception-02, revoke its sessions, block the source range',good:true},{label:'Isolate every reception PC',good:false,disrupt:2},{label:'Lock all 40 accounts for a day',good:false,disrupt:1}]},
-    benign:{clues:['Failures come from the office’s own network, spread over an hour.','Each account succeeded within a few tries, from its usual PC.','Passwords expired over the weekend; Monday morning staff are mistyping new ones.'],
-         truth:'Benign: staff mistyping new passwords after a scheduled expiry.'},
+    benign:{clues:['Failures come from the office’s own network, spread over an hour.','Each account succeeded within a few tries, from its usual PC.','IT forced a reset on Friday after a vendor’s breach; Monday morning staff are mistyping new passwords.'],
+         truth:'Benign: staff mistyping new passwords after a forced reset.'},
     fp:{clues:['Every “failure” comes from the visitor kiosk, exactly every 15 minutes.','The event code is a session timeout, not a wrong password.','Nobody typed anything: it’s the kiosk’s scheduled auto-logout.'],
          truth:'False positive: the rule counted the kiosk’s auto-logout as failed passwords.'}
   },
@@ -947,19 +950,19 @@ const ALERTS = {
     rule:'Link to a sign-in page clicked from email',
     mal:{clues:['The link’s domain is one letter off from ours and was registered two days ago.','The page asks for the password, then the MFA code.','Three other people received the same email.'],
          truth:'Spearphishing link: a look-alike sign-in page harvesting passwords and codes.',
-         resp:[{label:'Reset the clicker’s password, purge the email, block the domain',good:true},{label:'Isolate the clicker’s laptop for a week',good:false,disrupt:2},{label:'Ban all links in email',good:false,disrupt:1}]},
+         resp:[{label:'Reset the clicker’s password, revoke their sessions, purge the email, block the domain',good:true},{label:'Isolate the clicker’s laptop for a week',good:false,disrupt:2},{label:'Ban all links in email',good:false,disrupt:1}]},
     benign:{clues:['The email came from HR’s survey platform, announced last week.','The link’s domain is the platform’s real one.','It asks no passwords; sign-in goes through our own login page.'],
          truth:'Benign: a legitimate staff survey with tracking links.'},
-    fp:{clues:['The rule fires on any URL containing the word “login”.','The URL is our own company sign-in page.','Every staff member hits this page daily.'],
-         truth:'False positive: the rule matched our own login page.'}
+    fp:{clues:['The rule fires on any URL containing the word “login”.','The URL is a newsletter article: /blog/login-tips-for-staff.','It is not a sign-in page at all; the rule matched a word.'],
+         truth:'False positive: the rule matched the word “login” in an article’s address.'}
   },
   prober: {
     rule:'Port sweep against public addresses',
-    mal:{clues:['One source hits ports 22, 443 and 3389 on every public address, in sequence.','It then repeats only against the address that answered.','Requests look for a known remote-access login page.'],
-         truth:'Active scanning: an outsider mapping what we expose, looking for a way in.',
-         resp:[{label:'Block the source, confirm what is exposed, watch for follow-up',good:true},{label:'Take the website offline',good:false,disrupt:2},{label:'Ignore: scanning is just noise',good:false}]},
-    benign:{clues:['The source is the address of our own vulnerability scanner.','A scan was scheduled for tonight in the change calendar.','It ran on time and stopped on time.'],
-         truth:'Benign: our own scheduled vulnerability scan.'},
+    mal:{clues:['One source hits ports 22, 443 and 3389 on every public address, in sequence.','It then repeats only against the address that answered, and finds a remote-access login page.','Login attempts start on that page from the same source: the scan has become an attempt to get in.'],
+         truth:'Scanning followed by login attempts. The scan alone is reconnaissance (routine); trying to sign in to what it found is the attack.',
+         resp:[{label:'Confirm what is exposed, shut anything that shouldn’t be, check the login attempts, watch for follow-up',good:true},{label:'Block the source address and close the alert',good:false,why:'Blocking one address barely slows a scanner that can switch addresses; the exposed login page is still there.'},{label:'Take the website offline',good:false,disrupt:2},{label:'Ignore: scanning is just noise',good:false,why:'The scan was noise; the login attempts after it are not.'}]},
+    benign:{clues:['The source is a well-known internet-wide research scanner that probes every address on the internet.','It touched each of our public addresses once, on common ports, and moved on.','Nothing answered that shouldn’t, and no login attempts followed.'],
+         truth:'Benign: routine internet-wide scanning. It is reconnaissance, not an incident: confirm nothing unexpected is exposed and move on.'},
     fp:{clues:['The “scan” is many short DNS lookups.','They come from the guest Wi-Fi when a phone joins.','It’s normal phone behaviour; the rule threshold is too low.'],
          truth:'False positive: the rule mistook normal DNS lookups for a port scan.'}
   },
@@ -994,10 +997,10 @@ const BRIEFS = [
 const DOJO = [
   {q:'Which password space is biggest? (Each character chosen at random.)',
    opts:['8 characters from all 95 printable symbols','16 lowercase letters','10 letters and digits'], good:1,
-   explain:'95^8 ≈ 6.6×10^15. 26^16 ≈ 4.4×10^22. 62^10 ≈ 8.4×10^17. Every extra character multiplies the space, so length wins. Current NIST guidance (SP 800-63B) favours longer passwords over composition rules.'},
+   explain:'95^8 ≈ 6.6×10^15. 26^16 ≈ 4.4×10^22. 62^10 ≈ 8.4×10^17. Every extra character multiplies the space, so length wins. NIST SP 800-63B-4 (2025) sets a 15-character minimum for a password used on its own and tells verifiers not to impose composition rules.'},
   {q:'A site stores password hashes. When you sign in, how does it check your password?',
    opts:['It decrypts the stored hash and compares','It hashes what you typed and compares the two hashes','It emails your password to an admin'], good:1,
-   explain:'A hash is a one-way fingerprint: the same input always gives the same output, and you can’t run it backwards. So the site hashes your attempt and compares fingerprints. Password storage uses deliberately slow hash functions.'},
+   explain:'A hash is a one-way fingerprint: the same input always gives the same output, and you can’t run it backwards. So the site hashes your attempt and compares fingerprints. Good password storage uses deliberately slow, salted hash functions such as Argon2, bcrypt or PBKDF2.'},
   {q:'Two users both chose “sunshine1”. What does a unique random salt per user do?',
    opts:['Makes their stored hashes different, so precomputed tables and look-alike matches fail','Encrypts the password so it can be recovered','Turns a weak password into a strong one'], good:0,
    explain:'The salt is mixed in before hashing, so identical passwords produce different hashes and precomputed (rainbow) tables are useless. It does not make a guessable password hard to guess.'}
@@ -1007,10 +1010,11 @@ const DOJO = [
 const CARDS = [
   {id:'reset', name:'Reset credentials', csf:'Respond', text:'Give the admin account a new long password now.', fx:'Stage 2 starts with less attacker progress.'},
   {id:'revoke', name:'Revoke sessions', csf:'Respond', text:'Sign the account out everywhere, killing any session the attacker holds.', fx:'Stage 2 attacker moves slower.'},
-  {id:'mfa', name:'Enforce MFA', csf:'Protect', text:'Require a second factor for the admin account.', fx:'Stage 3 becomes much easier.'},
-  {id:'logs', name:'Review sign-in logs', csf:'Detect', text:'Pull every sign-in for the account in the last 30 days.', fx:'Every stage starts with more evidence.'},
+  {id:'mfa', name:'Enforce MFA', csf:'Protect', text:'Require a second factor for the admin account from now on.', fx:'Future password guesses fail. But it does nothing against an MFA device the attacker has already enrolled: no help in Stage 3.'},
+  {id:'devices', name:'Review MFA devices', csf:'Respond', text:'List every MFA device enrolled on the admin account and remove any nobody can vouch for.', fx:'Stage 3 becomes much easier: an unknown device is found and removed.'},
+  {id:'logs', name:'Review sign-in logs', csf:'Respond', text:'Pull every sign-in for the account in the last 30 days.', fx:'Every stage starts with more evidence.'},
   {id:'isolate', name:'Isolate host', csf:'Respond', text:'Cut the admin’s workstation off the network.', fx:'Does not help: the attacker is using the account, not that PC.'},
-  {id:'notify', name:'Notify leadership', csf:'Govern', text:'Tell leadership what happened, what you are doing, and when you’ll update them.', fx:'Reputation up; leadership is ready if it gets worse.'}
+  {id:'notify', name:'Notify leadership', csf:'Respond', text:'Tell leadership what happened, what you are doing, and when you’ll update them.', fx:'Reputation up; leadership is ready if it gets worse.'}
 ];
 
 /* ---------- Field Manual ---------- */
@@ -1020,20 +1024,24 @@ const EXTRA_ACTIONS = {
   logging:{name:'Enable security logging', desc:'Turn on event logs and forward them to a central collector so investigations have evidence.'},
   numbermatch:{name:'Number-matching MFA prompts', desc:'The user must type a number shown on the sign-in screen, so blindly approving a push does not work.'},
   callback:{name:'Call-back verification', desc:'Verify a caller by hanging up and calling the number on file, never one they give you.'},
+  scope:{name:'Scope after containment', desc:'Containing an attack is not the end. Ask what it touched (data, hosts), what access it added (accounts, MFA devices, sessions) and what it left behind (persistence), then recover. Contain, scope, recover.'},
   insider:{name:'Insider-risk referral', desc:'Report concerning behaviour factually to the insider-risk process (HR, legal, security). One sign proves nothing; don’t investigate on your own.'}
 };
 const FACTS = {
-  dbir_ia:{name:'How breaches start (2025)', desc:'In the 2025 Verizon Data Breach Investigations Report, the top known initial access vectors were credential abuse (22%), exploitation of vulnerabilities (20%) and phishing (16%).', src:'Verizon 2025 DBIR'},
+  dbir_ia:{name:'How breaches start (2025)', desc:'In the 2025 Verizon Data Breach Investigations Report, the top initial access vectors (in breaches where the vector was known) were credential abuse (22%), exploitation of vulnerabilities (20%) and phishing (16%). The 2026 report puts exploitation of vulnerabilities first (31%), with credential abuse down to 13%.', src:'Verizon 2025 DBIR'},
   dbir_rw:{name:'Ransomware and smaller organisations (2025)', desc:'The 2025 Verizon DBIR found ransomware in 88% of breaches at small and medium-sized organisations, compared with 39% at large ones.', src:'Verizon 2025 DBIR'},
   fp:{name:'Alert fatigue (2021)', desc:'In Critical Start’s 2021 survey of 100 SOC professionals, 68% said 25–75% of the alerts they investigate each day are false positives.', src:'Critical Start, 2021 SOC survey'},
-  nist:{name:'Length beats complexity', desc:'NIST SP 800-63B (digital identity guidelines) favours longer passwords and tells verifiers not to impose composition rules such as “one symbol, one digit”.', src:'NIST SP 800-63B'}
+  nist:{name:'Length beats complexity', desc:'NIST SP 800-63B-4 (digital identity guidelines, 2025) requires at least 15 characters for a password used on its own, tells verifiers not to impose composition rules such as “one symbol, one digit”, not to force periodic changes, and to reject passwords on a blocklist of common or breached ones.', src:'NIST SP 800-63B-4'}
 };
 const GAME_NOTES = [
   'Alert mix before tuning: 50% false positive, 30% benign but real, 20% malicious. (game)',
-  'Malicious alerts are weighted 22 credentials / 20 exploited vulnerability / 16 phishing / 42 other, borrowing the DBIR shares. (game)',
+  'Only malicious alerts use entry-route weights: password spraying 32 / exploited app 29 / phishing 24 (15 link, 9 call) / scanning 15. The first three keep the 2025 DBIR initial-access proportions (22 : 20 : 16), scaled up; scanning is reconnaissance, not a way in, so a scan alert is only malicious when login attempts follow it. False-positive and benign alerts pick a rule evenly. (game)',
   'Class strengths: Endpoint vs Execution/Persistence/Privilege Escalation; Network vs C2/Lateral Movement/Exfiltration/remote services/scanning; Logging vs Discovery/Credential Access once logs are on; Identity vs Credential Access and account abuse. Strong ×2, weak ×0.5. (game)',
   'District uptime, reputation, building health, MFA coverage (12 accounts) and all character names are invented. (game)',
-  'Automation risk “about 1 in 50 auto-closed alerts may be real” is an invented number. (game)'
+  'Automation risk “about 1 in 50 auto-closed alerts may be real” is an invented number. (game)',
+  'Acting on a morning briefing halves that threat’s odds for a week, and the Key Badge halves Sprayer alerts: both are invented effects. (game)',
+  'Time to acknowledge counts seconds of menu time in the game. Real SOCs measure time to acknowledge and time to resolve in minutes to hours, against agreed service-level targets. (game)',
+  'Escalation precision counts an escalation as good only when the alert was real and you had Evidence 40 or more. “Verdicts with evidence” uses the same 40 line. (game)'
 ];
 
 /* ---------- Debriefs ---------- */
@@ -1046,9 +1054,9 @@ const VEX_EXPLAIN = [
 /* ---- editions/town-hall/quiet.js ---- */
 /* ============================================================
    UPTIME · editions/town-hall/quiet.js
-   The Quiet Thread, first seeds (Town Hall). The intruder came in through the
-   old small-office router in the Front Desk network closet and lives off the
-   land: a valid service account, built-in tools, a cleared log, a scheduled
+   The Quiet Thread, first seeds (Town Hall). The intruder relays its traffic
+   through a hijacked old small-office router in the Front Desk network closet
+   (infrastructure, not its way in) and lives off the land: a valid service account, built-in tools, a cleared log, a scheduled
    task. It never raises an alert and has no wild encounter. Five faint clues,
    each visible only with the right capability, from Day 2 on.
    The clue situations are invented (game); the technique IDs are real (see QT_TECH).
@@ -1059,7 +1067,7 @@ const QT_CLUES = {
   'th-signin':   {tech: 'T1078', where: 'your desk (Ledger console)',
                   seen: 'svc-print, the printer’s service account, signed in to FD-STAFF-11 at 03:12 on Day 2, right password on the first try.'},
   'th-router':   {tech: 'T1090', where: 'network closet (Lanternkeep)',
-                  seen: 'Once a night, just after 03:00, the closet’s small-office router opened a short encrypted connection to an address no vendor of ours uses.'},
+                  seen: 'Once a night, around 03:10, the closet’s small-office router relayed a short encrypted connection between FD-STAFF-11 and an address no vendor of ours uses.'},
   'th-logclear': {tech: 'T1685.005', where: 'FD-STAFF-14 (Ledger)',
                   seen: 'FD-STAFF-14’s security log starts at 03:40 on Day 2 with a “log cleared” entry; the other PCs go back to Day 1.'},
   'th-schtask':  {tech: 'T1053.005', where: 'FD-STAFF-11 (Sentry)',
@@ -1090,7 +1098,7 @@ async function qtCloset() {
   if (!hasTool('lantern')) { await say('The old small-office router’s lights blink. Reading its connection table would take a network tool.'); return; }
   const i = await choose('The old small-office router hums on the shelf.', [{label: 'Lanternkeep: inspect its connections'}, {label: 'Leave it'}]);
   if (i !== 0) return;
-  await say('Lanternkeep: once a night, just after 03:00, the router opens a short encrypted connection to an address that isn’t any vendor or service you use. Small, regular, and under every threshold.');
+  await say('Lanternkeep: once a night, around 03:10, the router relays a short encrypted connection between FD-STAFF-11 and an address that isn’t any vendor or service you use. Small, regular, and under every threshold.');
   await qtAfterNote(qtNote('th-router'));
 }
 
@@ -1151,7 +1159,7 @@ const EDITION = {
   title: 'Town Hall · Front Desk district',
   blurb: 'You’re the new intern in a small town’s security team. Investigate alerts, fix what’s broken, and keep the district running.',
   creditsName: 'vertical slice 1: Town Hall, Front Desk district',
-  creditsFacts: 'Verizon 2025 Data Breach Investigations Report (initial access shares; ransomware at small and medium organisations). Critical Start 2021 SOC professional survey (false positives). NIST SP 800-63B (password length). Joint Cybersecurity Advisory AA24-038A (CISA, NSA, FBI and partners, February 2024).'
+  creditsFacts: 'Verizon 2025 Data Breach Investigations Report (initial access shares; ransomware at small and medium organisations) and 2026 executive summary (exploitation now first). Critical Start 2021 SOC professional survey (false positives). NIST SP 800-63B-4 (password length, no periodic changes, blocklists). Joint Cybersecurity Advisory AA24-038A (CISA, NSA, FBI and partners, February 2024).'
 };
 
 const FIX_ORDER = ['kiosk', 'wifi', 'logs'];
@@ -1165,9 +1173,9 @@ function newState(seed) {
     focus: 30, focusMax: 30, rep: 50, uptime: 99.95,
     health: {a: 100, b: 100, c: 100, d: 100},
     rank: 'Intern', badge: false,
-    m: {closed: 0, judged: 0, correctShown: 0, ttaSum: 0, ttaN: 0, esc: 0, escOk: 0, missed: 0, surfaced: 0, overreact: 0, autoClosed: 0, events: 0, today: 0},
+    m: {closed: 0, judged: 0, correctShown: 0, evOk: 0, ttaSum: 0, ttaN: 0, esc: 0, escOk: 0, missed: 0, surfaced: 0, overreact: 0, autoClosed: 0, events: 0, today: 0},
     track: {},
-    targets: {closed: 12, acc: 90, tta: 20, esc: 1, uptime: 99.9, mfa: 100, patch: 100},
+    targets: {closed: 12, acc: 90, evid: 80, tta: 20, esc: 75, uptime: 99.9, mfa: 100, patch: 100},
     mfaSet: ['rae', 'tomas', 'you'],
     fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
     fpWeight: 50, queue: 3, steps: 0, auto: false, playMs: 0
@@ -1270,11 +1278,11 @@ async function talk(npc) {
       break;
     case 'tomas':
       if (!f.wifi) await say('The guest Wi-Fi and the staff PCs share one flat network. A visitor’s laptop could talk straight to Lin’s PC. The closet’s right behind me.', who);
-      else if (!f.logs) await say('Next: logging. Each staff PC has security logging switched off. Turn it on and I’ll forward the logs to a collector.', who);
+      else if (!f.logs) await say('Next: logging. The staff PCs barely audit anything, and their logs never leave the PC. Switch on the audit policy and I’ll forward the logs to a collector.', who);
       else await say('Logs are flowing. Without them every investigation is guesswork.', who);
       break;
     case 'lin':
-      if (!f.logs) await say('My PC keeps no security logs at all? Then how would anyone know if something happened on it?', who);
+      if (!f.logs) await say('My PC’s security logs never leave my PC? Then how would anyone know if something happened on it?', who);
       else await say('The HVAC contractor had his laptop plugged in at the Annex all last week. He said he’d “finish from home”.', who);
       break;
     case 'hal':
@@ -1311,6 +1319,7 @@ async function raeTalk() {
     const id = ids[i];
     addTool(id, 3); f.starter = id;
     await say(TOOLS[id].name + ' is installed on your console. Tools aren’t thrown at problems: you run them, and their abilities cost Focus.', who);
+    await say('If an alert looks real and bigger than you, choose “Ask Rae” in the alert. Bring evidence: what you saw and why it matters. I judge escalations on that, not on how many you send.', who);
     await say('Press Select (Shift) any time to open the alert queue. Walking through the tangled cabling outside can also trip alerts: that space isn’t monitored yet.', who);
     await say('Onboarding tasks: change the kiosk’s default password, put guest Wi-Fi on its own network at the closet, and turn on logging at the staff PCs. Each fix shows up on the map.', who);
     unlock('fact', 'fp');
@@ -1339,7 +1348,7 @@ async function fixDone(key, msg) {
   toast('Map updated: lights on, cabling tidied');
   if (G.f.kiosk && G.f.wifi && G.f.logs && !G.f.onboarded) {
     G.f.onboarded = true;
-    await say('Onboarding baseline complete. Patch state ' + metricVals().patch + '%. Check the scorecard with Start.');
+    await say('Onboarding baseline complete. Hardening ' + metricVals().patch + '%. Check the scorecard with Start.');
   }
 }
 async function kioskTask() {
@@ -1377,11 +1386,11 @@ async function wifiTask() {
 async function pcTask(x) {
   if (!G.f.starter) { await say('A staff PC. Rae should brief you first.'); return; }
   if (G.pcs[x] || G.f.logs) { await say('Security logging is on and forwarding.'); if (G.f.logs) await qtPc(x); return; }
-  await say('Security event logging is switched off on this PC. You turn it on and point it at the collector.');
+  await say('This PC’s security auditing is barely configured, and nothing is forwarded anywhere. You switch on the audit policy and point it at the collector.');
   G.pcs[x] = true;
   const n = PCS.filter(p => G.pcs[p]).length;
   if (n < 3) { await say('Logging enabled (' + n + '/3).'); return; }
-  unlock('act', 'logging'); touchCSF('Detect');
+  unlock('act', 'logging'); touchCSF('Protect'); touchCSF('Detect');
   await fixDone('logs', 'All three staff PCs are logging. The records office lights up.');
   if (!hasTool('ledger')) {
     addTool('ledger', 3);
@@ -1407,9 +1416,9 @@ const PORT_SPEC = () => ({
   kind: 'mal', threat: 'jamb', tech: 'T1133', tags: ['remote'], story: true, group: 'd', rate: 13,
   title: 'Remote desktop sign-in from overseas', host: 'ANNEX-PC-03 · Annex',
   enemy: {spr: 'jamb', pal: 'jamb'},
-  clues: ['A remote-desktop session to ANNEX-PC-03 came straight in from the internet at 03:12.', 'It used the HVAC contractor’s account. The port was opened for him last week.', 'The contractor says he hasn’t connected since Tuesday, and the address is on another continent.'],
+  clues: ['A remote-desktop session to ANNEX-PC-03 came straight in from the internet at 01:47.', 'It used the HVAC contractor’s account. The port was opened for him last week.', 'The contractor says he hasn’t connected since Tuesday, and the address is on another continent.'],
   truth: 'An attacker used the open remote-desktop port and the contractor’s password: External Remote Services.',
-  resp: [{label: 'End the session, close the port, reset the contractor’s account, give him VPN with MFA', good: true},
+  resp: [{label: 'End the session, close the port, reset the contractor’s account, check ANNEX-PC-03 and what was copied', good: true},
          {label: 'Leave it: it’s probably the contractor', good: false},
          {label: 'Unplug the whole district from the internet', good: false, disrupt: 2}],
   chain: [{at: 35, text: 'The session starts browsing the Annex file share.'}, {at: 70, text: 'Large files are being copied out over the session.'}]
@@ -1418,7 +1427,7 @@ async function portScript() {
   const who = 'Rae Okafor';
   await say('Hal told you about the Annex port? Good timing. The board just lit up: a remote-desktop sign-in on the Annex PC, from overseas.', who);
   await say('This is real. Investigate, then close it with a verdict and a response. I’m right here.', who);
-  await fightStory(PORT_SPEC(), 'Try again. Close the door first, then ask questions.');
+  await fightStory(PORT_SPEC(), 'Try again. Contain first, then scope: what did that session touch?');
   G.f.portDone = true; G.mfaSet.push('contractor'); track();
   bumpUptime(0.01);
   await say('The port is shut and the contractor has a VPN with MFA. Look at the firewall on the map: no more gap. The Annex lights up.', who);
@@ -1440,7 +1449,7 @@ const VEX_SPEC = () => ({
   clues: ['Lin’s account signed in from the office and, two minutes later, from a hosting provider.', 'Yesterday Lin got an email linking to a sign-in page one letter off from ours.', 'The second session is reading the shared finance folder.'],
   truth: 'Vex phished Lin’s password and signed in with it.',
   resp: [{label: 'Reset Lin’s password, revoke her sessions, block the look-alike domain', good: true},
-         {label: 'Isolate Lin’s PC', good: false, disrupt: 2, why: 'The attacker isn’t on her PC; they’re using her account from elsewhere.'},
+         {label: 'Isolate Lin’s PC', good: false, disrupt: 2, why: 'Nothing points to her PC: the second session comes from a hosting provider, using her account. Cutting off her PC doesn’t touch it.'},
          {label: 'Close it: Lin travels a lot', good: false}],
   chain: [{at: 30, text: 'The second session lists the shared drives.'}, {at: 65, text: 'It opens finance spreadsheets one by one.'}]
 });
@@ -1452,10 +1461,11 @@ async function vexScript() {
   await fightStory(VEX_SPEC(), 'Vex: Too slow. Again: same trick, fresh logs.');
   await say('Not bad. Since you earned it, here’s what I did, step by step:', who);
   for (const [id, line] of VEX_EXPLAIN) { unlock('tech', id); await say(line, who); }
-  await say('Real attackers chain small, boring steps. Notice any one and the chain breaks. See you at the Board.', who);
+  await say('Real attackers chain small, boring steps. Notice any one and act on it, and the chain breaks. See you at the Board.', who);
   G.f.vexDone = true;
   G.targets.tta = 15; G.f.directive = true; touchCSF('Govern');
   await say('Rae (radio): Directive from leadership: the time-to-acknowledge target drops from 20 s to 15 s. Speed matters, but closing alerts fast and wrong always comes back to bite.');
+  await say('Rae (radio): Remember the hidden part of the scorecard: an alert you close as harmless that was really an attack still counts. Incident review finds it later and corrects your accuracy. When a measure becomes a target, people game it; don’t.');
 }
 
 /* ---------- Insider risk ---------- */
@@ -1487,7 +1497,7 @@ async function graceTalk() {
   if (f.insider === 'toReport') {
     await say('Thanks for coming to me. You did the right thing: you told me what you heard, not what you think he’ll do.', who);
     await say('HR, legal and security look at concerns like this together. Most turn out to be someone having a bad month. I’ll check in with Owen, supportively.', who);
-    await say('One sign proves nothing, and you didn\u2019t treat it like proof. That\u2019s how this is supposed to work.', who);
+    await say('One sign proves nothing, and you didn\u2019t treat it like proof. Keep this between us: it\u2019s need-to-know. That\u2019s how this is supposed to work.', who);
     f.insider = 'defused'; touchCSF('Govern');
     return;
   }
@@ -1544,7 +1554,7 @@ const BOARD_SPECS = () => [
    title: 'Round 1: failed sign-ins across 60 accounts', host: 'Board practice tenant', enemy: {spr: 'sprayer', pal: 'sprayer'},
    clues: ['60 accounts, one or two attempts each, in ten minutes: below the lockout threshold.', 'All from a small set of hosting-provider addresses.', 'One practice account with an old password signed in.'],
    truth: 'Password spraying against the practice accounts.',
-   resp: [{label: 'Reset the account that fell, enforce MFA, block the sources', good: true}, {label: 'Lock all 60 accounts for a week', good: false, disrupt: 1}, {label: 'Close: failures are normal', good: false}],
+   resp: [{label: 'Reset the account that fell, revoke its sessions, enforce MFA, block the sources', good: true}, {label: 'Lock all 60 accounts for a week', good: false, disrupt: 1}, {label: 'Close: failures are normal', good: false}],
    chain: [{at: 40, text: 'Another wave of attempts with a different common password.'}, {at: 75, text: 'A second account accepts the password.'}]},
   {kind: 'mal', threat: 'sprayer', tech: 'T1621', tags: ['identity'], story: true, rate: 12, group: 'a',
    title: 'Round 2: 23 MFA prompts at 2 a.m.', host: 'lin.zhao · phone', enemy: {spr: 'buzzer', pal: 'buzzer'},
@@ -1563,7 +1573,7 @@ async function boardScript() {
   const who = 'Marisol Diaz';
   if (G.f.boardDone) { await say('Every account you meet gets MFA now. That badge is a responsibility, not a trophy.', who); return; }
   if (!G.f.vexDone) { await say('Come back after you’ve dealt with Vex.', who); return; }
-  await say('I’m Marisol Diaz, identity lead. Most break-ins here don’t smash anything: they sign in.', who);
+  await say('I’m Marisol Diaz, identity lead. Plenty of break-ins don’t smash anything: they sign in.', who);
   await say('Three rounds: a password spray, an MFA fatigue push, and a help-desk impersonation call. Ready?', who);
   const specs = BOARD_SPECS();
   for (let r = 0; r < 3; r++) await fightStory(specs[r], 'Marisol: Again. Read the evidence before you react.');
@@ -1572,11 +1582,11 @@ async function boardScript() {
   if (!G.mfaSet.includes('marisol')) G.mfaSet.push('marisol');
   addTool('keyling', 5); track();
   await say('You cleared the Identity Board. This is the Key Badge.', who);
-  await say('Its power: you enforce MFA on every account you meet, and password-spray alerts on the map drop by half. Keyling joins your console.', who);
-  await say('Rank up: Intern → Tier 1 analyst. New responsibility: escalation. When evidence says it’s real and big, escalate to Tier 2 / incident response.');
+  await say('Its power: you enforce MFA on every account you meet. Sprays still come, but a guessed password alone no longer gets in, so Sprayer alerts on the map drop by half (game). Keyling joins your console.', who);
+  await say('Rank up: Intern → Tier 1 analyst. New responsibility: you escalate straight to Tier 2 / incident response, without going through Rae. Bring evidence.');
   touchCSF('Protect');
   if (hasTool('ledger')) {
-    const i = await choose('Rae: With Tier 1 comes automation. Ledger can auto-close alerts matching known false-positive patterns while you walk. Risk: about 1 in 50 auto-closed alerts might be real (game). Turn it on?',
+    const i = await choose('Rae: With Tier 1 comes automation. Ledger can auto-close alerts matching known false-positive patterns while you walk. Risk: about 1 in 50 auto-closed alerts might be real (game), and nobody looks at those. Turn it on?',
       [{label: 'Turn automation on', meta: {good: true}}, {label: 'Not now (toggle later in the Start menu)'}]);
     G.f.autoUnlocked = true; G.auto = i === 0;
   }
@@ -1591,7 +1601,7 @@ async function bossScript() {
   await say('Tabletop first. Pick three response cards. Then we work it in three stages.', who);
   const body = '<p>Pick <b>three</b> cards. Each is written from public ATT&amp;CK / D3FEND-style actions.</p>' +
     CARDS.map(c => '<div class="card"><b>' + esc(c.name) + '</b> <span class="tag">' + c.csf + '</span><br>' + esc(c.text) + '</div>').join('');
-  const items = CARDS.map(c => ({label: c.name, meta: {good: ['reset', 'revoke', 'mfa'].includes(c.id)}})).concat([{label: 'Play these three cards', done: true, meta: {done: true}}]);
+  const items = CARDS.map(c => ({label: c.name, meta: {good: ['reset', 'revoke', 'devices'].includes(c.id)}})).concat([{label: 'Play these three cards', done: true, meta: {done: true}}]);
   const sel = await UI.openModal('Tabletop: the sprayed admin', body, items, {multi: 3, closable: false, cls: 'tabletop'});
   const picks = sel.map(i => CARDS[i].id);
   G.f.cards = picks;
@@ -1602,9 +1612,24 @@ async function bossScript() {
   }
   if (picks.includes('isolate')) bumpUptime(-0.02);
   if (picks.includes('notify')) G.rep += 5;
-  await say('Debrief: there is no single right trio. Resetting, revoking and enforcing MFA contain an account takeover; logs scope it; leadership needs to know. Isolating a host does little when the attacker is using an account, not a PC.', who);
+  await say('Debrief: there is no single right trio. Reset the password, revoke sessions and remove rogue MFA devices in the same step, or the attacker walks back in. Enforcing MFA keeps it from happening again, but it doesn’t evict a device the attacker already enrolled. Logs scope it; telling leadership is part of the response. Isolating a host does little when the attacker is using an account, not a PC.', who);
+  await say('One more question for later: why was fd-admin on an MFA “exception” list at all? Who approved it, and who reviews that list? That’s a Govern question, and it’s how this started.', who);
+  touchCSF('Govern');
+  const stages = bossStages(picks);
+  for (const s of stages) await fightStory(s, 'Rae: Regroup. Same stage, we go again.');
+  touchCSF('Respond'); touchCSF('Recover'); unlock('fact', 'dbir_rw');
+  if (!G.mfaSet.includes('fdadmin')) G.mfaSet.push('fdadmin');
+  bumpUptime(0.01);
+  await say('Recover: fd-admin is back in service with a new passphrase and MFA, the rogue device is gone, its sessions are revoked, and the services it touched are checked.', who);
+  await say('That’s the Front Desk district secured. Next stop: the Mail Room.', who);
+  G.f.bossDone = true;
+  await summary();
+}
+// The three boss stages, shaped by the tabletop picks. Enforcing MFA does not touch Stage 3: the attacker's
+// device is already an enrolled factor. Only reviewing and removing enrolled devices does (ATT&CK T1098.005).
+function bossStages(picks) {
   const ev0 = picks.includes('logs') ? 20 : 0;
-  const stages = [
+  return [
     {kind: 'mal', threat: 'sprayer', tech: 'T1110.003', tags: ['identity'], story: true, rate: 12, group: 'a', ev0: ev0,
      title: 'Stage 1: fd-admin in the spray', host: 'fd-admin', enemy: {spr: 'sprayer', pal: 'bossSpray'},
      clues: ['fd-admin was one of 60 accounts tried with the same seasonal password in ten minutes.', 'fd-admin was on an MFA “exception” list, for convenience.', 'fd-admin’s attempt succeeded.'],
@@ -1616,24 +1641,16 @@ async function bossScript() {
      title: 'Stage 2: fd-admin signs in from abroad', host: 'fd-admin · admin console', enemy: {spr: 'actor', pal: 'impostor'},
      clues: ['New sign-in for fd-admin from a hosting provider abroad.', 'The session opened the admin console and listed every user.', 'Nobody on the team was working at that hour.'],
      truth: 'The attacker is using the admin’s valid credentials.',
-     resp: [{label: 'Reset fd-admin and revoke all its sessions', good: true}, {label: 'Isolate the admin’s workstation', good: false, disrupt: 2, why: 'The attacker isn’t on that PC.'}, {label: 'Wait and watch a little longer', good: false}],
+     resp: [{label: 'Reset fd-admin and revoke all its sessions', good: true}, {label: 'Isolate the admin’s workstation', good: false, disrupt: 2, why: 'Nothing points to that PC: the sign-ins come from a hosting provider abroad.'}, {label: 'Wait and watch a little longer', good: false}],
      chain: [{at: 60, text: 'The session starts exporting the user list.'}]},
     {kind: 'mal', threat: 'sprayer', tech: 'T1098.005', tags: ['identity'], story: true, group: 'a', ev0: ev0,
-     rate: picks.includes('mfa') ? 8 : 14, dwell0: picks.includes('mfa') ? 10 : 45,
+     rate: picks.includes('devices') ? 8 : 14, dwell0: picks.includes('devices') ? 10 : 45,
      title: 'Stage 3: a new MFA device appears', host: 'fd-admin · MFA settings', enemy: {spr: 'buzzer', pal: 'bossSpray'},
      clues: ['A phone nobody recognises was enrolled as fd-admin’s second factor.', 'The enrolment happened inside the attacker’s session.', 'Unless it’s removed, the attacker keeps a way back in, even after a password reset.'],
      truth: 'Device registration: the attacker enrolled their own MFA device to keep access.',
-     resp: [{label: 'Remove the rogue device, re-enrol MFA in person, review other admin accounts', good: true}, {label: 'Leave it: MFA is on now, so we’re safe', good: false}],
+     resp: [{label: 'Remove the rogue device, revoke sessions, re-enrol MFA in person, review other admin accounts', good: true}, {label: 'Leave it: MFA is on now, so we’re safe', good: false, why: 'The rogue phone is an MFA device. MFA being on lets it in; only removing it closes that door.'}, {label: 'Enforce MFA on fd-admin again', good: false, why: 'It is already enforced, and the attacker’s phone satisfies it. Remove the device.'}],
      chain: [{at: 60, text: 'The rogue device approves a new sign-in.'}]}
   ];
-  for (const s of stages) await fightStory(s, 'Rae: Regroup. Same stage, we go again.');
-  touchCSF('Respond'); touchCSF('Recover'); unlock('fact', 'dbir_rw');
-  if (!G.mfaSet.includes('fdadmin')) G.mfaSet.push('fdadmin');
-  bumpUptime(0.01);
-  await say('Recover: fd-admin is back in service with a new passphrase and MFA, the rogue device is gone, and the services it touched are checked.', who);
-  await say('That’s the Front Desk district secured. Next stop: the Mail Room.', who);
-  G.f.bossDone = true;
-  await summary();
 }
 
 /* ---------- Missed attacks surface ---------- */
@@ -1660,7 +1677,7 @@ async function summary() {
   const body = '<p class="big">Front Desk district: secured.</p>' +
     '<p>Rank <b>' + G.rank + '</b> · Badge <b>' + (G.badge ? 'Key Badge' : 'none') + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b></p>' +
     scorecardHtml() +
-    '<p>Insider-risk concern: <b>' + ({defused: 'reported and defused', reported: 'reported', toReport: 'seen, not yet reported', seen: 'seen, not handled'}[G.f.insider] || 'not encountered') + '</b>. Tool tuned: <b>' + (G.party.some(t => t.tuned) ? 'yes' : 'no') + '</b>. Missed attacks found in review: <b>' + G.m.surfaced + '</b>.</p>' +
+    '<p>Insider-risk concern: <b>' + ({defused: 'reported; HR followed up supportively', reported: 'reported', toReport: 'seen, not yet reported', seen: 'seen, not handled'}[G.f.insider] || 'not encountered') + '</b>. Tool tuned: <b>' + (G.party.some(t => t.tuned) ? 'yes' : 'no') + '</b>. Missed attacks found in review: <b>' + G.m.surfaced + '</b>.</p>' +
     qtSummaryHtml() +
     '<p class="big">Next: the Mail Room.</p>';
   Series.markEdition(EDITION.id, {done: true});
@@ -2963,7 +2980,8 @@ function metricVals() {
     closed: m.closed,
     acc: m.judged ? Math.round(m.correctShown / m.judged * 100) : null,
     tta: m.ttaN ? +(m.ttaSum / m.ttaN).toFixed(1) : null,
-    esc: m.escOk,
+    esc: m.esc ? Math.round(m.escOk / m.esc * 100) : null,
+    evid: m.judged ? Math.round((m.evOk || 0) / m.judged * 100) : null,
     uptime: +G.uptime.toFixed(2),
     mfa: Math.round(G.mfaSet.length / ACCOUNTS_TOTAL * 100),
     patch: Math.round(Object.keys(GROUPS).filter(groupFixed).length / 4 * 100),
@@ -2971,13 +2989,14 @@ function metricVals() {
   };
 }
 const METRICS = [
-  {k: 'closed', label: 'Alerts closed', unit: '', higher: true},
+  {k: 'closed', label: 'Alerts closed (read with accuracy)', unit: '', higher: true},
   {k: 'acc', label: 'Verdict accuracy', unit: '%', higher: true},
-  {k: 'tta', label: 'Time to acknowledge', unit: ' s', higher: false},
-  {k: 'esc', label: 'Correct escalations', unit: '', higher: true, tier1: true},
+  {k: 'evid', label: 'Verdicts with evidence ≥ 40', unit: '%', higher: true},
+  {k: 'tta', label: 'Time to acknowledge (game seconds)', unit: ' s', higher: false},
+  {k: 'esc', label: 'Escalation precision (real, with evidence ÷ all)', unit: '%', higher: true},
   {k: 'uptime', label: 'District uptime', unit: '%', higher: true},
   {k: 'mfa', label: 'MFA coverage', unit: '%', higher: true},
-  {k: 'patch', label: 'Patch state', unit: '%', higher: true}
+  {k: 'patch', label: 'Hardening (baseline fixes)', unit: '%', higher: true}
 ];
 if (typeof EDITION_METRICS !== 'undefined') METRICS.push(...EDITION_METRICS);
 function track() {
@@ -3149,7 +3168,7 @@ async function briefing() {
   const a = L[(G.day * 2) % L.length], b = L[(G.day * 2 + 1) % L.length];
   const body = '<p>Morning briefing, Day ' + G.day + '. Two items from the threat-intel feed:</p>' +
     '<ol><li>' + esc(a.text) + '</li><li>' + esc(b.text) + '</li></ol>' +
-    '<p>Act on one and that threat’s odds drop by half for a week.</p>';
+    '<p>Act on one and that threat’s odds drop by half for a week (game).</p>';
   const i = await UI.openModal('Morning briefing', body, [
     {label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither'}], {closable: false});
   touchCSF('Identify');
@@ -3157,15 +3176,20 @@ async function briefing() {
 }
 
 /* ---------- Alerts ---------- */
-function genAlert(forceKind) {
-  const kind = forceKind || weighted([{k: 'fp', w: G.fpWeight}, {k: 'benign', w: 30}, {k: 'mal', w: 20}]).k;
-  const wts = MAL_WEIGHTS.map(x => {
-    let w = x.w;
-    if (G.brief[x.t] && G.brief[x.t] >= G.day) w *= 0.5;
-    if (G.badge && x.t === 'sprayer') w *= 0.5;
+// Threat for an alert. Only malicious alerts use the entry-route weights (MAL_WEIGHTS, game) and the
+// briefing / Key Badge halving; false-positive and benign alerts pick a rule evenly (edition hooks still apply).
+function alertThreatWeights(kind) {
+  return MAL_WEIGHTS.map(x => {
+    let w = kind === 'mal' ? x.w : 10;
+    if (kind === 'mal' && G.brief[x.t] && G.brief[x.t] >= G.day) w *= 0.5;
+    if (kind === 'mal' && G.badge && x.t === 'sprayer') w *= 0.5;
     if (typeof alertWeight === 'function') w = alertWeight(x.t, w);
     return {t: x.t, w: w};
   });
+}
+function genAlert(forceKind) {
+  const kind = forceKind || weighted([{k: 'fp', w: G.fpWeight}, {k: 'benign', w: 30}, {k: 'mal', w: 20}]).k;
+  const wts = alertThreatWeights(kind);
   const t = weighted(wts).t;
   const th = THREATS[t], tpl = ALERTS[t], v = tpl[kind];
   const chain = ALERT_CHAINS[t];
@@ -3244,7 +3268,7 @@ async function doBattle(spec) {
       });
       items.push({label: 'Close alert', note: 'verdict + response', meta: {kind: 'close'}});
       items.push({label: 'Switch tool', disabled: G.party.length < 2, meta: {kind: 'switch'}});
-      if (G.rank !== 'Intern' && !spec.story) items.push({label: 'Escalate to Tier 2', note: 'when it’s real and big', meta: {kind: 'escalate'}});
+      if (!spec.story) items.push({label: G.rank === 'Intern' ? 'Ask Rae (escalate)' : 'Escalate to Tier 2', note: 'bring evidence', meta: {kind: 'escalate'}});
       const lastClue = B.clue > 0 ? 'Latest: ' + spec.clues[B.clue - 1] : 'What do you check first?';
       const i = await choose(lastClue, items, {cols: 2});
       const meta = items[i].meta;
@@ -3337,7 +3361,7 @@ async function closeFlow() {
   if (v < 0 || v === 3) return 'back';
   const verdict = ['fp', 'benign', 'mal'][v];
   let resp;
-  if (verdict === 'fp') resp = [{label: 'Close and tune the noisy rule', good: true, tune: true}, {label: 'Close as false positive', good: true}];
+  if (verdict === 'fp') resp = [{label: 'Close and file a tuning request for the noisy rule', good: true, tune: true}, {label: 'Close as false positive', good: true}];
   else if (verdict === 'benign') resp = [{label: 'Close and note why it’s expected', good: true}, {label: 'Close', good: true}];
   else resp = s.resp;
   const ri = await choose('Response?', resp.map(r => ({label: r.label, meta: {good: !!r.good}})).concat([{label: 'Back', meta: {back: true}}]), {cancel: true});
@@ -3350,6 +3374,7 @@ async function closeFlow() {
   }
   // scoring
   G.m.closed++; G.m.today++; G.m.judged++;
+  if (B.ev >= 40) G.m.evOk = (G.m.evOk || 0) + 1;
   B.revealed = correct || s.kind !== 'mal';
   const fresh = unlock('tech', s.tech);
   touchCSF('Detect');
@@ -3360,10 +3385,10 @@ async function closeFlow() {
     msg = 'Correct. ' + s.truth;
     if (s.kind === 'mal') {
       xp += 10; touchCSF('Respond');
-      if (!r.good) { xp = Math.floor(xp / 2); msg += ' Right call, heavy-handed response.'; }
+      if (!r.good) { xp = Math.floor(xp / 2); msg += r.why ? ' Right call, weak response: ' + r.why : ' Right call, heavy-handed response.'; }
       if (r.disrupt) { G.rep -= 2 * r.disrupt; bumpUptime(-0.01 * r.disrupt); }
     }
-    if (verdict === 'fp' && r.tune) { G.fpWeight = Math.max(25, G.fpWeight - 4); msg += ' Rule tuned: fewer false positives from now on.'; }
+    if (verdict === 'fp' && r.tune) { G.fpWeight = Math.max(25, G.fpWeight - 4); msg += ' Tuning request accepted: fewer false positives from now on.'; }
   } else if (s.kind === 'mal') {
     // a missed attack: nobody knows yet
     G.m.correctShown++; G.m.missed++;
@@ -3378,22 +3403,41 @@ async function closeFlow() {
   }
   if (s.kind === 'fp') { G.focus = Math.max(0, G.focus - 2); msg += ' (False positives drain Focus: −2.)'; }
   await say(msg);
+  if (correct && s.kind === 'mal' && r.good && !s.story) await scopeQuestion();
   if (typeof onAlertClosed === 'function') await onAlertClosed(s, verdict, correct, r);
   await say('ATT&CK: the rule maps to ' + s.tech + ' ' + TECH[s.tech].name + ' (' + TECH[s.tech].tactic.join(', ') + ').' + (fresh ? ' Added to the Field Manual.' : ''));
   await gainXP(xp + (s.story ? 20 : 0));
   return s.story ? 'win' : 'closed';
 }
+// Contain -> scope -> recover: one question after a correct malicious close. Every answer is a fair next step.
+async function scopeQuestion() {
+  const opts = [
+    {label: 'What it touched', note: 'data, hosts, mailboxes', meta: {good: true}, reply: 'Good: list what the attacker reached (files, hosts, mailboxes) before you call it closed.'},
+    {label: 'Access it added', note: 'accounts, MFA devices, sessions', meta: {good: true}, reply: 'Good: new accounts, rogue MFA devices and live sessions are how attackers walk back in.'},
+    {label: 'What it left behind', note: 'persistence on the host', meta: {good: true}, reply: 'Good: scheduled tasks, new services and startup entries can outlive the fix.'}];
+  const i = await choose('Contained. What do you check next?', opts, {cols: 1});
+  const o = opts[Math.max(0, i)];
+  const fresh = unlock('act', 'scope');
+  await say(o.reply + ' Contain, then scope, then recover.' + (fresh ? ' (Field Manual: Scope after containment.)' : ''));
+}
+// Escalation is judged on evidence: a real attack sent up with Evidence under 40 is not a good escalation.
 async function escalate() {
-  const s = B.spec;
+  const s = B.spec, intern = G.rank === 'Intern', to = intern ? 'Rae' : 'Tier 2';
   G.m.esc++; G.m.closed++; G.m.today++; G.m.judged++; B.revealed = true;
+  if (B.ev >= 40) G.m.evOk = (G.m.evOk || 0) + 1;
   unlock('tech', s.tech);
   if (s.kind === 'mal') {
-    G.m.escOk++; G.m.correctShown++; touchCSF('Respond');
-    await say('Escalated with evidence. Tier 2 confirms: ' + s.truth + ' Correct escalation.');
+    G.m.correctShown++; touchCSF('Respond');
+    if (B.ev < 40) {
+      await say(to + ' confirms it’s real: ' + s.truth + ' But you sent it up with almost no evidence (' + Math.round(B.ev) + '). Next time, gather some first: say what you saw and why it matters.');
+      await gainXP(8); return 'closed';
+    }
+    G.m.escOk++;
+    await say('Escalated with evidence (' + Math.round(B.ev) + '). ' + to + ' confirms: ' + s.truth + ' Good escalation.');
     await gainXP(20);
   } else {
     G.rep -= 2;
-    await say('Tier 2 looked and found nothing malicious: ' + s.truth + ' Escalations cost their time; bring evidence.');
+    await say(to + ' looked and found nothing malicious: ' + s.truth + ' Escalations cost their time; bring evidence.');
     await gainXP(3);
   }
   return 'closed';
@@ -3456,11 +3500,17 @@ function toolsHtml() {
 function creditsHtml() {
   return '<p><b>UPTIME</b>, ' + esc(EDITION.creditsName) + '. Original game: story, characters, tools, art and rules are original.</p>' +
     '<p>Build <b>' + BUILD_ID + '</b> · built ' + BUILD_TS + '</p>' +
-    '<h3>Frameworks</h3><p>MITRE ATT&amp;CK® technique IDs and names. © The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation.</p>' +
-    '<p>ATT&amp;CK is a registered trademark of The MITRE Corporation.</p>' +
+    '<h3>Frameworks</h3><p>MITRE ATT&amp;CK® technique IDs and names (checked against ATT&amp;CK v20.0, October 2026). © 2026 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation.</p>' +
+    '<p>MITRE ATT&amp;CK® and ATT&amp;CK® are registered trademarks of The MITRE Corporation.</p>' +
     '<p>Defensive actions are written in our own words in the style of MITRE D3FEND. Function names are from the NIST Cybersecurity Framework (CSF) 2.0.</p>' +
+    '<h3>ATT&amp;CK licence (MITRE Terms of Use)</h3>' +
+    '<p class="small"><b>License.</b> The MITRE Corporation (MITRE) hereby grants you a non-exclusive, royalty-free license to use ATT&amp;CK® for research, development, and commercial purposes. Any copy you make for such purposes is authorized provided that you reproduce MITRE\'s copyright designation and this license in any such copy.</p>' +
+    '<p class="small">"© 2026 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation."</p>' +
+    '<p class="small"><b>Disclaimers.</b> MITRE does not claim ATT&amp;CK enumerates all possibilities for the types of actions and behaviors documented as part of its adversary model and framework of techniques. Using the information contained within ATT&amp;CK to address or cover full categories of techniques will not guarantee full defensive coverage as there may be undisclosed techniques or variations on existing techniques not documented by ATT&amp;CK.</p>' +
+    '<p class="small">ALL DOCUMENTS AND THE INFORMATION CONTAINED THEREIN ARE PROVIDED ON AN "AS IS" BASIS AND THE CONTRIBUTOR, THE ORGANIZATION HE/SHE REPRESENTS OR IS SPONSORED BY (IF ANY), THE MITRE CORPORATION, ITS BOARD OF TRUSTEES, OFFICERS, AGENTS, AND EMPLOYEES, DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION THEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.</p>' +
     '<h3>Facts used</h3><p>' + esc(EDITION.creditsFacts) + '</p>' +
     '<h3>Inspiration only</h3><p>Genre inspiration from classic handheld monster-collecting RPGs; the 1990s CGI series set inside a computer; incident-response card games such as Backdoors &amp; Breaches by Black Hills Information Security; and the National Cyber League / Cyber Skyline. No names, art, cards or other material from those works are used.</p>' +
+    '<p>Uptime is an independent learning game. It is not affiliated with, sponsored by or endorsed by Nintendo, The Pokémon Company, Mainframe Entertainment or any other rights holder of ReBoot, Black Hills Information Security, the National Cyber League, Cyber Skyline, or The MITRE Corporation. Their names and marks belong to their owners.</p>' +
     (EDITION.creditsInspiration ? '<p>' + esc(EDITION.creditsInspiration) + '</p>' : '') +
     '<p class="small">Everything invented for play is labelled (game) in the Field Manual. No network requests; saves stay in this browser.</p>';
 }
@@ -3532,6 +3582,8 @@ function fixupState() {
   const base = newState(G.seed || 1);
   for (const k in base) if (G[k] === undefined) G[k] = base[k];
   for (const k in base.m) if (G.m[k] === undefined) G.m[k] = base.m[k];
+  for (const k in base.targets) if (G.targets[k] === undefined) G.targets[k] = base.targets[k];
+  if (G.targets.esc === 1) G.targets.esc = base.targets.esc; // older saves: the escalation target was a count
   if (!G.qt) G.qt = Series.blankQT();
 }
 let seedOverride = null;

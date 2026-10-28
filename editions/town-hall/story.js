@@ -13,7 +13,7 @@ const EDITION = {
   title: 'Town Hall · Front Desk district',
   blurb: 'You’re the new intern in a small town’s security team. Investigate alerts, fix what’s broken, and keep the district running.',
   creditsName: 'vertical slice 1: Town Hall, Front Desk district',
-  creditsFacts: 'Verizon 2025 Data Breach Investigations Report (initial access shares; ransomware at small and medium organisations). Critical Start 2021 SOC professional survey (false positives). NIST SP 800-63B (password length). Joint Cybersecurity Advisory AA24-038A (CISA, NSA, FBI and partners, February 2024).'
+  creditsFacts: 'Verizon 2025 Data Breach Investigations Report (initial access shares; ransomware at small and medium organisations) and 2026 executive summary (exploitation now first). Critical Start 2021 SOC professional survey (false positives). NIST SP 800-63B-4 (password length, no periodic changes, blocklists). Joint Cybersecurity Advisory AA24-038A (CISA, NSA, FBI and partners, February 2024).'
 };
 
 const FIX_ORDER = ['kiosk', 'wifi', 'logs'];
@@ -27,9 +27,9 @@ function newState(seed) {
     focus: 30, focusMax: 30, rep: 50, uptime: 99.95,
     health: {a: 100, b: 100, c: 100, d: 100},
     rank: 'Intern', badge: false,
-    m: {closed: 0, judged: 0, correctShown: 0, ttaSum: 0, ttaN: 0, esc: 0, escOk: 0, missed: 0, surfaced: 0, overreact: 0, autoClosed: 0, events: 0, today: 0},
+    m: {closed: 0, judged: 0, correctShown: 0, evOk: 0, ttaSum: 0, ttaN: 0, esc: 0, escOk: 0, missed: 0, surfaced: 0, overreact: 0, autoClosed: 0, events: 0, today: 0},
     track: {},
-    targets: {closed: 12, acc: 90, tta: 20, esc: 1, uptime: 99.9, mfa: 100, patch: 100},
+    targets: {closed: 12, acc: 90, evid: 80, tta: 20, esc: 75, uptime: 99.9, mfa: 100, patch: 100},
     mfaSet: ['rae', 'tomas', 'you'],
     fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
     fpWeight: 50, queue: 3, steps: 0, auto: false, playMs: 0
@@ -132,11 +132,11 @@ async function talk(npc) {
       break;
     case 'tomas':
       if (!f.wifi) await say('The guest Wi-Fi and the staff PCs share one flat network. A visitor’s laptop could talk straight to Lin’s PC. The closet’s right behind me.', who);
-      else if (!f.logs) await say('Next: logging. Each staff PC has security logging switched off. Turn it on and I’ll forward the logs to a collector.', who);
+      else if (!f.logs) await say('Next: logging. The staff PCs barely audit anything, and their logs never leave the PC. Switch on the audit policy and I’ll forward the logs to a collector.', who);
       else await say('Logs are flowing. Without them every investigation is guesswork.', who);
       break;
     case 'lin':
-      if (!f.logs) await say('My PC keeps no security logs at all? Then how would anyone know if something happened on it?', who);
+      if (!f.logs) await say('My PC’s security logs never leave my PC? Then how would anyone know if something happened on it?', who);
       else await say('The HVAC contractor had his laptop plugged in at the Annex all last week. He said he’d “finish from home”.', who);
       break;
     case 'hal':
@@ -173,6 +173,7 @@ async function raeTalk() {
     const id = ids[i];
     addTool(id, 3); f.starter = id;
     await say(TOOLS[id].name + ' is installed on your console. Tools aren’t thrown at problems: you run them, and their abilities cost Focus.', who);
+    await say('If an alert looks real and bigger than you, choose “Ask Rae” in the alert. Bring evidence: what you saw and why it matters. I judge escalations on that, not on how many you send.', who);
     await say('Press Select (Shift) any time to open the alert queue. Walking through the tangled cabling outside can also trip alerts: that space isn’t monitored yet.', who);
     await say('Onboarding tasks: change the kiosk’s default password, put guest Wi-Fi on its own network at the closet, and turn on logging at the staff PCs. Each fix shows up on the map.', who);
     unlock('fact', 'fp');
@@ -201,7 +202,7 @@ async function fixDone(key, msg) {
   toast('Map updated: lights on, cabling tidied');
   if (G.f.kiosk && G.f.wifi && G.f.logs && !G.f.onboarded) {
     G.f.onboarded = true;
-    await say('Onboarding baseline complete. Patch state ' + metricVals().patch + '%. Check the scorecard with Start.');
+    await say('Onboarding baseline complete. Hardening ' + metricVals().patch + '%. Check the scorecard with Start.');
   }
 }
 async function kioskTask() {
@@ -239,11 +240,11 @@ async function wifiTask() {
 async function pcTask(x) {
   if (!G.f.starter) { await say('A staff PC. Rae should brief you first.'); return; }
   if (G.pcs[x] || G.f.logs) { await say('Security logging is on and forwarding.'); if (G.f.logs) await qtPc(x); return; }
-  await say('Security event logging is switched off on this PC. You turn it on and point it at the collector.');
+  await say('This PC’s security auditing is barely configured, and nothing is forwarded anywhere. You switch on the audit policy and point it at the collector.');
   G.pcs[x] = true;
   const n = PCS.filter(p => G.pcs[p]).length;
   if (n < 3) { await say('Logging enabled (' + n + '/3).'); return; }
-  unlock('act', 'logging'); touchCSF('Detect');
+  unlock('act', 'logging'); touchCSF('Protect'); touchCSF('Detect');
   await fixDone('logs', 'All three staff PCs are logging. The records office lights up.');
   if (!hasTool('ledger')) {
     addTool('ledger', 3);
@@ -269,9 +270,9 @@ const PORT_SPEC = () => ({
   kind: 'mal', threat: 'jamb', tech: 'T1133', tags: ['remote'], story: true, group: 'd', rate: 13,
   title: 'Remote desktop sign-in from overseas', host: 'ANNEX-PC-03 · Annex',
   enemy: {spr: 'jamb', pal: 'jamb'},
-  clues: ['A remote-desktop session to ANNEX-PC-03 came straight in from the internet at 03:12.', 'It used the HVAC contractor’s account. The port was opened for him last week.', 'The contractor says he hasn’t connected since Tuesday, and the address is on another continent.'],
+  clues: ['A remote-desktop session to ANNEX-PC-03 came straight in from the internet at 01:47.', 'It used the HVAC contractor’s account. The port was opened for him last week.', 'The contractor says he hasn’t connected since Tuesday, and the address is on another continent.'],
   truth: 'An attacker used the open remote-desktop port and the contractor’s password: External Remote Services.',
-  resp: [{label: 'End the session, close the port, reset the contractor’s account, give him VPN with MFA', good: true},
+  resp: [{label: 'End the session, close the port, reset the contractor’s account, check ANNEX-PC-03 and what was copied', good: true},
          {label: 'Leave it: it’s probably the contractor', good: false},
          {label: 'Unplug the whole district from the internet', good: false, disrupt: 2}],
   chain: [{at: 35, text: 'The session starts browsing the Annex file share.'}, {at: 70, text: 'Large files are being copied out over the session.'}]
@@ -280,7 +281,7 @@ async function portScript() {
   const who = 'Rae Okafor';
   await say('Hal told you about the Annex port? Good timing. The board just lit up: a remote-desktop sign-in on the Annex PC, from overseas.', who);
   await say('This is real. Investigate, then close it with a verdict and a response. I’m right here.', who);
-  await fightStory(PORT_SPEC(), 'Try again. Close the door first, then ask questions.');
+  await fightStory(PORT_SPEC(), 'Try again. Contain first, then scope: what did that session touch?');
   G.f.portDone = true; G.mfaSet.push('contractor'); track();
   bumpUptime(0.01);
   await say('The port is shut and the contractor has a VPN with MFA. Look at the firewall on the map: no more gap. The Annex lights up.', who);
@@ -302,7 +303,7 @@ const VEX_SPEC = () => ({
   clues: ['Lin’s account signed in from the office and, two minutes later, from a hosting provider.', 'Yesterday Lin got an email linking to a sign-in page one letter off from ours.', 'The second session is reading the shared finance folder.'],
   truth: 'Vex phished Lin’s password and signed in with it.',
   resp: [{label: 'Reset Lin’s password, revoke her sessions, block the look-alike domain', good: true},
-         {label: 'Isolate Lin’s PC', good: false, disrupt: 2, why: 'The attacker isn’t on her PC; they’re using her account from elsewhere.'},
+         {label: 'Isolate Lin’s PC', good: false, disrupt: 2, why: 'Nothing points to her PC: the second session comes from a hosting provider, using her account. Cutting off her PC doesn’t touch it.'},
          {label: 'Close it: Lin travels a lot', good: false}],
   chain: [{at: 30, text: 'The second session lists the shared drives.'}, {at: 65, text: 'It opens finance spreadsheets one by one.'}]
 });
@@ -314,10 +315,11 @@ async function vexScript() {
   await fightStory(VEX_SPEC(), 'Vex: Too slow. Again: same trick, fresh logs.');
   await say('Not bad. Since you earned it, here’s what I did, step by step:', who);
   for (const [id, line] of VEX_EXPLAIN) { unlock('tech', id); await say(line, who); }
-  await say('Real attackers chain small, boring steps. Notice any one and the chain breaks. See you at the Board.', who);
+  await say('Real attackers chain small, boring steps. Notice any one and act on it, and the chain breaks. See you at the Board.', who);
   G.f.vexDone = true;
   G.targets.tta = 15; G.f.directive = true; touchCSF('Govern');
   await say('Rae (radio): Directive from leadership: the time-to-acknowledge target drops from 20 s to 15 s. Speed matters, but closing alerts fast and wrong always comes back to bite.');
+  await say('Rae (radio): Remember the hidden part of the scorecard: an alert you close as harmless that was really an attack still counts. Incident review finds it later and corrects your accuracy. When a measure becomes a target, people game it; don’t.');
 }
 
 /* ---------- Insider risk ---------- */
@@ -349,7 +351,7 @@ async function graceTalk() {
   if (f.insider === 'toReport') {
     await say('Thanks for coming to me. You did the right thing: you told me what you heard, not what you think he’ll do.', who);
     await say('HR, legal and security look at concerns like this together. Most turn out to be someone having a bad month. I’ll check in with Owen, supportively.', who);
-    await say('One sign proves nothing, and you didn\u2019t treat it like proof. That\u2019s how this is supposed to work.', who);
+    await say('One sign proves nothing, and you didn\u2019t treat it like proof. Keep this between us: it\u2019s need-to-know. That\u2019s how this is supposed to work.', who);
     f.insider = 'defused'; touchCSF('Govern');
     return;
   }
@@ -406,7 +408,7 @@ const BOARD_SPECS = () => [
    title: 'Round 1: failed sign-ins across 60 accounts', host: 'Board practice tenant', enemy: {spr: 'sprayer', pal: 'sprayer'},
    clues: ['60 accounts, one or two attempts each, in ten minutes: below the lockout threshold.', 'All from a small set of hosting-provider addresses.', 'One practice account with an old password signed in.'],
    truth: 'Password spraying against the practice accounts.',
-   resp: [{label: 'Reset the account that fell, enforce MFA, block the sources', good: true}, {label: 'Lock all 60 accounts for a week', good: false, disrupt: 1}, {label: 'Close: failures are normal', good: false}],
+   resp: [{label: 'Reset the account that fell, revoke its sessions, enforce MFA, block the sources', good: true}, {label: 'Lock all 60 accounts for a week', good: false, disrupt: 1}, {label: 'Close: failures are normal', good: false}],
    chain: [{at: 40, text: 'Another wave of attempts with a different common password.'}, {at: 75, text: 'A second account accepts the password.'}]},
   {kind: 'mal', threat: 'sprayer', tech: 'T1621', tags: ['identity'], story: true, rate: 12, group: 'a',
    title: 'Round 2: 23 MFA prompts at 2 a.m.', host: 'lin.zhao · phone', enemy: {spr: 'buzzer', pal: 'buzzer'},
@@ -425,7 +427,7 @@ async function boardScript() {
   const who = 'Marisol Diaz';
   if (G.f.boardDone) { await say('Every account you meet gets MFA now. That badge is a responsibility, not a trophy.', who); return; }
   if (!G.f.vexDone) { await say('Come back after you’ve dealt with Vex.', who); return; }
-  await say('I’m Marisol Diaz, identity lead. Most break-ins here don’t smash anything: they sign in.', who);
+  await say('I’m Marisol Diaz, identity lead. Plenty of break-ins don’t smash anything: they sign in.', who);
   await say('Three rounds: a password spray, an MFA fatigue push, and a help-desk impersonation call. Ready?', who);
   const specs = BOARD_SPECS();
   for (let r = 0; r < 3; r++) await fightStory(specs[r], 'Marisol: Again. Read the evidence before you react.');
@@ -434,11 +436,11 @@ async function boardScript() {
   if (!G.mfaSet.includes('marisol')) G.mfaSet.push('marisol');
   addTool('keyling', 5); track();
   await say('You cleared the Identity Board. This is the Key Badge.', who);
-  await say('Its power: you enforce MFA on every account you meet, and password-spray alerts on the map drop by half. Keyling joins your console.', who);
-  await say('Rank up: Intern → Tier 1 analyst. New responsibility: escalation. When evidence says it’s real and big, escalate to Tier 2 / incident response.');
+  await say('Its power: you enforce MFA on every account you meet. Sprays still come, but a guessed password alone no longer gets in, so Sprayer alerts on the map drop by half (game). Keyling joins your console.', who);
+  await say('Rank up: Intern → Tier 1 analyst. New responsibility: you escalate straight to Tier 2 / incident response, without going through Rae. Bring evidence.');
   touchCSF('Protect');
   if (hasTool('ledger')) {
-    const i = await choose('Rae: With Tier 1 comes automation. Ledger can auto-close alerts matching known false-positive patterns while you walk. Risk: about 1 in 50 auto-closed alerts might be real (game). Turn it on?',
+    const i = await choose('Rae: With Tier 1 comes automation. Ledger can auto-close alerts matching known false-positive patterns while you walk. Risk: about 1 in 50 auto-closed alerts might be real (game), and nobody looks at those. Turn it on?',
       [{label: 'Turn automation on', meta: {good: true}}, {label: 'Not now (toggle later in the Start menu)'}]);
     G.f.autoUnlocked = true; G.auto = i === 0;
   }
@@ -453,7 +455,7 @@ async function bossScript() {
   await say('Tabletop first. Pick three response cards. Then we work it in three stages.', who);
   const body = '<p>Pick <b>three</b> cards. Each is written from public ATT&amp;CK / D3FEND-style actions.</p>' +
     CARDS.map(c => '<div class="card"><b>' + esc(c.name) + '</b> <span class="tag">' + c.csf + '</span><br>' + esc(c.text) + '</div>').join('');
-  const items = CARDS.map(c => ({label: c.name, meta: {good: ['reset', 'revoke', 'mfa'].includes(c.id)}})).concat([{label: 'Play these three cards', done: true, meta: {done: true}}]);
+  const items = CARDS.map(c => ({label: c.name, meta: {good: ['reset', 'revoke', 'devices'].includes(c.id)}})).concat([{label: 'Play these three cards', done: true, meta: {done: true}}]);
   const sel = await UI.openModal('Tabletop: the sprayed admin', body, items, {multi: 3, closable: false, cls: 'tabletop'});
   const picks = sel.map(i => CARDS[i].id);
   G.f.cards = picks;
@@ -464,9 +466,24 @@ async function bossScript() {
   }
   if (picks.includes('isolate')) bumpUptime(-0.02);
   if (picks.includes('notify')) G.rep += 5;
-  await say('Debrief: there is no single right trio. Resetting, revoking and enforcing MFA contain an account takeover; logs scope it; leadership needs to know. Isolating a host does little when the attacker is using an account, not a PC.', who);
+  await say('Debrief: there is no single right trio. Reset the password, revoke sessions and remove rogue MFA devices in the same step, or the attacker walks back in. Enforcing MFA keeps it from happening again, but it doesn’t evict a device the attacker already enrolled. Logs scope it; telling leadership is part of the response. Isolating a host does little when the attacker is using an account, not a PC.', who);
+  await say('One more question for later: why was fd-admin on an MFA “exception” list at all? Who approved it, and who reviews that list? That’s a Govern question, and it’s how this started.', who);
+  touchCSF('Govern');
+  const stages = bossStages(picks);
+  for (const s of stages) await fightStory(s, 'Rae: Regroup. Same stage, we go again.');
+  touchCSF('Respond'); touchCSF('Recover'); unlock('fact', 'dbir_rw');
+  if (!G.mfaSet.includes('fdadmin')) G.mfaSet.push('fdadmin');
+  bumpUptime(0.01);
+  await say('Recover: fd-admin is back in service with a new passphrase and MFA, the rogue device is gone, its sessions are revoked, and the services it touched are checked.', who);
+  await say('That’s the Front Desk district secured. Next stop: the Mail Room.', who);
+  G.f.bossDone = true;
+  await summary();
+}
+// The three boss stages, shaped by the tabletop picks. Enforcing MFA does not touch Stage 3: the attacker's
+// device is already an enrolled factor. Only reviewing and removing enrolled devices does (ATT&CK T1098.005).
+function bossStages(picks) {
   const ev0 = picks.includes('logs') ? 20 : 0;
-  const stages = [
+  return [
     {kind: 'mal', threat: 'sprayer', tech: 'T1110.003', tags: ['identity'], story: true, rate: 12, group: 'a', ev0: ev0,
      title: 'Stage 1: fd-admin in the spray', host: 'fd-admin', enemy: {spr: 'sprayer', pal: 'bossSpray'},
      clues: ['fd-admin was one of 60 accounts tried with the same seasonal password in ten minutes.', 'fd-admin was on an MFA “exception” list, for convenience.', 'fd-admin’s attempt succeeded.'],
@@ -478,24 +495,16 @@ async function bossScript() {
      title: 'Stage 2: fd-admin signs in from abroad', host: 'fd-admin · admin console', enemy: {spr: 'actor', pal: 'impostor'},
      clues: ['New sign-in for fd-admin from a hosting provider abroad.', 'The session opened the admin console and listed every user.', 'Nobody on the team was working at that hour.'],
      truth: 'The attacker is using the admin’s valid credentials.',
-     resp: [{label: 'Reset fd-admin and revoke all its sessions', good: true}, {label: 'Isolate the admin’s workstation', good: false, disrupt: 2, why: 'The attacker isn’t on that PC.'}, {label: 'Wait and watch a little longer', good: false}],
+     resp: [{label: 'Reset fd-admin and revoke all its sessions', good: true}, {label: 'Isolate the admin’s workstation', good: false, disrupt: 2, why: 'Nothing points to that PC: the sign-ins come from a hosting provider abroad.'}, {label: 'Wait and watch a little longer', good: false}],
      chain: [{at: 60, text: 'The session starts exporting the user list.'}]},
     {kind: 'mal', threat: 'sprayer', tech: 'T1098.005', tags: ['identity'], story: true, group: 'a', ev0: ev0,
-     rate: picks.includes('mfa') ? 8 : 14, dwell0: picks.includes('mfa') ? 10 : 45,
+     rate: picks.includes('devices') ? 8 : 14, dwell0: picks.includes('devices') ? 10 : 45,
      title: 'Stage 3: a new MFA device appears', host: 'fd-admin · MFA settings', enemy: {spr: 'buzzer', pal: 'bossSpray'},
      clues: ['A phone nobody recognises was enrolled as fd-admin’s second factor.', 'The enrolment happened inside the attacker’s session.', 'Unless it’s removed, the attacker keeps a way back in, even after a password reset.'],
      truth: 'Device registration: the attacker enrolled their own MFA device to keep access.',
-     resp: [{label: 'Remove the rogue device, re-enrol MFA in person, review other admin accounts', good: true}, {label: 'Leave it: MFA is on now, so we’re safe', good: false}],
+     resp: [{label: 'Remove the rogue device, revoke sessions, re-enrol MFA in person, review other admin accounts', good: true}, {label: 'Leave it: MFA is on now, so we’re safe', good: false, why: 'The rogue phone is an MFA device. MFA being on lets it in; only removing it closes that door.'}, {label: 'Enforce MFA on fd-admin again', good: false, why: 'It is already enforced, and the attacker’s phone satisfies it. Remove the device.'}],
      chain: [{at: 60, text: 'The rogue device approves a new sign-in.'}]}
   ];
-  for (const s of stages) await fightStory(s, 'Rae: Regroup. Same stage, we go again.');
-  touchCSF('Respond'); touchCSF('Recover'); unlock('fact', 'dbir_rw');
-  if (!G.mfaSet.includes('fdadmin')) G.mfaSet.push('fdadmin');
-  bumpUptime(0.01);
-  await say('Recover: fd-admin is back in service with a new passphrase and MFA, the rogue device is gone, and the services it touched are checked.', who);
-  await say('That’s the Front Desk district secured. Next stop: the Mail Room.', who);
-  G.f.bossDone = true;
-  await summary();
 }
 
 /* ---------- Missed attacks surface ---------- */
@@ -522,7 +531,7 @@ async function summary() {
   const body = '<p class="big">Front Desk district: secured.</p>' +
     '<p>Rank <b>' + G.rank + '</b> · Badge <b>' + (G.badge ? 'Key Badge' : 'none') + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b></p>' +
     scorecardHtml() +
-    '<p>Insider-risk concern: <b>' + ({defused: 'reported and defused', reported: 'reported', toReport: 'seen, not yet reported', seen: 'seen, not handled'}[G.f.insider] || 'not encountered') + '</b>. Tool tuned: <b>' + (G.party.some(t => t.tuned) ? 'yes' : 'no') + '</b>. Missed attacks found in review: <b>' + G.m.surfaced + '</b>.</p>' +
+    '<p>Insider-risk concern: <b>' + ({defused: 'reported; HR followed up supportively', reported: 'reported', toReport: 'seen, not yet reported', seen: 'seen, not handled'}[G.f.insider] || 'not encountered') + '</b>. Tool tuned: <b>' + (G.party.some(t => t.tuned) ? 'yes' : 'no') + '</b>. Missed attacks found in review: <b>' + G.m.surfaced + '</b>.</p>' +
     qtSummaryHtml() +
     '<p class="big">Next: the Mail Room.</p>';
   Series.markEdition(EDITION.id, {done: true});

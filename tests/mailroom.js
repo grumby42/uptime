@@ -264,8 +264,8 @@ function frontDeskDone(s, extra) {
     return { hubShare: share(hub), mailShare: share(mail), lureMail: mail.lure || 0, lureSeal: seal.lure || 0,
       preMail: ['clasp', 'chirp', 'buzzer', 'grant', 'payee'].reduce((s, t) => s + (pre[t] || 0), 0), qtHit };
   });
-  // Expected (game weights, Key Badge halves Sprayer 22 -> 11): plaza 36/109 = 0.33; Mail Room 108/181 = 0.60.
-  check('alert mix: Mail Room home threats are ~x3 inside the Mail Room', Math.abs(mix.hubShare - 36 / 109) < 0.03 && Math.abs(mix.mailShare - 108 / 181) < 0.03, mix);
+  // Expected (game weights, Key Badge halves Sprayer 32 -> 16): plaza 44/104 = 0.42; Mail Room 132/192 = 0.69.
+  check('alert mix: Mail Room home threats are ~x3 inside the Mail Room', Math.abs(mix.hubShare - 44 / 104) < 0.03 && Math.abs(mix.mailShare - 132 / 192) < 0.03, mix);
   check('alert mix: no Mail Room threats before arrival', mix.preMail === 0, mix);
   check('alert mix: Seal Badge halves Lure', mix.lureSeal < mix.lureMail * 0.65, mix);
   check('alert mix: no Quiet Thread technique among threats', mix.qtHit.length === 0, mix.qtHit);

@@ -176,7 +176,7 @@ const ABIL = {
   timeline: {name:'Timeline', type:'inv', cost:2, ev:18, desc:'Put events in time order to see what happened first and what followed.'},
   baseline: {name:'Baseline', type:'inv', cost:1, ev:14, fpBonus:true, desc:'Compare activity against what is normal for this user, host or time of day.'},
   signins:  {name:'Check sign-ins', type:'inv', cost:2, ev:22, desc:'Review an account’s recent sign-ins, failures and MFA prompts.'},
-  reset:    {name:'Reset password', type:'con', cost:2, dw:25, ev:6, disrupt:1, desc:'Force a new password on an account so a stolen one stops working.'},
+  reset:    {name:'Reset password', type:'con', cost:2, dw:25, ev:6, disrupt:1, desc:'Force a new password on an account so a stolen one stops working. Sessions already signed in can survive a reset: revoke them too.'},
   revoke:   {name:'Revoke sessions', type:'con', cost:2, dw:25, ev:6, disrupt:1, desc:'Sign an account out everywhere, ending sessions an attacker may hold.'},
   mfa:      {name:'Enforce MFA', type:'con', cost:3, dw:40, ev:4, disrupt:0, desc:'Require a second factor for an account, so a password alone is not enough.'}
 };

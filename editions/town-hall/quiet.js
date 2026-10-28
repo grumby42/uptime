@@ -1,8 +1,8 @@
 /* ============================================================
    UPTIME · editions/town-hall/quiet.js
-   The Quiet Thread, first seeds (Town Hall). The intruder came in through the
-   old small-office router in the Front Desk network closet and lives off the
-   land: a valid service account, built-in tools, a cleared log, a scheduled
+   The Quiet Thread, first seeds (Town Hall). The intruder relays its traffic
+   through a hijacked old small-office router in the Front Desk network closet
+   (infrastructure, not its way in) and lives off the land: a valid service account, built-in tools, a cleared log, a scheduled
    task. It never raises an alert and has no wild encounter. Five faint clues,
    each visible only with the right capability, from Day 2 on.
    The clue situations are invented (game); the technique IDs are real (see QT_TECH).
@@ -13,7 +13,7 @@ const QT_CLUES = {
   'th-signin':   {tech: 'T1078', where: 'your desk (Ledger console)',
                   seen: 'svc-print, the printer’s service account, signed in to FD-STAFF-11 at 03:12 on Day 2, right password on the first try.'},
   'th-router':   {tech: 'T1090', where: 'network closet (Lanternkeep)',
-                  seen: 'Once a night, just after 03:00, the closet’s small-office router opened a short encrypted connection to an address no vendor of ours uses.'},
+                  seen: 'Once a night, around 03:10, the closet’s small-office router relayed a short encrypted connection between FD-STAFF-11 and an address no vendor of ours uses.'},
   'th-logclear': {tech: 'T1685.005', where: 'FD-STAFF-14 (Ledger)',
                   seen: 'FD-STAFF-14’s security log starts at 03:40 on Day 2 with a “log cleared” entry; the other PCs go back to Day 1.'},
   'th-schtask':  {tech: 'T1053.005', where: 'FD-STAFF-11 (Sentry)',
@@ -44,7 +44,7 @@ async function qtCloset() {
   if (!hasTool('lantern')) { await say('The old small-office router’s lights blink. Reading its connection table would take a network tool.'); return; }
   const i = await choose('The old small-office router hums on the shelf.', [{label: 'Lanternkeep: inspect its connections'}, {label: 'Leave it'}]);
   if (i !== 0) return;
-  await say('Lanternkeep: once a night, just after 03:00, the router opens a short encrypted connection to an address that isn’t any vendor or service you use. Small, regular, and under every threshold.');
+  await say('Lanternkeep: once a night, around 03:10, the router relays a short encrypted connection between FD-STAFF-11 and an address that isn’t any vendor or service you use. Small, regular, and under every threshold.');
   await qtAfterNote(qtNote('th-router'));
 }
 

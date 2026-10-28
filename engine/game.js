@@ -38,7 +38,8 @@ function metricVals() {
     closed: m.closed,
     acc: m.judged ? Math.round(m.correctShown / m.judged * 100) : null,
     tta: m.ttaN ? +(m.ttaSum / m.ttaN).toFixed(1) : null,
-    esc: m.escOk,
+    esc: m.esc ? Math.round(m.escOk / m.esc * 100) : null,
+    evid: m.judged ? Math.round((m.evOk || 0) / m.judged * 100) : null,
     uptime: +G.uptime.toFixed(2),
     mfa: Math.round(G.mfaSet.length / ACCOUNTS_TOTAL * 100),
     patch: Math.round(Object.keys(GROUPS).filter(groupFixed).length / 4 * 100),
@@ -46,13 +47,14 @@ function metricVals() {
   };
 }
 const METRICS = [
-  {k: 'closed', label: 'Alerts closed', unit: '', higher: true},
+  {k: 'closed', label: 'Alerts closed (read with accuracy)', unit: '', higher: true},
   {k: 'acc', label: 'Verdict accuracy', unit: '%', higher: true},
-  {k: 'tta', label: 'Time to acknowledge', unit: ' s', higher: false},
-  {k: 'esc', label: 'Correct escalations', unit: '', higher: true, tier1: true},
+  {k: 'evid', label: 'Verdicts with evidence ≥ 40', unit: '%', higher: true},
+  {k: 'tta', label: 'Time to acknowledge (game seconds)', unit: ' s', higher: false},
+  {k: 'esc', label: 'Escalation precision (real, with evidence ÷ all)', unit: '%', higher: true},
   {k: 'uptime', label: 'District uptime', unit: '%', higher: true},
   {k: 'mfa', label: 'MFA coverage', unit: '%', higher: true},
-  {k: 'patch', label: 'Patch state', unit: '%', higher: true}
+  {k: 'patch', label: 'Hardening (baseline fixes)', unit: '%', higher: true}
 ];
 if (typeof EDITION_METRICS !== 'undefined') METRICS.push(...EDITION_METRICS);
 function track() {
@@ -224,7 +226,7 @@ async function briefing() {
   const a = L[(G.day * 2) % L.length], b = L[(G.day * 2 + 1) % L.length];
   const body = '<p>Morning briefing, Day ' + G.day + '. Two items from the threat-intel feed:</p>' +
     '<ol><li>' + esc(a.text) + '</li><li>' + esc(b.text) + '</li></ol>' +
-    '<p>Act on one and that threat’s odds drop by half for a week.</p>';
+    '<p>Act on one and that threat’s odds drop by half for a week (game).</p>';
   const i = await UI.openModal('Morning briefing', body, [
     {label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither'}], {closable: false});
   touchCSF('Identify');
@@ -232,15 +234,20 @@ async function briefing() {
 }
 
 /* ---------- Alerts ---------- */
-function genAlert(forceKind) {
-  const kind = forceKind || weighted([{k: 'fp', w: G.fpWeight}, {k: 'benign', w: 30}, {k: 'mal', w: 20}]).k;
-  const wts = MAL_WEIGHTS.map(x => {
-    let w = x.w;
-    if (G.brief[x.t] && G.brief[x.t] >= G.day) w *= 0.5;
-    if (G.badge && x.t === 'sprayer') w *= 0.5;
+// Threat for an alert. Only malicious alerts use the entry-route weights (MAL_WEIGHTS, game) and the
+// briefing / Key Badge halving; false-positive and benign alerts pick a rule evenly (edition hooks still apply).
+function alertThreatWeights(kind) {
+  return MAL_WEIGHTS.map(x => {
+    let w = kind === 'mal' ? x.w : 10;
+    if (kind === 'mal' && G.brief[x.t] && G.brief[x.t] >= G.day) w *= 0.5;
+    if (kind === 'mal' && G.badge && x.t === 'sprayer') w *= 0.5;
     if (typeof alertWeight === 'function') w = alertWeight(x.t, w);
     return {t: x.t, w: w};
   });
+}
+function genAlert(forceKind) {
+  const kind = forceKind || weighted([{k: 'fp', w: G.fpWeight}, {k: 'benign', w: 30}, {k: 'mal', w: 20}]).k;
+  const wts = alertThreatWeights(kind);
   const t = weighted(wts).t;
   const th = THREATS[t], tpl = ALERTS[t], v = tpl[kind];
   const chain = ALERT_CHAINS[t];
@@ -319,7 +326,7 @@ async function doBattle(spec) {
       });
       items.push({label: 'Close alert', note: 'verdict + response', meta: {kind: 'close'}});
       items.push({label: 'Switch tool', disabled: G.party.length < 2, meta: {kind: 'switch'}});
-      if (G.rank !== 'Intern' && !spec.story) items.push({label: 'Escalate to Tier 2', note: 'when it’s real and big', meta: {kind: 'escalate'}});
+      if (!spec.story) items.push({label: G.rank === 'Intern' ? 'Ask Rae (escalate)' : 'Escalate to Tier 2', note: 'bring evidence', meta: {kind: 'escalate'}});
       const lastClue = B.clue > 0 ? 'Latest: ' + spec.clues[B.clue - 1] : 'What do you check first?';
       const i = await choose(lastClue, items, {cols: 2});
       const meta = items[i].meta;
@@ -412,7 +419,7 @@ async function closeFlow() {
   if (v < 0 || v === 3) return 'back';
   const verdict = ['fp', 'benign', 'mal'][v];
   let resp;
-  if (verdict === 'fp') resp = [{label: 'Close and tune the noisy rule', good: true, tune: true}, {label: 'Close as false positive', good: true}];
+  if (verdict === 'fp') resp = [{label: 'Close and file a tuning request for the noisy rule', good: true, tune: true}, {label: 'Close as false positive', good: true}];
   else if (verdict === 'benign') resp = [{label: 'Close and note why it’s expected', good: true}, {label: 'Close', good: true}];
   else resp = s.resp;
   const ri = await choose('Response?', resp.map(r => ({label: r.label, meta: {good: !!r.good}})).concat([{label: 'Back', meta: {back: true}}]), {cancel: true});
@@ -425,6 +432,7 @@ async function closeFlow() {
   }
   // scoring
   G.m.closed++; G.m.today++; G.m.judged++;
+  if (B.ev >= 40) G.m.evOk = (G.m.evOk || 0) + 1;
   B.revealed = correct || s.kind !== 'mal';
   const fresh = unlock('tech', s.tech);
   touchCSF('Detect');
@@ -435,10 +443,10 @@ async function closeFlow() {
     msg = 'Correct. ' + s.truth;
     if (s.kind === 'mal') {
       xp += 10; touchCSF('Respond');
-      if (!r.good) { xp = Math.floor(xp / 2); msg += ' Right call, heavy-handed response.'; }
+      if (!r.good) { xp = Math.floor(xp / 2); msg += r.why ? ' Right call, weak response: ' + r.why : ' Right call, heavy-handed response.'; }
       if (r.disrupt) { G.rep -= 2 * r.disrupt; bumpUptime(-0.01 * r.disrupt); }
     }
-    if (verdict === 'fp' && r.tune) { G.fpWeight = Math.max(25, G.fpWeight - 4); msg += ' Rule tuned: fewer false positives from now on.'; }
+    if (verdict === 'fp' && r.tune) { G.fpWeight = Math.max(25, G.fpWeight - 4); msg += ' Tuning request accepted: fewer false positives from now on.'; }
   } else if (s.kind === 'mal') {
     // a missed attack: nobody knows yet
     G.m.correctShown++; G.m.missed++;
@@ -453,22 +461,41 @@ async function closeFlow() {
   }
   if (s.kind === 'fp') { G.focus = Math.max(0, G.focus - 2); msg += ' (False positives drain Focus: −2.)'; }
   await say(msg);
+  if (correct && s.kind === 'mal' && r.good && !s.story) await scopeQuestion();
   if (typeof onAlertClosed === 'function') await onAlertClosed(s, verdict, correct, r);
   await say('ATT&CK: the rule maps to ' + s.tech + ' ' + TECH[s.tech].name + ' (' + TECH[s.tech].tactic.join(', ') + ').' + (fresh ? ' Added to the Field Manual.' : ''));
   await gainXP(xp + (s.story ? 20 : 0));
   return s.story ? 'win' : 'closed';
 }
+// Contain -> scope -> recover: one question after a correct malicious close. Every answer is a fair next step.
+async function scopeQuestion() {
+  const opts = [
+    {label: 'What it touched', note: 'data, hosts, mailboxes', meta: {good: true}, reply: 'Good: list what the attacker reached (files, hosts, mailboxes) before you call it closed.'},
+    {label: 'Access it added', note: 'accounts, MFA devices, sessions', meta: {good: true}, reply: 'Good: new accounts, rogue MFA devices and live sessions are how attackers walk back in.'},
+    {label: 'What it left behind', note: 'persistence on the host', meta: {good: true}, reply: 'Good: scheduled tasks, new services and startup entries can outlive the fix.'}];
+  const i = await choose('Contained. What do you check next?', opts, {cols: 1});
+  const o = opts[Math.max(0, i)];
+  const fresh = unlock('act', 'scope');
+  await say(o.reply + ' Contain, then scope, then recover.' + (fresh ? ' (Field Manual: Scope after containment.)' : ''));
+}
+// Escalation is judged on evidence: a real attack sent up with Evidence under 40 is not a good escalation.
 async function escalate() {
-  const s = B.spec;
+  const s = B.spec, intern = G.rank === 'Intern', to = intern ? 'Rae' : 'Tier 2';
   G.m.esc++; G.m.closed++; G.m.today++; G.m.judged++; B.revealed = true;
+  if (B.ev >= 40) G.m.evOk = (G.m.evOk || 0) + 1;
   unlock('tech', s.tech);
   if (s.kind === 'mal') {
-    G.m.escOk++; G.m.correctShown++; touchCSF('Respond');
-    await say('Escalated with evidence. Tier 2 confirms: ' + s.truth + ' Correct escalation.');
+    G.m.correctShown++; touchCSF('Respond');
+    if (B.ev < 40) {
+      await say(to + ' confirms it’s real: ' + s.truth + ' But you sent it up with almost no evidence (' + Math.round(B.ev) + '). Next time, gather some first: say what you saw and why it matters.');
+      await gainXP(8); return 'closed';
+    }
+    G.m.escOk++;
+    await say('Escalated with evidence (' + Math.round(B.ev) + '). ' + to + ' confirms: ' + s.truth + ' Good escalation.');
     await gainXP(20);
   } else {
     G.rep -= 2;
-    await say('Tier 2 looked and found nothing malicious: ' + s.truth + ' Escalations cost their time; bring evidence.');
+    await say(to + ' looked and found nothing malicious: ' + s.truth + ' Escalations cost their time; bring evidence.');
     await gainXP(3);
   }
   return 'closed';
@@ -531,11 +558,17 @@ function toolsHtml() {
 function creditsHtml() {
   return '<p><b>UPTIME</b>, ' + esc(EDITION.creditsName) + '. Original game: story, characters, tools, art and rules are original.</p>' +
     '<p>Build <b>' + BUILD_ID + '</b> · built ' + BUILD_TS + '</p>' +
-    '<h3>Frameworks</h3><p>MITRE ATT&amp;CK® technique IDs and names. © The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation.</p>' +
-    '<p>ATT&amp;CK is a registered trademark of The MITRE Corporation.</p>' +
+    '<h3>Frameworks</h3><p>MITRE ATT&amp;CK® technique IDs and names (checked against ATT&amp;CK v20.0, October 2026). © 2026 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation.</p>' +
+    '<p>MITRE ATT&amp;CK® and ATT&amp;CK® are registered trademarks of The MITRE Corporation.</p>' +
     '<p>Defensive actions are written in our own words in the style of MITRE D3FEND. Function names are from the NIST Cybersecurity Framework (CSF) 2.0.</p>' +
+    '<h3>ATT&amp;CK licence (MITRE Terms of Use)</h3>' +
+    '<p class="small"><b>License.</b> The MITRE Corporation (MITRE) hereby grants you a non-exclusive, royalty-free license to use ATT&amp;CK® for research, development, and commercial purposes. Any copy you make for such purposes is authorized provided that you reproduce MITRE\'s copyright designation and this license in any such copy.</p>' +
+    '<p class="small">"© 2026 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation."</p>' +
+    '<p class="small"><b>Disclaimers.</b> MITRE does not claim ATT&amp;CK enumerates all possibilities for the types of actions and behaviors documented as part of its adversary model and framework of techniques. Using the information contained within ATT&amp;CK to address or cover full categories of techniques will not guarantee full defensive coverage as there may be undisclosed techniques or variations on existing techniques not documented by ATT&amp;CK.</p>' +
+    '<p class="small">ALL DOCUMENTS AND THE INFORMATION CONTAINED THEREIN ARE PROVIDED ON AN "AS IS" BASIS AND THE CONTRIBUTOR, THE ORGANIZATION HE/SHE REPRESENTS OR IS SPONSORED BY (IF ANY), THE MITRE CORPORATION, ITS BOARD OF TRUSTEES, OFFICERS, AGENTS, AND EMPLOYEES, DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION THEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.</p>' +
     '<h3>Facts used</h3><p>' + esc(EDITION.creditsFacts) + '</p>' +
     '<h3>Inspiration only</h3><p>Genre inspiration from classic handheld monster-collecting RPGs; the 1990s CGI series set inside a computer; incident-response card games such as Backdoors &amp; Breaches by Black Hills Information Security; and the National Cyber League / Cyber Skyline. No names, art, cards or other material from those works are used.</p>' +
+    '<p>Uptime is an independent learning game. It is not affiliated with, sponsored by or endorsed by Nintendo, The Pokémon Company, Mainframe Entertainment or any other rights holder of ReBoot, Black Hills Information Security, the National Cyber League, Cyber Skyline, or The MITRE Corporation. Their names and marks belong to their owners.</p>' +
     (EDITION.creditsInspiration ? '<p>' + esc(EDITION.creditsInspiration) + '</p>' : '') +
     '<p class="small">Everything invented for play is labelled (game) in the Field Manual. No network requests; saves stay in this browser.</p>';
 }
@@ -607,6 +640,8 @@ function fixupState() {
   const base = newState(G.seed || 1);
   for (const k in base) if (G[k] === undefined) G[k] = base[k];
   for (const k in base.m) if (G.m[k] === undefined) G.m[k] = base.m[k];
+  for (const k in base.targets) if (G.targets[k] === undefined) G.targets[k] = base.targets[k];
+  if (G.targets.esc === 1) G.targets.esc = base.targets.esc; // older saves: the escalation target was a count
   if (!G.qt) G.qt = Series.blankQT();
 }
 let seedOverride = null;

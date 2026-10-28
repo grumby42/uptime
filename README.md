@@ -52,6 +52,8 @@ Need Node and Playwright (Chromium).
     node tests/bot.js phone        # same with taps on the on-screen pad (360x800)
     GAMER=1 node tests/bot.js desktop   # closes everything as a false positive; hidden missed attacks must surface
     node tests/layout.js           # pad and screen fit in phone portrait/landscape and desktop; series menu fits a phone
+    node tests/frontdesk.js        # Front Desk: escalation evidence gate + precision, boss MFA-card fix, alert weighting,
+                                   #   scoping question, ATT&CK licence in Credits
     node tests/quiet.js            # Quiet Thread: scripted clue path, saves across reload / New game / export-import, summary lines
     node tests/mailroom.js         # Mail Room: Key Badge door, inbox room, drills (broad vs focused, Tally), save/reload,
                                    #   Quiet Thread mailbox clues, alert mix (home x3, Seal Badge), time to quarantine, phone drill layout
@@ -65,7 +67,7 @@ The bots also check: zero console errors, zero network requests, mid-game save/r
 
 ## The Quiet Thread (spoilers)
 
-A hidden, series-long intruder that lives off the land and never raises a normal alert. It has no wild encounter and is never in the alert mix. In Town Hall it came in through an old small-office router. From Day 2 there are five faint clues, each visible only with the right capability: overnight sign-ins on the Ledger console at your desk (logging on), the closet router's connections (Lanternkeep, after the firewall fix), a short security log on FD-STAFF-14 (Ledger), a scheduled task on FD-STAFF-11 (Sentry's process tree), and a remark from Hal in facilities. Each adds an entry to the Field Manual's Unexplained chapter. Three or more and the end-of-slice summary says something is moving; hunt mode opens in a later edition.
+A hidden, series-long intruder that lives off the land and never raises a normal alert. It has no wild encounter and is never in the alert mix. In Town Hall it relays its traffic through a hijacked old small-office router and signs in with a real service account. From Day 2 there are five faint clues, each visible only with the right capability: overnight sign-ins on the Ledger console at your desk (logging on), the closet router's connections (Lanternkeep, after the firewall fix), a short security log on FD-STAFF-14 (Ledger), a scheduled task on FD-STAFF-11 (Sentry's process tree), and a remark from Hal in facilities. Each adds an entry to the Field Manual's Unexplained chapter. Three or more and the end-of-slice summary says something is moving; hunt mode opens in a later edition.
 
 Real-world basis: joint advisory AA24-038A (CISA, NSA, FBI and partners, February 2024) on Volt Typhoon. See CREDITS.md.
 

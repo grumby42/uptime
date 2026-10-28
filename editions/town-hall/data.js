@@ -90,7 +90,7 @@ const MAPS = {
   }
 };
 
-/* ---------- Building groups (patch state) ---------- */
+/* ---------- Building groups (hardening: one baseline fix each) ---------- */
 const GROUPS = {
   a: {name:'Front Desk', fix:'kiosk'},
   b: {name:'Guest lounge', fix:'wifi'},
@@ -115,7 +115,7 @@ const NPCS = [
 ];
 const ACCOUNTS_TOTAL = 12; // (game) staff accounts in the district, including the front-desk admin account
 
-/* ---------- ATT&CK techniques (verified against attack.mitre.org, Oct 2026) ---------- */
+/* ---------- ATT&CK techniques (verified against attack.mitre.org, Oct 2026; re-checked against ATT&CK v20.0 on 28 Oct 2026) ---------- */
 const TECH = {
   'T1110.003': {name:'Brute Force: Password Spraying', tactic:['Credential Access'], desc:'Trying one or a few common passwords against many accounts, to stay under lockout limits.'},
   'T1566.004': {name:'Phishing: Spearphishing Voice', tactic:['Initial Access'], desc:'Phone calls, often posing as IT or a trusted company, that talk someone into giving access or running something.'},
@@ -124,7 +124,7 @@ const TECH = {
   'T1133':     {name:'External Remote Services', tactic:['Initial Access','Persistence'], desc:'Using remote-access services reachable from the internet (remote desktop, VPN) to get in or stay in.'},
   'T1190':     {name:'Exploit Public-Facing Application', tactic:['Initial Access'], desc:'Abusing a flaw in an internet-facing app or device to get into the network.'},
   'T1621':     {name:'Multi-Factor Authentication Request Generation', tactic:['Credential Access'], desc:'Flooding a user with MFA approval prompts, hoping one gets approved.'},
-  'T1684.001': {name:'Social Engineering: Impersonation', tactic:['Stealth'], desc:'Posing as a trusted person (an executive, a colleague, a help-desk agent) to get someone to act. The older ID T1656 now redirects here.'},
+  'T1684.001': {name:'Social Engineering: Impersonation', tactic:['Stealth'], desc:'Posing as a trusted person (an executive, a colleague, a help-desk agent) to get someone to act. The older ID T1656 now redirects here. Its tactic, Stealth (TA0005), was called Defense Evasion before ATT&CK v19.'},
   'T1078':     {name:'Valid Accounts', tactic:['Initial Access','Persistence','Privilege Escalation','Stealth'], desc:'Signing in with real credentials that were stolen or guessed, so the activity looks legitimate.'},
   'T1078.001': {name:'Valid Accounts: Default Accounts', tactic:['Initial Access','Persistence','Privilege Escalation','Stealth'], desc:'Using built-in accounts and factory-default passwords that nobody changed.'},
   'T1098.005': {name:'Account Manipulation: Device Registration', tactic:['Persistence','Privilege Escalation'], desc:'Enrolling an attacker-controlled device (for example as an MFA device) on a compromised account to keep access.'}
@@ -139,9 +139,12 @@ const THREATS = {
   pry:     {name:'Pry', tech:'T1190', spr:'pry', pal:'pry', tags:[], bucket:'vuln'},
   jamb:    {name:'Jamb', tech:'T1133', spr:'jamb', pal:'jamb', tags:['remote'], bucket:'story'}
 };
-// (game) malicious entry weights, from the 2025 Verizon DBIR initial-access shares: credentials 22, exploited vulnerability 20, phishing 16, other 42.
+// (game) Weights for MALICIOUS alerts only (false-positive and benign alerts pick a rule evenly; see genAlert).
+// The three real ways in keep the 2025 Verizon DBIR initial-access proportions, credentials 22 : exploited
+// vulnerability 20 : phishing 16 (10 link, 6 call), scaled to 85. Scanning (Prober) is reconnaissance, not a way in,
+// and gets a fixed 15: a Prober alert is only malicious when login attempts follow the scan.
 const MAL_WEIGHTS = [
-  {t:'sprayer', w:22}, {t:'pry', w:20}, {t:'lure', w:10}, {t:'caller', w:6}, {t:'prober', w:42}
+  {t:'sprayer', w:32}, {t:'pry', w:29}, {t:'lure', w:15}, {t:'caller', w:9}, {t:'prober', w:15}
 ];
 
 /* Alert templates: per threat, three possible truths. Clues are revealed by investigation. */
@@ -152,8 +155,8 @@ const ALERTS = {
     mal:{clues:['Failures hit 40 different accounts in six minutes, two tries each: just under the lockout limit.','Every attempt comes from one hosting-provider address range never seen here before.','After the burst, one account (reception-02) signed in successfully from that range.'],
          truth:'Password spraying: one common password tried against many accounts. One account fell.',
          resp:[{label:'Reset reception-02, revoke its sessions, block the source range',good:true},{label:'Isolate every reception PC',good:false,disrupt:2},{label:'Lock all 40 accounts for a day',good:false,disrupt:1}]},
-    benign:{clues:['Failures come from the office’s own network, spread over an hour.','Each account succeeded within a few tries, from its usual PC.','Passwords expired over the weekend; Monday morning staff are mistyping new ones.'],
-         truth:'Benign: staff mistyping new passwords after a scheduled expiry.'},
+    benign:{clues:['Failures come from the office’s own network, spread over an hour.','Each account succeeded within a few tries, from its usual PC.','IT forced a reset on Friday after a vendor’s breach; Monday morning staff are mistyping new passwords.'],
+         truth:'Benign: staff mistyping new passwords after a forced reset.'},
     fp:{clues:['Every “failure” comes from the visitor kiosk, exactly every 15 minutes.','The event code is a session timeout, not a wrong password.','Nobody typed anything: it’s the kiosk’s scheduled auto-logout.'],
          truth:'False positive: the rule counted the kiosk’s auto-logout as failed passwords.'}
   },
@@ -171,19 +174,19 @@ const ALERTS = {
     rule:'Link to a sign-in page clicked from email',
     mal:{clues:['The link’s domain is one letter off from ours and was registered two days ago.','The page asks for the password, then the MFA code.','Three other people received the same email.'],
          truth:'Spearphishing link: a look-alike sign-in page harvesting passwords and codes.',
-         resp:[{label:'Reset the clicker’s password, purge the email, block the domain',good:true},{label:'Isolate the clicker’s laptop for a week',good:false,disrupt:2},{label:'Ban all links in email',good:false,disrupt:1}]},
+         resp:[{label:'Reset the clicker’s password, revoke their sessions, purge the email, block the domain',good:true},{label:'Isolate the clicker’s laptop for a week',good:false,disrupt:2},{label:'Ban all links in email',good:false,disrupt:1}]},
     benign:{clues:['The email came from HR’s survey platform, announced last week.','The link’s domain is the platform’s real one.','It asks no passwords; sign-in goes through our own login page.'],
          truth:'Benign: a legitimate staff survey with tracking links.'},
-    fp:{clues:['The rule fires on any URL containing the word “login”.','The URL is our own company sign-in page.','Every staff member hits this page daily.'],
-         truth:'False positive: the rule matched our own login page.'}
+    fp:{clues:['The rule fires on any URL containing the word “login”.','The URL is a newsletter article: /blog/login-tips-for-staff.','It is not a sign-in page at all; the rule matched a word.'],
+         truth:'False positive: the rule matched the word “login” in an article’s address.'}
   },
   prober: {
     rule:'Port sweep against public addresses',
-    mal:{clues:['One source hits ports 22, 443 and 3389 on every public address, in sequence.','It then repeats only against the address that answered.','Requests look for a known remote-access login page.'],
-         truth:'Active scanning: an outsider mapping what we expose, looking for a way in.',
-         resp:[{label:'Block the source, confirm what is exposed, watch for follow-up',good:true},{label:'Take the website offline',good:false,disrupt:2},{label:'Ignore: scanning is just noise',good:false}]},
-    benign:{clues:['The source is the address of our own vulnerability scanner.','A scan was scheduled for tonight in the change calendar.','It ran on time and stopped on time.'],
-         truth:'Benign: our own scheduled vulnerability scan.'},
+    mal:{clues:['One source hits ports 22, 443 and 3389 on every public address, in sequence.','It then repeats only against the address that answered, and finds a remote-access login page.','Login attempts start on that page from the same source: the scan has become an attempt to get in.'],
+         truth:'Scanning followed by login attempts. The scan alone is reconnaissance (routine); trying to sign in to what it found is the attack.',
+         resp:[{label:'Confirm what is exposed, shut anything that shouldn’t be, check the login attempts, watch for follow-up',good:true},{label:'Block the source address and close the alert',good:false,why:'Blocking one address barely slows a scanner that can switch addresses; the exposed login page is still there.'},{label:'Take the website offline',good:false,disrupt:2},{label:'Ignore: scanning is just noise',good:false,why:'The scan was noise; the login attempts after it are not.'}]},
+    benign:{clues:['The source is a well-known internet-wide research scanner that probes every address on the internet.','It touched each of our public addresses once, on common ports, and moved on.','Nothing answered that shouldn’t, and no login attempts followed.'],
+         truth:'Benign: routine internet-wide scanning. It is reconnaissance, not an incident: confirm nothing unexpected is exposed and move on.'},
     fp:{clues:['The “scan” is many short DNS lookups.','They come from the guest Wi-Fi when a phone joins.','It’s normal phone behaviour; the rule threshold is too low.'],
          truth:'False positive: the rule mistook normal DNS lookups for a port scan.'}
   },
@@ -218,10 +221,10 @@ const BRIEFS = [
 const DOJO = [
   {q:'Which password space is biggest? (Each character chosen at random.)',
    opts:['8 characters from all 95 printable symbols','16 lowercase letters','10 letters and digits'], good:1,
-   explain:'95^8 ≈ 6.6×10^15. 26^16 ≈ 4.4×10^22. 62^10 ≈ 8.4×10^17. Every extra character multiplies the space, so length wins. Current NIST guidance (SP 800-63B) favours longer passwords over composition rules.'},
+   explain:'95^8 ≈ 6.6×10^15. 26^16 ≈ 4.4×10^22. 62^10 ≈ 8.4×10^17. Every extra character multiplies the space, so length wins. NIST SP 800-63B-4 (2025) sets a 15-character minimum for a password used on its own and tells verifiers not to impose composition rules.'},
   {q:'A site stores password hashes. When you sign in, how does it check your password?',
    opts:['It decrypts the stored hash and compares','It hashes what you typed and compares the two hashes','It emails your password to an admin'], good:1,
-   explain:'A hash is a one-way fingerprint: the same input always gives the same output, and you can’t run it backwards. So the site hashes your attempt and compares fingerprints. Password storage uses deliberately slow hash functions.'},
+   explain:'A hash is a one-way fingerprint: the same input always gives the same output, and you can’t run it backwards. So the site hashes your attempt and compares fingerprints. Good password storage uses deliberately slow, salted hash functions such as Argon2, bcrypt or PBKDF2.'},
   {q:'Two users both chose “sunshine1”. What does a unique random salt per user do?',
    opts:['Makes their stored hashes different, so precomputed tables and look-alike matches fail','Encrypts the password so it can be recovered','Turns a weak password into a strong one'], good:0,
    explain:'The salt is mixed in before hashing, so identical passwords produce different hashes and precomputed (rainbow) tables are useless. It does not make a guessable password hard to guess.'}
@@ -231,10 +234,11 @@ const DOJO = [
 const CARDS = [
   {id:'reset', name:'Reset credentials', csf:'Respond', text:'Give the admin account a new long password now.', fx:'Stage 2 starts with less attacker progress.'},
   {id:'revoke', name:'Revoke sessions', csf:'Respond', text:'Sign the account out everywhere, killing any session the attacker holds.', fx:'Stage 2 attacker moves slower.'},
-  {id:'mfa', name:'Enforce MFA', csf:'Protect', text:'Require a second factor for the admin account.', fx:'Stage 3 becomes much easier.'},
-  {id:'logs', name:'Review sign-in logs', csf:'Detect', text:'Pull every sign-in for the account in the last 30 days.', fx:'Every stage starts with more evidence.'},
+  {id:'mfa', name:'Enforce MFA', csf:'Protect', text:'Require a second factor for the admin account from now on.', fx:'Future password guesses fail. But it does nothing against an MFA device the attacker has already enrolled: no help in Stage 3.'},
+  {id:'devices', name:'Review MFA devices', csf:'Respond', text:'List every MFA device enrolled on the admin account and remove any nobody can vouch for.', fx:'Stage 3 becomes much easier: an unknown device is found and removed.'},
+  {id:'logs', name:'Review sign-in logs', csf:'Respond', text:'Pull every sign-in for the account in the last 30 days.', fx:'Every stage starts with more evidence.'},
   {id:'isolate', name:'Isolate host', csf:'Respond', text:'Cut the admin’s workstation off the network.', fx:'Does not help: the attacker is using the account, not that PC.'},
-  {id:'notify', name:'Notify leadership', csf:'Govern', text:'Tell leadership what happened, what you are doing, and when you’ll update them.', fx:'Reputation up; leadership is ready if it gets worse.'}
+  {id:'notify', name:'Notify leadership', csf:'Respond', text:'Tell leadership what happened, what you are doing, and when you’ll update them.', fx:'Reputation up; leadership is ready if it gets worse.'}
 ];
 
 /* ---------- Field Manual ---------- */
@@ -244,20 +248,24 @@ const EXTRA_ACTIONS = {
   logging:{name:'Enable security logging', desc:'Turn on event logs and forward them to a central collector so investigations have evidence.'},
   numbermatch:{name:'Number-matching MFA prompts', desc:'The user must type a number shown on the sign-in screen, so blindly approving a push does not work.'},
   callback:{name:'Call-back verification', desc:'Verify a caller by hanging up and calling the number on file, never one they give you.'},
+  scope:{name:'Scope after containment', desc:'Containing an attack is not the end. Ask what it touched (data, hosts), what access it added (accounts, MFA devices, sessions) and what it left behind (persistence), then recover. Contain, scope, recover.'},
   insider:{name:'Insider-risk referral', desc:'Report concerning behaviour factually to the insider-risk process (HR, legal, security). One sign proves nothing; don’t investigate on your own.'}
 };
 const FACTS = {
-  dbir_ia:{name:'How breaches start (2025)', desc:'In the 2025 Verizon Data Breach Investigations Report, the top known initial access vectors were credential abuse (22%), exploitation of vulnerabilities (20%) and phishing (16%).', src:'Verizon 2025 DBIR'},
+  dbir_ia:{name:'How breaches start (2025)', desc:'In the 2025 Verizon Data Breach Investigations Report, the top initial access vectors (in breaches where the vector was known) were credential abuse (22%), exploitation of vulnerabilities (20%) and phishing (16%). The 2026 report puts exploitation of vulnerabilities first (31%), with credential abuse down to 13%.', src:'Verizon 2025 DBIR'},
   dbir_rw:{name:'Ransomware and smaller organisations (2025)', desc:'The 2025 Verizon DBIR found ransomware in 88% of breaches at small and medium-sized organisations, compared with 39% at large ones.', src:'Verizon 2025 DBIR'},
   fp:{name:'Alert fatigue (2021)', desc:'In Critical Start’s 2021 survey of 100 SOC professionals, 68% said 25–75% of the alerts they investigate each day are false positives.', src:'Critical Start, 2021 SOC survey'},
-  nist:{name:'Length beats complexity', desc:'NIST SP 800-63B (digital identity guidelines) favours longer passwords and tells verifiers not to impose composition rules such as “one symbol, one digit”.', src:'NIST SP 800-63B'}
+  nist:{name:'Length beats complexity', desc:'NIST SP 800-63B-4 (digital identity guidelines, 2025) requires at least 15 characters for a password used on its own, tells verifiers not to impose composition rules such as “one symbol, one digit”, not to force periodic changes, and to reject passwords on a blocklist of common or breached ones.', src:'NIST SP 800-63B-4'}
 };
 const GAME_NOTES = [
   'Alert mix before tuning: 50% false positive, 30% benign but real, 20% malicious. (game)',
-  'Malicious alerts are weighted 22 credentials / 20 exploited vulnerability / 16 phishing / 42 other, borrowing the DBIR shares. (game)',
+  'Only malicious alerts use entry-route weights: password spraying 32 / exploited app 29 / phishing 24 (15 link, 9 call) / scanning 15. The first three keep the 2025 DBIR initial-access proportions (22 : 20 : 16), scaled up; scanning is reconnaissance, not a way in, so a scan alert is only malicious when login attempts follow it. False-positive and benign alerts pick a rule evenly. (game)',
   'Class strengths: Endpoint vs Execution/Persistence/Privilege Escalation; Network vs C2/Lateral Movement/Exfiltration/remote services/scanning; Logging vs Discovery/Credential Access once logs are on; Identity vs Credential Access and account abuse. Strong ×2, weak ×0.5. (game)',
   'District uptime, reputation, building health, MFA coverage (12 accounts) and all character names are invented. (game)',
-  'Automation risk “about 1 in 50 auto-closed alerts may be real” is an invented number. (game)'
+  'Automation risk “about 1 in 50 auto-closed alerts may be real” is an invented number. (game)',
+  'Acting on a morning briefing halves that threat’s odds for a week, and the Key Badge halves Sprayer alerts: both are invented effects. (game)',
+  'Time to acknowledge counts seconds of menu time in the game. Real SOCs measure time to acknowledge and time to resolve in minutes to hours, against agreed service-level targets. (game)',
+  'Escalation precision counts an escalation as good only when the alert was real and you had Evidence 40 or more. “Verdicts with evidence” uses the same 40 line. (game)'
 ];
 
 /* ---------- Debriefs ---------- */

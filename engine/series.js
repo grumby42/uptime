@@ -49,7 +49,7 @@ const Series = {
 };
 function qtStageFor(n) { return n >= QT_SUSPECT ? 2 : n >= 1 ? 1 : 0; }
 
-/* ATT&CK techniques behind the Quiet Thread clues (verified on attack.mitre.org, Oct 2026, ATT&CK v19).
+/* ATT&CK techniques behind the Quiet Thread clues (verified on attack.mitre.org, Oct 2026; re-checked against ATT&CK v20.0 on 28 Oct 2026).
    Kept apart from each edition's TECH table: they never appear in alerts, and they are not counted in Field Manual %. */
 const QT_TECH = {
   'T1078':     {name: 'Valid Accounts', tactic: ['Initial Access', 'Persistence', 'Privilege Escalation', 'Stealth'],
