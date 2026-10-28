@@ -8,8 +8,8 @@ Planned home: GitHub Pages at `grumby42/uptime` (open `index.html` for the serie
 
 | # | Edition | District | Status |
 |---|---|---|---|
-| 1 | Town Hall | Front Desk, the Mail Room, Clerks' Row, Market Square, then Records Hall | playable (about 30 minutes each) |
-| | | IT Basement | next |
+| 1 | Town Hall | Front Desk, the Mail Room, Clerks' Row, Market Square, Records Hall, then the IT Basement | playable (about 30 minutes each) |
+| | | Server Room | next |
 
 ## Layout
 
@@ -39,6 +39,9 @@ editions/town-hall/
   records-data.js           Records Hall (district 5): art, map, people, techniques, threats, alerts, restore tests, BIA, restore-order rules, drills, dojo, cards, facts
   records-quiet.js          Quiet Thread clue found in Records Hall
   records-story.js          Records Hall objectives, fieldwork, directive, drills, Records Board, ransomware incident and restore-order mini-game, metrics, summary
+  basement-data.js          IT Basement (district 6): art, map, people, techniques, threats, alerts, log sources, clocks, firewall rules, tuning week, drills, dojos, cards, facts
+  basement-quiet.js         Quiet Thread clue found in the IT Basement, and the suspicion-file timeline
+  basement-story.js         IT Basement objectives, fieldwork, rule tuning, directive, drills, dojos, Basement Board, intruder incident, suspicion file, metrics, summary
   index.html                the built game (generated)
 tools/build.py              builds every edition and the menu
 tests/                      Playwright checks
@@ -57,8 +60,8 @@ Every build is stamped `ARCD-YYYYMMDD-HHMMZ` with a UTC timestamp from the clock
 
 Need Node and Playwright (Chromium).
 
-    node tests/bot.js desktop      # plays New game -> Front Desk -> Mail Room -> Clerks' Row -> Market Square -> Records Hall -> end-of-district with the keyboard
-    node tests/bot.js phone        # same with taps on the on-screen pad (360x800)
+    node tests/bot.js desktop      # plays New game -> Front Desk -> Mail Room -> Clerks' Row -> Market Square -> Records Hall -> IT Basement -> end-of-district with the keyboard
+    node tests/bot.js phone        # same with taps on the on-screen pad (360x800); run it last and alone (about 15 minutes)
     GAMER=1 node tests/bot.js desktop   # closes everything as a false positive; hidden missed attacks must surface
     node tests/layout.js           # pad and screen fit in phone portrait/landscape and desktop; series menu fits a phone
     node tests/frontdesk.js        # Front Desk: escalation evidence gate + precision, boss MFA-card fix, alert weighting,
@@ -83,6 +86,12 @@ Need Node and Playwright (Chromium).
                                    #   finance directive, alert mix and Vault Badge halving, Dojo, Records Board (Vault Badge, Cairn -> Bulwark),
                                    #   time to contain, restore-order rules (dependencies, reinfection), ransomware incident (pay decision, three
                                    #   stages, recovery from clean points), summary, phone layout
+    node tests/basement.js         # IT Basement: Vault Badge stairs, coverage (questions to sources), NTP and UTC, retention (M-21-31 rescinded,
+                                   #   federal only), firewall review (owners, replace before remove, deny by default), Quiet Thread any-to-any
+                                   #   clue, rule tuning (switching off refused, narrow exclusions, an over-broad exclusion hides a real attack
+                                   #   that incident review surfaces), drills (guessing 40, focused 100, Tally), save/reload, directive (DNS
+                                   #   stays), measured skew, alert mix, Dojos, Basement Board (Beacon Badge, Tier 3, Ledger -> Annalist, slower
+                                   #   dwell with full logging), boss stages, suspicion file consistent with every clue, summary, phone layout
 
 The bots also check: zero console errors, zero network requests, mid-game save/reload (including the series save), the export-code round trip, no horizontal scroll, and that no Quiet Thread technique ever appears as an ordinary alert. Set `UPTIME_FILE=file:///path/to/build.html` to test another build.
 
@@ -93,7 +102,7 @@ The bots also check: zero console errors, zero network requests, mid-game save/r
 
 ## The Quiet Thread (spoilers)
 
-A hidden, series-long intruder that lives off the land and never raises a normal alert. It has no wild encounter and is never in the alert mix. In Town Hall it relays its traffic through a hijacked old small-office router and signs in with a real service account. From Day 2 there are five faint clues, each visible only with the right capability: overnight sign-ins on the Ledger console at your desk (logging on), the closet router's connections (Lanternkeep, after the firewall fix), a short security log on FD-STAFF-14 (Ledger), a scheduled task on FD-STAFF-11 (Sentry's process tree), and a remark from Hal in facilities. Each adds an entry to the Field Manual's Unexplained chapter. Three or more and the end-of-slice summary says something is moving; hunt mode opens in a later edition.
+A hidden, series-long intruder that lives off the land and never raises a normal alert. It has no wild encounter and is never in the alert mix. In Town Hall it relays its traffic through a hijacked old small-office router and signs in with a real service account. From Day 2 there are five faint clues, each visible only with the right capability: overnight sign-ins on the Ledger console at your desk (logging on), the closet router's connections (Lanternkeep, after the firewall fix), a short security log on FD-STAFF-14 (Ledger), a scheduled task on FD-STAFF-11 (Sentry's process tree), and a remark from Hal in facilities. Each adds an entry to the Field Manual's Unexplained chapter. Three or more and the end-of-slice summary says something is moving; hunt mode opens in a later edition. In the IT Basement, with clocks synchronised and logs kept, the thread becomes visible: one more clue in the old any-to-any firewall rule's hit log, then every Unexplained note on one timeline, handed to Rae as a suspicion file. It is not resolved; it continues.
 
 Real-world basis: joint advisory AA24-038A (CISA, NSA, FBI and partners, February 2024) on Volt Typhoon. See CREDITS.md.
 
@@ -123,3 +132,8 @@ Reached from the plaza after Clerks' Row (Shield Badge door by the firewall, nor
 ## Records Hall (district 5)
 
 Reached from the plaza after Market Square (Lantern Badge door, south of the plaza between the Identity Board and the Dojo). Backup and recovery. You stay Tier 2 and own the recovery decisions. Odile Brennan's problem: backups say Success every night and nobody has restored one; the backup console opens with any domain admin password; nobody has agreed recovery objectives with the people who own the services. Fieldwork: a timed restore test in an isolated lab (a job that said Success fails: the portal's second disk was never selected), a business impact analysis lite (the directory and DNS go on the critical list because everything depends on them) and RTO/RPO agreed with the permits owner (NIST SP 800-34 Rev. 1 definitions; RTO inside the owner's limit, backups twice a day for a 12-hour RPO), 3-2-1 taught as a rule of thumb plus one copy ransomware can't reach (retention-locked appliance, weekly encrypted tapes offsite, the key escrowed apart from the data), and separate backup admin accounts with MFA and alerts on deletes (NCSC principles). A finance directive (cut backup storage 40%, game) teaches retention against cost and RPO. Three drills: twelve thousand renamed files (the migration's own account and untouched ways back, on the file server and the writing host, decide; count and extension are traps), a backup that succeeded at 41 GB (job log detail and the console audit log: the shares moved to a volume the job never selected; the storage dashboard is the trap), and a ransom note claiming 200 GB (flow records and the endpoint history show 3.8 GB packed with a compression utility and uploaded to cloud storage; the note and a forum rumour are traps; budget 3). The Cryptography Dojo covers encoding vs hashing vs encryption (Base64 is not encryption), why ransomware uses symmetric and asymmetric ciphers, and why an encrypted backup needs its key escrowed. The Records Board gives the Vault Badge (T1490/T1485 threats halved, game) and Cairn, a recovery tool, which becomes Bulwark after the incident. The incident is retold in outline from the City of Atlanta (22 March 2018; SamSam): leadership, legal, the cyber insurer (game), the FBI and CISA told automatically, four tabletop cards, a pay decision framed by the FBI's position and OFAC's 2021 advisory, three stages (encryption pushed by group policy, the attack on the backups that the separate credentials and retention lock refuse, and a second attacker account that means the directory itself must be rebuilt), then the restore-order mini-game: one crew, 48 game hours, dependencies, and restore points where any copy holding the attacker's foothold reinfects; the directory comes back from before the earliest compromise (checked in the lab, krbtgt reset twice) and misses its RPO by design. New Tier 2 metrics: restore test success rate, measured recovery time within RTO, RPO, critical systems with an offline copy, mean time to contain. One Quiet Thread clue sits in the backup console's old audit log: svc-print, from the Front Desk closet router, exporting the backup server's stored credentials at 03:14.
+
+
+## The IT Basement (district 6)
+
+Reached from the plaza after Records Hall (the stairs west of the records office, locked since slice 1, open with the Vault Badge). Logging, detection engineering and the network boundary. You start as Tier 2; clearing the Basement Board makes you Tier 3 senior analyst, responsible for detection engineering: you write the rules others triage. Magda Petrov's problem: logs come from a fraction of systems, clocks disagree by minutes, retention is 7 days, the firewall has years of unowned rules including an any-to-any, and the SIEM is noisy. Fieldwork: map investigation questions to the sources that answer them and onboard the VPN appliance, the edge firewall, DNS and server process creation (the ASD-led event logging guide's priorities); one clock for every log (internal NTP servers, UTC, ISO 8601; NIST SP 800-92, RFC 5905); retention from a risk assessment (OMB M-21-31 was rescinded by M-26-14 in May 2026, and both are federal-only); a firewall rule review (owner, reason, hits; replace a rule that still carries traffic before removing it; narrow through change control; deny by default both ways, per NIST SP 800-41 Rev. 1); and rule tuning, the mini-game: a week of alerts from one scan detection, narrow exclusions with a reason, owner and expiry, never switching it off; an over-broad exclusion (the IT subnet, a night window, a higher threshold) looks better on screen and silently hides a real attack that incident review surfaces later. A CIO directive (cut the SIEM licence 30%, game) teaches why DNS stays. Three drills: forty quiet minutes (FS-02's own log and the collector's health log, event 1102), seven minutes apart (each clock's offset and one shared event; ingest time is not event time), and long DNS names to one domain (Sysmon event 22's process and the domain's owner; count and randomness are traps). The Log Analysis and Scanning Dojos cover a web log line field by field, three clocks on one UTC timeline, guessing versus spraying, SYN versus connect scans, open/closed/filtered (Nmap reference guide) and written scope. The Basement Board gives the Beacon Badge (close one log-source gap; dwell grows slower where a district's logging is complete) and evolves Ledger into Annalist. The incident is game-original, its outline following what ATT&CK records for Volt Typhoon (G1017): an exploited VPN appliance, a service account, a cleared Security log whose forwarded copies survived, a firewall rule added for a way out, and scanning; the broad VPN rule waiting for Friday's change window was the way in. New metrics: log source coverage, largest clock skew, detection precision, firewall rules with an owner, and a modelled mean time to detect. One Quiet Thread clue sits in the any-to-any rule's hit log; afterwards Rae asks for the suspicion file.

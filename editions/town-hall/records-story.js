@@ -145,6 +145,7 @@ function rhObjective() {
   if (!f.rhBoard) return at('Take the Records Board challenge (Margit Halloran, through the east door).', 9, 2, 'rboard');
   if (!f.rhNight3) return at('End your shift at your desk.', 8, 14);
   if (!f.rhBoss) return at('Odile needs you: the stacks have gone dark.', 14, 6);
+  if (typeof bmObjective === 'function') return bmObjective();
   return {text: 'Records Hall recovered. Next: IT Basement.', done: true, district: 'records'};
 }
 

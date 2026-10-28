@@ -539,7 +539,7 @@ async function settleTo(s, re) {
     /Records Hall district: recovered/.test(sum) && /Vault Badge/.test(sum) && /Tier 2 incident responder/.test(sum) && /Next: IT Basement/.test(sum) && /5 of 5<\/b> systems within RTO|5 of 5 systems within RTO/.test(sum.replace(/<[^>]+>/g, '')) && /Restore test success rate/.test(sum) && /Twelve thousand renamed files/.test(sum), sum.slice(0, 400));
   await s.pickLabel(/Keep exploring/); await s.settle();
   p = await s.peek();
-  check('after recovery: objective done (Next: IT Basement); series save marks Records Hall done', p.objective.done && /IT Basement/.test(p.objective.text) && await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).editions['town-hall'].recordsHall === true), p.objective);
+  check('after recovery: objective points to the IT Basement (done, or the basement district); series save marks Records Hall done', (p.objective.done || p.objective.district === 'basement') && /IT Basement/.test(p.objective.text) && await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).editions['town-hall'].recordsHall === true), p.objective);
   check('Credits list the Records Hall sources and keep the MITRE notice', await s.page.evaluate(() => { const c = creditsHtml(); return /#StopRansomware Guide/.test(c) && /SP 800-34 Rev\. 1/.test(c) && /OFAC/.test(c) && /Keisha Lance Bottoms/.test(c) && /reproduced and distributed with the permission of The MITRE Corporation/.test(c); }));
   results.errors = s.errors; results.requests = s.requests;
   if (s.errors.length || s.requests.length) failed = true;

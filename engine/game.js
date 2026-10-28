@@ -26,7 +26,8 @@ function touchCSF(fn) { if (!G.csf[fn]) { G.csf[fn] = true; toast('CSF ' + fn + 
 function groupFixed(g) { return !!G.f[GROUPS[g].fix]; }
 function tool() { return G.party[G.active]; }
 function toolName(t) { return TOOLS[t.id].name + (t.tuned ? ' · Tuned' : ''); }
-function hasTool(id) { return G.party.some(t => t.id === id); }
+// A tool that evolved from another still counts as having it (EVOLVED_FROM, edition data), so earlier checks keep working.
+function hasTool(id) { return G.party.some(t => t.id === id || EVOLVED_FROM[t.id] === id); }
 function addTool(id, lvl) { if (!hasTool(id)) G.party.push({id: id, lvl: lvl || 3, xp: 0, tuned: false}); }
 function npcHere(map, x, y) { return NPCS.find(n => n.map === map && n.x === x && n.y === y && (!n.cond || n.cond(G))); }
 function mapRows(m) { return MAPS[m].rows; }
@@ -328,7 +329,7 @@ async function doBattle(spec) {
       });
       items.push({label: 'Close alert', note: 'verdict + response', meta: {kind: 'close'}});
       items.push({label: 'Switch tool', disabled: G.party.length < 2, meta: {kind: 'switch'}});
-      if (!spec.story) items.push({label: G.rank === 'Intern' ? 'Ask Rae (escalate)' : /^Tier 2/.test(G.rank) ? 'Escalate to Rae (incident lead)' : 'Escalate to Tier 2', note: 'bring evidence', meta: {kind: 'escalate'}});
+      if (!spec.story) items.push({label: G.rank === 'Intern' ? 'Ask Rae (escalate)' : /^Tier [23]/.test(G.rank) ? 'Escalate to Rae (incident lead)' : 'Escalate to Tier 2', note: 'bring evidence', meta: {kind: 'escalate'}});
       const lastClue = B.clue > 0 ? 'Latest: ' + spec.clues[B.clue - 1] : 'What do you check first?';
       const i = await choose(lastClue, items, {cols: 2});
       const meta = items[i].meta;
@@ -482,7 +483,7 @@ async function scopeQuestion() {
 }
 // Escalation is judged on evidence: a real attack sent up with Evidence under 40 is not a good escalation.
 async function escalate() {
-  const s = B.spec, intern = G.rank === 'Intern', to = intern || /^Tier 2/.test(G.rank) ? 'Rae' : 'Tier 2';
+  const s = B.spec, intern = G.rank === 'Intern', to = intern || /^Tier [23]/.test(G.rank) ? 'Rae' : 'Tier 2';
   G.m.esc++; G.m.closed++; G.m.today++; G.m.judged++; B.revealed = true;
   if (B.ev >= 40) G.m.evOk = (G.m.evOk || 0) + 1;
   unlock('tech', s.tech);

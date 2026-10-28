@@ -181,6 +181,9 @@ const ABIL = {
   mfa:      {name:'Enforce MFA', type:'con', cost:3, dw:40, ev:4, disrupt:0, desc:'Require a second factor for an account, so a password alone is not enough.'}
 };
 
+// Evolved tool id -> the tool it grew from (editions add entries), so hasTool('ledger') stays true after Ledger evolves.
+const EVOLVED_FROM = {};
+
 /* ---------- NIST CSF 2.0 functions (Field Manual) ---------- */
 const CSF = {
   Govern:'Set, communicate and oversee the organisation’s cybersecurity strategy, expectations and policy.',
