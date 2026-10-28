@@ -360,8 +360,8 @@ async function rhOfflineCopy() {
   c.keyEscrow = true;
   while (true) {
     const i = await choose('Coverage check: 4 of the 5 critical systems are on the weekly tapes. The directory’s job writes to the appliance only.', [
-      {label: 'Add the directory’s backup to the weekly tapes', meta: {good: true}},
-      {label: 'Leave it: the directory is small and easy to rebuild'}], {shuffle: true});
+      {label: 'Add the directory’s backup to the tapes: everyone signs in through it', meta: {good: true}},
+      {label: 'Leave it: the directory is small, and it’s quick to rebuild from scratch'}], {shuffle: true});
     if (i === 0) break;
     await say('Every account, group and policy the town has is in it, and nothing else signs anyone in without it. Rebuilding it from memory takes weeks.');
   }
@@ -376,7 +376,7 @@ async function rhCredsStep() {
     const i = await choose('How should the backup system be run?', [
       {label: 'Separate backup admin accounts that exist only on the backup system, MFA on any change or deletion, alerts on mass deletes and retention changes, and no domain accounts at all', meta: {good: true}},
       {label: 'Change the domain admin password to a long passphrase, and change it again every month'},
-      {label: 'Move the console to an unusual port and allow it only from the IT subnet'},
+      {label: 'Move the console to an unusual port that scanners don’t usually check'},
       {label: 'Give backup rights to fewer domain admins: two named people instead of every domain admin in IT'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('A new password is stolen the same way as the old one. The point is that a domain password shouldn’t open the backups at all.');
@@ -409,7 +409,7 @@ async function leonaTalk() {
       {label: 'Back up weekly instead of nightly, on Sunday nights, when nobody is changing files', meta: {k: 'weekly'}}], {shuffle: true});
     if (i === 0) { c.directive = 'tier'; break; }
     if (i === 1) await say('If an intruder has been in for longer than a week, every copy you keep contains them, and there is no clean copy to go back to.');
-    else if (i === 2) await say('The offline copy is the one ransomware can’t reach. It’s the last thing to cut, not the first.');
+    else if (i === 2) await say('The appliance’s copies are locked, but still online, on a system an attacker can reach and probe: the lock is one control that has to hold. The tapes are offline and offsite, so nothing has to hold for them. They’re the last thing to cut, not the first.');
     else await say('The permits database’s RPO is twelve hours. Weekly backups could lose a week of permits.');
   }
   G.f.rhDirective = true; unlock('act', 'retention'); touchCSF('Govern'); track();
@@ -523,7 +523,7 @@ function rhBossStages(picks, d) {
       title: 'Stage 1: the stacks go dark', host: 'FS-01, FS-02 and every server the policy reached', enemy: {spr: 'gloam', pal: 'gloam'},
       clues: ['At ' + RH_ENCRYPT + ' a scheduled task started the same program on every server except the directory and FS-03, an old server outside the group the policy targets. Files are renamed and turned to noise, and a ransom note sits in every share.', 'At 02:38 every volume shadow copy on the file servers was deleted, by svc-scanbak, a domain admin account nobody on the team created.', 'The task came from a new group policy, “Printer Mapping Update”, created by svc-scanbak at ' + RH_GPO + ' last night.'],
       truth: 'Data Encrypted for Impact, pushed to every server at once through group policy, after the shadow copies were deleted (Inhibit System Recovery). Pushing the task through a group policy is Group Policy Modification, ATT&CK T1484.001.',
-      resp: [{label: 'Isolate the servers at the switch but keep them powered (memory), disable svc-scanbak, unlink the policy, keep the backup network sealed, preserve evidence', good: true},
+      resp: [{label: 'Isolate the servers at the switch, powered on so memory survives; disable svc-scanbak, unlink the policy, keep the backup network sealed, preserve evidence', good: true},
              {label: 'Restore the file shares from last night now, so the departments can work again while the investigation goes on', good: false, why: 'Last night’s copies were taken after the policy went out at ' + RH_GPO + ': whole-server restores bring the scheduled task back. Contain first.'},
              {label: 'Pull the power on every server right now, so the encryption stops mid-file before it can reach the backups, the directory or anything else on the town’s network', good: false, disrupt: 1, why: 'Isolate at the switch first; power down only what you can’t disconnect. Memory evidence goes when the power does.'}],
       chain: [{at: 40, text: 'Another share fills with ransom notes.'}, {at: 75, text: 'The encryptor reaches the scanned-image archive.'}]},
@@ -532,8 +532,8 @@ function rhBossStages(picks, d) {
       title: 'Stage 2: they come for the backups', host: 'BKP-01 · backup appliance and console', enemy: {spr: 'lapse', pal: 'lapse'},
       clues: ['At 02:44 svc-scanbak tried to sign in to the backup console. Refused: it isn’t a backup account. Before the fieldwork, any account in the old domain group could.', 'At 02:46 it tried to delete the appliance’s copies over the network. The retention lock refused every request, and every refusal raised an alert.', picks.includes('reconnect') ? 'The tapes were loaded into the library this morning to speed things up: the one copy they couldn’t reach is on the network now.' : 'The weekly tapes are in the offsite store, offline. Their key is in escrow.'],
       truth: 'Inhibit System Recovery: going after the backups before the ransom demand. The separate credentials and the retention lock held.',
-      resp: [{label: 'Keep the backup network sealed, check the locked and offline copies are intact before any restore, keep the tapes offline until identity is ours again', good: true},
-             {label: 'Bring the tapes in now and load them in the lab, to check they’re readable and complete before the restore starts, since a bad tape found later costs a day', good: false, why: 'Not while svc-scanbak still works. The offline copy is the one thing they can’t reach: keep it that way until identity is yours again.'},
+      resp: [{label: 'Keep the backup network sealed and the tapes offline: svc-scanbak still works. Check the locked and offline copies are intact before any restore', good: true},
+             {label: 'Bring the tapes in now and load them in the backup library, to check they’re readable and complete before the restore starts, since a bad tape found later costs a day', good: false, why: 'Not while svc-scanbak still works. The offline copy is the one thing they can’t reach: keep it that way until identity is yours again.'},
              {label: 'Clear the alerts: they’re only refusals, which prove the lock is working and nothing got through', good: false, why: 'The refusals are the attacker telling you what they want. Keep every one.'}],
       chain: [{at: 60, text: 'svc-scanbak tries a second way into the appliance.'}]},
     s3: {kind: 'mal', threat: 'lapse', tech: 'T1078', tags: ['identity'], story: true, group: 'c', ev0: ev0,

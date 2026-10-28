@@ -227,7 +227,7 @@ function clerksDone(s, extra, party) {
   await s.pickLabel(/Cancel the hosting account now/);
   p = await s.waitUI('say');
   check('test site: cancelling the hosting first is a subdomain takeover risk (and loses the logs)', /subdomain takeover/.test(p.ui.text) && /logs/.test(p.ui.text), p.ui.text);
-  await s.settle([/Keep a copy of its logs/]);
+  await s.settle([/Copy and read its logs/]);
   p = await s.peek();
   check('test site retired; its console is gone from the map', p.f.mkTest && await s.page.evaluate(() => tileDef('market', 18, 8).ch === '.'));
 

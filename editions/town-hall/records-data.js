@@ -187,7 +187,7 @@ Object.assign(ALERTS, {
     rule: 'Bulk deletion on a file share',
     mal: {clues: ['Files on the old NAS backup share are being overwritten, then deleted.', 'The account is the NAS’s local admin, whose password was the same as a domain admin’s.', 'The retention-locked copies on the appliance refuse every delete; the NAS copies don’t.'],
           truth: 'Data Destruction aimed at the backups, the way back.',
-          resp: [{label: 'Cut the NAS off; give it its own admin password with MFA; reset the domain admin that shared it and hunt for its use; confirm the locked and offline copies; rebuild the share from them', good: true},
+          resp: [{label: 'Cut the NAS off; give it its own admin password with MFA; reset the domain admin that shared it and hunt for its use; check the locked and offline copies are intact; rebuild the share from them', good: true},
                  {label: 'Restore the NAS share from its own snapshots tonight, give the NAS a new long admin password, reset the domain admin too, and close once the department confirms every file is back where it belongs', good: false, why: 'Those copies are the ones being destroyed. Restore from copies the attacker can’t reach.'},
                  {label: 'Switch off the deletion alerts for the NAS: they’re too noisy to work through', good: false, why: 'That alert is the only reason you know.'}]},
     benign: {clues: ['The deletions follow the town’s records retention schedule: files past their keep-until date.', 'Hester signed off the disposal list last week.', 'The run is the scheduled disposal job, at its usual time.'],
@@ -199,9 +199,9 @@ Object.assign(ALERTS, {
     rule: 'Large upload to cloud storage',
     mal: {clues: ['9 GB left FS-03 for a cloud storage service the town has never used, between 03:41 and 03:55.', 'A compression utility packed the files into password-protected parts first.', 'The account is a help-desk admin signed in from another server at 03:30.'],
           truth: 'Exfiltration to Cloud Storage: data taken before encryption, so the attacker can threaten to publish it.',
-          resp: [{label: 'Block the destination, isolate the host, disable the account, preserve the logs, and scope exactly which files left', good: true},
+          resp: [{label: 'Block the destination, isolate the host, disable the account, preserve the logs, scope which files left: that decides who is told', good: true},
                  {label: 'Block the destination at the firewall and close: nothing more can leave, and the files that already left can’t be called back anyway', good: false, why: 'The account and the host are still the attacker’s, and you don’t yet know what left.'},
-                 {label: 'Wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'Data theft usually comes before encryption. This is the warning.'}]},
+                 {label: 'Wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'Data theft usually comes before encryption: this is the warning. Password-protected parts to a service the town never uses are no backup, and every minute you wait, more files leave.'}]},
     benign: {clues: ['Hester is copying the 1960s council minutes to the regional archive’s storage.', 'The transfer is ticketed and the destination is on the approved list.', 'It runs under her own account, in working hours, file by file.'],
              truth: 'Benign: the archivist’s approved migration to the regional archive.'},
     fp: {clues: ['The “upload” is the backup appliance replicating to its own second site.', 'The destination is ours, on the firewall’s list.', 'The rule doesn’t know the backup network.'],
@@ -211,7 +211,7 @@ Object.assign(ALERTS, {
     rule: 'Backup job failures',
     mal: {clues: ['Every backup job for FS-03 has failed since 04:30: the backup agent’s service on FS-03 was stopped at 04:29.', 'At 04:28 wbadmin deleted the Windows backup catalog on FS-03, run by a domain admin account.', 'A minute later the same account tried to sign in to the backup console.'],
           truth: 'Inhibit System Recovery: removing the backups and catalogs that let you restore. Ransomware often comes next.',
-          resp: [{label: 'Isolate FS-03, disable the account, lock retention on its copies, check the offline copy, hunt for the encryptor before it runs', good: true},
+          resp: [{label: 'Isolate FS-03, disable the account, lock retention on its copies, check the offline copy: ransomware often comes next. Hunt for it', good: true},
                  {label: 'Rerun the failed backup jobs now so tonight’s copies exist, check they finish with Success, and close the alert first thing in the morning', good: false, why: 'The jobs failed because someone removed the way back on purpose. They’re still in.'},
                  {label: 'Watch FS-03 closely tonight and act only if files start changing, so nobody is disturbed over what may only be a scheduling fault', good: false, why: 'This is the warning. Act now.'}]},
     benign: {clues: ['The appliance’s disk is 100% full.', 'Every job that wrote after 01:40 failed with “no space”.', 'Nico’s dashboard warned about space last week.'],
@@ -349,8 +349,8 @@ const RH_DRILLS = {
       {label: 'Ransomware: twelve thousand files renamed in under an hour, all with the same new extension, which is what mass encryption looks like', why: 'Volume and speed fit both. The writer and the shadow copies decide.'},
       {label: 'Ransomware: an extension nobody here has ever seen before, appended to every single file in the department’s shared folder at once', why: 'Extensions are chosen by whoever renames the files. They decide nothing.'}],
     reasons: [
-      {label: 'Every rename came from the migration’s service account on DMS-01 inside its change window, and nothing touched the ways back on FS-02 or DMS-01 (ransomware usually removes them)', good: true, why: 'Who did it, from where, under what approval, and whether the ways back were touched, from two independent records.'},
-      {label: 'The new extension sounds like a document-management format rather than anything a ransomware crew would choose, and the renamed files still carry their original names in front of it', why: 'An attacker can choose any extension.'},
+      {label: 'Every rename came from the migration’s service account on DMS-01 in its change window; nothing touched the ways back on FS-02 or DMS-01 (ransomware often clears them where it runs)', good: true, why: 'Who did it, from where, under what approval, and whether the ways back were touched, from two independent records.'},
+      {label: 'The new extension sounds like a document-management format rather than anything a ransomware crew would choose, and the renamed files still carry their original names in front of it', why: 'An attacker can choose any extension, and most ransomware keeps the original file name in front of its own.'},
       {label: 'Hester said a migration was running this week, and the renames match the kind of change she described', why: 'Memory isn’t a record. The audit log and the ticket are.'}],
     alts: [
       {label: 'Ransomware using a harmless-looking extension', good: true, why: 'Ruled out: the writer is the migration’s service account on DMS-01, the shadow copies are intact, and a renamed file opens normally.'},
@@ -395,10 +395,10 @@ const RH_DRILLS = {
     verdicts: [
       {label: 'A coverage gap: the shares moved to a new volume the job never selects, so it backed up the leftovers', good: true, why: 'The job read everything on E:, skipped nothing, and nobody changed it; the data is on F:.'},
       {label: 'Tampering: someone with console access shrank the job’s selection so the shares are left out', why: 'The console audit log shows no change, and only the backup admins signed in.'},
-      {label: 'Deduplication: the appliance stores only changed blocks, so 41 GB is normal and the data is still protected', why: 'The job read 41 GB. Deduplication can’t make it read less than it was given.'},
+      {label: 'Deduplication: the appliance stores each repeated block only once, so 41 GB is normal and the data is still protected', why: 'The job read 41 GB. Deduplication can’t make it read less than it was given.'},
       {label: 'Data loss: FS-01’s files are gone', why: 'F: holds 2.27 TB, and the departments are working normally.'}],
     reasons: [
-      {label: 'The job log shows it read only E:, now nearly empty, skipping nothing; the console audit shows no change; the data now lives on F:, which it never selects', good: true, why: 'What the job did, and who changed it, from the two records that say so.'},
+      {label: 'The job log shows it read only E:, now nearly empty, skipping nothing; the audit shows no change; the data is on F:, which it never selects, so it’s missed', good: true, why: 'What the job did, and who changed it, from the two records that say so.'},
       {label: 'The job says Success, and a job that reads everything it was given without one error or skipped file has done exactly the work it was set up to do, so the backup is fine', why: 'It succeeded at the wrong thing.'},
       {label: 'The repository total barely moved overnight, so whatever the job left out can’t be very much data', why: 'Totals hide one job’s drop.'}],
     alts: [
@@ -446,9 +446,9 @@ const RH_DRILLS = {
       {label: 'Yes: 200 GB from every department, as the note says', why: 'The note is a sales pitch. Your records show 3.8 GB from one share.'},
       {label: 'No: the encryption was stopped, so nothing was taken', why: 'The theft finished before the encryptor started. Stopping one doesn’t undo the other.'}],
     reasons: [
-      {label: 'A compression utility packed the files at 02:03, a sync tool uploaded them, and the firewall shows 3.8 GB to an unused cloud address before the encryptor ran', good: true, why: 'What was packed and what left, each from its own record, in time order.'},
+      {label: 'A compression utility packed the files at 02:03, then the firewall logged a sync tool sending 3.8 GB to an unused cloud address before encryption: data left', good: true, why: 'What was packed and what left, each from its own record, in time order.'},
       {label: 'The forum post says the town’s data is up for sale, so something must have been taken', why: 'A rumour with no sample.'},
-      {label: 'Ransomware crews always steal data before they encrypt, so this crew must have too, and the 200 GB in the note is the best figure we have for how much data left', why: 'Many do; this question is about this crew, and your records answer it.'}],
+      {label: 'Ransomware crews always steal data before they encrypt, so this crew must have too, and the 200 GB in the note is the best figure we have for how much data left', why: 'Many do; this question is about this crew, and your records answer it. The note’s figure is a sales pitch, not a measurement.'}],
     alts: [
       {label: 'A planner backing up their own work to a personal cloud', good: true, why: 'Ruled out: it ran under hd-admin, signed in from SCAN-01 at 01:31, at night, into password-protected parts that were deleted after upload.'},
       {label: 'More data left through another host', good: true, why: 'Ruled out for now: no other host sent more than 50 MB to a new destination overnight, and hd-admin read only the Planning applications on FS-02. Keep it open until the hunt ends: check large uploads to services the town does use, and what any other admin account read.'},
@@ -493,7 +493,7 @@ const RH_BOARD_SPECS = () => [
    title: 'Round 2: gigabytes to the cloud at 2 a.m.', host: 'HR-01 · HR file share', enemy: {spr: 'sluice', pal: 'sluice'},
    clues: ['A compression utility packs the HR share into password-protected parts.', 'A sync tool uploads 9 GB to a storage service the town has never used.', 'The account is a domain admin, signed in from a workstation at 00:50.'],
    truth: 'Exfiltration to Cloud Storage: data taken first, so the attacker can threaten to publish it.',
-   resp: [{label: 'Block the destination, isolate the host, disable the account, preserve the logs, and scope exactly which files left', good: true},
+   resp: [{label: 'Block the destination, isolate the host, disable the account, preserve the logs, scope which files left: that decides who is told', good: true},
           {label: 'Block the destination at the firewall and close: nothing more can leave, and the files that already left can’t be called back anyway', good: false, why: 'The account and the host are still the attacker’s.'},
           {label: 'Wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'This is the warning. Act now.'}],
    chain: [{at: 40, text: 'A second batch starts uploading.'}, {at: 75, text: 'The upload moves on to the payroll folder.'}]},
@@ -501,7 +501,7 @@ const RH_BOARD_SPECS = () => [
    title: 'Round 3: the backup share is being wiped', host: 'NAS-02 · old backup share', enemy: {spr: 'shredwick', pal: 'shredwick'},
    clues: ['Files on the old NAS backup share are being overwritten, then deleted.', 'The account is the NAS’s local admin, whose password was the same as a domain admin’s.', 'The retention-locked copies on the appliance refuse every delete; the NAS copies don’t.'],
    truth: 'Data Destruction aimed at the backups.',
-   resp: [{label: 'Cut the NAS off; give it its own admin password with MFA; reset the domain admin that shared it and hunt for its use; confirm the locked and offline copies; rebuild the share from them', good: true},
+   resp: [{label: 'Cut the NAS off; give it its own admin password with MFA; reset the domain admin that shared it and hunt for its use; check the locked and offline copies are intact; rebuild the share from them', good: true},
           {label: 'Restore the NAS share from its own snapshots tonight, give the NAS a new long admin password, reset the domain admin too, and close once the department confirms every file is back where it belongs', good: false, why: 'Those are the copies being destroyed.'},
           {label: 'Switch off the deletion alerts for the NAS until the clean-up is done', good: false, why: 'They are the only reason you know.'}],
    chain: [{at: 40, text: 'The next backup folder is overwritten.'}, {at: 75, text: 'The NAS’s own snapshots are deleted.'}]}

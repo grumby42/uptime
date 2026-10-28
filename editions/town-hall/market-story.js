@@ -350,7 +350,7 @@ async function mkTestConsole() {
   await say('The old test site’s console. test.townhall.example: a copy of the website from three years ago, at an outside hosting company, still answering. The DNS name points at the host with a CNAME. (game)');
   while (true) {
     const i = await choose('How do you retire it?', [
-      {label: 'Keep a copy of its logs, put up a maintenance page, remove the DNS record, wait out the cache time, then cancel the hosting', meta: {good: true}},
+      {label: 'Copy and read its logs, show a maintenance page, drop the DNS record, wait out the cache, then cancel, so nobody can take the name', meta: {good: true}},
       {label: 'Cancel the hosting account now: it’s only a test site, nobody uses it, and every day it stays up is another day it can be attacked'},
       {label: 'Leave it: nobody links to it, it holds no resident data, and the team may want it again for the next redesign of the town website'},
       {label: 'Remove the DNS record so nobody can find it, and keep the site running at the host, just in case the team needs it again later'}], {shuffle: true});
@@ -421,8 +421,8 @@ async function mkPaymentPage() {
   // Controls: CSP report-only, SRI where files never change.
   while (true) {
     const i = await choose('How do you keep those two honest in the browser?', [
-      {label: 'A Content Security Policy in report-only mode first (scripts only from us and Northgate, data only to Northgate), Subresource Integrity on files that never change, enforce after a clean week', meta: {good: true}},
-      {label: 'Subresource Integrity hashes on every script, Northgate’s included, so the browser refuses any file that changes by even one byte, which is exactly what a skimmer has to do to the page to work'},
+      {label: 'A Content Security Policy in report-only mode first (scripts only from us and Northgate, data only to Northgate), Subresource Integrity on files that never change, enforce after a clean week so nothing breaks', meta: {good: true}},
+      {label: 'Subresource Integrity hashes on every script, Northgate’s included, so the browser refuses any script file that changes by even one byte, and a skimmer slipped into either file never gets to run in a resident’s browser'},
       {label: 'Enforce a strict policy today, untested, so the page is protected from the first minute'},
       {label: 'Nothing: the WAF already inspects every request to the payment page'}], {shuffle: true});
     if (i === 0) break;
@@ -619,7 +619,7 @@ function mkBossStages(picks, restoreEarly) {
       title: 'Stage 2: the way in', host: 'deploy pipeline · web agency account', enemy: {spr: 'stuffer', pal: 'stuffer'},
       clues: ['The change to pay.js came through the deploy pipeline, from the web agency’s account, signed in from 203.0.113.88.', 'That account had no MFA. Its password matches one leaked in another site’s breach.', 'A week ago: one sign-in from 203.0.113.88 with that leaked password, right first time. No failures, so nothing alerted.'],
       truth: 'Credential stuffing against a third party’s account that could change the website, with no MFA on it.',
-      resp: [{label: 'Disable the agency account, revoke its sessions and deploy tokens, require MFA on every account that can change the site, review its changes', good: true},
+      resp: [{label: 'Disable the agency account, revoke its sessions and tokens: they outlive a password. MFA for anyone who can change the site; review its changes', good: true},
              {label: 'Reset the agency account’s password, tell the agency, and close: the attacker’s copy of the old password no longer works', good: false, why: 'Its sessions and deploy tokens work without the password. Revoke those too.'},
              {label: 'Ban the agency from working for the town and move every website change in-house, so no outside account can ever touch the town’s payment page again', good: false, why: 'They were a victim too. Fix how their access works: MFA, their own named accounts, tokens with owners and expiry dates.'}],
       chain: [{at: 60, text: 'The agency account lists the pipeline’s other sites.'}]},
@@ -628,7 +628,7 @@ function mkBossStages(picks, restoreEarly) {
       title: 'Stage 3: it comes back', host: 'PAY-01 · pay.js', enemy: {spr: 'skimlet', pal: 'skimlet'},
       clues: [restoreEarly ? 'Our own page went back up at 10:30, as the councillor asked. At 10:41, pay.js changes again.' : 'Our own page is still off. On its staging copy, pay.js changes again at 10:41.', 'The agency account was disabled at 10:30 and its own tokens revoked, but a deploy key saved in the pipeline’s settings, under no person’s account, was missed.', csp ? 'The CSP is enforcing now: browsers refuse the skimmer’s sends to metrics-cdn.example, and the tamper check confirms the policy header itself hasn’t been loosened.' : 'The CSP is still in report-only mode: it reports each send and lets it through.'],
       truth: 'The skimmer re-injected with a pipeline deploy key nobody had listed: it outlived the account clean-up.',
-      resp: [{label: 'Revoke every credential that can deploy, keys saved in the pipeline included; redeploy pay.js from the signed release; keep the hosted page until two clean tamper checks', good: true},
+      resp: [{label: 'List and revoke every deploy credential, pipeline keys included: one was missed. Redeploy pay.js from the signed release; keep the hosted page until two clean tamper checks', good: true},
              {label: 'Reset the agency’s password again and turn on MFA for it: the account was used once, and it can’t be used without the second factor', good: false, why: 'The key belongs to the pipeline, not to the agency account: no password reset touches it. Find it and revoke it.'},
              {label: 'Switch the tamper check off for a day: it keeps alerting on the same file, and the team is busy redeploying pay.js and checking every change the agency made over the last month', good: false, why: 'It is the only reason you know.'}],
       chain: [{at: 60, text: 'pay.js changes a third time.'}]}
