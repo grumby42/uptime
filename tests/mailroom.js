@@ -183,7 +183,7 @@ function frontDeskDone(s, extra) {
   check('drill: budget spent after two queries', dec.some(o => /Budget spent/.test(o.label)) && dec.filter(o => /^Query/.test(o.label)).every(o => o.disabled));
   await s.pickLabel(/Budget spent/);
   await s.pickLabel(/Credentials were submitted and used/);
-  await s.pickLabel(/sign-in from an unfamiliar hosting IP one second after/);
+  await s.pickLabel(/hosting-IP sign-in a second after her form/);
   await s.pickLabel(/VPN or a hotspot/); await s.pickLabel(/help desk re-enrolled/); await s.pickLabel(/Done: these are my 2/);
   await s.waitUI('modal');
   const deb = await s.modalText();
@@ -338,8 +338,8 @@ function frontDeskDone(s, extra) {
   await s.pickLabel(/Start investigating/);
   await s.pickLabel(/Ask Tally/); await s.pickLabel(/Ask Tally: “Does a DMARC pass/); await s.pickLabel(/Back to the investigation/);
   await s.pickLabel(/I have enough/);
-  await s.pickLabel(/BEC from a compromised supplier mailbox/);
-  await s.pickLabel(/Authentication proves which domain sent it/);
+  await s.pickLabel(/BEC from a hijacked supplier mailbox/);
+  await s.pickLabel(/Authentication proves the domain, not the request/);
   await s.pickLabel(/really changed banks/); await s.pickLabel(/Jonah’s own mailbox/); await s.pickLabel(/Done: these are my 2/);
   await s.waitUI('modal');
   const debG = await s.modalText();

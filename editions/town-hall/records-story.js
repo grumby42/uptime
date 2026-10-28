@@ -255,9 +255,9 @@ async function rhRestoreTest() {
   while (true) {
     const i = await choose('How do you test the backups?', [
       {label: 'Restore real systems into the isolated lab, time each one end to end, and have its owner check the data', meta: {good: true}},
-      {label: 'Read the job reports: green means it works'},
-      {label: 'Restore over the live permits server tonight, to make it real'},
-      {label: 'Restore one small file from each job'}], {shuffle: true});
+      {label: 'Read the job reports for every system: a job that finishes green every night has proved it can be restored'},
+      {label: 'Restore over the live permits server tonight, after hours, to make it a real test with the real data and the real users'},
+      {label: 'Restore one small file from each job into a temporary folder and open it, so every job is proved restorable'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Green means the job finished. It doesn’t say you can restore from it, or how long it takes.');
     else if (i === 2) await say('If it fails, you’ve caused the outage you were testing for. That’s what the isolated lab is for.');
@@ -295,9 +295,9 @@ async function rhBia() {
   while (true) {
     const i = await choose('The permits database: how long may it be down, and how much may it lose?', [
       {label: 'Ask Deshawn when the harm starts (a day without inspections), set the RTO under that at 16 hours, and an RPO of 12 hours: back it up twice a day', meta: {good: true}},
-      {label: 'Zero downtime and zero data loss, for everything'},
-      {label: 'IT decides: 72 hours is what we can do'},
-      {label: 'Whatever the nightly job gives us: up to a day of lost work'}], {shuffle: true});
+      {label: 'Zero downtime and zero data loss, for everything the town runs, so nobody ever has to choose what matters most'},
+      {label: 'IT decides: 72 hours is what we can do with the current team, and Deshawn plans around it'},
+      {label: 'Whatever the nightly job gives us: up to a day of lost work, which the clerks can re-enter from paper, and restores as fast as the team can manage'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Possible, for a price nobody here would pay, and not needed: Deshawn can run on paper for a day. Objectives come from what the business can bear.');
     else if (i === 2) await say('Then IT has decided how long inspections stop, without asking. And 72 hours is far past the day Deshawn can bear.');
@@ -337,10 +337,10 @@ async function rhOfflineCopy() {
   await say('One appliance, one copy, in this room, reachable from the network with a domain admin password. That’s our whole backup.', who);
   while (true) {
     const i = await choose('How many copies, and where?', [
-      {label: 'Three copies on two kinds of storage, one offsite, and one the network can’t reach: production, the appliance with a retention lock, and weekly encrypted tapes for the offsite store', meta: {good: true}},
-      {label: 'A second copy on the same appliance'},
-      {label: 'Copy everything to cloud storage mapped as a drive on the file server'},
-      {label: 'One copy is enough: the appliance has redundant disks'}], {shuffle: true});
+      {label: 'Three copies on two kinds of storage, one offsite, one the network can’t reach: production, the retention-locked appliance, and weekly encrypted tapes offsite', meta: {good: true}},
+      {label: 'A second copy on the same appliance, in a separate volume with its own schedule, so one failed job can’t take both'},
+      {label: 'Copy everything to cloud storage mapped as a drive on the file server, so there is always a current offsite copy, refreshed every hour, that nobody has to carry anywhere'},
+      {label: 'One copy is enough: the appliance has redundant disks and a spare power supply, so it survives any single hardware failure'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Same box, same room, same password. One fire or one stolen password takes both.');
     else if (i === 2) await say('Anything the file server can write to, ransomware on the file server can encrypt. A backup the network can always reach is not the one that saves you.');
@@ -351,8 +351,8 @@ async function rhOfflineCopy() {
   while (true) {
     const i = await choose('The tapes will be encrypted. Where does the key live?', [
       {label: 'In the key vault, with an escrowed copy sealed in the offsite store, and a test restore using only the escrowed key', meta: {good: true}},
-      {label: 'In the backup server’s settings, where the software can find it'},
-      {label: 'Nowhere: don’t encrypt the tapes, they’re offsite anyway'}], {shuffle: true});
+      {label: 'In the backup server’s settings, where the software can always find it at restore time, without anyone having to look for it'},
+      {label: 'Nowhere: don’t encrypt the tapes at all, since they’re locked in the offsite store and nobody there could read them anyway'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('If ransomware takes the backup server, it takes the only key with it, and every tape becomes noise.');
     else await say('Tapes travel, and tapes get lost. CISA’s #StopRansomware Guide asks for offline, encrypted backups of critical data.');
@@ -375,9 +375,9 @@ async function rhCredsStep() {
   while (true) {
     const i = await choose('How should the backup system be run?', [
       {label: 'Separate backup admin accounts that exist only on the backup system, MFA on any change or deletion, alerts on mass deletes and retention changes, and no domain accounts at all', meta: {good: true}},
-      {label: 'Change the domain admin password'},
-      {label: 'Move the console to an unusual port'},
-      {label: 'Give backup rights to fewer domain admins'}], {shuffle: true});
+      {label: 'Change the domain admin password to a long passphrase, and change it again every month'},
+      {label: 'Move the console to an unusual port and allow it only from the IT subnet'},
+      {label: 'Give backup rights to fewer domain admins: two named people instead of every domain admin in IT'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('A new password is stolen the same way as the old one. The point is that a domain password shouldn’t open the backups at all.');
     else if (i === 2) await say('Attackers scan every port. Hiding the door isn’t a lock.');
@@ -403,10 +403,10 @@ async function leonaTalk() {
   await say('Finance. Backup storage is the fastest-growing line in the IT budget, and the council wants it down by forty percent this year. (game)', who);
   while (true) {
     const i = await choose('How do you cut backup storage costs by 40%?', [
-      {label: 'Tier it with the owners: nightly copies kept 14 days, weeklies 8 weeks, monthlies a year (weeklies and monthlies on the offline tapes), stop backing up scratch space and duplicates, and keep enough history to reach back before an intruder arrived', meta: {good: true, k: 'tier'}},
-      {label: 'Keep only 7 days of backups', meta: {k: 'week'}},
-      {label: 'Drop the offline tapes: the appliance has copies', meta: {k: 'tapes'}},
-      {label: 'Back up weekly instead of nightly', meta: {k: 'weekly'}}], {shuffle: true});
+      {label: 'Tier it with the owners: nightlies kept 14 days, weeklies 8 weeks, monthlies a year (weeklies and monthlies on offline tapes); stop backing up scratch space and duplicates; keep history reaching back before an intruder arrived', meta: {good: true, k: 'tier'}},
+      {label: 'Keep only 7 days of backups, enough to undo any deletion someone notices within the week', meta: {k: 'week'}},
+      {label: 'Drop the offline tapes: the appliance has retention-locked copies, and the tapes cost the most to run', meta: {k: 'tapes'}},
+      {label: 'Back up weekly instead of nightly, on Sunday nights, when nobody is changing files', meta: {k: 'weekly'}}], {shuffle: true});
     if (i === 0) { c.directive = 'tier'; break; }
     if (i === 1) await say('If an intruder has been in for longer than a week, every copy you keep contains them, and there is no clean copy to go back to.');
     else if (i === 2) await say('The offline copy is the one ransomware can’t reach. It’s the last thing to cut, not the first.');
@@ -523,18 +523,18 @@ function rhBossStages(picks, d) {
       title: 'Stage 1: the stacks go dark', host: 'FS-01, FS-02 and every server the policy reached', enemy: {spr: 'gloam', pal: 'gloam'},
       clues: ['At ' + RH_ENCRYPT + ' a scheduled task started the same program on every server except the directory and FS-03, an old server outside the group the policy targets. Files are renamed and turned to noise, and a ransom note sits in every share.', 'At 02:38 every volume shadow copy on the file servers was deleted, by svc-scanbak, a domain admin account nobody on the team created.', 'The task came from a new group policy, “Printer Mapping Update”, created by svc-scanbak at ' + RH_GPO + ' last night.'],
       truth: 'Data Encrypted for Impact, pushed to every server at once through group policy, after the shadow copies were deleted (Inhibit System Recovery). Pushing the task through a group policy is Group Policy Modification, ATT&CK T1484.001.',
-      resp: [{label: 'Isolate the servers at the switch and keep them powered for memory capture, disable svc-scanbak, unlink the policy, keep the backup network sealed, preserve evidence', good: true},
-             {label: 'Restore the file shares from last night now', good: false, why: 'Last night’s copies were taken after the policy went out at ' + RH_GPO + ': whole-server restores bring the scheduled task back. Contain first.'},
-             {label: 'Pull the power on everything', good: false, disrupt: 1, why: 'Isolate at the switch first; power down only what you can’t disconnect. Memory evidence goes when the power does.'}],
+      resp: [{label: 'Isolate the servers at the switch but keep them powered (memory), disable svc-scanbak, unlink the policy, keep the backup network sealed, preserve evidence', good: true},
+             {label: 'Restore the file shares from last night now, so the departments can work again while the investigation goes on', good: false, why: 'Last night’s copies were taken after the policy went out at ' + RH_GPO + ': whole-server restores bring the scheduled task back. Contain first.'},
+             {label: 'Pull the power on every server right now, so the encryption stops mid-file before it can reach the backups, the directory or anything else on the town’s network', good: false, disrupt: 1, why: 'Isolate at the switch first; power down only what you can’t disconnect. Memory evidence goes when the power does.'}],
       chain: [{at: 40, text: 'Another share fills with ransom notes.'}, {at: 75, text: 'The encryptor reaches the scanned-image archive.'}]},
     s2: {kind: 'mal', threat: 'lapse', tech: 'T1490', tags: ['backup', 'host'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('verify') ? 8 : 13, dwell0: picks.includes('reconnect') ? 40 : 15,
       title: 'Stage 2: they come for the backups', host: 'BKP-01 · backup appliance and console', enemy: {spr: 'lapse', pal: 'lapse'},
       clues: ['At 02:44 svc-scanbak tried to sign in to the backup console. Refused: it isn’t a backup account. Before the fieldwork, any account in the old domain group could.', 'At 02:46 it tried to delete the appliance’s copies over the network. The retention lock refused every request, and every refusal raised an alert.', picks.includes('reconnect') ? 'The tapes were loaded into the library this morning to speed things up: the one copy they couldn’t reach is on the network now.' : 'The weekly tapes are in the offsite store, offline. Their key is in escrow.'],
       truth: 'Inhibit System Recovery: going after the backups before the ransom demand. The separate credentials and the retention lock held.',
-      resp: [{label: 'Keep the backup network sealed, check the locked and offline copies are intact and unchanged before any restore, and keep the tapes offline until identity is ours again', good: true},
-             {label: 'Bring the tapes in now to check them', good: false, why: 'Not while svc-scanbak still works. The offline copy is the one thing they can’t reach: keep it that way until identity is yours again.'},
-             {label: 'Clear the alerts: they’re only refusals', good: false, why: 'The refusals are the attacker telling you what they want. Keep every one.'}],
+      resp: [{label: 'Keep the backup network sealed, check the locked and offline copies are intact before any restore, keep the tapes offline until identity is ours again', good: true},
+             {label: 'Bring the tapes in now and load them in the lab, to check they’re readable and complete before the restore starts, since a bad tape found later costs a day', good: false, why: 'Not while svc-scanbak still works. The offline copy is the one thing they can’t reach: keep it that way until identity is yours again.'},
+             {label: 'Clear the alerts: they’re only refusals, which prove the lock is working and nothing got through', good: false, why: 'The refusals are the attacker telling you what they want. Keep every one.'}],
       chain: [{at: 60, text: 'svc-scanbak tries a second way into the appliance.'}]},
     s3: {kind: 'mal', threat: 'lapse', tech: 'T1078', tags: ['identity'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('identity') ? 8 : 14, dwell0: picks.includes('identity') ? 10 : 40,
@@ -542,9 +542,9 @@ function rhBossStages(picks, d) {
       clues: ['At 07:20 adm-bk2, an admin account nobody on the team knows, signs in to the directory from FS-03, an old file server outside the policy’s group, so never encrypted or isolated, and one the hunt hadn’t reached: it had checked 9 of 31 servers when the encryption began.', 'adm-bk2 and svc-scanbak were both created on DIR-01 on Day ' + d.E + ', at 02:33 and 02:31, by hd-admin, from SCAN-01. The directory review from the PLAN-LT-04 case was booked behind the server hunt: one query (every account created, or added to an admin group, since hd-admin was first misused) would have found both on Day ' + d3 + '.', 'SCAN-01’s endpoint history: a remote-management tool installed under hd-admin on Day ' + d.E + ' at 02:12. The earliest sign of the attacker anywhere.'],
       truth: 'Valid Accounts: a second admin account the attacker made days before anyone noticed them. Disabling the one you saw wasn’t enough: the directory itself is compromised, so identity is rebuilt before anything that trusts it. Making those accounts is Create Account: Domain Account, ATT&CK T1136.002.',
       resp: [{label: 'Disable adm-bk2 and every account created since Day ' + d.E + ', reset every privileged and service password from a clean admin workstation, isolate FS-03, and plan the directory’s restore from before Day ' + d.E + ' 02:12', good: true},
-             {label: 'Disable adm-bk2 and close', good: false, why: 'That is the second account you have found, not the last one you can prove. Find everything created since Day ' + d.E + ', and plan to restore the directory from before it.'},
-             {label: 'Reset hd-admin’s password again', good: false, why: 'hd-admin was disabled and reset on Day ' + d3 + '. The attacker made their own accounts: find and remove what they created.'},
-             {label: 'Restore the directory from last night', good: false, why: 'Last night’s directory holds svc-scanbak and the policy. Go back to before the earliest compromise.'}],
+             {label: 'Disable adm-bk2, reset its password, and close: it is the account the attacker was using tonight', good: false, why: 'That is the second account you have found, not the last one you can prove. Find everything created since Day ' + d.E + ', and plan to restore the directory from before it.'},
+             {label: 'Reset hd-admin’s password again and require a security key, since the attacker came in through it', good: false, why: 'hd-admin was disabled and reset on Day ' + d3 + '. The attacker made their own accounts: find and remove what they created.'},
+             {label: 'Restore the directory from last night’s copy, the newest one, so the fewest account changes are lost', good: false, why: 'Last night’s directory holds svc-scanbak and the policy. Go back to before the earliest compromise.'}],
       chain: [{at: 60, text: 'adm-bk2 lists every admin group.'}]}
   };
 }
@@ -621,9 +621,9 @@ async function rhPayDecision() {
   await say('The note wants 9 bitcoin for the key (game), and threatens to publish the planning files. Leadership will decide, with legal, and they want your recommendation.', who);
   const opts = [
     {label: 'Recommend not paying, subject to the check now under way: the appliance’s copies are retention-locked and the weekly tapes are offsite with their key in escrow; we verify both before promising any RTO (the directory has never been test-restored). The FBI and CISA are already involved, and legal checks OFAC’s advisory before anyone talks payment', meta: {good: true, k: 'no'}},
-    {label: 'Pay now: it’s faster than restoring', meta: {k: 'pay'}},
-    {label: 'Pay only to keep the planning files from being published', meta: {k: 'publish'}},
-    {label: 'Negotiate quietly, without telling the FBI', meta: {k: 'quiet'}}];
+    {label: 'Pay now: one decryptor brings every server back at once, faster than restoring them one by one', meta: {k: 'pay'}},
+    {label: 'Pay only to keep the planning files from being published, and restore everything else from our own copies', meta: {k: 'publish'}},
+    {label: 'Negotiate quietly, without telling the FBI, to keep the price down and the town out of the news', meta: {k: 'quiet'}}];
   while (true) {
     const i = await choose('Your recommendation on the ransom.', opts, {shuffle: true});
     const k = opts[i].meta.k;

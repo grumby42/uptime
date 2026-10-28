@@ -227,7 +227,7 @@ function clerksDone(s, extra, party) {
   await s.pickLabel(/Cancel the hosting account now/);
   p = await s.waitUI('say');
   check('test site: cancelling the hosting first is a subdomain takeover risk (and loses the logs)', /subdomain takeover/.test(p.ui.text) && /logs/.test(p.ui.text), p.ui.text);
-  await s.settle([/Check its logs and keep a copy/]);
+  await s.settle([/Keep a copy of its logs/]);
   p = await s.peek();
   check('test site retired; its console is gone from the map', p.f.mkTest && await s.page.evaluate(() => tileDef('market', 18, 8).ch === '.'));
 
@@ -507,7 +507,7 @@ function clerksDone(s, extra, party) {
   await s.settle(null, /Leadership have been told|The processor and leadership have been told/);
   p = await s.peek();
   check('tabletop: telling the processor and leadership is automatic, not a card', !p.ui.options.some(o => /Notify|processor/i.test(o.label) && !/hosted/.test(o.label)) && await s.page.evaluate(() => G.fm['fact:ba2018'] && /429,612/.test(FACTS.ba2018.desc) && /22 June 2018/.test(FACTS.ba2018.desc) && /5 September 2018/.test(FACTS.ba2018.desc) && /£20m/.test(FACTS.ba2018.desc)), p.ui.options.map(o => o.label));
-  await s.settle([/When the alert, or the call, reached us/, /Bring our own page back now/], /Market Square district: secured/);
+  await s.settle([/When the alert, or the processor’s call, reached us/, /Bring our own page back now/], /Market Square district: secured/);
   const sum = await s.modalText();
   p = await s.peek();
   const b = p.extra.mk.boss;

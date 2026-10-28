@@ -400,13 +400,13 @@ const MR_BOARD_SPECS = () => [
    title: 'Round 2: “the mayor” needs a wire today', host: 'jonah.abara · accounts payable', enemy: {spr: 'invoice', pal: 'invoice'},
    clues: ['The email is signed by the mayor but comes from mayor.office@townhall-gov.example, not townhall.example.', 'It asks Jonah to wire $92,000 for a “confidential land deal” today and to tell nobody.', 'The mayor’s office, called on the directory number, knows nothing about it.'],
    truth: 'Business email compromise by impersonation: a look-alike domain posing as an executive.',
-   resp: [{label: 'Don’t pay; block the look-alike domain; warn Accounts; report it', good: true}, {label: 'Pay: it’s the mayor', good: false}, {label: 'Reply and ask the mayor to confirm', good: false, why: 'The reply goes to the look-alike domain, so the attacker confirms it.'}],
+   resp: [{label: 'Don’t pay; block the look-alike domain; warn Accounts; report it', good: true}, {label: 'Pay: the email is signed by the mayor and marked confidential', good: false, why: 'It comes from townhall-gov.example, not our domain, and the mayor’s office knows nothing about it.'}, {label: 'Reply to ask the mayor to confirm; hold the wire until then', good: false, why: 'The reply goes to the look-alike domain, so the attacker confirms it.'}],
    chain: [{at: 40, text: 'A follow-up arrives: “Why isn’t this done yet?”'}, {at: 75, text: 'Jonah opens the payments system.'}]},
   {kind: 'mal', threat: 'caller', tech: 'T1566.004', tags: ['voice'], story: true, rate: 11, group: 'a',
    title: 'Round 3: a live call to the help desk', host: 'help desk line', enemy: {spr: 'caller', pal: 'impostor'},
    clues: ['The caller says he’s the HVAC contractor, locked out of email, and asks Kofi to reset his MFA and install a “remote support tool”.', 'He knows his manager’s name and the job site from public posts.', 'The real contractor, called on the number in the contract file, is on a roof and didn’t call.'],
    truth: 'Voice phishing aimed at the help desk: a pretext to reset MFA and get remote tools installed.',
-   resp: [{label: 'Refuse, verify by calling the number on file, log and report the call', good: true}, {label: 'Reset his MFA: he knows the manager’s name', good: false}, {label: 'Install the remote support tool for him', good: false}],
+   resp: [{label: 'Refuse, verify by calling the number on file, log and report the call', good: true}, {label: 'Reset his MFA: he knows his manager’s name and the job site, so he must be the contractor', good: false, why: 'Both come from public posts. Verify by calling the number in the contract file.'}, {label: 'Install the remote support tool for him, but watch the session', good: false, why: 'A remote tool installed for a caller you haven’t verified hands him a way into the network; watching doesn’t stop it.'}],
    chain: [{at: 40, text: 'The caller gets angry and says the heating will fail tonight.'}, {at: 75, text: 'He asks for the agent’s manager by name.'}]}
 ];
 async function mrGauntlet() {
@@ -470,21 +470,21 @@ async function mrBossScript() {
      title: 'Stage 1: the hijacked thread', host: 'Inv 2291 thread · accounts payable', enemy: {spr: 'invoice', pal: 'bossSpray'},
      clues: ['Since Monday, Harrow & Finch’s real mailbox has sent three “updated invoice” emails inside real threads.', 'Each one names a different new bank account.', picks.includes('callback') ? 'Harrow & Finch, called on the vendor-file number: “We sent none of these.”' : 'Harrow & Finch, called on the vendor-file number at last: “We sent none of these.”'],
      truth: 'The supplier’s mailbox is compromised and is being used against us (Compromise Accounts: Email Accounts).',
-     resp: [{label: 'Treat that mailbox as hostile: hold all its payment requests and tell the supplier by phone', good: true}, {label: 'Pay the newest invoice: it passed authentication', good: false}, {label: 'Reply asking which account is right', good: false, why: 'The attacker reads and answers that mailbox.'}],
+     resp: [{label: 'Treat that mailbox as hostile: hold its payment requests, tell the supplier by phone', good: true}, {label: 'Pay the newest invoice, hold the earlier two: it passed authentication', good: false, why: 'All three came from a hijacked mailbox. Passing authentication proves the mailbox, not the request.'}, {label: 'Reply asking which account is right', good: false, why: 'The attacker reads and answers that mailbox.'}],
      chain: [{at: 50, text: 'A fourth invoice arrives, marked “final notice”.'}]},
     {kind: 'mal', threat: 'payee', tech: 'T1657', tags: ['mail'], story: true, group: 'a', ev0: ev0,
      rate: picks.includes('bank') ? 9 : 14, dwell0: picks.includes('hold') ? 15 : 40,
      title: 'Stage 2: last week’s transfer', host: 'payments system · our bank', enemy: {spr: 'invoice', pal: 'impostor'},
      clues: ['One transfer of $31,200 went to a new account last Thursday.', 'The receiving account was opened three weeks ago.', 'Our bank says a recall has the best chance in the first hours, before the money moves on.'],
      truth: 'Financial theft: money already sent to an attacker-controlled account.',
-     resp: [{label: 'Ask our bank to recall it now, file at ic3.gov, keep every record', good: true}, {label: 'Wait for the supplier to sort it out', good: false}, {label: 'Pay the supplier again from a different account', good: false}],
+     resp: [{label: 'Ask our bank to recall it now, file at ic3.gov, keep every record', good: true}, {label: 'Wait for the supplier to confirm it never got the money, then ask our bank', good: false, why: 'A recall has the best chance in the first hours; by the time the supplier answers, the money has moved on.'}, {label: 'Pay the supplier again from a different account so the roadworks contract isn’t held up', good: false, why: 'That pays twice and does nothing to get the stolen money back.'}],
      chain: [{at: 60, text: 'The receiving bank reports part of the money moved to another account.'}]},
     {kind: 'mal', threat: 'lure', tech: 'T1566.002', tags: ['mail'], story: true, group: 'a', ev0: bad ? 0 : ev0,
      rate: picks.includes('search') ? 8 : 14, dwell0: picks.includes('search') ? 10 : (bad ? 55 : 45),
      title: 'Stage 3: the spread', host: 'six staff mailboxes', enemy: {spr: 'lure', pal: 'bossSpray'},
      clues: ['This morning the same mailbox sent six staff a “shared invoice” link.', 'The link opens a look-alike of our sign-in page.', 'One person entered a password before the page was blocked.'],
      truth: 'Spearphishing links from a trusted supplier mailbox, to harvest more accounts.',
-     resp: [{label: 'Search and purge every copy, block the link; for the one account that entered a password: reset it, revoke its sessions, check its sign-ins', good: true}, {label: 'Block harrowfinch.example forever and stop paying them', good: false, disrupt: 1, why: 'They’re a victim too, and the town still needs its roads paved. Block the attacker, not the supplier.'}, {label: 'Wait for more reports', good: false}],
+     resp: [{label: 'Purge every copy, block the link; for the account that entered a password: reset it, revoke its sessions, check its sign-ins', good: true}, {label: 'Block harrowfinch.example forever and stop paying them', good: false, disrupt: 1, why: 'They’re a victim too, and the town still needs its roads paved. Block the attacker, not the supplier.'}, {label: 'Wait for more reports: the page is already blocked, so nobody else can enter a password', good: false, why: 'The emails are still in the other inboxes, and the one password that was entered can already be used.'}],
      chain: [{at: 60, text: 'A harvested password is tried on our sign-in page.'}]}
   ];
   for (const s of stages) await fightStory(s, 'Bea: Regroup. Same stage, again.');

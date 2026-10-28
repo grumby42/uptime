@@ -303,10 +303,10 @@ async function mkWafDetect() {
   await say('The WAF box. It has a managed rule set (a standard collection of attack patterns), and nobody has ever switched it on. Everything passes.');
   while (true) {
     const i = await choose('How do you bring it in?', [
-      {label: 'Detection mode first: switch on the managed rules to log what they would block, read a day of real traffic, write exclusions for real residents, then block', meta: {good: true}},
-      {label: 'Blocking mode now, at the highest paranoia level'},
-      {label: 'Leave it as it is: having a WAF is enough'},
-      {label: 'Switch it off: the website will be patched'}], {shuffle: true});
+      {label: 'Detection mode first: managed rules on, logging what they would block; read a day of real traffic, write exclusions for real residents, then block', meta: {good: true}},
+      {label: 'Blocking mode now, at the highest paranoia level, and add an exclusion each time a resident reports being blocked'},
+      {label: 'Leave it as it is: having a WAF in front of the site is what the audit asks for, and that box is ticked'},
+      {label: 'Switch it off: the website will be patched this month, and a WAF in blocking mode only gets in residents’ way until someone has the time to tune it'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('The strictest level catches the most, and blocks the most real residents too. Paying a bill shouldn’t trip an alarm. Detect, tune, then block.');
     else if (i === 2) await say('A WAF with no rules switched on is a box with lights. It blocks nothing and logs nothing useful.');
@@ -329,9 +329,9 @@ async function mkCmsPatch() {
   while (true) {
     const i = await choose('When does it go on?', [
       {label: 'Today: take a backup, apply it on staging and check the site, then production', meta: {good: true}},
-      {label: 'At the quarterly maintenance window, next month'},
+      {label: 'At the quarterly maintenance window next month, with the other CMS updates'},
       {label: 'Never: a WAF rule can block the upload instead'},
-      {label: 'Turn off uploads forever'}], {shuffle: true});
+      {label: 'Turn off uploads for good and email agendas instead'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('It’s internet-facing and being exploited now. A month is a long time to leave the door open.');
     else if (i === 2) await say('A WAF rule can cover the gap for a day or two (a virtual patch). It’s a filter in front of the flaw, not a fix in it.');
@@ -350,10 +350,10 @@ async function mkTestConsole() {
   await say('The old test site’s console. test.townhall.example: a copy of the website from three years ago, at an outside hosting company, still answering. The DNS name points at the host with a CNAME. (game)');
   while (true) {
     const i = await choose('How do you retire it?', [
-      {label: 'Check its logs and keep a copy, put up a maintenance page, remove the DNS record, wait out the DNS cache time, then cancel the hosting', meta: {good: true}},
-      {label: 'Cancel the hosting account now: it’s only a test'},
-      {label: 'Leave it: nobody links to it'},
-      {label: 'Remove the DNS record and keep the site running, just in case'}], {shuffle: true});
+      {label: 'Keep a copy of its logs, put up a maintenance page, remove the DNS record, wait out the cache time, then cancel the hosting', meta: {good: true}},
+      {label: 'Cancel the hosting account now: it’s only a test site, nobody uses it, and every day it stays up is another day it can be attacked'},
+      {label: 'Leave it: nobody links to it, it holds no resident data, and the team may want it again for the next redesign of the town website'},
+      {label: 'Remove the DNS record so nobody can find it, and keep the site running at the host, just in case the team needs it again later'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Two problems. You lose its logs before anyone has read them, and the town’s name still points at a hosting account nobody owns. Someone else could claim it and serve anything from test.townhall.example: a subdomain takeover.');
     else if (i === 2) await say('The inventory found it, and so will every scanner on the internet. It runs a three-year-old CMS.');
@@ -393,8 +393,8 @@ async function mkPaymentPage() {
   while (true) {
     const i = await choose('Before the scripts: where should residents type their card details?', [
       {label: 'On Northgate’s own hosted payment page (we redirect residents there): our code never touches card entry', meta: {good: true, k: 'redirect'}},
-      {label: 'In Northgate’s form inside an iframe on our page', meta: {k: 'iframe'}},
-      {label: 'On our own page, as now: the WAF protects it'}], {shuffle: true});
+      {label: 'In Northgate’s card form, embedded in an iframe on our page so residents never leave our site', meta: {k: 'iframe'}},
+      {label: 'On our own page, as now: the WAF protects it, and residents trust a page that looks like the town’s own site'}], {shuffle: true});
     if (i === 0) { c.scope = 'redirect'; break; }
     if (i === 1) { c.scope = 'iframe'; await say('Much better than today: the processor produces the form. But the page around the iframe is still ours, and it still has to be protected from scripts. A redirect takes our page out of card entry altogether.', who); break; }
     await say('The WAF sees requests to our server. It never sees what a script does inside a resident’s browser, and a page we produce is a page we must protect, script by script.');
@@ -421,10 +421,10 @@ async function mkPaymentPage() {
   // Controls: CSP report-only, SRI where files never change.
   while (true) {
     const i = await choose('How do you keep those two honest in the browser?', [
-      {label: 'A Content Security Policy in report-only mode first (scripts only from us and Northgate, data sent only to Northgate), Subresource Integrity on files that never change, then enforce after a clean week', meta: {good: true}},
-      {label: 'Subresource Integrity hashes on every script, Northgate’s included'},
-      {label: 'Enforce a strict policy today, untested'},
-      {label: 'Nothing: the WAF covers the payment page'}], {shuffle: true});
+      {label: 'A Content Security Policy in report-only mode first (scripts only from us and Northgate, data only to Northgate), Subresource Integrity on files that never change, enforce after a clean week', meta: {good: true}},
+      {label: 'Subresource Integrity hashes on every script, Northgate’s included, so the browser refuses any file that changes by even one byte, which is exactly what a skimmer has to do to the page to work'},
+      {label: 'Enforce a strict policy today, untested, so the page is protected from the first minute'},
+      {label: 'Nothing: the WAF already inspects every request to the payment page'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Northgate updates tokenize.js in place when they release. The browser would refuse the new file the moment it changed, and every payment would fail. Pin what never changes; track vendor changes through their notices and the tamper check.');
     else if (i === 2) await say('If you’ve missed one thing the page needs, payments break for everyone. Report-only shows you what would break, without breaking it.');
@@ -495,8 +495,8 @@ async function bramTalk() {
   while (true) {
     const i = await choose('Your answer to the councillor.', [
       {label: 'Agree a plan: within the hour, payments move to the processor’s hosted page; our own page comes back only once it is proved clean', meta: {good: true, k: 'plan'}},
-      {label: 'Promise our own page back within the hour, whatever happened', meta: {k: 'promise'}},
-      {label: 'Refuse: payments stay off until every investigation is finished', meta: {k: 'refuse'}}], {shuffle: true});
+      {label: 'Promise our own page back within the hour, whatever happened: residents know it, and the councillor gets what he asked for', meta: {k: 'promise'}},
+      {label: 'Refuse: payments stay off until every investigation is finished and signed off, however long it takes, because a clean recovery comes first', meta: {k: 'refuse'}}], {shuffle: true});
     if (i === 0) { c.directive = 'plan'; break; }
     if (i === 1) await say('If the page was skimmed, bringing it back in an hour may bring the skimmer back with it, and every resident who pays in that hour is exposed. Fast and clean pull against each other; find a way to have both.');
     else await say('Residents still need to pay, and “off until we’re finished” can mean a week. Find a clean fallback instead of a long outage.');
@@ -610,8 +610,8 @@ function mkBossStages(picks, restoreEarly) {
       clues: ['pay.js, our own payment script, grew by 412 bytes at ' + MK_INJECT + ' last night. No change ticket.', 'The new lines read the card fields as residents type and send them to metrics-cdn.example, a domain registered four days ago.', 'The CSP, still in report-only mode, reported every send. Report-only reports; it doesn’t stop.'],
       truth: 'A skimmer: malicious JavaScript added to our own payment script (Command and Scripting Interpreter: JavaScript).',
       resp: [{label: 'Take card entry off our page now (hosted checkout or offline), keep a copy of the changed pay.js and the logs, then remove the lines', good: true},
-             {label: 'Delete the new lines and carry on', good: false, why: 'Without a copy and the logs, you can’t prove when it started or who was affected, and you still don’t know how it got in.'},
-             {label: 'Keep the page up while you investigate', good: false, why: 'Every resident who pays meanwhile is skimmed. Contain card entry first.'},
+             {label: 'Delete the new lines from pay.js and carry on: the skimmer stops the moment they’re gone', good: false, why: 'Without a copy and the logs, you can’t prove when it started or who was affected, and you still don’t know how it got in.'},
+             {label: 'Keep the page up while you investigate, so residents can still pay their bills today', good: false, why: 'Every resident who pays meanwhile is skimmed. Contain card entry first.'},
              {label: 'Shut down every town website', good: false, disrupt: 2, why: 'The news site and the permits pages aren’t skimming anyone. Contain the payment page.'}],
       chain: [{at: 40, text: 'Another resident pays a water bill on the page.'}, {at: 75, text: 'metrics-cdn.example receives another batch.'}]},
     s2: {kind: 'mal', threat: 'stuffer', tech: 'T1110.004', tags: ['web', 'identity'], story: true, group: 'a', ev0: ev0,
@@ -619,18 +619,18 @@ function mkBossStages(picks, restoreEarly) {
       title: 'Stage 2: the way in', host: 'deploy pipeline · web agency account', enemy: {spr: 'stuffer', pal: 'stuffer'},
       clues: ['The change to pay.js came through the deploy pipeline, from the web agency’s account, signed in from 203.0.113.88.', 'That account had no MFA. Its password matches one leaked in another site’s breach.', 'A week ago: one sign-in from 203.0.113.88 with that leaked password, right first time. No failures, so nothing alerted.'],
       truth: 'Credential stuffing against a third party’s account that could change the website, with no MFA on it.',
-      resp: [{label: 'Disable the agency account, revoke its sessions and deploy tokens, require MFA on every account that can change the site, review everything it changed', good: true},
-             {label: 'Reset its password and close', good: false, why: 'Its sessions and deploy tokens work without the password. Revoke those too.'},
-             {label: 'Ban the agency from working for the town', good: false, why: 'They were a victim too. Fix how their access works: MFA, their own named accounts, tokens with owners and expiry dates.'}],
+      resp: [{label: 'Disable the agency account, revoke its sessions and deploy tokens, require MFA on every account that can change the site, review its changes', good: true},
+             {label: 'Reset the agency account’s password, tell the agency, and close: the attacker’s copy of the old password no longer works', good: false, why: 'Its sessions and deploy tokens work without the password. Revoke those too.'},
+             {label: 'Ban the agency from working for the town and move every website change in-house, so no outside account can ever touch the town’s payment page again', good: false, why: 'They were a victim too. Fix how their access works: MFA, their own named accounts, tokens with owners and expiry dates.'}],
       chain: [{at: 60, text: 'The agency account lists the pipeline’s other sites.'}]},
     s3: {kind: 'mal', threat: 'skimlet', tech: 'T1059.007', tags: ['web'], story: true, group: 'a', ev0: ev0,
       rate: csp ? 8 : 13, dwell0: restoreEarly && !csp ? 45 : 15,
       title: 'Stage 3: it comes back', host: 'PAY-01 · pay.js', enemy: {spr: 'skimlet', pal: 'skimlet'},
       clues: [restoreEarly ? 'Our own page went back up at 10:30, as the councillor asked. At 10:41, pay.js changes again.' : 'Our own page is still off. On its staging copy, pay.js changes again at 10:41.', 'The agency account was disabled at 10:30 and its own tokens revoked, but a deploy key saved in the pipeline’s settings, under no person’s account, was missed.', csp ? 'The CSP is enforcing now: browsers refuse the skimmer’s sends to metrics-cdn.example, and the tamper check confirms the policy header itself hasn’t been loosened.' : 'The CSP is still in report-only mode: it reports each send and lets it through.'],
       truth: 'The skimmer re-injected with a pipeline deploy key nobody had listed: it outlived the account clean-up.',
-      resp: [{label: 'List and revoke every credential that can deploy, including keys saved in the pipeline, redeploy pay.js from the signed release, keep card entry on the hosted page until two clean tamper checks', good: true},
-             {label: 'Reset the agency’s password again', good: false, why: 'The key belongs to the pipeline, not to the agency account: no password reset touches it. Find it and revoke it.'},
-             {label: 'Switch the tamper check off: it keeps alerting', good: false, why: 'It is the only reason you know.'}],
+      resp: [{label: 'Revoke every credential that can deploy, keys saved in the pipeline included; redeploy pay.js from the signed release; keep the hosted page until two clean tamper checks', good: true},
+             {label: 'Reset the agency’s password again and turn on MFA for it: the account was used once, and it can’t be used without the second factor', good: false, why: 'The key belongs to the pipeline, not to the agency account: no password reset touches it. Find it and revoke it.'},
+             {label: 'Switch the tamper check off for a day: it keeps alerting on the same file, and the team is busy redeploying pay.js and checking every change the agency made over the last month', good: false, why: 'It is the only reason you know.'}],
       chain: [{at: 60, text: 'pay.js changes a third time.'}]}
   };
 }
@@ -664,18 +664,18 @@ async function mkBossScript() {
   // The exposure window: when did it start, and who is affected?
   const startOpts = [
     {label: MK_INJECT + ' last night: the deploy log’s change to pay.js, which matches the first browser report of the new lines', meta: {good: true, k: 'inject'}},
-    {label: 'When the alert, or the call, reached us', meta: {k: 'alert'}},
-    {label: 'When the CMS was last patched', meta: {k: 'cms'}},
-    {label: 'The start of the month, to be safe', meta: {k: 'month'}}];
+    {label: 'When the alert, or the processor’s call, reached us: that is the first moment we can show the skimming was actually happening', meta: {k: 'alert'}},
+    {label: 'When the CMS was last patched, since the attacker must have got in through the upload flaw before that patch went on', meta: {k: 'cms'}},
+    {label: 'The start of the month, to be safe: a wider window can’t miss anyone, and residents can always ignore the notice', meta: {k: 'month'}}];
   const si = await UI.openModal('Exposure window: the start', '<p>Card entry is contained. Before residents are told who is affected: when did the exposure start?</p>' +
     '<pre class="art">' + esc(['Deploy log      pay.js changed ' + MK_INJECT + ' by the web agency’s account (no ticket)', 'CSP reports     first send to metrics-cdn.example at ' + MK_INJECT + ':40', chk === 'q15' ? 'Tamper check    flagged at 01:27' : 'Processor call  three days later, fraud on cards used here']) + '</pre>', startOpts.map(o => ({label: o.label, meta: o.meta})), {shuffle: true, closable: false, cls: 'drill'});
   const startOk = startOpts[si].meta.k === 'inject';
   if (!startOk) await say(startOpts[si].meta.k === 'alert' ? 'That would leave out everyone skimmed before we noticed. The window starts at the first malicious change the evidence shows.' : startOpts[si].meta.k === 'month' ? 'That tells thousands of residents who weren’t affected to cancel their cards. Use the evidence: the deploy log and the first report agree on ' + MK_INJECT + '.' : 'The patch has nothing to do with this change. The deploy log does: ' + MK_INJECT + '.', who);
   const whoOpts = [
     {label: 'Everyone who typed a card into our page inside the window: completed payments, and declined or abandoned attempts too', meta: {good: true, k: 'paid'}},
-    {label: 'Everyone who visited the payment page', meta: {k: 'visited'}},
-    {label: 'Every resident with a portal account', meta: {k: 'all'}},
-    {label: 'Nobody: the CSP reported it', meta: {k: 'none'}}];
+    {label: 'Everyone who visited the payment page inside the window, whether or not they paid, since the skimmer loaded for every one of them', meta: {k: 'visited'}},
+    {label: 'Every resident with a portal account, since any of them could have paid while the page was skimmed', meta: {k: 'all'}},
+    {label: 'Nobody: the CSP reported the sends to metrics-cdn.example, so the card data never left residents’ browsers', meta: {k: 'none'}}];
   const wi = await choose('Who was affected?', whoOpts, {shuffle: true});
   const whoOk = whoOpts[wi].meta.k === 'paid';
   if (!whoOk) await say(whoOpts[wi].meta.k === 'none' ? 'Report-only reports and lets everything through. Every card typed in the window went to the attacker.' : 'The skimmer read card fields as people typed. Visitors who never typed a card had nothing taken; everyone who typed one did, whether or not the payment went through. Northgate’s records show declined attempts as well as completed ones; people who gave up before pressing Pay never reached Northgate, so a public notice covers them.', who);
@@ -684,7 +684,7 @@ async function mkBossScript() {
   await say('It’s been an hour, and I’m getting calls. Payments?', 'Councillor Bram Whitlock');
   const dOpts = [
     {label: 'Payments are back on Northgate’s hosted page; our own page stays off until it is proved clean', meta: {good: true, k: 'hosted'}},
-    {label: 'Bring our own page back now: the hour is up', meta: {k: 'ours'}},
+    {label: 'Bring our own page back now: the hour is up, and the new lines in pay.js are gone', meta: {k: 'ours'}},
     {label: 'All online payments stay off for a week', meta: {k: 'off'}}];
   const di = await choose('The councillor’s directive: payments back within one hour.', dOpts, {shuffle: true});
   const dk = dOpts[di].meta.k;

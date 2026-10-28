@@ -272,10 +272,10 @@ async function crAdminTask() {
   await say('All eighteen clerks are in the local Administrators group. It started with one plotter driver years ago.', who);
   while (true) {
     const i = await choose('How do you fix it?', [
-      {label: 'Remove staff from local admin; IT uses separate admin accounts, and every laptop gets its own rotated local admin password; exceptions go through a help-desk request that is checked, time-limited and logged', meta: {good: true}},
-      {label: 'Remove everyone’s admin rights, no exceptions, ever'},
-      {label: 'Keep admin rights, but buy better antivirus'},
-      {label: 'One shared admin password for IT across every laptop'}], {shuffle: true});
+      {label: 'Remove staff from local admin; IT gets separate admin accounts and a rotated local admin password per laptop; exceptions go through a checked, time-limited, logged request', meta: {good: true}},
+      {label: 'Remove everyone’s admin rights, IT’s included, with no exceptions and no request process: anything that needs admin rights waits for the laptop’s next rebuild at the bench, however urgent'},
+      {label: 'Keep admin rights for the clerks who install drivers, but buy better antivirus with behaviour blocking for every laptop'},
+      {label: 'Remove staff from local admin, and give IT one strong shared local admin password for every laptop, kept in the vault and changed each quarter'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Real needs will come up. With no way to ask, people go around you. Have a process.');
     else if (i === 2) await say('Anything a clerk opens runs with the clerk’s rights. With admin rights, one click on a consent prompt lets it change anything on the laptop, including the antivirus settings.');
@@ -337,8 +337,8 @@ async function crAsrTask() {
   while (true) {
     const i = await choose('How do you roll it out?', [
       {label: 'Rules and an app allow-list in audit mode first, review a week of hits, then block', meta: {good: true}},
-      {label: 'Block mode on everything, today'},
-      {label: 'Skip it: antivirus already covers this'}], {shuffle: true});
+      {label: 'Block mode on every rule and the allow-list today, with a help-desk line for anything that breaks'},
+      {label: 'Skip it: antivirus already catches malicious documents and scripts when they land'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Some line-of-business tools will break, and people will ask for blanket exceptions. Audit first, then block.');
     else await say('Antivirus looks for known-bad files. These rules stop risky behaviour, like Word starting a script host, whatever the file is.');
@@ -356,9 +356,9 @@ async function crPslogVerify() {
   await say('CR-LT-04. You run a harmless test command in PowerShell. Where should the script block show up?');
   while (true) {
     const i = await choose('Check it in…', [
-      {label: 'The System log'},
+      {label: 'The System log, where Windows records the policy being applied'},
       {label: 'Event 4104 in Microsoft-Windows-PowerShell/Operational', meta: {good: true}},
-      {label: 'The Security log'}], {shuffle: true});
+      {label: 'The Security log, next to the sign-in events for that session'}], {shuffle: true});
     if (i === 1) break;
     if (i === 0) await say('Services and drivers report there. Script blocks don’t.');
     else await say('The Security log holds audit events such as sign-ins. Script blocks go to PowerShell’s own Operational log.');
@@ -450,7 +450,7 @@ async function crException() {
     const i = await choose('Gus’s request.', [
       {label: 'Log a help-desk request: IT checks it, installs the signed driver for him, and records it', meta: {good: true}},
       {label: 'Give Gus admin rights for one hour, logged, through the help desk'},
-      {label: 'Make Gus a permanent admin: he’s trustworthy'},
+      {label: 'Make Gus a permanent admin: he’s trustworthy, has been here for years, and installs drivers every few months'},
       {label: 'Tell Gus no, and to find a plotter that doesn’t need a driver'}], {shuffle: true});
     if (i === 0) { await say('Arlo installs the signed driver from the bench. Gus never needs admin rights at all. Logged in the ticket.'); break; }
     if (i === 1) { c.admins++; c.tempAdmin = true; track(); await say('Checked, time-limited and logged: that works. It expires after the hour. Even better next time: IT installs it, and nobody needs admin rights.'); break; }
@@ -577,8 +577,8 @@ async function crBossScript() {
     clues: [CR_OFFLINE + ' rejoined the network at 08:55 after two weeks away. It missed this month’s patches.', 'From 09:02 it tries TCP 445 on every address in the laptop segment.', 'Every laptop it reaches that lacks ADV-26-101 (game) starts doing the same within a minute.'],
     truth: 'A worm exploiting a network-service flaw to spread host to host (Exploitation of Remote Services).',
     resp: [{label: 'Isolate ' + CR_OFFLINE + ', block SMB between laptop segments, then isolate every infected laptop and nothing else', good: true},
-           {label: 'Reimage ' + CR_OFFLINE + ' and close', good: false, why: 'Other laptops are already scanning. Patient zero is the start, not the scope.'},
-           {label: 'Shut down every laptop in town', good: false, disrupt: 2, why: 'It stops the worm and every clerk. Isolate what is infected.'}],
+           {label: 'Reimage ' + CR_OFFLINE + ' tonight from the standard image and close: it’s the laptop that started it', good: false, why: 'Other laptops are already scanning. Patient zero is the start, not the scope.'},
+           {label: 'Shut down every laptop in town, patch them all, then bring them back', good: false, disrupt: 2, why: 'It stops the worm and every clerk. Isolate what is infected.'}],
     chain: [{at: 40, text: 'A second laptop starts scanning port 445.'}, {at: 75, text: 'A third joins it.'}]};
   await fightStory(s1, 'Ruth: Regroup. Same stage, again.');
   c.infected = crInfectedSet(); c.bossT0 = G.playMs;
@@ -598,8 +598,8 @@ async function crBossFinish() {
      clues: ['On the infected laptops, vssadmin deletes every shadow copy.', 'The worm installed itself as a new service on each one.', 'Sunday’s offline backups are intact: nothing on the network could reach them.'],
      truth: 'Inhibit System Recovery: the worm removes restore points before it encrypts.',
      resp: [{label: 'Keep them isolated, plan rebuilds from the offline backups, patch every clean laptop now', good: true},
-            {label: 'Restore from the shadow copies', good: false, why: 'They have just been deleted.'},
-            {label: 'Pay for a decryption key now', good: false, why: 'Nothing is encrypted yet, and paying guarantees nothing.'}],
+            {label: 'Restore the infected laptops from their shadow copies and reconnect them once the worm’s service is removed', good: false, why: 'The shadow copies have just been deleted, and an unpatched laptop back on the network gets reinfected.'},
+            {label: 'Pay for a decryption key now, while nothing is encrypted yet and the attacker’s price is still low', good: false, why: 'Nothing is encrypted yet, and paying guarantees nothing.'}],
      chain: [{at: 60, text: 'A laptop starts renaming files.'}]},
     {kind: 'mal', threat: 'shade', tech: 'T1486', tags: ['host'], story: true, group: 'a',
      rate: picks.includes('patch') ? 8 : 14, dwell0: picks.includes('blockall') ? 55 : (picks.includes('patch') ? 10 : 35),
@@ -607,8 +607,8 @@ async function crBossFinish() {
      clues: ['On ' + CR_OFFLINE + ' the worm begins encrypting files.', 'Reverse engineering shows that each time it starts on a new laptop, it first tries to connect to an unregistered domain and quits if the connection succeeds. A researcher has registered it: new infections stop, but a laptop that is already encrypting keeps going. (game, modelled on WannaCry)', picks.includes('blockall') ? 'Your new DNS block list includes that domain: the worm can’t see the switch.' : 'The town’s DNS filter would block that domain as newly seen.'],
      truth: 'Data Encrypted for Impact. The kill switch stops new infections; it can’t halt encryption already running, so infected laptops are rebuilt from backup.',
      resp: [{label: 'Let the kill-switch connection through, rebuild ' + CR_OFFLINE + ' from offline backup, finish patching', good: true},
-            {label: 'Block the domain: it’s malware infrastructure', good: false, why: 'During WannaCry, CISA asked admins not to block the kill-switch domain: registering it had slowed the spread. Blocking it here lets every new infection run again.'},
-            {label: 'Decrypt with a tool from a forum', good: false, why: 'Unverified tools can destroy files, or bring more malware.'}],
+            {label: 'Block the domain at the town’s DNS filter: it’s malware infrastructure, and every infected laptop is calling it', good: false, why: 'During WannaCry, CISA asked admins not to block the kill-switch domain: registering it had slowed the spread. Blocking it here lets every new infection run again.'},
+            {label: 'Decrypt the files with a free tool posted on a forum, then reconnect the laptop', good: false, why: 'Unverified tools can destroy files, or bring more malware.'}],
      chain: [{at: 60, text: 'Encryption reaches the shared documents folder.'}]}
   ];
   for (const s of stages) await fightStory(s, 'Ruth: Regroup. Same stage, again.');

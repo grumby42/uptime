@@ -187,7 +187,7 @@ function mailDone(s, extra, party) {
   await s.pickLabel(/better antivirus/);
   p = await s.waitUI('say');
   check('local admin: “better antivirus” is explained away', /with the clerk’s rights/.test(p.ui.text), p.ui.text);
-  await s.settle([/exceptions go through a help-desk request/]);
+  await s.settle([/exceptions go through a checked, time-limited, logged request/]);
   p = await s.peek();
   check('local admin removed: 18 -> 0', p.f.crAdmin && p.metrics.crAdmins === 0, p.metrics);
   check('local admin: Windows LAPS fact unlocked (one rotated local admin password per laptop)', await s.page.evaluate(() => !!G.fm['fact:laps'] && /lateral/.test(FACTS.laps.desc)));

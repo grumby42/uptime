@@ -224,8 +224,8 @@ async function kioskTask() {
   while (true) {
     const i = await choose('Change it to…', [
       {label: 'A long random passphrase, stored in the team password vault', meta: {good: true}},
-      {label: '“Kiosk2026!”: it has a capital, a digit and a symbol'},
-      {label: 'Leave it: visitors never see the admin screen'}], {shuffle: true});
+      {label: '“Kiosk2026!”: it has a capital, a digit and a symbol, and the team can remember it'},
+      {label: 'Leave it: visitors never see the admin screen, and the kiosk sits behind reception'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Short and predictable: a year and a symbol are the first things spraying tools try. Length matters more than symbols.');
     else await say('Default passwords are public. Anyone who reads the manual has the keys.');
@@ -239,9 +239,9 @@ async function wifiTask() {
   await say('The network closet. Guest Wi-Fi and the staff PCs share one flat network.');
   while (true) {
     const i = await choose('Fix it by…', [
-      {label: 'Hiding the guest network’s name'},
+      {label: 'Hiding the guest network’s name from the list'},
       {label: 'Putting guest Wi-Fi on its own segment that can only reach the internet', meta: {good: true}},
-      {label: 'Changing the guest password every day'}], {shuffle: true});
+      {label: 'Changing the guest password every day at reception'}], {shuffle: true});
     if (i === 1) break;
     if (i === 0) await say('A hidden network name is still visible to anyone listening. It doesn’t separate anything.');
     else await say('A new password doesn’t stop a guest who is already on from reaching staff PCs.');
@@ -285,7 +285,7 @@ const PORT_SPEC = () => ({
   clues: ['A remote-desktop session to ANNEX-PC-03 came straight in from the internet at 01:47.', 'It used the HVAC contractor’s account. The port was opened for him last week.', 'The contractor says he hasn’t connected since Tuesday, and the address is on another continent.'],
   truth: 'An attacker used the open remote-desktop port and the contractor’s password: External Remote Services.',
   resp: [{label: 'End the session, close the port, reset the contractor’s account, check ANNEX-PC-03 and what was copied', good: true},
-         {label: 'Leave it: it’s probably the contractor', good: false},
+         {label: 'Leave it until morning and ask the contractor then: the sign-in used his real account and password, so it’s probably him', good: false, why: 'He already said he hasn’t connected since Tuesday, the address is on another continent, and the session is reaching into the file share now.'},
          {label: 'Unplug the whole district from the internet', good: false, disrupt: 2}],
   chain: [{at: 35, text: 'The session starts browsing the Annex file share.'}, {at: 70, text: 'Large files are being copied out over the session.'}]
 });
@@ -315,8 +315,8 @@ const VEX_SPEC = () => ({
   clues: ['Lin’s account signed in from the office and, two minutes later, from a hosting provider.', 'Yesterday Lin got an email linking to a sign-in page one letter off from ours.', 'The second session is reading the shared finance folder.'],
   truth: 'Vex phished Lin’s password and signed in with it.',
   resp: [{label: 'Reset Lin’s password, revoke her sessions, block the look-alike domain', good: true},
-         {label: 'Isolate Lin’s PC', good: false, disrupt: 2, why: 'Nothing points to her PC: the second session comes from a hosting provider, using her account. Cutting off her PC doesn’t touch it.'},
-         {label: 'Close it: Lin travels a lot', good: false}],
+         {label: 'Isolate Lin’s PC and reimage it: the phishing email landed there', good: false, disrupt: 2, why: 'Nothing points to her PC: the second session comes from a hosting provider, using her account. Cutting off her PC doesn’t touch it.'},
+         {label: 'Close it: Lin travels a lot, and the hosting provider is probably her hotel’s VPN', good: false, why: 'Two minutes earlier she signed in from the office, and she was just sent a look-alike sign-in link. She can’t be in both places.'}],
   chain: [{at: 30, text: 'The second session lists the shared drives.'}, {at: 65, text: 'It opens finance spreadsheets one by one.'}]
 });
 async function vexScript() {
@@ -344,9 +344,9 @@ async function owenTalk() {
   await say('Maybe they’ll find out how it feels when nobody knows where the files are.', who);
   f.insider = 'seen';
   const opts = [
-    {label: 'Search Owen’s email and files to see what he’s planning'},
-    {label: 'Tell the team to keep an eye on Owen'},
-    {label: 'Ignore it: he’s just venting'},
+    {label: 'Search Owen’s email and files first, so the report has evidence behind it'},
+    {label: 'Tell the team leads to keep a quiet eye on Owen and note anything odd'},
+    {label: 'Ignore it: he’s just venting, and one remark proves nothing'},
     {label: 'Report what you heard, factually, to the insider-risk process (HR)', meta: {good: true}}];
   while (true) {
     const i = await choose('(Resentment after a reorg can be an early warning sign. What do you do?)', opts);
@@ -424,19 +424,19 @@ const BOARD_SPECS = () => [
    title: 'Round 1: failed sign-ins across 60 accounts', host: 'Board practice tenant', enemy: {spr: 'sprayer', pal: 'sprayer'},
    clues: ['60 accounts, one or two attempts each, in ten minutes: below the lockout threshold.', 'All from a small set of hosting-provider addresses.', 'One practice account with an old password signed in.'],
    truth: 'Password spraying against the practice accounts.',
-   resp: [{label: 'Reset the account that fell, revoke its sessions, enforce MFA, block the sources', good: true}, {label: 'Lock all 60 accounts for a week', good: false, disrupt: 1}, {label: 'Close: failures are normal', good: false}],
+   resp: [{label: 'Reset the fallen account, revoke its sessions, enforce MFA, block the sources', good: true}, {label: 'Lock all 60 practice accounts for a week so the spray has nothing left to try against', good: false, disrupt: 1, why: 'Locking everyone out stops their work, and the account that fell already has a session.'}, {label: 'Close: one or two failures per account is normal background, and lockout never triggered', good: false, why: 'Failures spread thin under the lockout limit are what spraying looks like, and one account signed in.'}],
    chain: [{at: 40, text: 'Another wave of attempts with a different common password.'}, {at: 75, text: 'A second account accepts the password.'}]},
   {kind: 'mal', threat: 'sprayer', tech: 'T1621', tags: ['identity'], story: true, rate: 12, group: 'a',
    title: 'Round 2: 23 MFA prompts at 2 a.m.', host: 'lin.zhao · phone', enemy: {spr: 'buzzer', pal: 'buzzer'},
    clues: ['Lin’s phone received 23 sign-in approval prompts between 02:00 and 02:20.', 'Each prompt followed a correct password: the attacker already has it.', 'The sign-ins come from a city Lin has never been to.'],
    truth: 'MFA fatigue: flooding Lin with prompts, hoping she taps Approve.',
-   resp: [{label: 'Tell Lin to deny, reset her password, switch to number-matching prompts', good: true}, {label: 'Tell Lin to approve one so they stop', good: false}, {label: 'Turn MFA off for Lin until it calms down', good: false}],
+   resp: [{label: 'Tell Lin to deny, reset her password, switch to number-matching prompts', good: true}, {label: 'Tell Lin to approve one so they stop', good: false}, {label: 'Turn off MFA prompts for Lin tonight, turn them back on tomorrow', good: false, why: 'With MFA off, the password the attacker already has is enough to sign in.'}],
    chain: [{at: 40, text: 'The prompts speed up: one every 20 seconds.'}, {at: 75, text: 'A text arrives “from IT”: “Just approve it so we can fix the bug”.'}]},
   {kind: 'mal', threat: 'caller', tech: 'T1684.001', tags: ['voice', 'identity'], story: true, rate: 11, group: 'a',
    title: 'Round 3: “the CFO” calls the help desk', host: 'help desk line', enemy: {spr: 'caller', pal: 'impostor'},
    clues: ['A caller says he is the CFO, travelling, lost his phone, and needs his MFA reset right now.', 'He is angry and in a hurry, and asks the agent to skip the usual checks.', 'The real CFO answers his desk phone from the directory: he is in the building.'],
    truth: 'Help-desk impersonation: a fake executive pushing for an MFA reset.',
-   resp: [{label: 'Refuse the reset, verify by calling back the directory number, report the call', good: true}, {label: 'Reset his MFA: he’s the CFO', good: false}, {label: 'Email him a temporary password', good: false}],
+   resp: [{label: 'Refuse the reset, verify by calling back the directory number, report the call', good: true}, {label: 'Reset his MFA after he answers two checks: his date of birth and his manager’s name', good: false, why: 'Birthdays and org charts are easy to find; an impostor knows them. Call back the directory number instead.'}, {label: 'Email a temporary password to his work address, which only he can read', good: false, why: 'It still skips checking who is calling, and a mailbox is exactly what an impostor may already have.'}],
    chain: [{at: 40, text: 'The caller threatens to complain to the agent’s boss.'}, {at: 75, text: 'A second agent receives the same call.'}]}
 ];
 async function boardScript() {
@@ -504,7 +504,7 @@ function bossStages(picks) {
      title: 'Stage 1: fd-admin in the spray', host: 'fd-admin', enemy: {spr: 'sprayer', pal: 'bossSpray'},
      clues: ['fd-admin was one of 60 accounts tried with the same seasonal password in ten minutes.', 'fd-admin was on an MFA “exception” list, for convenience.', 'fd-admin’s attempt succeeded.'],
      truth: 'Password spraying found an admin account without MFA.',
-     resp: [{label: 'Confirm the compromise and start containment on fd-admin', good: true}, {label: 'Close: failed sign-ins are normal', good: false}],
+     resp: [{label: 'Confirm the compromise and start containment on fd-admin', good: true}, {label: 'Close: one try per account stays under the lockout limit, so nothing was breached', good: false, why: 'fd-admin’s attempt succeeded: that is a breach, lockout or not.'}],
      chain: [{at: 50, text: 'fd-admin’s sign-in is followed by a second, from a new location.'}]},
     {kind: 'mal', threat: 'jamb', tech: 'T1078', tags: ['identity'], story: true, group: 'a', ev0: ev0,
      rate: picks.includes('revoke') ? 9 : 14, dwell0: picks.includes('reset') ? 15 : 40,
@@ -518,7 +518,7 @@ function bossStages(picks) {
      title: 'Stage 3: a new MFA device appears', host: 'fd-admin · MFA settings', enemy: {spr: 'buzzer', pal: 'bossSpray'},
      clues: ['A phone nobody recognises was enrolled as fd-admin’s second factor.', 'The enrolment happened inside the attacker’s session.', 'Unless it’s removed, the attacker keeps a way back in, even after a password reset.'],
      truth: 'Device registration: the attacker enrolled their own MFA device to keep access.',
-     resp: [{label: 'Remove the rogue device, revoke sessions, re-enrol MFA in person, review other admin accounts', good: true}, {label: 'Leave it: MFA is on now, so we’re safe', good: false, why: 'The rogue phone is an MFA device. MFA being on lets it in; only removing it closes that door.'}, {label: 'Enforce MFA on fd-admin again', good: false, why: 'It is already enforced, and the attacker’s phone satisfies it. Remove the device.'}],
+     resp: [{label: 'Remove the rogue device, revoke sessions, re-enrol MFA in person, review other admin accounts', good: true}, {label: 'Leave it: MFA is enforced on fd-admin now and the password was reset, so a stolen password alone can’t get back in', good: false, why: 'The rogue phone is an MFA device. MFA being on lets it in; only removing it closes that door.'}, {label: 'Enforce MFA on fd-admin again', good: false, why: 'It is already enforced, and the attacker’s phone satisfies it. Remove the device.'}],
      chain: [{at: 60, text: 'The rogue device approves a new sign-in.'}]}
   ];
 }
