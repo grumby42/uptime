@@ -1,0 +1,2369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:;">
+<title>Uptime</title>
+<style>
+/* UPTIME · style.css — phone-first layout; menus readable in light and dark */
+:root{
+  --bg:#10141f; --ink:#e9edf5; --paper:#f4f2ec; --paper-ink:#1b2233; --muted:#4a5163;
+  --cur:#e6f5c8; --accent:#2f6e3e; --warn:#b8432f; --gold:#ffd96a;
+  --fs:14px; --s:1;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --paper:#1f2533; --paper-ink:#e9edf5; --muted:#aab3c5; --cur:#2c4a35; }
+}
+:root[data-theme="dark"]{ --paper:#1f2533; --paper-ink:#e9edf5; --muted:#aab3c5; --cur:#2c4a35; }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);overflow-x:hidden;max-width:100vw}
+body{font-family:var(--mono);-webkit-text-size-adjust:100%;touch-action:manipulation;min-height:100vh;min-height:100dvh;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit}
+#app{display:flex;flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;width:100%}
+#stage{position:relative;max-width:100vw}
+#screen{position:relative;overflow:hidden;background:#000;margin:0 auto}
+#cv{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* HUD over the map */
+#hud{position:absolute;left:0;right:0;top:0;padding:2px 6px;font-size:calc(var(--fs) * .8);line-height:1.3;
+  background:rgba(16,20,31,.72);color:#fff;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hud div{overflow:hidden;text-overflow:ellipsis}
+#hud .obj{color:var(--gold)}
+#toast{position:absolute;left:50%;top:24%;transform:translateX(-50%);background:#1b2233;color:#fff;border:2px solid var(--gold);
+  padding:3px 8px;font-size:calc(var(--fs) * .8);opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:96%;overflow:hidden;text-overflow:ellipsis}
+#toast.show{opacity:1}
+
+/* Battle panels (real text over the canvas) */
+.bpanel{position:absolute;display:none;background:#fff;color:#1b2233;border:2px solid #1b2233;padding:3px 6px;font-size:var(--fs);line-height:1.25}
+.bpanel.show{display:block}
+#bcard{left:2.5%;top:4%;width:47%}
+#btool{left:50.5%;top:46%;width:47%}
+.bt{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bcard .bt{white-space:normal}
+.bs{font-size:.8em;color:#4a5163;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{display:flex;align-items:center;gap:4px;font-size:.8em;margin-top:2px}
+.bl{width:5.6em;flex:none}
+.bo{flex:1;height:.8em;border:2px solid #1b2233;display:block;position:relative}
+.bi{display:block;height:100%}
+.bn{width:3.6em;flex:none;text-align:right}
+
+/* Dialogue / choice panel */
+#panel{background:#fff;color:#1b2233;font-size:var(--fs);line-height:1.4;display:none}
+#panel.show{display:block}
+body.landscape #panel{position:absolute;left:0;right:0;bottom:0;max-height:58%;overflow:auto;border-top:3px solid #1b2233;padding:.5em .9em;z-index:5}
+body.portrait #panel{display:block;visibility:hidden;width:100%;min-height:150px;font-size:14px;padding:8px 12px;border-top:3px solid #1b2233}
+body.portrait #panel.show{visibility:visible}
+#pwho{font-weight:700;color:var(--accent)}
+#ptext{white-space:pre-wrap;min-height:1.4em}
+#pmore{text-align:right;animation:blink 1s steps(2) infinite;height:1em;line-height:1em}
+@keyframes blink{50%{opacity:0}}
+#popts{display:grid;gap:2px 10px;margin-top:4px}
+.opt{display:block;width:100%;text-align:left;background:none;border:2px solid transparent;color:inherit;font-size:inherit;
+  padding:2px 4px;cursor:pointer;line-height:1.25}
+.opt .car{display:inline-block;width:1em;visibility:hidden}
+.opt.cur{border-color:#1b2233;background:#e6f5c8}
+.opt.cur .car{visibility:visible}
+.opt.dis{opacity:.45;cursor:default}
+.opt .note{display:block;font-size:.78em;color:#4a5163;padding-left:1.25em}
+body.portrait #popts .opt{min-height:36px}
+
+/* On-screen pad */
+#pad{display:none}
+body.portrait #pad, body.touch #pad{display:grid}
+body.portrait #pad{grid-template-columns:1fr auto 1fr;align-items:center;width:100%;max-width:420px;padding:10px 8px 6px;gap:4px}
+.dpad{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,46px);justify-self:start}
+.dpad button,.ab button,.sys button{touch-action:none;border:none;color:#e9edf5;cursor:pointer}
+.dpad button{background:#3a4a6b;font-size:20px;border-radius:6px}
+.dpad button.on,.ab button.on,.sys button.on{filter:brightness(1.5)}
+.du{grid-column:2;grid-row:1}.dl{grid-column:1;grid-row:2}.dr{grid-column:3;grid-row:2}.dd{grid-column:2;grid-row:3}
+.dc{grid-column:2;grid-row:2;background:#2b2f3a;border-radius:4px}
+.ab{display:flex;gap:8px;justify-self:end;align-items:center}
+.ab button{width:54px;height:54px;border-radius:50%;font-size:20px;font-weight:700}
+.ab .ba{background:#b8432f;margin-top:-26px}.ab .bb{background:#8a4b2f;margin-top:26px}
+.sys{display:flex;flex-direction:column;gap:10px;align-items:center}
+.sys button{background:#4a5163;border-radius:12px;font-size:10px;padding:8px 6px;letter-spacing:.5px}
+body.landscape.touch #pad{position:fixed;inset:0;pointer-events:none;display:block}
+body.landscape.touch .dpad{position:fixed;left:14px;bottom:20px;pointer-events:auto}
+body.landscape.touch .ab{position:fixed;right:18px;bottom:30px;pointer-events:auto}
+body.landscape.touch .sys{position:fixed;right:18px;top:14px;flex-direction:row;pointer-events:auto}
+#foot{font-size:11px;color:#8b93a7;padding:6px 10px;text-align:center;max-width:100vw}
+body.portrait #foot .keys{display:none}
+
+/* Modal pages */
+#modal{position:fixed;inset:0;background:rgba(8,10,16,.8);display:none;align-items:center;justify-content:center;z-index:50;padding:8px}
+#modal.show{display:flex}
+.mbox{background:var(--paper);color:var(--paper-ink);width:min(760px,100%);max-height:100%;display:flex;flex-direction:column;border:3px solid #1b2233;box-shadow:0 0 0 3px var(--paper)}
+.mhead{font-weight:700;padding:10px 14px 0;font-size:17px;letter-spacing:1px}
+.mhead:empty{display:none}
+.mbody{overflow:auto;padding:6px 14px;font-size:15px;line-height:1.45;-webkit-user-select:text;user-select:text;overscroll-behavior:contain}
+.mbody p{margin:.5em 0}
+.mbody h3{font-size:14px;margin:1em 0 .3em;color:var(--accent);letter-spacing:1px;text-transform:uppercase}
+.mopts{padding:6px 10px 10px;display:flex;flex-direction:column;gap:3px;max-height:48%;overflow:auto;flex:none}
+.mopts .opt{font-size:15px;min-height:40px;padding:6px 8px;color:var(--paper-ink)}
+.mopts .opt.cur{background:var(--cur);border-color:var(--paper-ink)}
+.mopts .opt .note{color:var(--muted)}
+.mopts .opt.sel{font-weight:700}
+.chk{display:inline-block;width:1.4em}
+.mbody .small,.small{font-size:12px;color:var(--muted)}
+.fm{padding:6px 0;border-bottom:1px solid rgba(127,127,127,.3);font-size:14px}
+.fm.lock{color:var(--muted)}
+table.sc{border-collapse:collapse;width:100%;font-size:13px;margin:.4em 0}
+table.sc th,table.sc td{border-bottom:1px solid rgba(127,127,127,.35);padding:3px 4px;text-align:left}
+table.sc th{font-size:12px;color:var(--muted)}
+.dir{color:var(--warn);font-weight:700}
+.card{border:2px solid var(--paper-ink);padding:6px 8px;margin:6px 0;font-size:14px}
+.tag{font-size:11px;border:1px solid var(--muted);padding:0 4px;color:var(--muted)}
+textarea{width:100%;font-family:var(--mono);font-size:12px;background:#fff;color:#1b2233;border:2px solid #1b2233;-webkit-user-select:text;user-select:text}
+.err{color:var(--warn)}
+.title{text-align:center;padding:10px 0}
+.logo{font-size:44px;font-weight:800;letter-spacing:8px;color:var(--accent)}
+.big{font-size:17px;font-weight:700}
+@media (max-width:420px){ table.sc{font-size:11.5px} table.sc th,table.sc td{padding:3px 2px} .mbody{font-size:14px;padding:6px 10px} }
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <div id="screen">
+      <canvas id="cv" width="320" height="180" aria-label="Game screen"></canvas>
+      <div id="hud"></div>
+      <div id="bcard" class="bpanel"></div>
+      <div id="btool" class="bpanel"></div>
+      <div id="toast"></div>
+    </div>
+    <div id="panel" aria-live="polite"><div id="pwho"></div><div id="ptext"></div><div id="popts"></div><div id="pmore">&#9660;</div></div>
+  </div>
+  <div id="pad" aria-label="Controls">
+    <div class="dpad">
+      <button class="du" data-btn="up" aria-label="Up">&#9650;</button>
+      <button class="dl" data-btn="left" aria-label="Left">&#9664;</button>
+      <span class="dc"></span>
+      <button class="dr" data-btn="right" aria-label="Right">&#9654;</button>
+      <button class="dd" data-btn="down" aria-label="Down">&#9660;</button>
+    </div>
+    <div class="sys"><button data-btn="select">SELECT</button><button data-btn="start">START</button></div>
+    <div class="ab"><button class="bb" data-btn="b" aria-label="B">B</button><button class="ba" data-btn="a" aria-label="A">A</button></div>
+  </div>
+  <div id="foot"><span class="keys">Arrows move &middot; Z = A &middot; X = B &middot; Enter = Start &middot; Shift = Select &middot; </span>Build <span class="buildid"></span></div>
+</div>
+<div id="modal" role="dialog" aria-modal="true"></div>
+<script>
+const BUILD_ID = 'ARCD-20261028-0419Z', BUILD_TS = '2026-10-28 04:19 UTC';
+/* ---- engine/core-data.js ---- */
+/* ============================================================
+   UPTIME · engine/core-data.js
+   Shared art and rules used by every edition: sprites, palettes, the tile legend,
+   tool classes, tools, abilities, and the NIST CSF 2.0 function names.
+   All art is original pixel data (palette index 1=dark..4=light, 0=transparent).
+   ============================================================ */
+'use strict';
+
+/* ---------- Sprites (16x16, rows of palette indices) ---------- */
+const S = {
+  G: ["3333333333333333","3323333332333333","3212333321233333","3321233332123323","3332123333212212","3333212332121233","3323321221213333","3212332112133333","2121233321333323","3212123332133212","3321212333212123","3332121233321233","3323212123332123","3212321212333213","2123332121233321","3333333333333333"],
+  R: ["4444444444444444","4444444444444444","4444442222444444","4444442442444444","4222222442222224","4244444444444424","4244444444444424","4244443333444424","4244443113444424","4244443333444424","4244444444444424","4222222442222224","4444442442444444","4444442222444444","4444444444444444","4444444444444444"],
+  L: ["1111111111111111","1222222222222221","1211111221111121","1214441221444121","1214441221444121","1211111221111121","1222222222222221","1211111221111121","1214441221444121","1214441221444121","1211111221111121","1222222222222221","1222211111122221","1222213333122221","1222213333122221","1111113333111111"],
+  B: ["1111111111111111","1222222222222221","1211111221111121","1213131221111121","1211311221131121","1211111221111121","1222222222222221","1211111221111121","1211131221313121","1213111221111121","1211111221111121","1222222222222221","1222211111122221","1222212222122221","1222212222122221","1111112222111111"],
+  K: ["1111111111111111","1333333333333331","1311111111111131","1314121212121131","1311111111111131","1314121214121131","1311111111111131","1314121212121131","1311111111111131","1314141212121131","1311111111111131","1314121212141131","1311111111111131","1333333333333331","1222222222222221","1111111111111111"],
+  F: ["1111111111111111","1222122212221221","1222122212221221","1111111111111111","1221222122212221","1221222122212221","1111111111111111","4444444444444444","4444444444444444","1111111111111111","1222122212221221","1222122212221221","1111111111111111","1221222122212221","1221222122212221","1111111111111111"],
+  P: ["4444444444444444","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","3333333333333333"],
+  W: ["4444444444444444","4443344444443344","4433444444433444","4444444444444444","4444444334444444","4444443344444444","4444444444444444","4334444444443344","4344444444433444","4444444444444444","4444443344444444","4444433444444444","4444444444444444","4443344444433444","4433444444334444","4444444444444444"],
+  O: ["1221444444441221","1221444334441221","1221444334441221","1221444444441221","1221444444441221","1221444334441221","1221444334441221","1221444444441221","1221444444441221","1221444334441221","1221444334441221","1221444444441221","1221444444441221","1221444334441221","1221444334441221","1221444444441221"],
+  hedge: ["1222122221222212","2333233332333323","2344233442334423","2333233332333323","1222122221222212","2232222322223222","2343223432234322","2232222322223222","1222122221222212","2333233332333323","2344233442334423","2333233332333323","1222122221222212","2232222322223222","2343223432234322","1111111111111111"],
+  floor: ["4444444444444443","4444444444444443","4434444444444443","4444444444444443","4444444444444443","4444444444434443","4444444444444443","4444444444444443","4444444444444443","4444434444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","4444444444444443","3333333333333333"],
+  wall: ["2222222222222222","2333333333333332","2322222222222232","2322222222222232","2322222222222232","2322222222222232","2322222222222232","2333333333333332","2222222222222222","1111111111111111","3443443443443443","3443443443443443","3443443443443443","3443443443443443","3333333333333333","1111111111111111"],
+  pc: ["0000000000000000","0011111111111100","0014444444444100","0014444444444100","0014111114444100","0014444444444100","0014441111144100","0011111111111100","0000001111000000","0000011111100000","2222222222222222","3333333333333333","3333333333333333","2222222222222222","2200000000000022","2200000000000022"],
+  kiosk: ["0000000000000000","0000111111110000","0001444444441000","0001444444441000","0001433443341000","0001444444441000","0001444444441000","0000111111110000","0000001221000000","0000001221000000","0000001221000000","0000001221000000","0000012222100000","0000122222210000","0001111111111000","0000000000000000"],
+  counter: ["1111111111111111","1333333333333331","1344444444444431","1333333333333331","1111111111111111","1222222222222221","1222222222222221","1223222232222321","1222222222222221","1222222222222221","1223222232222321","1222222222222221","1222222222222221","1111111111111111","0000000000000000","0000000000000000"],
+  door: ["1111111111111111","1222222222222221","1211111111111121","1213333333333121","1213333333333121","1213333333333121","1213333333333121","1213333333344121","1213333333344121","1213333333333121","1213333333333121","1213333333333121","1213333333333121","1213333333333121","1213333333333121","1111111111111111"],
+  exit: ["2222222222222222","2333333333333332","2333333333333332","2333333113333332","2333333113333332","2333333113333332","2333333113333332","2333333113333332","2331111111111332","2333111111113332","2333311111133332","2333331111333332","2333333113333332","2333333333333332","2333333333333332","2222222222222222"],
+  sign: ["0000000000000000","0111111111111110","0144444444444410","0141111411114410","0144444444444410","0141114111144410","0144444444444410","0111111111111110","0000000220000000","0000000220000000","0000000220000000","0000000220000000","0000000220000000","0000000220000000","0000003333000000","0000000000000000"],
+  stairs: ["1111111111111111","1444444444444441","1333333333333331","1111111111111111","1444444444444441","1333333333333331","1111111111111111","1444444444444441","1333333333333331","1111111111111111","1444444444444441","1333333333333331","1111111111111111","1222222222222221","1222222222222221","1111111111111111"],
+  // characters
+  player: ["0000011111100000","0000122222210000","0001222222221000","0011233333321100","0141344334431410","0141333333331410","0011133113311100","0001133333311000","0000111111110000","0001444444441000","0014414444144100","0014414444144100","0001111111111000","0000122112210000","0000122112210000","0000111001110000"],
+  actor: ["0000011111100000","0000122222210000","0001222222221000","0012221111222100","0012214334122100","0012213333122100","0012221111222100","0001222222221000","0011222222221100","0122122222212210","0122122442212210","0011122222211100","0000122222210000","0000122112210000","0000122112210000","0000111001110000"],
+  // tools (original characters)
+  sentry: ["0110000000000110","1221100000011221","1222211111122221","0122222222222210","0123311221133210","0134431221344310","0134131221314310","0123311111133210","0122222442222210","0122224444222210","0012222442222100","0012332222332100","0001233333321000","0000122222210000","0000110000110000","0001100000011000"],
+  lantern: ["0000011111100000","0000122222210000","0001222222221000","0001233333321000","0001231331321000","0001233333321000","0000112222110000","0001222222221000","0012211111122100","0122214444122210","0122214114122214","0122214444122244","0012211111122144","0001222222221010","0000122002210000","0000111001110000"],
+  keyling: ["0000011111100000","0001122222211000","0012233333322100","0123300000033210","0123000000003210","0123014004103210","0123000110003210","0123300000033210","0012233333322100","0001122222211000","0000001221000000","0000001221000000","0000001221110000","0000001222210000","0000001221110000","0000001111000000"],
+  ledger: ["0000000000000000","0111111111111110","0122222212222210","0124444212444210","0121111212111210","0121441212144210","0121111212111210","0124444212444210","0124444212444210","0124334212433210","0122222212222210","0111111111111110","0001100000011000","0001100000011000","0011100000011100","0000000000000000"],
+  // threats (original)
+  sprayer: ["0000000000000000","0000000111000000","0000001222100000","0000001232100404","0000011222110040","0000012222210404","0000122222221000","0001233333322100","0001234114322100","0001233333322100","0001222222222100","0001222222222100","0001222222222100","0000122222221000","0000011111110000","0000010000010000"],
+  caller: ["0000000000000000","0011100000011100","0122210000122210","0123321111233210","0122222222222210","0011222222221100","0000124224210000","0000122222210000","0000122112210000","0000122222210000","0000122332210000","0001222222221000","0012222222222100","0012222222222100","0001111111111000","0000000000000000"],
+  lure: ["0000000011000000","0000000122100000","0000000121000000","0000000121000000","0000000121000000","0111111121111110","0144444121444410","0134444121444310","0143444121443410","0144344121434410","0144434121344410","0144443111444410","0144444444444410","0111111111111110","0000012222100000","0000001111000000"],
+  prober: ["0000000000000000","0001000000001000","0000100000010000","0000011111100000","0000122222210000","0001223333221000","0012234444322100","0012234114322100","0012233333322100","0001222222221000","0000111111110000","0001100110011000","0011000110001100","0010000110000100","0000001111000000","0000000000000000"],
+  jamb: ["1111111111111111","1222222222222221","1233333333333321","1230000000000321","1230000000000321","1230000000000321","1230000000044321","1230000000444321","1230000004444321","1230000044144321","1230000444444321","1230004444444321","1230044414144321","1230444444444321","1234444444444321","1111111111111111"],
+  pry: ["0000000000000000","0000000000011000","0000000000122100","0000000001221000","0000000012410000","0000000124100000","0000001221000000","0000012210000000","0000122100000000","0001221000000000","0012210000000000","0122100000000000","1221000000000000","1210000000000000","1331000000000000","0110000000000000"],
+  noise: ["0000011111100000","0001222222221000","0012323232323100","0123232323232310","0122411221142210","0123411321143210","0122222222222210","0123232323232310","0122222222222210","0123232323232310","0122222222222210","0123232323232310","0122222222222210","0121221212212210","0110110101101100","0000000000000000"],
+  beacon: ["0000000110000000","0000001221000000","0000012332100000","0000123443210000","0001234114321000","0012344114432100","0123444114443210","1234444114444321","1234444114444321","0123444444443210","0012344114432100","0001234114321000","0000123443210000","0000012332100000","0000001221000000","0000000110000000"],
+  buzzer: ["0040000000000400","0400111111100040","4000122222100004","0000123332100000","0400133433100040","0040133333100400","0000133433100000","0000133333100000","0000133333100000","0000122222100000","0000121112100000","0000122222100000","0000011111000000","0000000000000000","0000000000000000","0000000000000000"]
+};
+
+/* ---------- Palettes (index 1..4) ---------- */
+const PAL = {
+  G: ['#1f3d2b','#2f6e3e','#5aa64b','#a6d96a'],
+  R: ['#2b2f3a','#4a5163','#8b93a7','#d7dbe4'],
+  L: ['#3b2418','#8a4b2f','#c98a54','#ffd96a'],
+  B: ['#2a2523','#5b4a42','#8c7b70','#6e7a8a'],
+  K: ['#1b2233','#3a4a6b','#7fa2d6','#9ff0c8'],
+  F: ['#4a1414','#b8432f','#e58a5c','#f2e3c6'],
+  P: ['#6b6253','#a89a80','#d8cbb0','#efe6d2'],
+  W: ['#12304f','#1f5a8a','#3f8fd0','#2f74b5'],
+  O: ['#4a1414','#b8432f','#8b93a7','#d7dbe4'],
+  hedge: ['#173322','#24583a','#3f8a4f','#7cc46a'],
+  floor: ['#3a3a4a','#6b6f86','#b9bccb','#dcdfe8'],
+  wall: ['#1b2233','#3a4a6b','#6d7fa6','#a9b8d6'],
+  pcOff: ['#1b2233','#5b3a26','#a8703f','#2b2f3a'],
+  pcOn: ['#1b2233','#5b3a26','#a8703f','#9ff0c8'],
+  pcMine: ['#1b2233','#5b3a26','#a8703f','#7fa2d6'],
+  kioskBad: ['#1b2233','#5b4a42','#b8432f','#e58a5c'],
+  kioskOk: ['#1b2233','#5b4a42','#2f6e3e','#9ff0c8'],
+  closetBad: ['#1b2233','#3a4a6b','#7fa2d6','#e58a5c'],
+  closetOk: ['#1b2233','#3a4a6b','#7fa2d6','#9ff0c8'],
+  counter: ['#2a2523','#5b4a42','#8c7b70','#d8cbb0'],
+  door: ['#3b2418','#8a4b2f','#c98a54','#ffd96a'],
+  exit: ['#1b2233','#8a4b2f','#c98a54','#d8cbb0'],
+  sign: ['#3b2418','#8a4b2f','#5aa64b','#f2e3c6'],
+  stairs: ['#1b2233','#3a4a6b','#8b93a7','#d7dbe4'],
+  board: ['#2a1a3a','#5a3a7a','#9a7ac0','#ffd96a'],
+  dojo: ['#0b2b33','#1f6f78','#7cc6c4','#ffd96a'],
+  // characters
+  player: ['#1a1a2e','#3c5a9a','#f2c7a0','#ffffff'],
+  actor: ['#141414','#5a2a6e','#e0b090','#ff4d6d'],
+  rae: ['#1a1a2e','#2b1d16','#8a5a3c','#d94f70'],
+  dee: ['#1a1a2e','#c98a54','#f0c8a0','#5aa64b'],
+  tomas: ['#1a1a2e','#3b2418','#c98a54','#e58a5c'],
+  lin: ['#1a1a2e','#111111','#f2c7a0','#7fa2d6'],
+  owen: ['#1a1a2e','#6b6253','#e0b090','#8c7b70'],
+  grace: ['#1a1a2e','#5b4a42','#c98a54','#c49ae0'],
+  hal: ['#1a1a2e','#8b93a7','#f2c7a0','#3a4a6b'],
+  marisol: ['#1a1a2e','#3a1d10','#b07850','#ffd96a'],
+  imani: ['#1a1a2e','#141414','#7a4a2c','#9ff0c8'],
+  sam: ['#1a1a2e','#c0a040','#f0c8a0','#ff9f43'],
+  staffer: ['#1a1a2e','#2f6e3e','#e0b090','#f2e3c6'],
+  // tools
+  sentry: ['#1b2233','#3c5a9a','#9fc4f0','#ffd96a'],
+  lantern: ['#1b2233','#8a4b2f','#e58a5c','#ffd96a'],
+  ledger: ['#1b2233','#2f6e3e','#a6d96a','#f2e3c6'],
+  keyling: ['#1b2233','#5a2a6e','#c49ae0','#ffd96a'],
+  // threats
+  sprayer: ['#141414','#3f8fd0','#9fc4f0','#ff4d6d'],
+  caller: ['#141414','#b8432f','#e58a5c','#ffd96a'],
+  lure: ['#141414','#8b93a7','#ff4d6d','#f2e3c6'],
+  prober: ['#141414','#3a4a6b','#7fa2d6','#9ff0c8'],
+  jamb: ['#141414','#5b4a42','#8c7b70','#e58a5c'],
+  pry: ['#141414','#b8432f','#e58a5c','#ffd96a'],
+  noise: ['#3a4a6b','#d7dbe4','#8b93a7','#141414'],
+  beacon: ['#141414','#b8432f','#e58a5c','#ffd96a'],
+  buzzer: ['#141414','#5a2a6e','#d7dbe4','#ff4d6d'],
+  impostor: ['#141414','#5a2a6e','#c49ae0','#ff4d6d'],
+  bossSpray: ['#141414','#4a1414','#b8432f','#ffd96a']
+};
+
+/* ---------- Tile legend ----------
+   spr: sprite key, pal: palette key, solid, grass (encounters), under: tile drawn beneath transparent pixels */
+const TILES = {
+  'W': {spr:'W', pal:'W', solid:true},
+  '=': {spr:'R', pal:'R'},
+  '.': {spr:'P', pal:'P'},
+  'F': {spr:'F', pal:'F', solid:true},
+  'O': {spr:'O', pal:'O', solid:true, port:true},
+  'h': {spr:'hedge', pal:'hedge', solid:true},
+  'G': {spr:'G', pal:'G', grass:true},
+  '1': {spr:'G', pal:'G', grass:true, shrink:1},
+  '2': {spr:'G', pal:'G', grass:true, shrink:2},
+  '3': {spr:'G', pal:'G', grass:true, shrink:3},
+  'K': {spr:'K', pal:'K', solid:true},
+  'a': {group:'a', solid:true}, 'b': {group:'b', solid:true}, 'c': {group:'c', solid:true}, 'd': {group:'d', solid:true},
+  'I': {spr:'L', pal:'board', solid:true},
+  'J': {spr:'L', pal:'dojo', solid:true},
+  'D': {spr:'door', pal:'door', door:true},
+  'S': {spr:'sign', pal:'sign', solid:true, under:'.'},
+  'X': {spr:'stairs', pal:'stairs', solid:true},
+  ',': {spr:'floor', pal:'floor'},
+  'w': {spr:'wall', pal:'wall', solid:true},
+  'p': {spr:'pc', pal:'pcOff', solid:true, under:',', pc:true},
+  'q': {spr:'pc', pal:'pcOn', solid:true, under:','},
+  'Y': {spr:'pc', pal:'pcMine', solid:true, under:','},
+  'k': {spr:'kiosk', pal:'kioskBad', solid:true, under:','},
+  'n': {spr:'K', pal:'closetBad', solid:true},
+  'c_': {spr:'counter', pal:'counter', solid:true, under:','},
+  'E': {spr:'exit', pal:'exit', door:true}
+};
+// 'C' = reception counter (alias)
+TILES['C'] = TILES['c_'];
+delete TILES['c_'];
+// map 'c' only means building group c in the hub; interiors use 'C' for the counter.
+
+/* ---------- Tools ---------- */
+const CLASSES = {
+  endpoint: {label:'Endpoint', strong:['Execution','Persistence','Privilege Escalation'], weakTags:['recon']},
+  network:  {label:'Network',  strong:['Command and Control','Lateral Movement','Exfiltration'], strongTags:['remote','recon'], weakTags:['voice']},
+  logging:  {label:'Logging',  strong:['Discovery','Credential Access'], needsLogs:true, weakTags:['voice']},
+  identity: {label:'Identity', strong:['Credential Access'], strongTags:['identity'], weakTags:['recon']}
+};
+const TOOLS = {
+  sentry:  {name:'Sentry', cls:'endpoint', sub:'EDR', spr:'sentry', blurb:'A watchful owl that never blinks. Sees every process a host starts.',
+            abil:['ptree','askuser','kill','isolate']},
+  lantern: {name:'Lanternkeep', cls:'network', sub:'firewall', spr:'lantern', blurb:'A gatekeeper with a lantern who checks every traveller between segments.',
+            abil:['flow','geo','egress','closeport']},
+  ledger:  {name:'Ledger', cls:'logging', sub:'SIEM', spr:'ledger', blurb:'A bookish librarian that remembers everything it is told, and nothing it isn’t.',
+            abil:['search','correlate','timeline','baseline']},
+  keyling: {name:'Keyling', cls:'identity', sub:'MFA', spr:'keyling', blurb:'A living keyring. Asks every visitor for a second proof of who they are.',
+            abil:['signins','reset','revoke','mfa']}
+};
+// type: inv (adds evidence), con (contains: pushes dwell back if there is an attacker)
+// disrupt: 0 none, 1 minor, 2 major (over-reaction if the alert was not malicious)
+const ABIL = {
+  ptree:    {name:'Process tree', type:'inv', cost:2, ev:22, desc:'Look at which program started which, to see how an activity began on a host.'},
+  askuser:  {name:'Ask the user', type:'inv', cost:1, ev:14, social:true, desc:'Contact the person directly (on a known number) and ask what they did or saw.'},
+  kill:     {name:'Kill process', type:'con', cost:2, dw:20, ev:6, disrupt:1, desc:'Stop a running program on a host. Quick, but the cause may come back.'},
+  isolate:  {name:'Isolate host', type:'con', cost:3, dw:40, ev:4, disrupt:2, desc:'Cut a computer off the network except for the security tools. Stops spread, stops the user’s work too.'},
+  flow:     {name:'Inspect flow', type:'inv', cost:2, ev:22, desc:'Review network connection records: who talked to whom, when, and how much.'},
+  geo:      {name:'Geo-check', type:'inv', cost:1, ev:14, desc:'Compare where a connection or sign-in comes from against where that user normally is.'},
+  egress:   {name:'Block egress', type:'con', cost:2, dw:20, ev:6, disrupt:1, desc:'Block outbound traffic to a suspicious destination.'},
+  closeport:{name:'Close port', type:'con', cost:3, dw:40, ev:4, disrupt:2, desc:'Shut an exposed service at the firewall. Anyone relying on it loses access.'},
+  search:   {name:'Search logs', type:'inv', cost:2, ev:22, desc:'Query collected logs for the account, host or address in the alert.'},
+  correlate:{name:'Correlate', type:'inv', cost:3, ev:32, desc:'Join events from different sources (sign-ins, network, endpoint) to see one story.'},
+  timeline: {name:'Timeline', type:'inv', cost:2, ev:18, desc:'Put events in time order to see what happened first and what followed.'},
+  baseline: {name:'Baseline', type:'inv', cost:1, ev:14, fpBonus:true, desc:'Compare activity against what is normal for this user, host or time of day.'},
+  signins:  {name:'Check sign-ins', type:'inv', cost:2, ev:22, desc:'Review an account’s recent sign-ins, failures and MFA prompts.'},
+  reset:    {name:'Reset password', type:'con', cost:2, dw:25, ev:6, disrupt:1, desc:'Force a new password on an account so a stolen one stops working.'},
+  revoke:   {name:'Revoke sessions', type:'con', cost:2, dw:25, ev:6, disrupt:1, desc:'Sign an account out everywhere, ending sessions an attacker may hold.'},
+  mfa:      {name:'Enforce MFA', type:'con', cost:3, dw:40, ev:4, disrupt:0, desc:'Require a second factor for an account, so a password alone is not enough.'}
+};
+
+/* ---------- NIST CSF 2.0 functions (Field Manual) ---------- */
+const CSF = {
+  Govern:'Set, communicate and oversee the organisation’s cybersecurity strategy, expectations and policy.',
+  Identify:'Understand the organisation’s current cybersecurity risks: assets, threats, weaknesses.',
+  Protect:'Use safeguards to manage those risks: access control, training, secure configuration.',
+  Detect:'Find and analyse possible attacks and compromises.',
+  Respond:'Take action on a detected cybersecurity incident.',
+  Recover:'Restore assets and operations affected by an incident.'
+};
+
+/* ---- engine/engine.js ---- */
+/* ============================================================
+   UPTIME · engine.js
+   RNG, sprite cache, screen scaling, input, UI primitives
+   (dialogue panel with typewriter, choice lists, modal menus), save codec.
+   ============================================================ */
+'use strict';
+
+const VW = 320, VH = 180, TS = 16;
+
+/* ---------- RNG (mulberry32, seedable for tests) ---------- */
+function makeRng(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+let rng = makeRng((Date.now() ^ 0x5eed) >>> 0);
+function rnd() { return rng(); }
+function pick(arr) { return arr[Math.floor(rnd() * arr.length)]; }
+function weighted(list) { // [{w,...}]
+  const tot = list.reduce((s, x) => s + x.w, 0);
+  let r = rnd() * tot;
+  for (const x of list) { if ((r -= x.w) < 0) return x; }
+  return list[list.length - 1];
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- Sprite cache: grid + palette -> offscreen canvas ---------- */
+const SPR_CACHE = {};
+function sprite(key, palKey, opts) {
+  opts = opts || {};
+  const id = key + '|' + palKey + '|' + (opts.variant || '');
+  if (SPR_CACHE[id]) return SPR_CACHE[id];
+  let grid = S[key];
+  if (!grid) throw new Error('no sprite ' + key);
+  if (opts.variant === 'back') grid = grid.map((r, y) => (y >= 3 && y <= 7) ? r.replace(/[34]/g, '2') : r);
+  if (opts.variant === 'step') grid = grid.slice(0, 13).concat(['0000122112210000', '0000122011110000', '0000111000000000']);
+  if (opts.variant === 'tuned') grid = tunedGrid(grid);
+  const pal = PAL[palKey];
+  const c = document.createElement('canvas');
+  c.width = 16; c.height = 16;
+  const x = c.getContext('2d');
+  grid.forEach((row, yy) => {
+    for (let xx = 0; xx < 16; xx++) {
+      const v = +row[xx];
+      if (v) { x.fillStyle = pal[v - 1]; x.fillRect(xx, yy, 1, 1); }
+    }
+  });
+  SPR_CACHE[id] = c;
+  return c;
+}
+// "Tuned" form: adds an antenna and a status light along the top edge (original variation).
+function tunedGrid(grid) {
+  const g = grid.map(r => r.split(''));
+  g[0][7] = '1'; g[0][8] = '1'; g[1][7] = '4'; g[1][8] = '4';
+  for (let y = 12; y < 16; y++) { if (g[y][0] === '0') g[y][0] = y % 2 ? '4' : '0'; if (g[y][15] === '0') g[y][15] = y % 2 ? '4' : '0'; }
+  return g.map(r => r.join(''));
+}
+
+/* ---------- Screen & scaling ---------- */
+const Screen = {
+  canvas: null, ctx: null, k: 1, s: 1,
+  init() {
+    this.canvas = document.getElementById('cv');
+    this.ctx = this.canvas.getContext('2d');
+    window.addEventListener('resize', () => this.fit());
+    window.addEventListener('orientationchange', () => setTimeout(() => this.fit(), 100));
+    this.fit();
+  },
+  fit() {
+    const dpr = window.devicePixelRatio || 1;
+    const W = window.innerWidth, H = window.innerHeight;
+    const touch = document.body.classList.contains('touch');
+    const portrait = H > W * 1.05 || W < 560;
+    document.body.classList.toggle('portrait', portrait);
+    document.body.classList.toggle('landscape', !portrait);
+    let availW, availH;
+    if (portrait) { availW = W; availH = Math.max(180, H * 0.42); }
+    else { availW = W - (touch ? 300 : 24); availH = H - 34; }
+    // largest whole number of device pixels per logical pixel that fits
+    let k = Math.floor(Math.min(availW * dpr / VW, availH * dpr / VH));
+    if (k < 1) k = 1;
+    // keep the CSS scale a whole number where the screen is big enough (desktop: 2x, 3x, 4x...)
+    if (dpr <= 1.01 || k / dpr >= 2) { const cssK = Math.max(1, Math.floor(k / dpr)); k = Math.round(cssK * dpr); }
+    this.k = k; this.s = k / dpr;
+    this.canvas.width = VW * k; this.canvas.height = VH * k;
+    const wrap = document.getElementById('screen');
+    wrap.style.width = (VW * this.s) + 'px'; wrap.style.height = (VH * this.s) + 'px';
+    document.documentElement.style.setProperty('--s', this.s);
+    document.documentElement.style.setProperty('--fs', Math.max(10, Math.round(4.6 * this.s)) + 'px');
+    this.ctx.setTransform(k, 0, 0, k, 0, 0);
+    this.ctx.imageSmoothingEnabled = false;
+  }
+};
+
+/* ---------- Input ---------- */
+const BTN_KEYS = {
+  ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right',
+  z:'a', Z:'a', x:'b', X:'b', Enter:'start', Shift:'select'
+};
+const Input = {
+  held: {}, taps: [], handler: null,
+  init() {
+    window.addEventListener('keydown', e => {
+      const b = BTN_KEYS[e.key];
+      if (!b) return;
+      if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') return;
+      e.preventDefault();
+      if (e.repeat && !['up','down','left','right'].includes(b)) return;
+      this.down(b, e.repeat);
+    });
+    window.addEventListener('keyup', e => { const b = BTN_KEYS[e.key]; if (b) this.up(b); });
+    window.addEventListener('blur', () => { this.held = {}; });
+    document.querySelectorAll('[data-btn]').forEach(el => {
+      const b = el.dataset.btn;
+      const on = e => { e.preventDefault(); el.classList.add('on'); this.down(b, false); };
+      const off = e => { e.preventDefault(); el.classList.remove('on'); this.up(b); };
+      el.addEventListener('pointerdown', on);
+      el.addEventListener('pointerup', off);
+      el.addEventListener('pointercancel', off);
+      el.addEventListener('pointerleave', off);
+      el.addEventListener('contextmenu', e => e.preventDefault());
+    });
+  },
+  down(b, repeat) {
+    const wasHeld = this.held[b];
+    this.held[b] = true;
+    if (!wasHeld || repeat) this.taps.push(b);
+    if (this.handler) this.handler(b, repeat);
+  },
+  up(b) { this.held[b] = false; }
+};
+
+/* ---------- UI: dialogue panel, choices, modal ---------- */
+const UI = {
+  panel: null, text: null, who: null, opts: null, more: null,
+  mode: null,            // 'say' | 'choice' | null
+  typing: false, full: '', shown: 0, resolve: null,
+  choice: null,          // {items, cursor, cols, resolve, cancel}
+  modalEl: null, modal: null, // {items, cursor, resolve, closable}
+  turbo: false, openedAt: 0,
+  ghost() { return performance.now() - this.openedAt < 350; }, // ignore the click that belongs to the tap which opened this UI
+  init() {
+    this.panel = document.getElementById('panel');
+    this.text = document.getElementById('ptext');
+    this.who = document.getElementById('pwho');
+    this.opts = document.getElementById('popts');
+    this.more = document.getElementById('pmore');
+    this.modalEl = document.getElementById('modal');
+    this.panel.addEventListener('click', e => {
+      if (e.target.closest('[data-i]')) return;
+      if (this.mode === 'say' && !this.ghost()) this.handle('a');
+    });
+  },
+  showPanel(on) { this.panel.classList.toggle('show', !!on); },
+  say(text, who) {
+    return new Promise(res => {
+      this.mode = 'say'; this.resolve = res; this.openedAt = performance.now();
+      this.full = text; this.shown = 0; this.typing = true;
+      this.who.textContent = who || ''; this.who.style.display = who ? '' : 'none';
+      this.opts.innerHTML = ''; this.more.style.visibility = 'hidden';
+      this.text.textContent = '';
+      this.showPanel(true);
+      if (this.turbo) { this.shown = this.full.length; }
+    });
+  },
+  tick(dt) {
+    if (this.mode === 'say' && this.typing) {
+      this.shown = Math.min(this.full.length, this.shown + dt * 0.09);
+      this.text.textContent = this.full.slice(0, Math.floor(this.shown));
+      if (this.shown >= this.full.length) { this.typing = false; this.more.style.visibility = 'visible'; }
+    }
+  },
+  choose(prompt, items, o) {
+    o = o || {};
+    return new Promise(res => {
+      this.mode = 'choice';
+      this.choice = {items, cursor: o.cursor || 0, cols: o.cols || 1, resolve: res, cancel: !!o.cancel};
+      this.openedAt = performance.now();
+      while (this.choice.items[this.choice.cursor] && this.choice.items[this.choice.cursor].disabled && this.choice.cursor < items.length - 1) this.choice.cursor++;
+      this.who.textContent = o.who || ''; this.who.style.display = o.who ? '' : 'none';
+      this.text.textContent = prompt || '';
+      this.more.style.visibility = 'hidden';
+      this.showPanel(true);
+      this.renderChoice();
+    });
+  },
+  renderChoice() {
+    const c = this.choice;
+    this.opts.style.gridTemplateColumns = 'repeat(' + c.cols + ', minmax(0,1fr))';
+    this.opts.innerHTML = c.items.map((it, i) =>
+      '<button class="opt' + (i === c.cursor ? ' cur' : '') + (it.disabled ? ' dis' : '') + '" data-i="' + i + '">' +
+      '<span class="car">▸</span>' + esc(it.label) + (it.note ? '<span class="note">' + esc(it.note) + '</span>' : '') + '</button>').join('');
+    this.opts.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      if (this.ghost()) return;
+      const i = +b.dataset.i; if (c.items[i].disabled) return;
+      c.cursor = i; this.finishChoice(i);
+    }));
+  },
+  finishChoice(i) {
+    const c = this.choice;
+    this.choice = null; this.mode = null;
+    this.opts.innerHTML = '';
+    c.resolve(i);
+  },
+  hidePanel() { if (!this.mode) this.showPanel(false); },
+  handle(b) {
+    if (this.modal) return this.modalHandle(b);
+    if (this.mode === 'say') {
+      if (b === 'a' || b === 'b') {
+        if (this.typing) { this.shown = this.full.length; this.text.textContent = this.full; this.typing = false; this.more.style.visibility = 'visible'; }
+        else { const r = this.resolve; this.mode = null; this.resolve = null; r(); }
+      }
+      return true;
+    }
+    if (this.mode === 'choice') {
+      const c = this.choice, n = c.items.length;
+      const move = d => { let i = c.cursor; for (let k = 0; k < n; k++) { i = (i + d + n) % n; if (!c.items[i].disabled) break; } c.cursor = i; this.renderChoice(); };
+      if (b === 'up') move(-c.cols); else if (b === 'down') move(c.cols);
+      else if (b === 'left') move(-1); else if (b === 'right') move(1);
+      else if (b === 'a') { if (!c.items[c.cursor].disabled) this.finishChoice(c.cursor); }
+      else if (b === 'b' && c.cancel) this.finishChoice(-1);
+      return true;
+    }
+    return false;
+  },
+  /* Modal: full-screen readable page with a list of options. */
+  openModal(title, bodyHtml, items, o) {
+    o = o || {};
+    return new Promise(res => {
+      this.modal = {items, cursor: o.cursor || 0, resolve: res, closable: o.closable !== false, multi: o.multi || 0, sel: new Set()};
+      this.openedAt = performance.now();
+      this.modalEl.innerHTML =
+        '<div class="mbox ' + (o.cls || '') + '"><div class="mhead">' + esc(title) + '</div>' +
+        '<div class="mbody" id="mbody">' + bodyHtml + '</div>' +
+        '<div class="mopts" id="mopts"></div></div>';
+      this.modalEl.classList.add('show');
+      this.renderModal();
+      const mb = document.getElementById('mbody'); if (mb) mb.scrollTop = 0;
+    });
+  },
+  renderModal() {
+    const m = this.modal; if (!m) return;
+    const box = document.getElementById('mopts');
+    box.innerHTML = m.items.map((it, i) =>
+      '<button class="opt' + (i === m.cursor ? ' cur' : '') + (it.disabled ? ' dis' : '') + (m.sel.has(i) ? ' sel' : '') + '" data-i="' + i + '">' +
+      '<span class="car">▸</span>' + (m.multi && !it.done ? '<span class="chk">' + (m.sel.has(i) ? '■' : '□') + '</span>' : '') + esc(it.label) +
+      (it.note ? '<span class="note">' + esc(it.note) + '</span>' : '') + '</button>').join('');
+    box.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => {
+      if (this.ghost()) return;
+      const i = +b.dataset.i; if (m.items[i].disabled) return;
+      m.cursor = i; this.modalActivate(i);
+    }));
+    const cur = box.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
+  },
+  modalActivate(i) {
+    const m = this.modal;
+    if (m.multi && !m.items[i].done) {
+      if (m.sel.has(i)) m.sel.delete(i); else if (m.sel.size < m.multi) m.sel.add(i);
+      this.renderModal(); return;
+    }
+    if (m.multi && m.items[i].done && m.sel.size !== m.multi) return;
+    this.closeModal(m.multi ? [...m.sel] : i);
+  },
+  closeModal(v) {
+    const m = this.modal; this.modal = null;
+    this.modalEl.classList.remove('show'); this.modalEl.innerHTML = '';
+    if (m) m.resolve(v);
+  },
+  modalHandle(b) {
+    const m = this.modal, n = m.items.length;
+    const mb = document.getElementById('mbody');
+    const move = d => { let i = m.cursor; for (let k = 0; k < n; k++) { i = (i + d + n) % n; if (!m.items[i].disabled) break; } m.cursor = i; this.renderModal(); };
+    if (b === 'up') { if (n <= 1 && mb) mb.scrollTop -= 60; else move(-1); }
+    else if (b === 'down') { if (n <= 1 && mb) mb.scrollTop += 60; else move(1); }
+    else if (b === 'left' && mb) mb.scrollTop -= 120;
+    else if (b === 'right' && mb) mb.scrollTop += 120;
+    else if (b === 'a') { if (!m.items[m.cursor].disabled) this.modalActivate(m.cursor); }
+    else if ((b === 'b' || b === 'start') && m.closable) this.closeModal(-1);
+    return true;
+  }
+};
+
+/* ---------- Save codec ---------- */
+const SAVE_KEY = 'uptime.slice1.save';
+function checksum(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16); }
+function encodeSave(obj) {
+  const json = JSON.stringify(obj);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  return 'UPT1.' + b64 + '.' + checksum(json);
+}
+function decodeSave(code) {
+  code = String(code || '').trim().replace(/\s+/g, '');
+  const parts = code.split('.');
+  if (parts.length !== 3 || parts[0] !== 'UPT1') throw new Error('Not an Uptime save code.');
+  const json = decodeURIComponent(escape(atob(parts[1])));
+  if (checksum(json) !== parts[2]) throw new Error('Save code is damaged (checksum mismatch).');
+  return JSON.parse(json);
+}
+function storeGet() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } }
+function storeSet(v) { try { localStorage.setItem(SAVE_KEY, v); return true; } catch (e) { return false; } }
+function storeDel() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+/* ---- engine/series.js ---- */
+/* ============================================================
+   UPTIME · engine/series.js
+   Series-level save (localStorage key 'uptime.series'), separate from each
+   edition's own save, so later editions can read what happened earlier.
+   Also the core of the Quiet Thread: a hidden, series-long intruder that lives
+   off the land and never raises a normal alert. It is never part of the alert
+   mix: there are no wild encounters for it, only clues an analyst may notice.
+   ============================================================ */
+'use strict';
+
+const SERIES_KEY = 'uptime.series';
+// Quiet Thread stages: 0 unseen · 1 noticed (a clue or two) · 2 suspected (3+ clues; hunt mode opens later)
+const QT_SUSPECT = 3;
+
+const Series = {
+  data: null,
+  blankQT() { return {stage: 0, cluesFound: [], evicted: false}; },
+  blank() { return {v: 1, quietThread: this.blankQT(), editions: {}}; },
+  normQT(q) {
+    const b = this.blankQT();
+    if (!q || typeof q !== 'object') return b;
+    b.cluesFound = Array.isArray(q.cluesFound) ? q.cluesFound.filter(x => typeof x === 'string').filter((x, i, a) => a.indexOf(x) === i) : [];
+    b.stage = Math.max(+q.stage || 0, qtStageFor(b.cluesFound.length));
+    b.evicted = q.evicted === true;
+    return b;
+  },
+  load() {
+    let d = null;
+    try { const raw = localStorage.getItem(SERIES_KEY); if (raw) d = JSON.parse(raw); } catch (e) { d = null; }
+    const out = this.blank();
+    if (d && typeof d === 'object') {
+      out.quietThread = this.normQT(d.quietThread);
+      if (d.editions && typeof d.editions === 'object') out.editions = d.editions;
+    }
+    this.data = out;
+    return out;
+  },
+  save() { try { localStorage.setItem(SERIES_KEY, JSON.stringify(this.data)); return true; } catch (e) { return false; } },
+  qt() { if (!this.data) this.load(); return this.data.quietThread; },
+  // Merge a copy carried in an edition save (e.g. an imported save code) into the series record.
+  merge(q) {
+    const cur = this.qt(), inc = this.normQT(q);
+    inc.cluesFound.forEach(c => { if (!cur.cluesFound.includes(c)) cur.cluesFound.push(c); });
+    cur.stage = Math.max(cur.stage, inc.stage, qtStageFor(cur.cluesFound.length));
+    cur.evicted = cur.evicted || inc.evicted;
+    this.save();
+  },
+  markEdition(id, info) { if (!this.data) this.load(); this.data.editions[id] = Object.assign({}, this.data.editions[id] || {}, info); this.save(); }
+};
+function qtStageFor(n) { return n >= QT_SUSPECT ? 2 : n >= 1 ? 1 : 0; }
+
+/* ATT&CK techniques behind the Quiet Thread clues (verified on attack.mitre.org, Oct 2026, ATT&CK v19).
+   Kept apart from each edition's TECH table: they never appear in alerts, and they are not counted in Field Manual %. */
+const QT_TECH = {
+  'T1078':     {name: 'Valid Accounts', tactic: ['Initial Access', 'Persistence', 'Privilege Escalation', 'Stealth'],
+                plain: 'Signing in with a real account’s real password. Nothing fails, so nothing alerts.'},
+  'T1090':     {name: 'Proxy', tactic: ['Command and Control'],
+                plain: 'Relaying traffic through another device so neither end shows where it really comes from or goes.'},
+  'T1685.005': {name: 'Disable or Modify Tools: Clear Windows Event Logs', tactic: ['Defense Impairment'],
+                plain: 'Wiping a computer’s event logs so the record of what happened is gone. Before ATT&CK v19 this was T1070.001.'},
+  'T1053.005': {name: 'Scheduled Task/Job: Scheduled Task', tactic: ['Execution', 'Persistence', 'Privilege Escalation'],
+                plain: 'Using the Windows Task Scheduler to run a program at set times, so it keeps coming back without anyone starting it.'},
+  'T1584.008': {name: 'Compromise Infrastructure: Network Devices', tactic: ['Resource Development'],
+                plain: 'Taking over routers and similar network gear, often old small-office models, to use as infrastructure such as relays.'}
+};
+const QT_FIELD_NOTES = 'Field notes: the Quiet Thread is a composite (game). Its real-world basis is joint Cybersecurity Advisory AA24-038A ' +
+  '(CISA, NSA and FBI with partner agencies, February 2024) on Volt Typhoon, a PRC state-sponsored group. The advisory reports access to some US ' +
+  'critical-infrastructure IT networks for at least five years, using valid accounts, built-in tools, selective clearing of logs and compromised ' +
+  'small-office routers, and pre-positioning to move toward operational technology (OT) and disrupt it.';
+
+function qtCount() { return Series.qt().cluesFound.length; }
+function qtFound(id) { return Series.qt().cluesFound.includes(id); }
+// Keep a copy inside the edition save so export codes carry it to another device.
+function qtMirror() { if (G) G.qt = JSON.parse(JSON.stringify(Series.qt())); }
+// After Continue/Import: fold the save's copy into the series record, then mirror back.
+function qtAdopt() { if (G && G.qt) Series.merge(G.qt); qtMirror(); }
+// Record a clue (QT_CLUES is edition data). Returns true when it is new.
+function qtNote(id) {
+  const c = QT_CLUES[id]; if (!c) return false;
+  const q = Series.qt();
+  if (q.cluesFound.includes(id)) return false;
+  q.cluesFound.push(id);
+  q.stage = Math.max(q.stage, qtStageFor(q.cluesFound.length));
+  Series.save(); qtMirror();
+  toast('Field Manual: something unexplained, noted');
+  return true;
+}
+function qtFmHtml() {
+  const found = Series.qt().cluesFound.filter(id => QT_CLUES[id]);
+  const others = Series.qt().cluesFound.length - found.length;
+  if (!found.length && !others) return '';
+  let h = '<h3>Unexplained</h3><p class="small">No alert fired for any of these. They may be nothing. (' + Series.qt().cluesFound.length + ' noted)</p>';
+  for (const id of found) {
+    const c = QT_CLUES[id], t = QT_TECH[c.tech];
+    h += '<div class="fm"><b>' + esc(c.tech + ' ' + t.name) + '</b> <span class="tag">long campaign</span><br>' + esc(t.plain) +
+      ' Tactic: ' + esc(t.tactic.join(', ')) + '.<br><small>What you noticed: ' + esc(c.seen) + ' (game)</small></div>';
+  }
+  if (others) h += '<div class="fm small">' + others + ' more noted in another edition.</div>';
+  h += '<div class="fm small">' + esc(QT_FIELD_NOTES) + '</div>';
+  return h;
+}
+
+/* ---- editions/town-hall/data.js ---- */
+/* ============================================================
+   UPTIME · editions/town-hall/data.js
+   Town Hall edition data: maps, buildings, people, ATT&CK techniques met here,
+   threats, alert templates, briefings, dojo puzzles, tabletop cards, Field Manual text.
+   ============================================================ */
+'use strict';
+
+/* ---------- Maps ---------- */
+// Hub: Town Hall plaza, the Front Desk building (a), guest lounge (b), records office (c), annex (d),
+// the firewall with the contractor's open port (O), the cabling route south to the Identity Board (I) and the Dojo (J).
+const MAPS = {
+  hub: {
+    name: 'Town Hall · Front Desk district',
+    rows: [
+      "WWWWWWWWWWWWWW==WWWWWWWWWWWWWW",
+      "WWWWWWWWWWWWWW==WWWWWWWWWWWWWW",
+      "FFFFFFFFFFFFFFOOFFFFFFFFFFFFFF",
+      "h111..........==........222KKh",
+      "h1aaaa..bbbb..==..dddd..222KKh",
+      "h1aaaa..bbbb..==..dddd...2KKKh",
+      "h.aaDa..bbDb..==..ddDd.......h",
+      "h.............==.............h",
+      "h============================h",
+      "h.S.cccc......==.............h",
+      "h.X.ccDc......==......3333GGGh",
+      "hhhhhhhhhhhhh.==.hhhhh3333GGGh",
+      "hGGGGGGGGGGGG.==.GGGGGGGGGGGGh",
+      "hGGGGGGGGGGGGGGGGGGGGGGGGGGGGh",
+      "hGG..........GGGG.......GGGGGh",
+      "hGG.IIII.GGGGGGGGGGGG.JJJJ..Gh",
+      "hGG.IIII.GGGGGGGGGGGG.JJJJ..Gh",
+      "hGG.IIDI.GGGGGGGGGGGG.JJDJ..Gh",
+      "hGG......GGGGGGGGGGG.........h",
+      "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+    ],
+    doors: {'4,6':{to:'desk', x:9, y:9, dir:'up'}, '6,17':{to:'board', x:9, y:9, dir:'up'}, '24,17':{to:'dojo', x:9, y:9, dir:'up'},
+            '10,6':{locked:'Guest lounge. Visitors wait here for their badges.'}, '20,6':{locked:'The Annex. The HVAC contractor works from here.'}, '6,10':{locked:'Records office. Owen keeps the archive here.'}},
+    outdoor: true
+  },
+  desk: {
+    name: 'Front Desk',
+    rows: [
+      "wwwwwwwwwwwwwwwwwwww",
+      "wn,,,,,,,w,,,,,,,,,w",
+      "w,,,,,,,,w,p,,p,,p,w",
+      "w,,,,,,,,w,,,,,,,,,w",
+      "w,,k,,,,,,,,,,,,,,,w",
+      "wCCC,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,Y,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "wwwwwwwwwEwwwwwwwwww"
+    ],
+    doors: {'9,10':{to:'hub', x:4, y:7, dir:'down'}}
+  },
+  board: {
+    name: 'Identity Board',
+    rows: [
+      "wwwwwwwwwwwwwwwwwwww",
+      "wKK,,,,,,,,,,,,,,KKw",
+      "wKK,,,,,,,,,,,,,,KKw",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "wwwwwwwwwEwwwwwwwwww"
+    ],
+    doors: {'9,10':{to:'hub', x:6, y:18, dir:'down'}}
+  },
+  dojo: {
+    name: 'Password Cracking Dojo',
+    rows: [
+      "wwwwwwwwwwwwwwwwwwww",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,q,,,q,,,q,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,w",
+      "wwwwwwwwwEwwwwwwwwww"
+    ],
+    doors: {'9,10':{to:'hub', x:24, y:18, dir:'down'}}
+  }
+};
+
+/* ---------- Building groups (patch state) ---------- */
+const GROUPS = {
+  a: {name:'Front Desk', fix:'kiosk'},
+  b: {name:'Guest lounge', fix:'wifi'},
+  c: {name:'Records office', fix:'logs'},
+  d: {name:'Annex', fix:'portDone'}
+};
+
+/* ---------- NPCs ---------- */
+// cond(G) decides whether the NPC is present.
+const NPCS = [
+  {id:'rae', name:'Rae Okafor', role:'SOC lead', map:'desk', x:16, y:6, dir:'down', pal:'rae', acct:true},
+  {id:'dee', name:'Dee Marsh', role:'reception', map:'desk', x:1, y:6, dir:'down', pal:'dee', acct:true},
+  {id:'tomas', name:'Tomas Reyes', role:'IT technician', map:'desk', x:3, y:1, dir:'down', pal:'tomas', acct:true},
+  {id:'lin', name:'Lin Zhao', role:'accounts', map:'desk', x:12, y:3, dir:'down', pal:'lin', acct:true},
+  {id:'hal', name:'Hal Benning', role:'facilities', map:'hub', x:17, y:7, dir:'down', pal:'hal', acct:true},
+  {id:'sam', name:'Sam Ortiz', role:'visitor', map:'hub', x:9, y:7, dir:'down', pal:'sam'},
+  {id:'owen', name:'Owen Pike', role:'records clerk', map:'hub', x:8, y:10, dir:'left', pal:'owen', acct:true, cond:G=>G.day>=2},
+  {id:'grace', name:'Grace Kim', role:'HR partner', map:'hub', x:12, y:9, dir:'down', pal:'grace', acct:true, cond:G=>G.day>=2},
+  {id:'vex', name:'Vex', role:'red teamer', map:'hub', x:15, y:12, dir:'up', spr:'actor', pal:'actor', cond:G=>G.f.vexMet && !G.f.vexDone},
+  {id:'marisol', name:'Marisol Diaz', role:'identity lead', map:'board', x:9, y:2, dir:'down', pal:'marisol', acct:true},
+  {id:'imani', name:'Imani Brooks', role:'NCL coach', map:'dojo', x:9, y:5, dir:'down', pal:'imani', acct:true}
+];
+const ACCOUNTS_TOTAL = 12; // (game) staff accounts in the district, including the front-desk admin account
+
+/* ---------- ATT&CK techniques (verified against attack.mitre.org, Oct 2026) ---------- */
+const TECH = {
+  'T1110.003': {name:'Brute Force: Password Spraying', tactic:['Credential Access'], desc:'Trying one or a few common passwords against many accounts, to stay under lockout limits.'},
+  'T1566.004': {name:'Phishing: Spearphishing Voice', tactic:['Initial Access'], desc:'Phone calls, often posing as IT or a trusted company, that talk someone into giving access or running something.'},
+  'T1566.002': {name:'Phishing: Spearphishing Link', tactic:['Initial Access'], desc:'A message with a link to a fake sign-in page or a malicious download.'},
+  'T1595':     {name:'Active Scanning', tactic:['Reconnaissance'], desc:'Probing an organisation’s internet-facing addresses to learn what services are exposed.'},
+  'T1133':     {name:'External Remote Services', tactic:['Initial Access','Persistence'], desc:'Using remote-access services reachable from the internet (remote desktop, VPN) to get in or stay in.'},
+  'T1190':     {name:'Exploit Public-Facing Application', tactic:['Initial Access'], desc:'Abusing a flaw in an internet-facing app or device to get into the network.'},
+  'T1621':     {name:'Multi-Factor Authentication Request Generation', tactic:['Credential Access'], desc:'Flooding a user with MFA approval prompts, hoping one gets approved.'},
+  'T1684.001': {name:'Social Engineering: Impersonation', tactic:['Stealth'], desc:'Posing as a trusted person (an executive, a colleague, a help-desk agent) to get someone to act. The older ID T1656 now redirects here.'},
+  'T1078':     {name:'Valid Accounts', tactic:['Initial Access','Persistence','Privilege Escalation','Stealth'], desc:'Signing in with real credentials that were stolen or guessed, so the activity looks legitimate.'},
+  'T1078.001': {name:'Valid Accounts: Default Accounts', tactic:['Initial Access','Persistence','Privilege Escalation','Stealth'], desc:'Using built-in accounts and factory-default passwords that nobody changed.'},
+  'T1098.005': {name:'Account Manipulation: Device Registration', tactic:['Persistence','Privilege Escalation'], desc:'Enrolling an attacker-controlled device (for example as an MFA device) on a compromised account to keep access.'}
+};
+
+/* ---------- Threats (wild alerts) ---------- */
+const THREATS = {
+  sprayer: {name:'Sprayer', tech:'T1110.003', spr:'sprayer', pal:'sprayer', tags:['identity'], bucket:'cred'},
+  caller:  {name:'Caller', tech:'T1566.004', spr:'caller', pal:'caller', tags:['voice'], bucket:'phish'},
+  lure:    {name:'Lure', tech:'T1566.002', spr:'lure', pal:'lure', tags:[], bucket:'phish'},
+  prober:  {name:'Prober', tech:'T1595', spr:'prober', pal:'prober', tags:['recon'], bucket:'other'},
+  pry:     {name:'Pry', tech:'T1190', spr:'pry', pal:'pry', tags:[], bucket:'vuln'},
+  jamb:    {name:'Jamb', tech:'T1133', spr:'jamb', pal:'jamb', tags:['remote'], bucket:'story'}
+};
+// (game) malicious entry weights, from the 2025 Verizon DBIR initial-access shares: credentials 22, exploited vulnerability 20, phishing 16, other 42.
+const MAL_WEIGHTS = [
+  {t:'sprayer', w:22}, {t:'pry', w:20}, {t:'lure', w:10}, {t:'caller', w:6}, {t:'prober', w:42}
+];
+
+/* Alert templates: per threat, three possible truths. Clues are revealed by investigation. */
+const HOSTS = ['FD-RECEPTION-02','FD-KIOSK-01','FD-STAFF-07','FD-STAFF-11','ANNEX-PC-03','FD-LAPTOP-14'];
+const ALERTS = {
+  sprayer: {
+    rule:'Many failed sign-ins across accounts',
+    mal:{clues:['Failures hit 40 different accounts in six minutes, two tries each: just under the lockout limit.','Every attempt comes from one hosting-provider address range never seen here before.','After the burst, one account (reception-02) signed in successfully from that range.'],
+         truth:'Password spraying: one common password tried against many accounts. One account fell.',
+         resp:[{label:'Reset reception-02, revoke its sessions, block the source range',good:true},{label:'Isolate every reception PC',good:false,disrupt:2},{label:'Lock all 40 accounts for a day',good:false,disrupt:1}]},
+    benign:{clues:['Failures come from the office’s own network, spread over an hour.','Each account succeeded within a few tries, from its usual PC.','Passwords expired over the weekend; Monday morning staff are mistyping new ones.'],
+         truth:'Benign: staff mistyping new passwords after a scheduled expiry.'},
+    fp:{clues:['Every “failure” comes from the visitor kiosk, exactly every 15 minutes.','The event code is a session timeout, not a wrong password.','Nobody typed anything: it’s the kiosk’s scheduled auto-logout.'],
+         truth:'False positive: the rule counted the kiosk’s auto-logout as failed passwords.'}
+  },
+  caller: {
+    rule:'Staff report: suspicious “IT” phone call',
+    mal:{clues:['Caller ID showed an outside number labelled with our company name.','The caller asked Dee to read back the sign-in code just texted to her.','The real help desk made no outbound calls today.'],
+         truth:'Voice phishing: someone posing as IT tried to get a sign-in code over the phone.',
+         resp:[{label:'Reset Dee’s password, check her sign-ins, warn staff',good:true},{label:'Isolate Dee’s PC',good:false,disrupt:2},{label:'Block all outside calls',good:false,disrupt:1}]},
+    benign:{clues:['A help-desk ticket shows Lin asked a software vendor to call her back.','The number matches the vendor’s published support line.','The caller asked for nothing sensitive.'],
+         truth:'Benign: a vendor support callback the user had requested.'},
+    fp:{clues:['The alert came from a keyword rule on voicemail transcripts.','The trigger word was “urgent”.','The voicemail is a dentist’s appointment reminder.'],
+         truth:'False positive: a keyword rule fired on an appointment reminder.'}
+  },
+  lure: {
+    rule:'Link to a sign-in page clicked from email',
+    mal:{clues:['The link’s domain is one letter off from ours and was registered two days ago.','The page asks for the password, then the MFA code.','Three other people received the same email.'],
+         truth:'Spearphishing link: a look-alike sign-in page harvesting passwords and codes.',
+         resp:[{label:'Reset the clicker’s password, purge the email, block the domain',good:true},{label:'Isolate the clicker’s laptop for a week',good:false,disrupt:2},{label:'Ban all links in email',good:false,disrupt:1}]},
+    benign:{clues:['The email came from HR’s survey platform, announced last week.','The link’s domain is the platform’s real one.','It asks no passwords; sign-in goes through our own login page.'],
+         truth:'Benign: a legitimate staff survey with tracking links.'},
+    fp:{clues:['The rule fires on any URL containing the word “login”.','The URL is our own company sign-in page.','Every staff member hits this page daily.'],
+         truth:'False positive: the rule matched our own login page.'}
+  },
+  prober: {
+    rule:'Port sweep against public addresses',
+    mal:{clues:['One source hits ports 22, 443 and 3389 on every public address, in sequence.','It then repeats only against the address that answered.','Requests look for a known remote-access login page.'],
+         truth:'Active scanning: an outsider mapping what we expose, looking for a way in.',
+         resp:[{label:'Block the source, confirm what is exposed, watch for follow-up',good:true},{label:'Take the website offline',good:false,disrupt:2},{label:'Ignore: scanning is just noise',good:false}]},
+    benign:{clues:['The source is the address of our own vulnerability scanner.','A scan was scheduled for tonight in the change calendar.','It ran on time and stopped on time.'],
+         truth:'Benign: our own scheduled vulnerability scan.'},
+    fp:{clues:['The “scan” is many short DNS lookups.','They come from the guest Wi-Fi when a phone joins.','It’s normal phone behaviour; the rule threshold is too low.'],
+         truth:'False positive: the rule mistook normal DNS lookups for a port scan.'}
+  },
+  pry: {
+    rule:'Odd requests to the visitor kiosk web app',
+    mal:{clues:['Requests put database commands into the visitor-name field.','The app version has a publicly known flaw that is not yet patched.','One request returned far more data than a normal page.'],
+         truth:'Exploiting a public-facing app: injecting commands through a known flaw.',
+         resp:[{label:'Block the source, patch the app, check what data was returned',good:true},{label:'Isolate the reception PCs',good:false,disrupt:2},{label:'Restart the kiosk and close it',good:false}]},
+    benign:{clues:['Errors began right after an app update.','They come from visitors’ normal sign-in attempts.','The vendor confirmed a display bug in the new version.'],
+         truth:'Benign: a buggy update causing harmless errors.'},
+    fp:{clues:['The rule looks for the word “select” in requests.','The match is a menu label: “Select your host”.','Nothing unusual reached the database.'],
+         truth:'False positive: a keyword rule matched a menu label.'}
+  }
+};
+// Attacker progress lines for each wild threat's alerts (two steps along the chain).
+const ALERT_CHAINS = {sprayer: ['More failures roll in across accounts.', 'A sprayed account signs in successfully.'],
+    caller: ['A second employee reports the same call.', 'Someone read a code out loud; a new sign-in follows.'],
+    lure: ['Two more people click the link.', 'A harvested password is used to sign in.'],
+    prober: ['The scan narrows to one address.', 'Login attempts begin on the exposed service.'],
+    pry: ['Requests start returning database rows.', 'A new file appears in the kiosk app folder.']};
+
+/* ---------- Morning briefing items (retold, generic but accurate) ---------- */
+const BRIEFS = [
+  {t:'sprayer', text:'Attackers are spraying common passwords against remote email logins.', act:'Ban common passwords and check the lockout policy'},
+  {t:'caller', text:'Callers posing as IT support are phoning staff and asking for sign-in codes.', act:'Remind staff: IT will never ask for your code'},
+  {t:'lure', text:'Emails linking to look-alike sign-in pages are circulating.', act:'Warn staff and show the report-phishing button'},
+  {t:'prober', text:'Internet-wide scans for exposed remote-access services are routine.', act:'Review which services face the internet'},
+  {t:'pry', text:'Newly disclosed flaws in internet-facing apps are exploited quickly.', act:'Patch internet-facing apps first'}
+];
+
+/* ---------- Dojo puzzles ---------- */
+const DOJO = [
+  {q:'Which password space is biggest? (Each character chosen at random.)',
+   opts:['8 characters from all 95 printable symbols','16 lowercase letters','10 letters and digits'], good:1,
+   explain:'95^8 ≈ 6.6×10^15. 26^16 ≈ 4.4×10^22. 62^10 ≈ 8.4×10^17. Every extra character multiplies the space, so length wins. Current NIST guidance (SP 800-63B) favours longer passwords over composition rules.'},
+  {q:'A site stores password hashes. When you sign in, how does it check your password?',
+   opts:['It decrypts the stored hash and compares','It hashes what you typed and compares the two hashes','It emails your password to an admin'], good:1,
+   explain:'A hash is a one-way fingerprint: the same input always gives the same output, and you can’t run it backwards. So the site hashes your attempt and compares fingerprints. Password storage uses deliberately slow hash functions.'},
+  {q:'Two users both chose “sunshine1”. What does a unique random salt per user do?',
+   opts:['Makes their stored hashes different, so precomputed tables and look-alike matches fail','Encrypts the password so it can be recovered','Turns a weak password into a strong one'], good:0,
+   explain:'The salt is mixed in before hashing, so identical passwords produce different hashes and precomputed (rainbow) tables are useless. It does not make a guessable password hard to guess.'}
+];
+
+/* ---------- Boss tabletop cards (our own, written from ATT&CK/D3FEND-style actions) ---------- */
+const CARDS = [
+  {id:'reset', name:'Reset credentials', csf:'Respond', text:'Give the admin account a new long password now.', fx:'Stage 2 starts with less attacker progress.'},
+  {id:'revoke', name:'Revoke sessions', csf:'Respond', text:'Sign the account out everywhere, killing any session the attacker holds.', fx:'Stage 2 attacker moves slower.'},
+  {id:'mfa', name:'Enforce MFA', csf:'Protect', text:'Require a second factor for the admin account.', fx:'Stage 3 becomes much easier.'},
+  {id:'logs', name:'Review sign-in logs', csf:'Detect', text:'Pull every sign-in for the account in the last 30 days.', fx:'Every stage starts with more evidence.'},
+  {id:'isolate', name:'Isolate host', csf:'Respond', text:'Cut the admin’s workstation off the network.', fx:'Does not help: the attacker is using the account, not that PC.'},
+  {id:'notify', name:'Notify leadership', csf:'Govern', text:'Tell leadership what happened, what you are doing, and when you’ll update them.', fx:'Reputation up; leadership is ready if it gets worse.'}
+];
+
+/* ---------- Field Manual ---------- */
+const EXTRA_ACTIONS = {
+  passphrase:{name:'Replace default credentials', desc:'Change factory-default passwords to long, unique ones kept in a password vault.'},
+  segment:{name:'Network segmentation', desc:'Put guest devices on their own network that can reach the internet but not staff systems.'},
+  logging:{name:'Enable security logging', desc:'Turn on event logs and forward them to a central collector so investigations have evidence.'},
+  numbermatch:{name:'Number-matching MFA prompts', desc:'The user must type a number shown on the sign-in screen, so blindly approving a push does not work.'},
+  callback:{name:'Call-back verification', desc:'Verify a caller by hanging up and calling the number on file, never one they give you.'},
+  insider:{name:'Insider-risk referral', desc:'Report concerning behaviour factually to the insider-risk process (HR, legal, security). One sign proves nothing; don’t investigate on your own.'}
+};
+const FACTS = {
+  dbir_ia:{name:'How breaches start (2025)', desc:'In the 2025 Verizon Data Breach Investigations Report, the top known initial access vectors were credential abuse (22%), exploitation of vulnerabilities (20%) and phishing (16%).', src:'Verizon 2025 DBIR'},
+  dbir_rw:{name:'Ransomware and smaller organisations (2025)', desc:'The 2025 Verizon DBIR found ransomware in 88% of breaches at small and medium-sized organisations, compared with 39% at large ones.', src:'Verizon 2025 DBIR'},
+  fp:{name:'Alert fatigue (2021)', desc:'In Critical Start’s 2021 survey of 100 SOC professionals, 68% said 25–75% of the alerts they investigate each day are false positives.', src:'Critical Start, 2021 SOC survey'},
+  nist:{name:'Length beats complexity', desc:'NIST SP 800-63B (digital identity guidelines) favours longer passwords and tells verifiers not to impose composition rules such as “one symbol, one digit”.', src:'NIST SP 800-63B'}
+};
+const GAME_NOTES = [
+  'Alert mix before tuning: 50% false positive, 30% benign but real, 20% malicious. (game)',
+  'Malicious alerts are weighted 22 credentials / 20 exploited vulnerability / 16 phishing / 42 other, borrowing the DBIR shares. (game)',
+  'Class strengths: Endpoint vs Execution/Persistence/Privilege Escalation; Network vs C2/Lateral Movement/Exfiltration/remote services/scanning; Logging vs Discovery/Credential Access once logs are on; Identity vs Credential Access and account abuse. Strong ×2, weak ×0.5. (game)',
+  'District uptime, reputation, building health, MFA coverage (12 accounts) and all character names are invented. (game)',
+  'Automation risk “about 1 in 50 auto-closed alerts may be real” is an invented number. (game)'
+];
+
+/* ---------- Debriefs ---------- */
+const VEX_EXPLAIN = [
+  ['T1595','First I scanned your public addresses (Active Scanning, T1595). The Annex was answering on remote desktop until you closed it, so I went to people instead.'],
+  ['T1566.002','Then I emailed Lin a link to a sign-in page one letter off from yours (Spearphishing Link, T1566.002).'],
+  ['T1078','With her password I signed in like a normal user (Valid Accounts, T1078). That is why it looked quiet: real credentials make real-looking logs.']
+];
+
+/* ---- editions/town-hall/quiet.js ---- */
+/* ============================================================
+   UPTIME · editions/town-hall/quiet.js
+   The Quiet Thread, first seeds (Town Hall). The intruder came in through the
+   old small-office router in the Front Desk network closet and lives off the
+   land: a valid service account, built-in tools, a cleared log, a scheduled
+   task. It never raises an alert and has no wild encounter. Five faint clues,
+   each visible only with the right capability, from Day 2 on.
+   The clue situations are invented (game); the technique IDs are real (see QT_TECH).
+   ============================================================ */
+'use strict';
+
+const QT_CLUES = {
+  'th-signin':   {tech: 'T1078', where: 'your desk (Ledger console)',
+                  seen: 'svc-print, the printer’s service account, signed in to FD-STAFF-11 at 03:12 on Day 2, right password on the first try.'},
+  'th-router':   {tech: 'T1090', where: 'network closet (Lanternkeep)',
+                  seen: 'Once a night, just after 03:00, the closet’s small-office router opened a short encrypted connection to an address no vendor of ours uses.'},
+  'th-logclear': {tech: 'T1685.005', where: 'FD-STAFF-14 (Ledger)',
+                  seen: 'FD-STAFF-14’s security log starts at 03:40 on Day 2 with a “log cleared” entry; the other PCs go back to Day 1.'},
+  'th-schtask':  {tech: 'T1053.005', where: 'FD-STAFF-11 (Sentry)',
+                  seen: 'A scheduled task called PrinterHealthCheck starts a built-in Windows command-line tool on FD-STAFF-11 at 03:10 each night. Nobody made it.'},
+  'th-reboot':   {tech: 'T1584.008', where: 'Hal, facilities (hallway)',
+                  seen: 'The old closet router keeps rebooting itself around 03:00. Its maker stopped releasing updates for it years ago.'}
+};
+// Staff PC hostnames by map column (the three desks in the Front Desk office).
+const PC_HOSTS = {11: 'FD-STAFF-11', 14: 'FD-STAFF-14', 17: 'FD-STAFF-17'};
+
+async function qtAfterNote(fresh) {
+  if (!fresh) return;
+  await say('(It doesn’t match any alert. You make a note in the Field Manual, under Unexplained.)');
+  if (qtCount() === QT_SUSPECT) await say('(That’s ' + QT_SUSPECT + ' things that don’t fit. Maybe they’re one thing.)');
+}
+
+/* (a) Your desk: with logging on, Ledger shows the overnight sign-ins from Day 2. */
+function qtDeskReady() { return G.f.logs && G.day >= 2 && hasTool('ledger'); }
+async function qtDeskConsole() {
+  await say('Ledger console, overnight sign-ins: svc-print, the printer’s service account, signed in to FD-STAFF-11 at 03:12. Right password, first try.');
+  await say('Service accounts run programs, not people, and this one normally only talks to the print server. No rule fired: nothing failed.');
+  await qtAfterNote(qtNote('th-signin'));
+}
+
+/* (b) Network closet, after the firewall fix: Lanternkeep can read the router's connection table. */
+async function qtCloset() {
+  if (!G.f.portDone || G.day < 2) return;
+  if (!hasTool('lantern')) { await say('The old small-office router’s lights blink. Reading its connection table would take a network tool.'); return; }
+  const i = await choose('The old small-office router hums on the shelf.', [{label: 'Lanternkeep: inspect its connections'}, {label: 'Leave it'}]);
+  if (i !== 0) return;
+  await say('Lanternkeep: once a night, just after 03:00, the router opens a short encrypted connection to an address that isn’t any vendor or service you use. Small, regular, and under every threshold.');
+  await qtAfterNote(qtNote('th-router'));
+}
+
+/* (c) and (d) Staff PCs from Day 2: Ledger compares log lengths, Sentry reads the process tree. */
+async function qtPc(x) {
+  if (G.day < 2) return;
+  const host = PC_HOSTS[x];
+  const opts = [];
+  if (hasTool('ledger')) opts.push({label: 'Ledger: check this PC’s security log', meta: {k: 'log'}});
+  if (hasTool('sentry')) opts.push({label: 'Sentry: look at the process tree', meta: {k: 'tree'}});
+  if (!opts.length) return;
+  opts.push({label: 'Leave it', meta: {k: 'leave'}});
+  const i = await choose(host + '.', opts);
+  const k = opts[i].meta.k;
+  if (k === 'log') {
+    if (x !== 14) { await say('Ledger: ' + host + '’s security log runs back to Day 1, when you switched logging on. Steady and ordinary.'); return; }
+    await say('Ledger: ' + host + '’s security log starts at 03:40 on Day 2. The other PCs go back to Day 1. Its first entry is Windows event 1102: the audit log was cleared.');
+    await say('Nobody on staff remembers clearing it. The copy forwarded to the collector before 03:40 is still there.');
+    await qtAfterNote(qtNote('th-logclear'));
+  } else if (k === 'tree') {
+    if (x !== 11) { await say('Sentry, process tree on ' + host + ': the browser, the mail app, the update service. Ordinary.'); return; }
+    await say('Sentry, process tree on ' + host + ': at 03:10 each night the Task Scheduler starts a built-in Windows command-line tool. The task is called PrinterHealthCheck.');
+    await say('Nobody in IT made it, and the printer has its own health checks.');
+    await qtAfterNote(qtNote('th-schtask'));
+  }
+}
+
+/* (e) Hallway remark from facilities, Day 2 on. */
+async function qtHal(who) {
+  if (G.day < 2 || !G.f.portDone) return;
+  if (qtFound('th-reboot')) { await say('That closet router? Still rebooting itself now and then.', who); return; }
+  await say('Funny thing: the little router in the Front Desk closet rebooted itself again last night. Third time this month.', who);
+  const i = await choose('Hal shrugs.', [{label: 'Ask about the router'}, {label: '“Probably the heat.”'}]);
+  if (i !== 0) return;
+  await say('Lights went dark around three and came back on their own. It’s an old model; the maker stopped putting out updates for it years ago. Tomas keeps meaning to replace it.', who);
+  await qtAfterNote(qtNote('th-reboot'));
+}
+
+/* End-of-slice line: explicit only with 3+ clues; otherwise one subtle line. */
+function qtSummaryHtml() {
+  if (qtCount() >= QT_SUSPECT) return '<p class="big">Something quiet is moving in the network.</p><p class="small">Note: Hunt mode opens later. Your Unexplained notes carry over.</p>';
+  return '<p class="small">Overnight, the closet router blinked, went dark, and came back.</p>';
+}
+
+/* ---- editions/town-hall/story.js ---- */
+/* ============================================================
+   UPTIME · editions/town-hall/story.js
+   Town Hall edition: state, objectives, map interactions, NPC talk and every
+   story script (onboarding, the open port, Vex, insider risk, Dojo, Identity
+   Board, the sprayed admin), the end-of-slice summary, and the edition hooks
+   the shared engine calls (EDITION, newState, editionTile, introScript...).
+   ============================================================ */
+'use strict';
+
+const EDITION = {
+  id: 'town-hall',
+  saveKey: 'uptime.slice1.save',
+  title: 'Town Hall · Front Desk district',
+  blurb: 'You’re the new intern in a small town’s security team. Investigate alerts, fix what’s broken, and keep the district running.',
+  creditsName: 'vertical slice 1: Town Hall, Front Desk district',
+  creditsFacts: 'Verizon 2025 Data Breach Investigations Report (initial access shares; ransomware at small and medium organisations). Critical Start 2021 SOC professional survey (false positives). NIST SP 800-63B (password length). Joint Cybersecurity Advisory AA24-038A (CISA, NSA, FBI and partners, February 2024).'
+};
+
+const FIX_ORDER = ['kiosk', 'wifi', 'logs'];
+const PCS = [11, 14, 17];
+
+/* ---------- State ---------- */
+function newState(seed) {
+  return {
+    v: 1, seed: seed, map: 'desk', x: 15, y: 6, dir: 'right',
+    day: 1, f: {}, party: [], active: 0, items: {guide: 0},
+    focus: 30, focusMax: 30, rep: 50, uptime: 99.95,
+    health: {a: 100, b: 100, c: 100, d: 100},
+    rank: 'Intern', badge: false,
+    m: {closed: 0, judged: 0, correctShown: 0, ttaSum: 0, ttaN: 0, esc: 0, escOk: 0, missed: 0, surfaced: 0, overreact: 0, autoClosed: 0, events: 0, today: 0},
+    track: {},
+    targets: {closed: 12, acc: 90, tta: 20, esc: 1, uptime: 99.9, mfa: 100, patch: 100},
+    mfaSet: ['rae', 'tomas', 'you'],
+    fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
+    fpWeight: 50, queue: 3, steps: 0, auto: false, playMs: 0
+  };
+}
+
+/* ---------- Edition hooks used by the engine ---------- */
+function fixesCount() { return FIX_ORDER.filter(k => G.f[k]).length; }
+// Map tiles that change as the district is fixed.
+function editionTile(d, ch, x, y) {
+  if (d.shrink && fixesCount() >= d.shrink) { d = Object.assign({ch: '.'}, TILES['.']); }
+  if (d.port && G.f.portDone) { d.spr = 'F'; d.pal = 'F'; }
+  if (ch === 'p' && (G.pcs[x] || G.f.logs)) d.pal = 'pcOn';
+  if (ch === 'k' && G.f.kiosk) d.pal = 'kioskOk';
+  if (ch === 'n' && G.f.wifi) d.pal = 'closetOk';
+  return d;
+}
+async function introScript() {
+  await say('Day 1, 08:00. Town Hall, Front Desk building. Your first day as the security intern.');
+  await say('Controls: move with the arrows or D-pad. A (Z) talks and confirms. B (X) goes back. Start (Enter) opens the menu. Select (Shift) opens the alert queue.');
+  await say('Rae, your manager, is waiting just to your right.');
+}
+
+/* ---------- Objective (also used by the test bot) ---------- */
+function objective() {
+  const f = G.f;
+  if (!f.starter) return {text: 'Talk to Rae, your SOC lead.', map: 'desk', x: 16, y: 6};
+  if (!f.kiosk) return {text: 'Onboarding: change the visitor kiosk’s default password.', map: 'desk', x: 3, y: 4};
+  if (!f.wifi) return {text: 'Onboarding: fix the guest Wi-Fi at the network closet.', map: 'desk', x: 1, y: 1};
+  if (!f.logs) { const n = PCS.filter(x => G.pcs[x]).length; const pc = PCS.find(x => !G.pcs[x]); return {text: 'Onboarding: turn on logging at the staff PCs (' + n + '/3).', map: 'desk', x: pc, y: 2}; }
+  if (!f.halHint) return {text: 'Stretch your legs: Hal from facilities is outside.', map: 'hub', x: 17, y: 7};
+  if (!f.portDone) return {text: 'Report back to Rae.', map: 'desk', x: 16, y: 6};
+  if (G.day < 2) return {text: 'End your shift at your desk.', map: 'desk', x: 16, y: 7};
+  if (!f.vexDone) return {text: 'Head south through the cabling toward the Identity Board.', map: 'hub', x: 14, y: 12, step: true};
+  if (!f.insider || f.insider === 'seen') return {text: '(Optional) Owen, by the records office, seems upset.', map: 'hub', x: 8, y: 10};
+  if (f.insider === 'toReport') return {text: 'Report what you saw to Grace, the HR partner.', map: 'hub', x: 12, y: 9};
+  if (!f.dojoDone) {
+    if (!f.dojoMet) return {text: '(Optional) Train at the Password Cracking Dojo.', map: 'dojo', x: 9, y: 5};
+    const i = G.dojo.findIndex(d => !d); return {text: '(Optional) Dojo puzzle ' + (i + 1) + ' of 3.', map: 'dojo', x: [5, 9, 13][i], y: 2};
+  }
+  if (!f.boardDone) return {text: 'Take the Identity Board challenge (Marisol Diaz).', map: 'board', x: 9, y: 2};
+  if (!f.bossDone) return {text: 'Rae needs you: an incident is starting.', map: 'desk', x: 16, y: 6};
+  return {text: 'Slice complete. Next: the Mail Room.', done: true};
+}
+
+function triggers() {
+  if (G.map === 'hub' && G.y >= 11) {
+    if (!G.f.portDone || G.day < 2) {
+      run(async () => {
+        await say(!G.f.portDone ? 'Rae (radio): Not yet. Finish onboarding with me first.' : 'Rae (radio): It’s late. End your shift at your desk; the Board will still be there tomorrow.');
+        G.y = 10; G.dir = 'up';
+      });
+      return true;
+    }
+    if (!G.f.vexDone) { run(vexScript); return true; }
+  }
+  return false;
+}
+
+/* ---------- Interaction ---------- */
+function interact() {
+  const [dx, dy] = DIRS[G.dir];
+  const tx = G.x + dx, ty = G.y + dy;
+  const npc = npcHere(G.map, tx, ty);
+  if (npc) { run(() => talk(npc)); return; }
+  const ch = tileChar(G.map, tx, ty);
+  const door = doorAt(G.map, tx, ty);
+  if (door && door.locked) { run(async () => { await say(door.locked); }); return; }
+  if (ch === 'k') run(kioskTask);
+  else if (ch === 'n') run(wifiTask);
+  else if (ch === 'p') run(() => pcTask(tx));
+  else if (ch === 'Y') run(deskEnd);
+  else if (ch === 'q') run(() => dojoPuzzle([5, 9, 13].indexOf(tx)));
+  else if (ch === 'S') run(async () => { await say('TOWN HALL. North: the firewall. South: the Identity Board and the Dojo, through the cabling. Stairs: IT Basement.'); });
+  else if (ch === 'X') run(async () => { await say('IT Basement. The door is locked: “Coming in the next slice.”'); });
+  else if (ch === 'O') run(async () => { await say(G.f.portDone ? 'The port is closed. The contractor now connects through the VPN, with MFA.' : 'A gap in the firewall: a remote-desktop port left open to the internet.'); });
+  else if (ch === 'K') run(async () => { await say('Server racks hum. Status lights blink green.'); });
+}
+
+/* ---------- Story: NPC talk ---------- */
+async function mfaMeet(npc) {
+  if (G.badge && npc.acct && !G.mfaSet.includes(npc.id)) {
+    G.mfaSet.push(npc.id); track();
+    await say('Key Badge: MFA is now enforced on ' + npc.name.split(' ')[0] + '’s account. (MFA coverage ' + metricVals().mfa + '%)');
+  }
+}
+async function talk(npc) {
+  const who = npc.name;
+  const f = G.f;
+  switch (npc.id) {
+    case 'rae': await raeTalk(); break;
+    case 'dee':
+      if (!f.kiosk) await say('Morning! The visitor kiosk still uses the password from the manual: admin, admin. Everyone knows it.', who);
+      else if (!f.wifi) await say('The new kiosk passphrase is long, and it lives in the password vault, not on a sticky note. Progress!', who);
+      else await say('Yesterday someone called pretending to be IT and asked for my sign-in code. I hung up and called the help desk back on the number on my badge.', who);
+      break;
+    case 'tomas':
+      if (!f.wifi) await say('The guest Wi-Fi and the staff PCs share one flat network. A visitor’s laptop could talk straight to Lin’s PC. The closet’s right behind me.', who);
+      else if (!f.logs) await say('Next: logging. Each staff PC has security logging switched off. Turn it on and I’ll forward the logs to a collector.', who);
+      else await say('Logs are flowing. Without them every investigation is guesswork.', who);
+      break;
+    case 'lin':
+      if (!f.logs) await say('My PC keeps no security logs at all? Then how would anyone know if something happened on it?', who);
+      else await say('The HVAC contractor had his laptop plugged in at the Annex all last week. He said he’d “finish from home”.', who);
+      break;
+    case 'hal':
+      if (!f.halHint && f.starter) {
+        await say('You’re the new analyst? Quick question. The HVAC contractor asked me to open a remote-desktop port on the Annex so he can adjust the thermostats from home.', who);
+        await say('I had IT open it last week. That’s fine, right? It’s only him using it. I think.', who);
+        f.halHint = true; unlock('tech', 'T1133');
+        await say('(An internet-facing remote-desktop port with a password only. Worth telling Rae.)');
+      } else if (!f.portDone) await say('The contractor says remote access saves him a two-hour drive.', who);
+      else { await say('The contractor uses the VPN with MFA now. He grumbled for a minute, then said it was easy.', who); await qtHal(who); }
+      break;
+    case 'sam':
+      if (!f.wifi) await say('I’m here for a meeting. The guest Wi-Fi password was on a sticky note on the counter. Handy!', who);
+      else await say('Guest Wi-Fi only reaches the internet now. Fine by me: I only need email.', who);
+      break;
+    case 'owen': await owenTalk(); break;
+    case 'grace': await graceTalk(); break;
+    case 'vex': await vexScript(); break;
+    case 'marisol': await boardScript(); break;
+    case 'imani': await dojoIntro(); break;
+  }
+  await mfaMeet(npc);
+}
+
+async function raeTalk() {
+  const f = G.f, who = 'Rae Okafor';
+  if (!f.starter) {
+    await say('Day 1. Welcome to the Town Hall security team. I’m Rae Okafor, SOC lead. You’re our intern.', who);
+    await say('Our job: keep the district running and notice when someone is trying to break in. Every alert is a question. Some are attacks; most aren’t.', who);
+    await say('First you need a tool. I have budget for one starter. Pick the one that fits how you think.', who);
+    const ids = ['sentry', 'lantern', 'ledger'];
+    const i = await choose('Choose your starter tool:', ids.map(id => ({label: TOOLS[id].name + ' (' + CLASSES[TOOLS[id].cls].label + ' · ' + TOOLS[id].sub + ')', note: TOOLS[id].blurb, meta: {good: id === 'sentry'}})), {who: who});
+    const id = ids[i];
+    addTool(id, 3); f.starter = id;
+    await say(TOOLS[id].name + ' is installed on your console. Tools aren’t thrown at problems: you run them, and their abilities cost Focus.', who);
+    await say('Press Select (Shift) any time to open the alert queue. Walking through the tangled cabling outside can also trip alerts: that space isn’t monitored yet.', who);
+    await say('Onboarding tasks: change the kiosk’s default password, put guest Wi-Fi on its own network at the closet, and turn on logging at the staff PCs. Each fix shows up on the map.', who);
+    unlock('fact', 'fp');
+    await briefing();
+    return;
+  }
+  if (!(f.kiosk && f.wifi && f.logs)) {
+    const left = [!f.kiosk && 'the kiosk password', !f.wifi && 'the guest Wi-Fi', !f.logs && 'logging on the staff PCs'].filter(Boolean);
+    await say('Still to do: ' + left.join(', ') + '. Press Start (Enter) for your scorecard and objective.', who);
+    return;
+  }
+  if (!f.halHint) { await say('Baseline done. Nice. Go stretch your legs; Hal from facilities was asking for someone from security.', who); return; }
+  if (!f.portDone) { await portScript(); return; }
+  if (G.day < 2) { await say('Good first day. End your shift at your desk when you’re ready.', who); return; }
+  if (!f.vexDone) { await say('The Identity Board is south, past the cabling. Fair warning: the town hired a red teamer called Vex to test us.', who); return; }
+  if (!f.boardDone) { await say('Marisol runs the Identity Board. Clear her challenge and you’re a Tier 1 analyst.', who); return; }
+  if (!f.bossDone) { await bossScript(); return; }
+  await say('You held the Front Desk. The Mail Room is next.', who);
+  await summary();
+}
+
+/* ---------- Onboarding tasks ---------- */
+async function fixDone(key, msg) {
+  G.f[key] = true; track();
+  await say(msg);
+  toast('Map updated: lights on, cabling tidied');
+  if (G.f.kiosk && G.f.wifi && G.f.logs && !G.f.onboarded) {
+    G.f.onboarded = true;
+    await say('Onboarding baseline complete. Patch state ' + metricVals().patch + '%. Check the scorecard with Start.');
+  }
+}
+async function kioskTask() {
+  if (!G.f.starter) { await say('The visitor kiosk. Rae should brief you first.'); return; }
+  if (G.f.kiosk) { await say('Kiosk: signed in with the new passphrase. Default login disabled.'); return; }
+  await say('The visitor kiosk admin login is still admin / admin: the manufacturer default, printed in the public manual.');
+  while (true) {
+    const i = await choose('Change it to…', [
+      {label: 'A long random passphrase, stored in the team password vault', meta: {good: true}},
+      {label: '“Kiosk2026!”: it has a capital, a digit and a symbol'},
+      {label: 'Leave it: visitors never see the admin screen'}]);
+    if (i === 0) break;
+    if (i === 1) await say('Short and predictable: a year and a symbol are the first things spraying tools try. Length matters more than symbols.');
+    else await say('Default passwords are public. Anyone who reads the manual has the keys.');
+  }
+  unlock('tech', 'T1078.001'); unlock('act', 'passphrase'); touchCSF('Protect');
+  await fixDone('kiosk', 'Done. Default credentials gone (ATT&CK T1078.001, Default Accounts, is now one less way in). The Front Desk windows light up.');
+}
+async function wifiTask() {
+  if (!G.f.starter) { await say('The network closet. Rae should brief you first.'); return; }
+  if (G.f.wifi) { await say('Guest Wi-Fi: its own network, internet only. Staff network untouched.'); await qtCloset(); return; }
+  await say('The network closet. Guest Wi-Fi and the staff PCs share one flat network.');
+  while (true) {
+    const i = await choose('Fix it by…', [
+      {label: 'Hiding the guest network’s name'},
+      {label: 'Putting guest Wi-Fi on its own segment that can only reach the internet', meta: {good: true}},
+      {label: 'Changing the guest password every day'}]);
+    if (i === 1) break;
+    if (i === 0) await say('A hidden network name is still visible to anyone listening. It doesn’t separate anything.');
+    else await say('A new password doesn’t stop a guest who is already on from reaching staff PCs.');
+  }
+  unlock('act', 'segment'); touchCSF('Protect'); touchCSF('Identify');
+  await fixDone('wifi', 'Guest Wi-Fi now lives on its own segment. The guest lounge lights up and the cabling shrinks.');
+}
+async function pcTask(x) {
+  if (!G.f.starter) { await say('A staff PC. Rae should brief you first.'); return; }
+  if (G.pcs[x] || G.f.logs) { await say('Security logging is on and forwarding.'); if (G.f.logs) await qtPc(x); return; }
+  await say('Security event logging is switched off on this PC. You turn it on and point it at the collector.');
+  G.pcs[x] = true;
+  const n = PCS.filter(p => G.pcs[p]).length;
+  if (n < 3) { await say('Logging enabled (' + n + '/3).'); return; }
+  unlock('act', 'logging'); touchCSF('Detect');
+  await fixDone('logs', 'All three staff PCs are logging. The records office lights up.');
+  if (!hasTool('ledger')) {
+    addTool('ledger', 3);
+    await say('Tomas: I set up an open-source log collector for those logs. Download done; it’s on your console now. Meet Ledger.', 'Tomas Reyes');
+  } else {
+    const t = G.party.find(p => p.id === 'ledger'); t.lvl++;
+    await say('Ledger has real logs to read now. Ledger reached Lv ' + t.lvl + '.');
+  }
+}
+async function deskEnd() {
+  if (!G.f.starter) { await say('Your desk. Talk to Rae first.'); return; }
+  if (!G.f.portDone && G.day === 1) { await say('Your desk. Too early to go home: onboarding comes first.'); return; }
+  const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}];
+  if (qtDeskReady()) opts.push({label: 'Ledger console: overnight sign-ins', meta: {k: 'console'}});
+  opts.push({label: 'Not yet', meta: {k: 'no'}});
+  const i = await choose('Your desk. End your shift?', opts);
+  if (opts[i].meta.k === 'end') await endShift('desk');
+  else if (opts[i].meta.k === 'console') await qtDeskConsole();
+}
+
+/* ---------- Port attack (first real attack) ---------- */
+const PORT_SPEC = () => ({
+  kind: 'mal', threat: 'jamb', tech: 'T1133', tags: ['remote'], story: true, group: 'd', rate: 13,
+  title: 'Remote desktop sign-in from overseas', host: 'ANNEX-PC-03 · Annex',
+  enemy: {spr: 'jamb', pal: 'jamb'},
+  clues: ['A remote-desktop session to ANNEX-PC-03 came straight in from the internet at 03:12.', 'It used the HVAC contractor’s account. The port was opened for him last week.', 'The contractor says he hasn’t connected since Tuesday, and the address is on another continent.'],
+  truth: 'An attacker used the open remote-desktop port and the contractor’s password: External Remote Services.',
+  resp: [{label: 'End the session, close the port, reset the contractor’s account, give him VPN with MFA', good: true},
+         {label: 'Leave it: it’s probably the contractor', good: false},
+         {label: 'Unplug the whole district from the internet', good: false, disrupt: 2}],
+  chain: [{at: 35, text: 'The session starts browsing the Annex file share.'}, {at: 70, text: 'Large files are being copied out over the session.'}]
+});
+async function portScript() {
+  const who = 'Rae Okafor';
+  await say('Hal told you about the Annex port? Good timing. The board just lit up: a remote-desktop sign-in on the Annex PC, from overseas.', who);
+  await say('This is real. Investigate, then close it with a verdict and a response. I’m right here.', who);
+  await fightStory(PORT_SPEC(), 'Try again. Close the door first, then ask questions.');
+  G.f.portDone = true; G.mfaSet.push('contractor'); track();
+  bumpUptime(0.01);
+  await say('The port is shut and the contractor has a VPN with MFA. Look at the firewall on the map: no more gap. The Annex lights up.', who);
+  await say('Leadership approved a budget request: one more tool. Pick what the team is missing.', who);
+  const rest = ['sentry', 'lantern', 'ledger'].filter(id => !hasTool(id));
+  if (rest.length) {
+    const i = await choose('Budget request: add a tool', rest.map(id => ({label: TOOLS[id].name + ' (' + CLASSES[TOOLS[id].cls].label + ')', note: TOOLS[id].blurb, meta: {good: true}})), {who: who});
+    addTool(rest[i], 3);
+    await say(TOOLS[rest[i]].name + ' joins your console. Switch tools mid-investigation with “Switch tool”.', who);
+  }
+  await say('That’s Day 1. End your shift at your desk when you’re ready.', who);
+}
+
+/* ---------- Rival ---------- */
+const VEX_SPEC = () => ({
+  kind: 'mal', threat: 'lure', tech: 'T1078', tags: ['identity'], story: true, group: 'a', rate: 12,
+  title: 'Lin signed in from two places at once', host: 'lin.zhao · Front Desk',
+  enemy: {spr: 'actor', pal: 'actor'},
+  clues: ['Lin’s account signed in from the office and, two minutes later, from a hosting provider.', 'Yesterday Lin got an email linking to a sign-in page one letter off from ours.', 'The second session is reading the shared finance folder.'],
+  truth: 'Vex phished Lin’s password and signed in with it.',
+  resp: [{label: 'Reset Lin’s password, revoke her sessions, block the look-alike domain', good: true},
+         {label: 'Isolate Lin’s PC', good: false, disrupt: 2, why: 'The attacker isn’t on her PC; they’re using her account from elsewhere.'},
+         {label: 'Close it: Lin travels a lot', good: false}],
+  chain: [{at: 30, text: 'The second session lists the shared drives.'}, {at: 65, text: 'It opens finance spreadsheets one by one.'}]
+});
+async function vexScript() {
+  G.f.vexMet = true;
+  const who = 'Vex';
+  await say('Hold up, intern. Name’s Vex. The town pays me to break in before someone else does.', who);
+  await say('I’ve already got a foothold in your district. Find it. Fast.', who);
+  await fightStory(VEX_SPEC(), 'Vex: Too slow. Again: same trick, fresh logs.');
+  await say('Not bad. Since you earned it, here’s what I did, step by step:', who);
+  for (const [id, line] of VEX_EXPLAIN) { unlock('tech', id); await say(line, who); }
+  await say('Real attackers chain small, boring steps. Notice any one and the chain breaks. See you at the Board.', who);
+  G.f.vexDone = true;
+  G.targets.tta = 15; G.f.directive = true; touchCSF('Govern');
+  await say('Rae (radio): Directive from leadership: the time-to-acknowledge target drops from 20 s to 15 s. Speed matters, but closing alerts fast and wrong always comes back to bite.');
+}
+
+/* ---------- Insider risk ---------- */
+async function owenTalk() {
+  const who = 'Owen Pike', f = G.f;
+  if (f.insider === 'defused') { await say('HR asked me to help design the new archive process. Turns out someone noticed fifteen years counts for something.', who); return; }
+  if (f.insider === 'reported' ) { await say('Grace from HR asked to grab coffee tomorrow about the reorg. Didn’t expect that.', who); f.insider = 'defused'; return; }
+  if (f.insider === 'toReport') { await say('Still here. Still annoyed.', who); return; }
+  await say('Fifteen years on this archive, and the reorg hands my team to someone who started last spring.', who);
+  await say('Maybe they’ll find out how it feels when nobody knows where the files are.', who);
+  f.insider = 'seen';
+  const opts = [
+    {label: 'Search Owen’s email and files to see what he’s planning'},
+    {label: 'Tell the team to keep an eye on Owen'},
+    {label: 'Ignore it: he’s just venting'},
+    {label: 'Report what you heard, factually, to the insider-risk process (HR)', meta: {good: true}}];
+  while (true) {
+    const i = await choose('(Resentment after a reorg can be an early warning sign. What do you do?)', opts);
+    if (i === 3) break;
+    if (i === 0) await say('Don’t snoop. Looking through someone’s mail without authorisation breaks policy, maybe the law, and ruins any real investigation. That’s for the formal process.');
+    else if (i === 1) await say('That turns one remark into gossip and can wreck a person’s reputation. One sign proves nothing.');
+    else await say('Most venting is just venting. But you don’t have to judge it: a short factual report lets the people trained for this decide, quietly.');
+  }
+  f.insider = 'toReport'; unlock('act', 'insider');
+  await say('(One sign proves nothing. Your job is to pass on what you observed, not to investigate. Grace, the HR partner, is by the plaza.)');
+}
+async function graceTalk() {
+  const who = 'Grace Kim', f = G.f;
+  if (f.insider === 'toReport') {
+    await say('Thanks for coming to me. You did the right thing: you told me what you heard, not what you think he’ll do.', who);
+    await say('HR, legal and security look at concerns like this together. Most turn out to be someone having a bad month. I’ll check in with Owen, supportively.', who);
+    await say('One sign proves nothing, and you didn\u2019t treat it like proof. That\u2019s how this is supposed to work.', who);
+    f.insider = 'defused'; touchCSF('Govern');
+    return;
+  }
+  if (f.insider === 'reported' || f.insider === 'defused') { await say('Owen’s doing better. The reorg left him feeling invisible; now he’s helping shape the new team.', who); return; }
+  await say('I’m the HR partner for this district. If something at work worries you, about a person or a process, my door is open.', who);
+}
+
+/* ---------- Dojo ---------- */
+async function dojoIntro() {
+  const who = 'Imani Brooks';
+  if (!G.f.vexDone) { await say('The Dojo opens once you’re past the onboarding rush.', who); return; }
+  if (!G.f.dojoMet) {
+    G.f.dojoMet = true;
+    await say('Welcome to the Password Cracking Dojo. I coach the team for National Cyber League-style games.', who);
+    await say('Three terminals, three puzzles: length, hashing, salting. Solve them all and I’ll give you a Tuning Guide.', who);
+    return;
+  }
+  if (G.f.dojoDone) { await say('Remember: long beats clever, hashes are one-way, salt is per user.', who); return; }
+  await say('Puzzles solved: ' + G.dojo.filter(Boolean).length + ' of 3. The terminals are along the back wall.', who);
+}
+async function dojoPuzzle(i) {
+  if (!G.f.dojoMet) { await say('A practice terminal. Talk to Coach Imani first.'); return; }
+  if (G.dojo[i]) { await say('Solved. ' + DOJO[i].explain); return; }
+  const p = DOJO[i];
+  while (true) {
+    const k = await choose(p.q, p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})));
+    if (k === p.good) break;
+    await say('Not quite. Think it through and try again.');
+  }
+  await say('Correct. ' + p.explain);
+  G.dojo[i] = true;
+  if (i === 0) unlock('fact', 'nist');
+  touchCSF('Protect');
+  if (G.dojo.every(Boolean)) {
+    G.f.dojoDone = true; G.items.guide = 1;
+    await say('Imani: All three. Here: a Tuning Guide. Use it on a tool that has reached Lv 5 to tune it.', 'Imani Brooks');
+    await evolveCheck();
+  }
+}
+async function evolveCheck() {
+  if (!G.items.guide) return;
+  const t = G.party.find(p => p.lvl >= 5 && !p.tuned);
+  if (!t) return;
+  const i = await choose(TOOLS[t.id].name + ' (Lv ' + t.lvl + ') is ready to be Tuned. Use the Tuning Guide?', [{label: 'Tune it', meta: {good: true}}, {label: 'Later'}]);
+  if (i !== 0) return;
+  G.items.guide = 0; t.tuned = true;
+  await say(TOOLS[t.id].name + ' was Tuned! Fewer noisy detections, sharper abilities (power ×1.25).');
+}
+
+/* ---------- Identity Board ---------- */
+const BOARD_SPECS = () => [
+  {kind: 'mal', threat: 'sprayer', tech: 'T1110.003', tags: ['identity'], story: true, rate: 12, group: 'a',
+   title: 'Round 1: failed sign-ins across 60 accounts', host: 'Board practice tenant', enemy: {spr: 'sprayer', pal: 'sprayer'},
+   clues: ['60 accounts, one or two attempts each, in ten minutes: below the lockout threshold.', 'All from a small set of hosting-provider addresses.', 'One practice account with an old password signed in.'],
+   truth: 'Password spraying against the practice accounts.',
+   resp: [{label: 'Reset the account that fell, enforce MFA, block the sources', good: true}, {label: 'Lock all 60 accounts for a week', good: false, disrupt: 1}, {label: 'Close: failures are normal', good: false}],
+   chain: [{at: 40, text: 'Another wave of attempts with a different common password.'}, {at: 75, text: 'A second account accepts the password.'}]},
+  {kind: 'mal', threat: 'sprayer', tech: 'T1621', tags: ['identity'], story: true, rate: 12, group: 'a',
+   title: 'Round 2: 23 MFA prompts at 2 a.m.', host: 'lin.zhao · phone', enemy: {spr: 'buzzer', pal: 'buzzer'},
+   clues: ['Lin’s phone received 23 sign-in approval prompts between 02:00 and 02:20.', 'Each prompt followed a correct password: the attacker already has it.', 'The sign-ins come from a city Lin has never been to.'],
+   truth: 'MFA fatigue: flooding Lin with prompts, hoping she taps Approve.',
+   resp: [{label: 'Tell Lin to deny, reset her password, switch to number-matching prompts', good: true}, {label: 'Tell Lin to approve one so they stop', good: false}, {label: 'Turn MFA off for Lin until it calms down', good: false}],
+   chain: [{at: 40, text: 'The prompts speed up: one every 20 seconds.'}, {at: 75, text: 'A text arrives “from IT”: “Just approve it so we can fix the bug”.'}]},
+  {kind: 'mal', threat: 'caller', tech: 'T1684.001', tags: ['voice', 'identity'], story: true, rate: 11, group: 'a',
+   title: 'Round 3: “the CFO” calls the help desk', host: 'help desk line', enemy: {spr: 'caller', pal: 'impostor'},
+   clues: ['A caller says he is the CFO, travelling, lost his phone, and needs his MFA reset right now.', 'He is angry and in a hurry, and asks the agent to skip the usual checks.', 'The real CFO answers his desk phone from the directory: he is in the building.'],
+   truth: 'Help-desk impersonation: a fake executive pushing for an MFA reset.',
+   resp: [{label: 'Refuse the reset, verify by calling back the directory number, report the call', good: true}, {label: 'Reset his MFA: he’s the CFO', good: false}, {label: 'Email him a temporary password', good: false}],
+   chain: [{at: 40, text: 'The caller threatens to complain to the agent’s boss.'}, {at: 75, text: 'A second agent receives the same call.'}]}
+];
+async function boardScript() {
+  const who = 'Marisol Diaz';
+  if (G.f.boardDone) { await say('Every account you meet gets MFA now. That badge is a responsibility, not a trophy.', who); return; }
+  if (!G.f.vexDone) { await say('Come back after you’ve dealt with Vex.', who); return; }
+  await say('I’m Marisol Diaz, identity lead. Most break-ins here don’t smash anything: they sign in.', who);
+  await say('Three rounds: a password spray, an MFA fatigue push, and a help-desk impersonation call. Ready?', who);
+  const specs = BOARD_SPECS();
+  for (let r = 0; r < 3; r++) await fightStory(specs[r], 'Marisol: Again. Read the evidence before you react.');
+  unlock('act', 'numbermatch'); unlock('act', 'callback'); unlock('fact', 'dbir_ia');
+  G.f.boardDone = true; G.badge = true; G.rank = 'Tier 1 analyst'; G.focusMax = 34; G.focus = G.focusMax;
+  if (!G.mfaSet.includes('marisol')) G.mfaSet.push('marisol');
+  addTool('keyling', 5); track();
+  await say('You cleared the Identity Board. This is the Key Badge.', who);
+  await say('Its power: you enforce MFA on every account you meet, and password-spray alerts on the map drop by half. Keyling joins your console.', who);
+  await say('Rank up: Intern → Tier 1 analyst. New responsibility: escalation. When evidence says it’s real and big, escalate to Tier 2 / incident response.');
+  touchCSF('Protect');
+  if (hasTool('ledger')) {
+    const i = await choose('Rae: With Tier 1 comes automation. Ledger can auto-close alerts matching known false-positive patterns while you walk. Risk: about 1 in 50 auto-closed alerts might be real (game). Turn it on?',
+      [{label: 'Turn automation on', meta: {good: true}}, {label: 'Not now (toggle later in the Start menu)'}]);
+    G.f.autoUnlocked = true; G.auto = i === 0;
+  }
+  await evolveCheck();
+}
+
+/* ---------- Boss: The sprayed admin ---------- */
+async function bossScript() {
+  const who = 'Rae Okafor';
+  await surfaceMissed(true);
+  await say('Incident: “The sprayed admin”. fd-admin, the Front Desk admin account, had no MFA. It was sprayed overnight and someone is using it.', who);
+  await say('Tabletop first. Pick three response cards. Then we work it in three stages.', who);
+  const body = '<p>Pick <b>three</b> cards. Each is written from public ATT&amp;CK / D3FEND-style actions.</p>' +
+    CARDS.map(c => '<div class="card"><b>' + esc(c.name) + '</b> <span class="tag">' + c.csf + '</span><br>' + esc(c.text) + '</div>').join('');
+  const items = CARDS.map(c => ({label: c.name, meta: {good: ['reset', 'revoke', 'mfa'].includes(c.id)}})).concat([{label: 'Play these three cards', done: true, meta: {done: true}}]);
+  const sel = await UI.openModal('Tabletop: the sprayed admin', body, items, {multi: 3, closable: false, cls: 'tabletop'});
+  const picks = sel.map(i => CARDS[i].id);
+  G.f.cards = picks;
+  for (const id of picks) {
+    const c = CARDS.find(x => x.id === id);
+    touchCSF(c.csf);
+    await say(c.name + ': ' + c.fx);
+  }
+  if (picks.includes('isolate')) bumpUptime(-0.02);
+  if (picks.includes('notify')) G.rep += 5;
+  await say('Debrief: there is no single right trio. Resetting, revoking and enforcing MFA contain an account takeover; logs scope it; leadership needs to know. Isolating a host does little when the attacker is using an account, not a PC.', who);
+  const ev0 = picks.includes('logs') ? 20 : 0;
+  const stages = [
+    {kind: 'mal', threat: 'sprayer', tech: 'T1110.003', tags: ['identity'], story: true, rate: 12, group: 'a', ev0: ev0,
+     title: 'Stage 1: fd-admin in the spray', host: 'fd-admin', enemy: {spr: 'sprayer', pal: 'bossSpray'},
+     clues: ['fd-admin was one of 60 accounts tried with the same seasonal password in ten minutes.', 'fd-admin was on an MFA “exception” list, for convenience.', 'fd-admin’s attempt succeeded.'],
+     truth: 'Password spraying found an admin account without MFA.',
+     resp: [{label: 'Confirm the compromise and start containment on fd-admin', good: true}, {label: 'Close: failed sign-ins are normal', good: false}],
+     chain: [{at: 50, text: 'fd-admin’s sign-in is followed by a second, from a new location.'}]},
+    {kind: 'mal', threat: 'jamb', tech: 'T1078', tags: ['identity'], story: true, group: 'a', ev0: ev0,
+     rate: picks.includes('revoke') ? 9 : 14, dwell0: picks.includes('reset') ? 15 : 40,
+     title: 'Stage 2: fd-admin signs in from abroad', host: 'fd-admin · admin console', enemy: {spr: 'actor', pal: 'impostor'},
+     clues: ['New sign-in for fd-admin from a hosting provider abroad.', 'The session opened the admin console and listed every user.', 'Nobody on the team was working at that hour.'],
+     truth: 'The attacker is using the admin’s valid credentials.',
+     resp: [{label: 'Reset fd-admin and revoke all its sessions', good: true}, {label: 'Isolate the admin’s workstation', good: false, disrupt: 2, why: 'The attacker isn’t on that PC.'}, {label: 'Wait and watch a little longer', good: false}],
+     chain: [{at: 60, text: 'The session starts exporting the user list.'}]},
+    {kind: 'mal', threat: 'sprayer', tech: 'T1098.005', tags: ['identity'], story: true, group: 'a', ev0: ev0,
+     rate: picks.includes('mfa') ? 8 : 14, dwell0: picks.includes('mfa') ? 10 : 45,
+     title: 'Stage 3: a new MFA device appears', host: 'fd-admin · MFA settings', enemy: {spr: 'buzzer', pal: 'bossSpray'},
+     clues: ['A phone nobody recognises was enrolled as fd-admin’s second factor.', 'The enrolment happened inside the attacker’s session.', 'Unless it’s removed, the attacker keeps a way back in, even after a password reset.'],
+     truth: 'Device registration: the attacker enrolled their own MFA device to keep access.',
+     resp: [{label: 'Remove the rogue device, re-enrol MFA in person, review other admin accounts', good: true}, {label: 'Leave it: MFA is on now, so we’re safe', good: false}],
+     chain: [{at: 60, text: 'The rogue device approves a new sign-in.'}]}
+  ];
+  for (const s of stages) await fightStory(s, 'Rae: Regroup. Same stage, we go again.');
+  touchCSF('Respond'); touchCSF('Recover'); unlock('fact', 'dbir_rw');
+  if (!G.mfaSet.includes('fdadmin')) G.mfaSet.push('fdadmin');
+  bumpUptime(0.01);
+  await say('Recover: fd-admin is back in service with a new passphrase and MFA, the rogue device is gone, and the services it touched are checked.', who);
+  await say('That’s the Front Desk district secured. Next stop: the Mail Room.', who);
+  G.f.bossDone = true;
+  await summary();
+}
+
+/* ---------- Missed attacks surface ---------- */
+async function surfaceMissed(force) {
+  const hidden = G.m.missed - G.m.surfaced;
+  if (hidden <= 0 || (!force && hidden < 2)) return;
+  G.m.correctShown = Math.max(0, G.m.correctShown - hidden);
+  G.m.surfaced = G.m.missed;
+  bumpUptime(-0.05); G.rep -= 3 * hidden;
+  await say('Incident review: ' + hidden + ' alert' + (hidden > 1 ? 's' : '') + ' closed as not malicious were real attacks. Your accuracy has been corrected.', 'Rae Okafor');
+  await say('Fast closes look great on a scorecard until they don’t. Gaming a metric hides risk; it doesn’t remove it.', 'Rae Okafor');
+  if (!force) {
+    const spec = genAlert('mal'); spec.dwell0 = 45; spec.title = 'Follow-up: ' + spec.title;
+    await say('One of them is still active. Investigate it now.');
+    await doBattle(spec);
+  }
+}
+
+/* ---------- End of slice ---------- */
+async function summary() {
+  await surfaceMissed(true);
+  G.f.summaryShown = true;
+  const v = metricVals();
+  const body = '<p class="big">Front Desk district: secured.</p>' +
+    '<p>Rank <b>' + G.rank + '</b> · Badge <b>' + (G.badge ? 'Key Badge' : 'none') + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b></p>' +
+    scorecardHtml() +
+    '<p>Insider-risk concern: <b>' + ({defused: 'reported and defused', reported: 'reported', toReport: 'seen, not yet reported', seen: 'seen, not handled'}[G.f.insider] || 'not encountered') + '</b>. Tool tuned: <b>' + (G.party.some(t => t.tuned) ? 'yes' : 'no') + '</b>. Missed attacks found in review: <b>' + G.m.surfaced + '</b>.</p>' +
+    qtSummaryHtml() +
+    '<p class="big">Next: the Mail Room.</p>';
+  Series.markEdition(EDITION.id, {done: true});
+  const i = await UI.openModal('End of slice 1', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  storeSet(encodeSave(G));
+  if (i === 1) { started = false; titleScreen(); }
+}
+
+/* ---- engine/game.js ---- */
+/* ============================================================
+   UPTIME · engine/game.js
+   Shared game core: overworld, rendering, HUD, script runner, investigations
+   (battles), alerts, scorecard, Field Manual, menus, save/load, title, main loop,
+   debug hooks for tests. Each edition supplies its data and story (EDITION,
+   newState, objective, interact, triggers, editionTile, summary, introScript...).
+   ============================================================ */
+'use strict';
+
+let G = null;          // saved game state
+let B = null;          // current battle (not saved)
+let busy = 0;          // running scripts
+let moving = null;     // current step animation
+let fade = 0;          // map transition fade (0..1)
+let started = false;   // past the title screen
+let lastT = 0, encCooldown = 0, toastT = 0, shake = 0, titleOpen = false;
+
+const DIRS = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0]};
+
+/* ---------- Helpers ---------- */
+const say = (t, who) => UI.say(t, who);
+const choose = (p, items, o) => UI.choose(p, items, o);
+function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); toastT = 2600; }
+function unlock(kind, key) { if (!G.fm[kind + ':' + key]) { G.fm[kind + ':' + key] = true; return true; } return false; }
+function touchCSF(fn) { if (!G.csf[fn]) { G.csf[fn] = true; toast('CSF ' + fn + ' unlocked in the Field Manual'); } }
+function groupFixed(g) { return !!G.f[GROUPS[g].fix]; }
+function tool() { return G.party[G.active]; }
+function toolName(t) { return TOOLS[t.id].name + (t.tuned ? ' · Tuned' : ''); }
+function hasTool(id) { return G.party.some(t => t.id === id); }
+function addTool(id, lvl) { if (!hasTool(id)) G.party.push({id: id, lvl: lvl || 3, xp: 0, tuned: false}); }
+function npcHere(map, x, y) { return NPCS.find(n => n.map === map && n.x === x && n.y === y && (!n.cond || n.cond(G))); }
+function mapRows(m) { return MAPS[m].rows; }
+
+/* ---------- Metrics ---------- */
+function metricVals() {
+  const m = G.m;
+  return {
+    closed: m.closed,
+    acc: m.judged ? Math.round(m.correctShown / m.judged * 100) : null,
+    tta: m.ttaN ? +(m.ttaSum / m.ttaN).toFixed(1) : null,
+    esc: m.escOk,
+    uptime: +G.uptime.toFixed(2),
+    mfa: Math.round(G.mfaSet.length / ACCOUNTS_TOTAL * 100),
+    patch: Math.round(Object.keys(GROUPS).filter(groupFixed).length / 4 * 100)
+  };
+}
+const METRICS = [
+  {k: 'closed', label: 'Alerts closed', unit: '', higher: true},
+  {k: 'acc', label: 'Verdict accuracy', unit: '%', higher: true},
+  {k: 'tta', label: 'Time to acknowledge', unit: ' s', higher: false},
+  {k: 'esc', label: 'Correct escalations', unit: '', higher: true, tier1: true},
+  {k: 'uptime', label: 'District uptime', unit: '%', higher: true},
+  {k: 'mfa', label: 'MFA coverage', unit: '%', higher: true},
+  {k: 'patch', label: 'Patch state', unit: '%', higher: true}
+];
+function track() {
+  const v = metricVals();
+  for (const d of METRICS) {
+    const x = v[d.k]; if (x === null || x === undefined) continue;
+    const t = G.track[d.k] || (G.track[d.k] = {best: x, worst: x});
+    if (d.higher) { t.best = Math.max(t.best, x); t.worst = Math.min(t.worst, x); }
+    else { t.best = Math.min(t.best, x); t.worst = Math.max(t.worst, x); }
+  }
+}
+function bumpUptime(d) { G.uptime = clamp(+(G.uptime + d).toFixed(3), 99.0, 100); track(); }
+
+/* ---------- Tiles ---------- */
+function tileChar(map, x, y) { const r = mapRows(map); if (y < 0 || y >= r.length || x < 0 || x >= r[0].length) return null; return r[y][x]; }
+function tileDef(map, x, y) {
+  const ch = tileChar(map, x, y); if (ch === null) return null;
+  let d = Object.assign({ch: ch}, TILES[ch]);
+  if (d.group) { const lit = groupFixed(d.group); d.spr = lit ? 'L' : 'B'; d.pal = lit ? 'L' : 'B'; }
+  return editionTile(d, ch, x, y);
+}
+function doorAt(map, x, y) { const d = MAPS[map].doors; return d && d[x + ',' + y]; }
+function blocked(map, x, y) {
+  const d = tileDef(map, x, y); if (!d) return true;
+  if (d.solid) return true;
+  const door = doorAt(map, x, y); if (door && door.locked) return true;
+  if (npcHere(map, x, y)) return true;
+  return false;
+}
+
+/* ---------- Rendering ---------- */
+function camera() {
+  const r = mapRows(G.map), mw = r[0].length * TS, mh = r.length * TS;
+  let px = G.x * TS, py = G.y * TS;
+  if (moving) { const t = moving.t; px = (moving.fx + (moving.tx - moving.fx) * t) * TS; py = (moving.fy + (moving.ty - moving.fy) * t) * TS; }
+  let cx = mw <= VW ? -(VW - mw) / 2 : clamp(px + 8 - VW / 2, 0, mw - VW);
+  let cy = mh <= VH ? -(VH - mh) / 2 : clamp(py + 8 - VH / 2, 0, mh - VH);
+  return {cx: Math.round(cx), cy: Math.round(cy), px: px, py: py};
+}
+function drawWorld(ctx) {
+  ctx.fillStyle = '#10141f'; ctx.fillRect(0, 0, VW, VH);
+  const r = mapRows(G.map), cam = camera();
+  const x0 = Math.max(0, Math.floor(cam.cx / TS)), y0 = Math.max(0, Math.floor(cam.cy / TS));
+  const x1 = Math.min(r[0].length - 1, Math.floor((cam.cx + VW) / TS)), y1 = Math.min(r.length - 1, Math.floor((cam.cy + VH) / TS));
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const d = tileDef(G.map, x, y);
+    const sx = x * TS - cam.cx, sy = y * TS - cam.cy;
+    if (d.under) { const u = TILES[d.under]; ctx.drawImage(sprite(u.spr, u.pal), sx, sy); }
+    ctx.drawImage(sprite(d.spr, d.pal), sx, sy);
+  }
+  // entities sorted by y
+  const ents = NPCS.filter(n => n.map === G.map && (!n.cond || n.cond(G))).map(n => ({x: n.x * TS, y: n.y * TS, spr: n.spr || 'player', pal: n.pal, dir: n.dir}));
+  const walkFrame = moving && moving.t > 0.25 && moving.t < 0.75;
+  ents.push({x: cam.px, y: cam.py, spr: 'player', pal: 'player', dir: G.dir, me: true, step: walkFrame});
+  ents.sort((a, b) => a.y - b.y);
+  for (const e of ents) {
+    const variant = e.dir === 'up' && e.spr === 'player' ? 'back' : (e.step ? 'step' : '');
+    ctx.drawImage(sprite(e.spr, e.pal, {variant: variant}), Math.round(e.x - cam.cx), Math.round(e.y - cam.cy - (e.step ? 1 : 0)));
+  }
+  if (fade > 0) { ctx.fillStyle = 'rgba(16,20,31,' + fade + ')'; ctx.fillRect(0, 0, VW, VH); }
+}
+function ellipse(ctx, cx, cy, rx, ry, c1, c2) {
+  for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) {
+    const d = (x / rx) ** 2 + (y / ry) ** 2;
+    if (d <= 1) { ctx.fillStyle = d > 0.7 ? c1 : c2; ctx.fillRect(cx + x, cy + y, 1, 1); }
+  }
+}
+let platformCache = null;
+function drawBattle(ctx) {
+  if (!platformCache) {
+    const c = document.createElement('canvas'); c.width = VW; c.height = VH;
+    const x = c.getContext('2d');
+    x.fillStyle = '#dbeaf7'; x.fillRect(0, 0, VW, 96);
+    x.fillStyle = '#c9e3a8'; x.fillRect(0, 96, VW, VH - 96);
+    ellipse(x, 252, 84, 40, 7, '#5aa64b', '#a6d96a');
+    ellipse(x, 76, 114, 44, 7, '#5aa64b', '#a6d96a');
+    platformCache = c;
+  }
+  ctx.drawImage(platformCache, 0, 0);
+  if (!B) return;
+  const sh = shake > 0 ? Math.round((Math.random() - 0.5) * 4) : 0;
+  let es = B.spec.enemy;
+  if (!B.spec.story && !B.revealed) es = {spr: 'beacon', pal: 'beacon'};
+  const bob = Math.round(Math.sin(performance.now() / 300) * 1);
+  ctx.drawImage(sprite(es.spr, es.pal), 236 + sh, 50 + bob, 32, 32);
+  const t = tool();
+  if (t) ctx.drawImage(sprite(TOOLS[t.id].spr, TOOLS[t.id].spr, {variant: t.tuned ? 'tuned' : ''}), 60, 80, 32, 32);
+}
+
+/* ---------- HUD ---------- */
+let hudStr = '';
+function hudUpdate() {
+  const el = document.getElementById('hud');
+  if (!G || !started || B) { if (hudStr !== '') { el.innerHTML = ''; hudStr = ''; } el.style.display = 'none'; return; }
+  el.style.display = '';
+  const v = metricVals();
+  const s = 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · Queue ' + G.queue +
+    ' · Up ' + v.uptime.toFixed(2) + '%|' + objective().text;
+  if (s !== hudStr) {
+    hudStr = s; const p = s.split('|');
+    el.innerHTML = '<div>' + esc(p[0]) + '</div><div class="obj">▸ ' + esc(p[1]) + '</div>';
+  }
+}
+
+/* ---------- Script runner ---------- */
+async function run(fn) {
+  busy++;
+  try { await fn(); }
+  catch (e) { console.error(e); }
+  finally {
+    busy--;
+    if (!busy) { UI.hidePanel(); hudUpdate(); autosave(); }
+  }
+}
+function autosave() { if (G && started && !B) storeSet(encodeSave(G)); }
+
+/* ---------- Movement ---------- */
+function tryMove(dir) {
+  G.dir = dir;
+  const [dx, dy] = DIRS[dir];
+  const tx = G.x + dx, ty = G.y + dy;
+  const door = doorAt(G.map, tx, ty);
+  if (door && door.locked) { run(async () => { await say(door.locked); }); return; }
+  if (blocked(G.map, tx, ty)) return;
+  moving = {fx: G.x, fy: G.y, tx: tx, ty: ty, t: 0};
+}
+function stepDone() {
+  G.x = moving.tx; G.y = moving.ty; moving = null;
+  G.steps++;
+  if (G.f.logs) G.m.events += 37 + Math.floor(rnd() * 20);
+  if (G.steps % 12 === 0 && G.f.starter) G.queue = Math.min(9, G.queue + 1);
+  if (G.auto && G.steps % 15 === 0 && G.queue > 0 && hasTool('ledger')) {
+    if (rnd() < G.fpWeight / (G.fpWeight + 50) * 0.8) {
+      G.queue--; G.m.autoClosed++;
+      if (rnd() < 0.02) G.m.missed++;
+      toast('Ledger auto-closed a known false positive');
+    }
+  }
+  if (encCooldown > 0) encCooldown--;
+  const door = doorAt(G.map, G.x, G.y);
+  if (door && door.to) { run(() => warp(door.to, door.x, door.y, door.dir)); return; }
+  if (triggers()) return;
+  const d = tileDef(G.map, G.x, G.y);
+  if (d.grass && G.party.length && encCooldown <= 0 && rnd() < 0.12) {
+    encCooldown = 4;
+    run(async () => { await randomAlert('grass'); });
+  }
+}
+async function warp(map, x, y, dir) {
+  if (!UI.turbo) for (let i = 1; i <= 6; i++) { fade = i / 6; await sleep(25); }
+  G.map = map; G.x = x; G.y = y; G.dir = dir || G.dir;
+  if (!UI.turbo) for (let i = 5; i >= 0; i--) { fade = i / 6; await sleep(25); }
+  fade = 0;
+}
+/* ---------- Shifts, days, briefing ---------- */
+async function endShift(reason) {
+  const body = '<p>Day ' + G.day + ' is over' + (reason === 'focus' ? ': your Focus ran out' : '') + '.</p>' +
+    '<p>Alerts closed today: <b>' + G.m.today + '</b>. Queue left overnight: <b>' + G.queue + '</b>.</p>' +
+    (G.f.overnight ? '<p>An unfinished alert waited overnight; its dwell grew.</p>' : '');
+  await UI.openModal('End of shift', body, [{label: 'Go home', meta: {good: true}}], {closable: false});
+  if (G.f.overnight) { bumpUptime(-0.01); G.rep -= 1; G.f.overnight = false; }
+  G.day++; G.m.today = 0; G.focus = G.focusMax;
+  await briefing();
+  await surfaceMissed(false);
+}
+async function briefing() {
+  const a = BRIEFS[(G.day * 2) % BRIEFS.length], b = BRIEFS[(G.day * 2 + 1) % BRIEFS.length];
+  const body = '<p>Morning briefing, Day ' + G.day + '. Two items from the threat-intel feed:</p>' +
+    '<ol><li>' + esc(a.text) + '</li><li>' + esc(b.text) + '</li></ol>' +
+    '<p>Act on one and that threat’s odds drop by half for a week.</p>';
+  const i = await UI.openModal('Morning briefing', body, [
+    {label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither'}], {closable: false});
+  touchCSF('Identify');
+  if (i === 0 || i === 1) { const it = i === 0 ? a : b; G.brief[it.t] = G.day + 6; toast(THREATS[it.t].name + ' odds halved this week'); }
+}
+
+/* ---------- Alerts ---------- */
+function genAlert(forceKind) {
+  const kind = forceKind || weighted([{k: 'fp', w: G.fpWeight}, {k: 'benign', w: 30}, {k: 'mal', w: 20}]).k;
+  const wts = MAL_WEIGHTS.map(x => {
+    let w = x.w;
+    if (G.brief[x.t] && G.brief[x.t] >= G.day) w *= 0.5;
+    if (G.badge && x.t === 'sprayer') w *= 0.5;
+    return {t: x.t, w: w};
+  });
+  const t = weighted(wts).t;
+  const th = THREATS[t], tpl = ALERTS[t], v = tpl[kind];
+  const chain = ALERT_CHAINS[t];
+  return {
+    kind: kind, threat: t, tech: th.tech, tags: th.tags, story: false, group: 'a',
+    title: tpl.rule, host: pick(HOSTS) + ' · Front Desk',
+    enemy: kind === 'mal' ? {spr: th.spr, pal: th.pal} : kind === 'fp' ? {spr: 'noise', pal: 'noise'} : {spr: 'player', pal: 'staffer'},
+    clues: v.clues, truth: v.truth, resp: tpl.mal.resp,
+    rate: kind === 'mal' ? 12 + Math.floor(rnd() * 5) : 8,
+    chain: [{at: 40, text: chain[0]}, {at: 75, text: chain[1]}]
+  };
+}
+async function randomAlert(src) {
+  if (!G.party.length) { await say('No tool on your console yet. Talk to Rae.'); return; }
+  if (G.focus <= 0) { await say('You’re out of Focus. End your shift at your desk.'); return; }
+  const spec = genAlert();
+  await doBattle(spec);
+}
+async function openQueue() {
+  if (!G.party.length) { await say('No tool on your console yet. Talk to Rae.'); return; }
+  if (G.queue <= 0) { await say('Alert queue: empty. New alerts arrive as the district works.'); return; }
+  if (G.focus <= 0) { await say('You’re out of Focus. End your shift at your desk.'); return; }
+  G.queue--;
+  await doBattle(genAlert());
+}
+
+/* ---------- Battle ---------- */
+function eff(spec) {
+  const C = CLASSES[TOOLS[tool().id].cls];
+  const tac = TECH[spec.tech].tactic, tags = spec.tags || [];
+  if ((C.weakTags || []).some(t => tags.includes(t))) return 0.5;
+  let strong = tac.some(t => C.strong.includes(t));
+  if (C.needsLogs && !G.f.logs) strong = false;
+  if ((C.strongTags || []).some(t => tags.includes(t))) strong = true;
+  return strong ? 2 : 1;
+}
+function power() { const t = tool(); return (1 + 0.08 * (t.lvl - 3)) * (t.tuned ? 1.25 : 1); }
+function effLabel(m) { return m >= 2 ? 'strong ×2' : m <= 0.5 ? 'weak ×0.5' : ''; }
+function bhud() {
+  const card = document.getElementById('bcard'), tp = document.getElementById('btool');
+  if (!B) { card.classList.remove('show'); tp.classList.remove('show'); return; }
+  const s = B.spec, t = tool();
+  card.innerHTML = '<div class="bt">ALERT · ' + esc(s.title) + '</div><div class="bs">' + esc(s.host) + '</div>' +
+    bar('Evidence', B.ev, '#2f74b5') + bar('Dwell', B.dwell, '#b8432f');
+  tp.innerHTML = '<div class="bt">' + esc(toolName(t).toUpperCase()) + ' · Lv ' + t.lvl + '</div><div class="bs">' + CLASSES[TOOLS[t.id].cls].label + ' · ' + TOOLS[t.id].sub + '</div>' +
+    bar('Focus', G.focus / G.focusMax * 100, '#5aa64b', G.focus + '/' + G.focusMax);
+  card.classList.add('show'); tp.classList.add('show');
+}
+function bar(label, pct, color, txt) {
+  return '<div class="bar"><span class="bl">' + label + '</span><span class="bo"><span class="bi" style="width:' + clamp(pct, 0, 100).toFixed(0) + '%;background:' + color + '"></span></span>' + (txt ? '<span class="bn">' + txt + '</span>' : '<span class="bn">' + Math.round(clamp(pct, 0, 100)) + '</span>') + '</div>';
+}
+async function fightStory(spec, retryMsg) {
+  while (true) {
+    G.focus = G.focusMax;
+    const r = await doBattle(Object.assign({}, spec));
+    if (r === 'win') return;
+    await say(retryMsg);
+  }
+}
+async function doBattle(spec) {
+  B = {spec: spec, ev: spec.ev0 || 0, dwell: spec.dwell0 || 0, clue: 0, disrupt: 0, t0: performance.now(), acked: false, revealed: false, chainI: 0};
+  UI.showPanel(true);
+  bhud();
+  G.focus = Math.max(0, G.focus - 1);
+  let result = null;
+  try {
+    await say((spec.story ? 'INCIDENT! ' : 'ALERT! ') + spec.title + '. (' + spec.host + ')');
+    while (result === null) {
+      bhud();
+      const t = tool();
+      const m = eff(spec);
+      const items = TOOLS[t.id].abil.map(k => {
+        const a = ABIL[k];
+        return {label: a.name + ' (' + a.cost + ')', note: (a.type === 'inv' ? 'investigate' : 'contain') + (effLabel(m) ? ' · ' + effLabel(m) : ''),
+          disabled: a.cost > G.focus, meta: {kind: 'ability', key: k, type: a.type, cost: a.cost, eff: m, disrupt: a.disrupt || 0}};
+      });
+      items.push({label: 'Close alert', note: 'verdict + response', meta: {kind: 'close'}});
+      items.push({label: 'Switch tool', disabled: G.party.length < 2, meta: {kind: 'switch'}});
+      if (G.rank !== 'Intern' && !spec.story) items.push({label: 'Escalate to Tier 2', note: 'when it’s real and big', meta: {kind: 'escalate'}});
+      const lastClue = B.clue > 0 ? 'Latest: ' + spec.clues[B.clue - 1] : 'What do you check first?';
+      const i = await choose(lastClue, items, {cols: 2});
+      const meta = items[i].meta;
+      if (!B.acked && meta.kind !== 'switch') ackNow();
+      if (meta.kind === 'ability') { await useAbility(meta.key, m); }
+      else if (meta.kind === 'switch') {
+        const opts = G.party.map((p, j) => ({label: toolName(p) + ' Lv ' + p.lvl, disabled: j === G.active, meta: {idx: j}})).concat([{label: 'Back'}]);
+        const j = await choose('Switch to which tool? (Takes a moment: the attacker gets a step.)', opts, {cancel: true});
+        if (j < 0 || j >= G.party.length) continue;
+        G.active = j; bhud();
+        await say(toolName(tool()) + ' takes over.');
+      } else if (meta.kind === 'close') {
+        const r = await closeFlow(); if (r === 'back') continue;
+        if (r) { result = r; break; }
+      } else if (meta.kind === 'escalate') {
+        result = await escalate(); break;
+      }
+      // the clock / attacker moves
+      const r2 = await attackerStep(); if (r2) { result = r2; break; }
+      if (G.focus <= 0) {
+        await say('Your Focus is spent. The shift ends; this alert waits in the queue overnight.');
+        G.queue++; G.f.overnight = true; result = 'shift';
+      }
+    }
+  } finally {
+    B = null; bhud(); UI.showPanel(false);
+  }
+  track();
+  if (result === 'shift') await endShift('focus');
+  if (result !== 'shift' && !spec.story) await evolveCheck();
+  return result;
+}
+function ackNow() {
+  B.acked = true;
+  const s = (performance.now() - B.t0) / 1000;
+  G.m.ttaSum += Math.min(s, 120); G.m.ttaN++;
+}
+async function useAbility(k, m) {
+  const a = ABIL[k], s = B.spec;
+  G.focus -= a.cost;
+  unlock('act', k);
+  shake = 300;
+  if (a.type === 'inv') {
+    let gain = a.ev * m * power();
+    if (a.social && (s.tags || []).includes('voice')) gain *= 1.5;
+    if (a.fpBonus && s.kind !== 'mal') gain *= 1.5;
+    B.ev = clamp(B.ev + gain, 0, 100);
+    bhud();
+    if (B.clue < s.clues.length) { const c = s.clues[B.clue++]; await say(a.name + ': ' + c); }
+    else await say(a.name + ': nothing new, but it confirms the picture. Evidence ' + Math.round(B.ev) + '.');
+  } else {
+    B.disrupt += a.disrupt || 0;
+    B.ev = clamp(B.ev + (a.ev || 0), 0, 100);
+    if (s.kind === 'mal') {
+      B.dwell = clamp(B.dwell - a.dw * m * power(), 0, 100); bhud();
+      await say(a.name + ': applied. The suspicious activity pauses; dwell pushed back.');
+    } else {
+      bhud();
+      await say(a.name + ': applied.' + (a.disrupt ? ' Someone’s work is interrupted while it’s in place.' : ''));
+    }
+  }
+}
+async function attackerStep() {
+  const s = B.spec;
+  B.dwell = clamp(B.dwell + (s.rate || 8), 0, 100); bhud();
+  if (s.kind === 'mal' && s.chain && B.chainI < s.chain.length && B.dwell >= s.chain[B.chainI].at) {
+    const c = s.chain[B.chainI++];
+    if (B.ev >= 25 || s.story) await say('Activity: ' + c.text);
+  }
+  if (B.dwell >= 100) {
+    if (s.kind === 'mal') {
+      await say('Dwell is full: the alert escalates without you and the attacker advances. Rae’s team takes over.');
+      G.health[s.group] = Math.max(0, G.health[s.group] - 15); bumpUptime(-0.03); G.rep -= 3;
+      return s.story ? 'lose' : 'escalated';
+    }
+    await say('Timed out. Tier 2 picked it up and closed it.');
+    G.rep -= 2;
+    return 'timeout';
+  }
+  return null;
+}
+async function closeFlow() {
+  const s = B.spec;
+  const v = await choose('Verdict?', [
+    {label: 'False positive', note: 'the rule is wrong', meta: {verdict: 'fp'}},
+    {label: 'Benign', note: 'real, but expected', meta: {verdict: 'benign'}},
+    {label: 'Malicious', note: 'an attack', meta: {verdict: 'mal'}},
+    {label: 'Back', meta: {back: true}}], {cancel: true});
+  if (v < 0 || v === 3) return 'back';
+  const verdict = ['fp', 'benign', 'mal'][v];
+  let resp;
+  if (verdict === 'fp') resp = [{label: 'Close and tune the noisy rule', good: true, tune: true}, {label: 'Close as false positive', good: true}];
+  else if (verdict === 'benign') resp = [{label: 'Close and note why it’s expected', good: true}, {label: 'Close', good: true}];
+  else resp = s.resp;
+  const ri = await choose('Response?', resp.map(r => ({label: r.label, meta: {good: !!r.good}})).concat([{label: 'Back', meta: {back: true}}]), {cancel: true});
+  if (ri < 0 || ri === resp.length) return 'back';
+  const r = resp[ri];
+  const correct = verdict === s.kind;
+  if (s.story) {
+    if (!correct) { await say('Rae: Not that verdict. Look at the evidence again.'); return null; }
+    if (!r.good) { await say('Rae: Right verdict, wrong response.' + (r.why ? ' ' + r.why : ' Think about what actually stops this attacker.')); if (r.disrupt) { bumpUptime(-0.01 * r.disrupt); } return null; }
+  }
+  // scoring
+  G.m.closed++; G.m.today++; G.m.judged++;
+  B.revealed = correct || s.kind !== 'mal';
+  const fresh = unlock('tech', s.tech);
+  touchCSF('Detect');
+  let xp = 10 + Math.floor(B.ev / 10);
+  let msg = '';
+  if (correct) {
+    G.m.correctShown++;
+    msg = 'Correct. ' + s.truth;
+    if (s.kind === 'mal') {
+      xp += 10; touchCSF('Respond');
+      if (!r.good) { xp = Math.floor(xp / 2); msg += ' Right call, heavy-handed response.'; }
+      if (r.disrupt) { G.rep -= 2 * r.disrupt; bumpUptime(-0.01 * r.disrupt); }
+    }
+    if (verdict === 'fp' && r.tune) { G.fpWeight = Math.max(25, G.fpWeight - 4); msg += ' Rule tuned: fewer false positives from now on.'; }
+  } else if (s.kind === 'mal') {
+    // a missed attack: nobody knows yet
+    G.m.correctShown++; G.m.missed++;
+    msg = 'Closed.'; xp = 4;
+  } else {
+    msg = 'Rae reviewed it: ' + s.truth;
+    xp = 3; if (verdict === 'mal') G.rep -= 2;
+  }
+  if (s.kind !== 'mal' && B.disrupt > 0) {
+    G.rep -= 3 * B.disrupt; bumpUptime(-0.01 * B.disrupt); G.m.overreact++;
+    msg += ' But you disrupted people’s work for an alert that wasn’t an attack: reputation and uptime drop.';
+  }
+  if (s.kind === 'fp') { G.focus = Math.max(0, G.focus - 2); msg += ' (False positives drain Focus: −2.)'; }
+  await say(msg);
+  await say('ATT&CK: the rule maps to ' + s.tech + ' ' + TECH[s.tech].name + ' (' + TECH[s.tech].tactic.join(', ') + ').' + (fresh ? ' Added to the Field Manual.' : ''));
+  await gainXP(xp + (s.story ? 20 : 0));
+  return s.story ? 'win' : 'closed';
+}
+async function escalate() {
+  const s = B.spec;
+  G.m.esc++; G.m.closed++; G.m.today++; G.m.judged++; B.revealed = true;
+  unlock('tech', s.tech);
+  if (s.kind === 'mal') {
+    G.m.escOk++; G.m.correctShown++; touchCSF('Respond');
+    await say('Escalated with evidence. Tier 2 confirms: ' + s.truth + ' Correct escalation.');
+    await gainXP(20);
+  } else {
+    G.rep -= 2;
+    await say('Tier 2 looked and found nothing malicious: ' + s.truth + ' Escalations cost their time; bring evidence.');
+    await gainXP(3);
+  }
+  return 'closed';
+}
+async function gainXP(n) {
+  const t = tool(); if (!t) return;
+  t.xp += n;
+  let ups = 0;
+  while (t.xp >= 20 * t.lvl) { t.xp -= 20 * t.lvl; t.lvl++; ups++; }
+  if (ups) await say(toolName(t) + ' reached Lv ' + t.lvl + '! (+' + n + ' XP)');
+}
+
+/* ---------- Menus ---------- */
+function scorecardHtml() {
+  const v = metricVals();
+  const fmt = (d, x) => x === null || x === undefined ? '—' : (d.k === 'uptime' ? x.toFixed(2) : x) + d.unit;
+  const rows = METRICS.map(d => {
+    const tr = G.track[d.k] || {};
+    const tgt = G.targets[d.k];
+    const tgtS = (d.k === 'tta' ? '≤ ' : '≥ ') + (d.k === 'uptime' ? tgt.toFixed(1) : tgt) + d.unit;
+    const na = d.tier1 && G.rank === 'Intern';
+    return '<tr><td>' + d.label + (na ? ' <small>(Tier 1)</small>' : '') + '</td><td><b>' + fmt(d, v[d.k]) + '</b></td><td>' + fmt(d, tr.best) + '</td><td>' + fmt(d, tr.worst) + '</td><td>' + tgtS + '</td></tr>';
+  }).join('');
+  return '<table class="sc"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
+    (G.f.directive ? '<p class="dir">Directive: time-to-acknowledge target cut from 20 s to 15 s.</p>' : '') +
+    '<p>Rank <b>' + G.rank + '</b> · Day ' + G.day + ' · Reputation ' + G.rep + ' · Badge: ' + (G.badge ? 'Key Badge' : 'none') + '</p>' +
+    '<p>Buildings: ' + Object.keys(GROUPS).map(g => GROUPS[g].name + ' ' + (groupFixed(g) ? 'lit' : 'dark') + ' (' + G.health[g] + '%)').join(' · ') + '</p>' +
+    '<p>Ticking: events ingested <b>' + G.m.events.toLocaleString('en-US') + '</b> · queue <b>' + G.queue + '</b> · auto-closed <b>' + G.m.autoClosed + '</b>' + (G.f.autoUnlocked ? ' · automation ' + (G.auto ? 'ON' : 'off') : '') + '</p>' +
+    '<p class="small">Uptime, reputation and building health are game models (game). Objective: ' + esc(objective().text) + '</p>';
+}
+function fmEntries() {
+  const out = [];
+  for (const id in TECH) out.push({cat: 'ATT&CK techniques', key: 'tech:' + id, name: id + ' ' + TECH[id].name, desc: TECH[id].desc + ' Tactic: ' + TECH[id].tactic.join(', ') + '.'});
+  for (const k in ABIL) out.push({cat: 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: ABIL[k].name, desc: ABIL[k].desc});
+  for (const k in EXTRA_ACTIONS) out.push({cat: 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: EXTRA_ACTIONS[k].name, desc: EXTRA_ACTIONS[k].desc});
+  for (const k in CSF) out.push({cat: 'NIST CSF 2.0 functions', key: 'csf:' + k, name: k, desc: CSF[k]});
+  for (const k in FACTS) out.push({cat: 'Facts', key: 'fact:' + k, name: FACTS[k].name, desc: FACTS[k].desc + ' Source: ' + FACTS[k].src + '.'});
+  return out;
+}
+function fmUnlocked(e) { return e.key.startsWith('csf:') ? !!G.csf[e.key.slice(4)] : !!G.fm[e.key]; }
+function fmPct() { const e = fmEntries(); return Math.round(e.filter(fmUnlocked).length / e.length * 100); }
+function fmHtml() {
+  const e = fmEntries(); let cat = '', h = '<p>' + fmPct() + '% complete. Descriptions are our own words; IDs are from MITRE ATT&amp;CK.</p>';
+  for (const x of e) {
+    if (x.cat !== cat) { cat = x.cat; h += '<h3>' + esc(cat) + '</h3>'; }
+    h += fmUnlocked(x) ? '<div class="fm"><b>' + esc(x.name) + '</b><br>' + esc(x.desc) + '</div>' : '<div class="fm lock">??? (not met yet)</div>';
+  }
+  h += qtFmHtml();
+  h += '<h3>Game rules (invented)</h3>' + GAME_NOTES.map(n => '<div class="fm">' + esc(n) + '</div>').join('');
+  return h;
+}
+function toolsHtml() {
+  return G.party.map((t, i) => {
+    const T = TOOLS[t.id];
+    return '<div class="fm"><b>' + esc(toolName(t)) + '</b> · ' + CLASSES[T.cls].label + ' · ' + T.sub + ' · Lv ' + t.lvl + ' (' + t.xp + '/' + (20 * t.lvl) + ' XP)' + (i === G.active ? ' · <i>active</i>' : '') +
+      '<br>' + esc(T.blurb) + '<br><small>Strong vs: ' + CLASSES[T.cls].strong.join(', ') + (T.cls === 'logging' ? ' (with logging on)' : '') + '</small><br><small>' + T.abil.map(k => ABIL[k].name + ' (' + ABIL[k].cost + ')').join(' · ') + '</small></div>';
+  }).join('') + '<p>Tuning Guide: ' + (G.items.guide ? '1 (use on a Lv 5+ tool)' : 'none') + '</p>';
+}
+function creditsHtml() {
+  return '<p><b>UPTIME</b>, ' + esc(EDITION.creditsName) + '. Original game: story, characters, tools, art and rules are original.</p>' +
+    '<p>Build <b>' + BUILD_ID + '</b> · built ' + BUILD_TS + '</p>' +
+    '<h3>Frameworks</h3><p>MITRE ATT&amp;CK® technique IDs and names. © The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation.</p>' +
+    '<p>ATT&amp;CK is a registered trademark of The MITRE Corporation.</p>' +
+    '<p>Defensive actions are written in our own words in the style of MITRE D3FEND. Function names are from the NIST Cybersecurity Framework (CSF) 2.0.</p>' +
+    '<h3>Facts used</h3><p>' + esc(EDITION.creditsFacts) + '</p>' +
+    '<h3>Inspiration only</h3><p>Genre inspiration from classic handheld monster-collecting RPGs; the 1990s CGI series set inside a computer; incident-response card games such as Backdoors &amp; Breaches by Black Hills Information Security; and the National Cyber League / Cyber Skyline. No names, art, cards or other material from those works are used.</p>' +
+    '<p class="small">Everything invented for play is labelled (game) in the Field Manual. No network requests; saves stay in this browser.</p>';
+}
+async function startMenu() {
+  while (true) {
+    const items = [
+      {label: 'Scorecard', meta: {k: 'score'}}, {label: 'Field Manual (' + fmPct() + '%)', meta: {k: 'fm'}},
+      {label: 'Tools', meta: {k: 'tools'}}, {label: 'Save', meta: {k: 'save'}},
+      {label: 'Export save code', meta: {k: 'export'}}, {label: 'Import save code', meta: {k: 'import'}}];
+    if (G.f.autoUnlocked) items.push({label: 'Automation: ' + (G.auto ? 'ON' : 'off'), meta: {k: 'auto'}});
+    items.push({label: 'Credits', meta: {k: 'credits'}}, {label: 'Close', meta: {k: 'close'}});
+    const body = '<p><b>' + esc(objective().text) + '</b></p><p class="small">Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · played ' + fmtTime(G.playMs) + '</p>' +
+      '<p class="small">Controls: arrows / D-pad move · Z = A (talk, confirm) · X = B (back) · Enter = Start (this menu) · Shift = Select (alert queue)</p><p class="small">Build ' + BUILD_ID + ' · ' + BUILD_TS + '</p>';
+    const i = await UI.openModal('Menu', body, items);
+    if (i < 0) return;
+    const k = items[i].meta.k;
+    if (k === 'close') return;
+    if (k === 'score') await UI.openModal('Scorecard', scorecardHtml(), [{label: 'Back'}]);
+    if (k === 'fm') await UI.openModal('Field Manual', fmHtml(), [{label: 'Back'}]);
+    if (k === 'tools') await toolsMenu();
+    if (k === 'save') { const ok = storeSet(encodeSave(G)); await UI.openModal('Save', ok ? '<p>Saved in this browser.</p>' : '<p>This browser blocked storage. Use Export save code instead.</p>', [{label: 'OK'}]); }
+    if (k === 'export') await exportSave();
+    if (k === 'import') { if (await importFlow()) return; }
+    if (k === 'auto') G.auto = !G.auto;
+    if (k === 'credits') await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]);
+  }
+}
+async function toolsMenu() {
+  const items = G.party.map((t, i) => ({label: 'Make ' + toolName(t) + ' active', disabled: i === G.active, meta: {i: i}}));
+  const canTune = G.items.guide ? G.party.filter(t => t.lvl >= 5 && !t.tuned) : [];
+  canTune.forEach(t => items.push({label: 'Tune ' + TOOLS[t.id].name + ' (uses Tuning Guide)', meta: {tune: t.id}}));
+  items.push({label: 'Back', meta: {}});
+  const i = await UI.openModal('Tools', toolsHtml(), items);
+  if (i < 0) return;
+  const m = items[i].meta;
+  if (m.i !== undefined) G.active = m.i;
+  if (m.tune) { const t = G.party.find(p => p.id === m.tune); t.tuned = true; G.items.guide = 0; await UI.openModal('Tuned', '<p>' + esc(TOOLS[t.id].name) + ' was Tuned. Power ×1.25.</p>', [{label: 'OK'}]); }
+}
+async function exportSave() {
+  const code = encodeSave(G);
+  await UI.openModal('Export save code', '<p>Copy this code somewhere safe. Import it on any device.</p><textarea id="codebox" readonly rows="6">' + esc(code) + '</textarea>', [{label: 'Done'}]);
+}
+function fmtTime(ms) { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ' min ' + (s % 60) + ' s'; }
+
+/* ---------- Title ---------- */
+async function titleScreen() {
+  titleOpen = true;
+  const has = !!storeGet();
+  const items = [];
+  if (has) items.push({label: 'Continue', meta: {k: 'cont'}});
+  items.push({label: 'New game', meta: {k: 'new'}}, {label: 'Import save code', meta: {k: 'import'}}, {label: 'Credits', meta: {k: 'credits'}});
+  const body = '<div class="title"><div class="logo">UPTIME</div><div>' + esc(EDITION.title) + '</div></div>' +
+    '<p>' + esc(EDITION.blurb) + '</p>' +
+    '<p class="small">Move: arrows / D-pad · A: Z · B: X · Start: Enter · Select: Shift (alert queue)</p>' +
+    '<p class="small">Build ' + BUILD_ID + ' · ' + BUILD_TS + '</p>';
+  const i = await UI.openModal('', body, items, {closable: false, cls: 'titlebox'});
+  const k = items[i].meta.k;
+  titleOpen = false;
+  if (k === 'cont') {
+    try { G = decodeSave(storeGet()); fixupState(); qtAdopt(); started = true; hudUpdate(); }
+    catch (e) { await UI.openModal('Continue', '<p>That save could not be read: ' + esc(e.message) + '</p>', [{label: 'OK'}]); return titleScreen(); }
+    return;
+  }
+  if (k === 'credits') { await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]); return titleScreen(); }
+  if (k === 'import') { const ok = await importFlow(); if (!ok) return titleScreen(); return; }
+  newGame();
+}
+function fixupState() {
+  const base = newState(G.seed || 1);
+  for (const k in base) if (G[k] === undefined) G[k] = base[k];
+  for (const k in base.m) if (G.m[k] === undefined) G.m[k] = base.m[k];
+  if (!G.qt) G.qt = Series.blankQT();
+}
+let seedOverride = null;
+function newGame() {
+  const seed = seedOverride !== null ? seedOverride : (Date.now() >>> 0);
+  rng = makeRng(seed);
+  G = newState(seed); started = true;
+  qtMirror();
+  track(); hudUpdate();
+  run(introScript);
+}
+async function importFlow() {
+  const i = await UI.openModal('Import save code', '<p>Paste a save code, then choose Load.</p><textarea id="codebox" rows="6" placeholder="UPT1.…"></textarea>', [{label: 'Load'}, {label: 'Cancel'}]);
+  // the textarea is removed when the modal closes, so read it on click (see modal hook below)
+  if (i !== 0) return false;
+  try {
+    G = decodeSave(lastImportText); fixupState(); qtAdopt(); started = true; storeSet(encodeSave(G)); hudUpdate();
+    await UI.openModal('Import', '<p>Save loaded. Day ' + G.day + ', ' + esc(G.rank) + '.</p>', [{label: 'OK'}]);
+    return true;
+  } catch (e) {
+    await UI.openModal('Import', '<p>' + esc(e.message) + '</p>', [{label: 'OK'}]);
+    return false;
+  }
+}
+let lastImportText = '';
+document.addEventListener('input', e => { if (e.target && e.target.id === 'codebox') lastImportText = e.target.value; }, true);
+
+/* ---------- Main loop ---------- */
+function frame(t) {
+  const dt = Math.min(50, t - (lastT || t)); lastT = t;
+  UI.tick(dt);
+  if (toastT > 0) { toastT -= dt; if (toastT <= 0) document.getElementById('toast').classList.remove('show'); }
+  if (shake > 0) shake -= dt;
+  if (G && started) {
+    if (!titleOpen) G.playMs += dt;
+    if (moving) {
+      moving.t += dt / (UI.turbo ? 45 : 140);
+      if (moving.t >= 1) {
+        const mv = moving; stepDone();
+        if (!busy && !UI.mode && !UI.modal && !moving) {
+          const held = ['up', 'down', 'left', 'right'].find(d => Input.held[d]);
+          const tap = Input.taps.find(b => DIRS[b]);
+          Input.taps = Input.taps.filter(b => !DIRS[b]);
+          const nd = tap || held;
+          if (nd) tryMove(nd);
+        }
+      }
+    } else if (!busy && !UI.mode && !UI.modal) {
+      const tap = Input.taps.find(b => DIRS[b]);
+      Input.taps = Input.taps.filter(b => !DIRS[b]);
+      const held = ['up', 'down', 'left', 'right'].find(d => Input.held[d]);
+      const nd = tap || held;
+      if (nd) tryMove(nd);
+    } else { Input.taps = Input.taps.filter(b => !DIRS[b]); }
+    if (B) drawBattle(Screen.ctx); else drawWorld(Screen.ctx);
+    hudUpdate();
+  } else {
+    drawTitleBg(Screen.ctx, t);
+  }
+  requestAnimationFrame(frame);
+}
+function drawTitleBg(ctx, t) {
+  for (let y = 0; y < 12; y++) for (let x = 0; x < 21; x++) {
+    const k = (x + y) % 7 === 0 ? 'L' : (x * 3 + y) % 5 === 0 ? 'K' : 'G';
+    ctx.drawImage(sprite(S[k] ? k : 'G', k), x * 16 - (Math.floor(t / 60) % 16), y * 16);
+  }
+}
+
+/* ---------- Button dispatch ---------- */
+function onButton(b) {
+  if (UI.modal || UI.mode) { UI.handle(b); Input.taps = []; return; }
+  if (!G || !started || busy || moving) return;
+  if (b === 'a') interact();
+  else if (b === 'start') run(startMenu);
+  else if (b === 'select') run(openQueue);
+}
+
+/* ---------- Debug / test hooks (no effect on play) ---------- */
+window.__UPTIME = {
+  peek() {
+    let ui = null;
+    if (UI.modal) ui = {type: 'modal', options: UI.modal.items.map(o => ({label: o.label, meta: o.meta || null, disabled: !!o.disabled, done: !!o.done})), cursor: UI.modal.cursor, multi: UI.modal.multi, sel: [...UI.modal.sel]};
+    else if (UI.mode === 'say') ui = {type: 'say', typing: UI.typing, text: UI.full};
+    else if (UI.mode === 'choice') ui = {type: 'choice', options: UI.choice.items.map(o => ({label: o.label, meta: o.meta || null, disabled: !!o.disabled})), cursor: UI.choice.cursor, cols: UI.choice.cols, text: UI.text.textContent};
+    if (!G) return {started: false, ui: ui};
+    const solid = mapRows(G.map).map((r, y) => r.split('').map((c, x) => blocked(G.map, x, y) ? 1 : 0));
+    return {
+      started: started, map: G.map, x: G.x, y: G.y, dir: G.dir, moving: !!moving, busy: busy, day: G.day, focus: G.focus,
+      f: G.f, rank: G.rank, ui: ui, objective: objective(), solid: solid, doors: MAPS[G.map].doors,
+      battle: B ? {kind: B.spec.kind, ev: B.ev, dwell: B.dwell, story: !!B.spec.story, tech: B.spec.tech} : null,
+      party: G.party, metrics: metricVals(), m: G.m, fm: fmPct(), queue: G.queue, mfa: G.mfaSet.length, summary: !!G.f.summaryShown,
+      qt: Series.qt()
+    };
+  },
+  turbo(on) { UI.turbo = !!on; },
+  seed(n) { seedOverride = n >>> 0; },
+  state() { return G; },
+  series() { return Series.load(); }
+};
+
+/* ---------- Boot ---------- */
+function boot() {
+  const touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || (window.matchMedia && matchMedia('(pointer: coarse)').matches);
+  document.body.classList.toggle('touch', !!touch);
+  Series.load();
+  Screen.init(); UI.init(); Input.init();
+  Input.handler = onButton;
+  document.querySelectorAll('.buildid').forEach(e => e.textContent = BUILD_ID + ' · ' + BUILD_TS);
+  requestAnimationFrame(frame);
+  titleScreen();
+}
+window.addEventListener('DOMContentLoaded', boot);
+
+</script>
+</body>
+</html>

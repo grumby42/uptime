@@ -1,0 +1,8 @@
+{
+  "id": "town-hall",
+  "name": "Town Hall",
+  "district": "Front Desk district",
+  "slice": 1,
+  "blurb": "You're the new security intern in a small town. Investigate alerts, fix what's broken, and keep the district running.",
+  "files": ["data.js", "quiet.js", "story.js"]
+}

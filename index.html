@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:;">
+<title>Uptime</title>
+<style>
+:root{--bg:#f4f2ec;--ink:#1b2233;--muted:#4a5163;--line:#1b2233;--accent:#2f6e3e;--card:#fff;
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"DejaVu Sans Mono","Liberation Mono",monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141f;--ink:#e9edf5;--muted:#aab3c5;--line:#3a4a6b;--accent:#a6d96a;--card:#1f2533}}
+:root[data-theme="dark"]{--bg:#10141f;--ink:#e9edf5;--muted:#aab3c5;--line:#3a4a6b;--accent:#a6d96a;--card:#1f2533}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);overflow-x:hidden}
+main{max-width:640px;margin:0 auto;padding:24px 16px 32px}
+h1{font-size:40px;letter-spacing:8px;margin:0 0 4px;color:var(--accent)}
+p{line-height:1.5}
+.sub{color:var(--muted);margin:0 0 20px}
+ol{list-style:none;padding:0;margin:0}
+li{margin:0 0 12px}
+a.ed{display:block;border:3px solid var(--line);background:var(--card);color:var(--ink);text-decoration:none;padding:14px 16px}
+a.ed:focus,a.ed:hover{outline:3px solid var(--accent);outline-offset:2px}
+.ed b{display:block;font-size:18px}
+.ed span{display:block;color:var(--muted);font-size:14px;margin-top:4px}
+.soon{border:3px dashed var(--line);padding:14px 16px;color:var(--muted)}
+footer{margin-top:28px;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<h1>UPTIME</h1>
+<p class="sub">A security-analyst RPG in small offline editions. Each one runs in your browser, phone or desktop, with no network requests. Saves stay in this browser.</p>
+<ol>
+<li><a class="ed" href="editions/town-hall/index.html"><b>1. Town Hall</b><span>Front Desk district. You&#x27;re the new security intern in a small town. Investigate alerts, fix what&#x27;s broken, and keep the district running.</span></a></li>
+<li class="soon">Next: the Mail Room</li>
+</ol>
+<footer>Build ARCD-20261028-0419Z &middot; 2026-10-28 04:19 UTC &middot; Code under the MIT licence; framework data keeps its own terms (see CREDITS.md).</footer>
+</main>
+</body>
+</html>

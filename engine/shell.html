@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:;">
+<title>Uptime</title>
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <div id="screen">
+      <canvas id="cv" width="320" height="180" aria-label="Game screen"></canvas>
+      <div id="hud"></div>
+      <div id="bcard" class="bpanel"></div>
+      <div id="btool" class="bpanel"></div>
+      <div id="toast"></div>
+    </div>
+    <div id="panel" aria-live="polite"><div id="pwho"></div><div id="ptext"></div><div id="popts"></div><div id="pmore">&#9660;</div></div>
+  </div>
+  <div id="pad" aria-label="Controls">
+    <div class="dpad">
+      <button class="du" data-btn="up" aria-label="Up">&#9650;</button>
+      <button class="dl" data-btn="left" aria-label="Left">&#9664;</button>
+      <span class="dc"></span>
+      <button class="dr" data-btn="right" aria-label="Right">&#9654;</button>
+      <button class="dd" data-btn="down" aria-label="Down">&#9660;</button>
+    </div>
+    <div class="sys"><button data-btn="select">SELECT</button><button data-btn="start">START</button></div>
+    <div class="ab"><button class="bb" data-btn="b" aria-label="B">B</button><button class="ba" data-btn="a" aria-label="A">A</button></div>
+  </div>
+  <div id="foot"><span class="keys">Arrows move &middot; Z = A &middot; X = B &middot; Enter = Start &middot; Shift = Select &middot; </span>Build <span class="buildid"></span></div>
+</div>
+<div id="modal" role="dialog" aria-modal="true"></div>
+<script>
+const BUILD_ID = '__BUILD_ID__', BUILD_TS = '__BUILD_TS__';
+/*__JS__*/
+</script>
+</body>
+</html>
