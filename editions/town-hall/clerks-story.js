@@ -158,6 +158,7 @@ function crObjective() {
     return at('Lead containment: isolate the laptops the evidence says are spreading, and nothing else (' + left.length + ' to go). Ruth has the fleet search.', 14, 9);
   }
   if (!f.crBoss) return at('Containment holds. Report to Ruth.', 14, 9);
+  if (typeof mkObjective === 'function') return mkObjective();
   return {text: 'Clerks’ Row secured. Next: Market Square.', done: true, district: 'clerks'};
 }
 
