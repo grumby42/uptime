@@ -15,7 +15,7 @@
 'use strict';
 
 if (typeof EDITION !== 'undefined') {
-  EDITION.creditsFacts += ' Clerks’ Row: CISA Known Exploited Vulnerabilities catalog and BOD 22-01. Microsoft Learn on the monthly update cycle, Office internet-macro blocking, attack surface reduction rules, PowerShell script block logging, Task Scheduler event 106 and Audit Other Object Access Events, Defender Antivirus events and tamper protection, Sysmon. Microsoft Incident Response, Guidance for Incident Responders (execution artefacts). ASD Essential Eight. CISA eviction strategies (CM0147). UK National Audit Office, Investigation: WannaCry cyber attack and the NHS (2017). Microsoft Security Bulletin MS17-010 and MSRC WannaCrypt guidance. CISA alert TA17-132A.';
+  EDITION.creditsFacts += ' Clerks’ Row: CISA Known Exploited Vulnerabilities catalog and BOD 22-01. Microsoft Learn on the monthly update cycle and cumulative updates, update and restart deadlines, User Account Control, Windows LAPS, Office internet-macro blocking, attack surface reduction rules, PowerShell script block logging, Task Scheduler event 106 and Audit Other Object Access Events, Defender Antivirus events, tamper protection and troubleshooting mode, Sysmon. Microsoft Support on removing PowerShell 2.0; DISA Windows 11 STIG V-253285. Microsoft Incident Response, Guidance for Incident Responders (execution artefacts). ASD Essential Eight. CISA eviction strategies (CM0147). UK National Audit Office, Investigation: WannaCry cyber attack and the NHS (2017). Microsoft Security Bulletin MS17-010 and MSRC WannaCrypt guidance. CISA alert TA17-132A.';
 }
 
 /* ---------- State ---------- */
@@ -126,7 +126,8 @@ function crTile(d, ch, x, y) {
   if (ch === 'x' && G.f.crShield && (x + y) % 2 === 0) d = Object.assign({ch: ','}, TILES[',']);
   if (ch === 'l' && G.cr) {
     const h = crHostAt(x, y);
-    d.pal = crIsolated(h) ? 'pcIso' : crInfectedLive(h) ? 'pcHot' : crLit(h) ? 'pcOn' : 'pcOff';
+    // No red for infected laptops: the player finds them from the fleet search and each laptop's own evidence.
+    d.pal = crIsolated(h) ? 'pcIso' : crLit(h) ? 'pcOn' : 'pcOff';
   }
   return d;
 }
@@ -154,8 +155,7 @@ function crObjective() {
   if (!f.crContain && !f.crBoss) return at('Ruth needs you: something is spreading.', 14, 9);
   if (f.crContain && !f.crContained && CR().infected.some(h => !crIsolated(h))) {
     const left = CR().infected.filter(h => !crIsolated(h));
-    const p = crHostXY(left[0]);
-    return at('Lead containment: isolate the infected laptops (' + left.length + ' left). They show red.', p.x, p.y);
+    return at('Lead containment: isolate the laptops the evidence says are spreading, and nothing else (' + left.length + ' to go). Ruth has the fleet search.', 14, 9);
   }
   if (!f.crBoss) return at('Containment holds. Report to Ruth.', 14, 9);
   return {text: 'Clerks’ Row secured. Next: Market Square.', done: true, district: 'clerks'};
@@ -225,7 +225,7 @@ async function crArrive() {
   await say('Day ' + G.day + '. Clerks’ Row: three rows of laptops, a deployment office, a Forensics Dojo, and a door marked Endpoint Board.');
   await say('You’re the Tier 1 from the Mail Room? Ruth Avila. I run Clerks’ Row: licences, records, permits, planning. Eighteen laptops.', who);
   await say('Two problems. We are months behind on patches: see how every laptop is dark? And every clerk is a local administrator, because it was easier.', who);
-  await say('Anything a clerk opens runs with full control of the laptop, and nothing is patched against the flaws it uses. Fix both, then we talk about alerts.', who);
+  await say('Anything a clerk opens is one click on a consent prompt away from full control of the laptop, and nothing is patched against the flaws it uses. Fix both, then we talk about alerts.', who);
   if (!hasTool('sentry')) {
     addTool('watchling', 4);
     await say('You don’t have an endpoint tool yet. Here: Watchling, a basic EDR agent on every laptop. It sees process starts. It grows.', who);
@@ -248,7 +248,7 @@ async function ruthTalk() {
   if (!f.crDrill3) { await say('Arlo has the CR-LT-09 bench log.', who); return; }
   if (!f.crBoard) { await say('Teo runs the Endpoint Board, through the east door. Yara’s Forensics Dojo is worth a visit first.', who); return; }
   if (!f.crContain && !f.crBoss) { await crBossScript(); return; }
-  if (f.crContain && !f.crContained) { await say('Keep going: the red laptops. Isolate those, and only those.', who); return; }
+  if (f.crContain && !f.crContained) { await crFleetSearch(); await say('Find them on the map. Isolate the ones spreading, and only those.', who); return; }
   if (!f.crBoss) { await crBossFinish(); return; }
   await say('Clerks’ Row is patched, and nobody here is an administrator any more. Market Square is next.', who);
   await crSummary();
@@ -271,18 +271,18 @@ async function crAdminTask() {
   await say('All eighteen clerks are in the local Administrators group. It started with one plotter driver years ago.', who);
   while (true) {
     const i = await choose('How do you fix it?', [
-      {label: 'Remove staff from local admin; IT uses separate admin accounts; exceptions go through a help-desk request that is checked, time-limited and logged', meta: {good: true}},
+      {label: 'Remove staff from local admin; IT uses separate admin accounts, and every laptop gets its own rotated local admin password; exceptions go through a help-desk request that is checked, time-limited and logged', meta: {good: true}},
       {label: 'Remove everyone’s admin rights, no exceptions, ever'},
       {label: 'Keep admin rights, but buy better antivirus'},
       {label: 'One shared admin password for IT across every laptop'}]);
     if (i === 0) break;
     if (i === 1) await say('Real needs will come up. With no way to ask, people go around you. Have a process.');
-    else if (i === 2) await say('Anything a clerk opens runs with the clerk’s rights. With admin rights, it can change anything on the laptop, including the antivirus settings.');
-    else await say('One leaked password would open every laptop. Separate, managed admin accounts.');
+    else if (i === 2) await say('Anything a clerk opens runs with the clerk’s rights. With admin rights, one click on a consent prompt lets it change anything on the laptop, including the antivirus settings.');
+    else await say('One leaked password would open every laptop. Give every laptop its own rotated local admin password (Windows LAPS), and give IT separate admin accounts.');
   }
   const c = CR(); c.admins = 0; G.f.crAdmin = true; track();
-  unlock('act', 'leastpriv'); unlock('fact', 'e8'); touchCSF('Protect'); touchCSF('Govern');
-  await say('Done by policy overnight. Staff with local admin: 18 → 0. Requests for admin rights are now checked when they’re made, which is what Australia’s Essential Eight asks for too.', who);
+  unlock('act', 'leastpriv'); unlock('fact', 'e8'); unlock('fact', 'laps'); touchCSF('Protect'); touchCSF('Govern');
+  await say('Done by policy overnight. Staff with local admin: 18 → 0. Windows LAPS now rotates a different local admin password on each laptop, so one leaked password opens one laptop, not eighteen. Requests for admin rights are now checked when they’re made, which is what Australia’s Essential Eight asks for too.', who);
   await say('Next: the patch backlog. The console is behind me.', who);
 }
 async function crConsole() {
@@ -300,7 +300,7 @@ function crAdvCard(a) {
 }
 async function crTriage() {
   const c = CR();
-  await say('Patch Tuesday: Microsoft’s monthly security update is out, along with this month’s fixes from the other vendors we use. Eight advisories land on the console, and the deployment office can push one batch today. (Advisories and IDs are invented: game.)');
+  await say('Patch Tuesday: Microsoft’s monthly security update is out, along with this month’s fixes from the other vendors we use. Windows fixes come as one cumulative update, so every Windows advisory travels together. Eight advisories land on the console, and the deployment office can push one batch today. (Advisories and IDs are invented: game.)');
   const plan = {};
   for (let n = 0; n < CR_ADVISORIES.length; n++) {
     const a = CR_ADVISORIES[n];
@@ -327,7 +327,7 @@ async function crTriage() {
   const n = crDeploy('week');
   unlock('act', 'patchprio'); unlock('fact', 'kev'); unlock('fact', 'patchtue'); touchCSF('Protect'); touchCSF('Identify');
   await say('Deployed: ' + n + ' update' + (n === 1 ? '' : 's') + ' to the laptops that are online. Laptops lit: ' + CR_HOSTS_ALL.filter(crLit).length + ' of 18.');
-  await say('Two stay dark. ' + CR_OFFLINE + ' is at a conference with its owner, offline. ' + CR_DEFERRED + ' installed everything but its user has postponed the restart five times, so none of it is in effect yet. (game)');
+  await say('Two stay dark. ' + CR_OFFLINE + ' is at a conference with its owner, offline. ' + CR_DEFERRED + ' installed everything but its user has postponed the restart five times, so none of it is in effect yet. (game) A restart deadline would stop that: Windows can enforce one after a short grace period.');
   await say('Patch compliance on your scorecard counts updates in effect, not updates sent. Known exploited: ' + metricVals().crKev + '%.');
 }
 async function crAsrTask() {
@@ -372,7 +372,8 @@ async function crLaptop(x, y) {
   const h = crHostAt(x, y), c = CR(), f = G.f;
   if (!f.crMet) { await say('A clerk’s laptop. Ruth should show you around first.'); return; }
   if (h === 'CR-LT-04' && f.crPslogGpo && !f.crPslog) { await crPslogVerify(); return; }
-  const state = crIsolated(h) ? 'isolated' : crInfectedLive(h) ? 'INFECTED: scanning port 445' : crLit(h) ? 'priority patches in effect' : (h === CR_OFFLINE && !f.crBoss ? 'offline (at a conference)' : h === CR_DEFERRED && !f.crBoss ? 'restart pending' : 'missing priority patches');
+  const state = crIsolated(h) ? 'isolated' : crInfectedLive(h) ? 'outbound TCP 445 to ' + crScanCount(h) + ' different laptop addresses in the last 10 minutes'
+    : (f.crContain && !f.crBoss && h === CR_DECOY) ? 'TCP 445 to FILESRV-01 only, the records share, as every hour' : crLit(h) ? 'priority patches in effect' : (h === CR_OFFLINE && !f.crBoss ? 'offline (at a conference)' : h === CR_DEFERRED && !f.crBoss ? 'restart pending' : 'missing priority patches');
   if (!f.crShield) {
     await say(h + ': ' + state + '.');
     if (h === CR_QT_HOST) await crQtLaptop();
@@ -409,10 +410,25 @@ async function crIsolate(h) {
   if (done) await say('Every infected laptop is isolated. Containment holds. Report to Ruth.');
 }
 
+/* ---------- Worm containment evidence: a fleet search, with one laptop that uses TCP 445 legitimately ---------- */
+function crScanCount(h) { return 180 + (+h.slice(6) * 37) % 70; }  // (game)
+function crFleetRows() {
+  const rows = CR().infected.map(h => ({h: h, scan: true, text: h + '  outbound TCP 445 to ' + crScanCount(h) + ' different laptop addresses in 10 minutes'}));
+  rows.push({h: CR_DECOY, scan: false, text: CR_DECOY + '  outbound TCP 445 to FILESRV-01 only (the records share): 6 connections, as every hour'});
+  return rows.sort((a, b) => a.h < b.h ? -1 : 1);
+}
+async function crFleetSearch() {
+  const rows = crFleetRows();
+  const body = '<p>Fleet search from your endpoint tool (game data): every laptop that made a TCP 445 connection in the last 15 minutes.</p>' +
+    '<pre class="art">' + esc(rows.map(r => r.text + (crIsolated(r.h) ? '   [isolated]' : '')).join('\n')) + '</pre>' +
+    '<p class="small">Laptops use TCP 445 every day to reach the town’s file servers. Isolate what the evidence says is spreading, and nothing else.</p>';
+  await UI.openModal('Fleet search · TCP 445', body, [{label: 'Back to the map', meta: {good: true}}], {closable: false, cls: 'drill'});
+}
+
 /* ---------- Drills ---------- */
 async function crDrill(key) {
   const D = Object.assign({}, CR_DRILLS[key]);
-  D.artefact = mrDay(D.artefact);
+  D.artefact = mrDay(D.artefact).replace(/\{D-1\}/g, String(G.day - 1));
   const r = await doDrill(D);
   CR().drills[key] = {score: r.score, verdictOk: r.verdictOk, supported: r.supported, ai: r.ai, aiWrong: r.aiWrong};
   return r;
@@ -436,8 +452,8 @@ async function crException() {
       {label: 'Make Gus a permanent admin: he’s trustworthy'},
       {label: 'Tell Gus no, and to find a plotter that doesn’t need a driver'}]);
     if (i === 0) { await say('Arlo installs the signed driver from the bench. Gus never needs admin rights at all. Logged in the ticket.'); break; }
-    if (i === 1) { c.admins++; c.tempAdmin = true; track(); await say('Checked, time-limited and logged: that works. It expires at the end of the shift. Even better next time: IT installs it, and nobody needs admin rights.'); break; }
-    if (i === 2) await say('Trust isn’t the question. Anything Gus opens would run as an admin too.');
+    if (i === 1) { c.admins++; c.tempAdmin = true; track(); await say('Checked, time-limited and logged: that works. It expires after the hour. Even better next time: IT installs it, and nobody needs admin rights.'); break; }
+    if (i === 2) await say('Trust isn’t the question. Anything Gus opens could run as an admin too: one click on a consent prompt is all it takes.');
     else await say('A “no” with no path sends people around the process. Give them a way to ask.');
   }
   G.f.crException = true; touchCSF('Govern');
@@ -536,21 +552,23 @@ async function crBossScript() {
   const who = 'Ruth Avila', c = CR();
   await surfaceMissed(true);
   await say('Incident. ' + CR_OFFLINE + ' came back from the conference this morning and joined the network. Ten minutes later, laptops started scanning each other on port 445.', who);
-  await say('It’s a worm, using the file-sharing flaw from ADV-26-101 (game). This is how WannaCry ran through the NHS in 2017: one unpatched network service, laptop to laptop.', who);
+  await say('It’s a worm, using the file-sharing flaw from ADV-26-101 (game). This is how WannaCry spread in 2017, the NHS included: one unpatched network service, computer to computer.', who);
   unlock('fact', 'wannacry'); unlock('fact', 'ms17010');
-  await say('Tabletop first. Pick four response cards. Then we work it in three stages, and you lead containment.', who);
-  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions and CISA’s WannaCry guidance.</p>' +
-    CR_CARDS.map(x => '<div class="card"><b>' + esc(x.name) + '</b> <span class="tag">' + x.csf + '</span><br>' + esc(x.text) + '</div>').join('');
-  const items = CR_CARDS.map(x => ({label: x.name, meta: {good: ['segment', 'smb', 'pz', 'patch'].includes(x.id)}})).concat([{label: 'Play these four cards', done: true, meta: {done: true}}]);
+  const notify = CR_CARDS.find(x => x.auto), cards = CR_CARDS.filter(x => !x.auto);
+  await say('I’ve already told leadership: what is happening, what we are doing, and that they get an update every hour. That is never optional, so it isn’t one of your cards.', who);
+  touchCSF(notify.csf); G.rep += 5; toast(notify.name + ': done. Reputation up.');
+  await say('Tabletop. Pick four response cards. Then we work it in three stages, and you lead containment.', who);
+  const body = '<p>Pick <b>four</b> cards. Each is our own, written from public ATT&amp;CK / D3FEND-style actions and CISA’s WannaCry guidance. (Leadership has already been told.)</p>' +
+    cards.map(x => '<div class="card"><b>' + esc(x.name) + '</b> <span class="tag">' + x.csf + '</span><br>' + esc(x.text) + '</div>').join('');
+  const items = cards.map(x => ({label: x.name, meta: {good: ['segment', 'smb', 'pz', 'patch'].includes(x.id)}})).concat([{label: 'Play these four cards', done: true, meta: {done: true}}]);
   const sel = await UI.openModal('Tabletop: the worm', body, items, {multi: 4, closable: false, cls: 'tabletop'});
-  const picks = sel.map(i => CR_CARDS[i].id);
+  const picks = sel.map(i => cards[i].id);
   G.f.crCards = picks;
   for (const id of picks) { const x = CR_CARDS.find(y => y.id === id); touchCSF(x.csf); await say(x.name + ': ' + x.fx); }
   if (picks.includes('unplug')) { bumpUptime(-0.03); G.rep -= 3; }
   if (picks.includes('ransom')) G.rep -= 5;
-  if (picks.includes('notify')) G.rep += 5;
   if (picks.includes('backup')) G.rep += 2;
-  await say('Debrief: no single right four. Cut the paths the worm uses (the segment, SMB at the boundaries), find where it started, and patch what it exploits. Paying buys nothing certain; shutting the whole town down stops the worm and everything else. And don’t block every domain it contacts: WannaCry had a kill switch, and CISA told admins not to block it.', who);
+  await say('Debrief: no single right four. Cut the paths the worm uses (the segment, SMB at the boundaries), find where it started, and patch what it exploits. Paying buys nothing certain; shutting the whole town down stops the worm and everything else. And don’t block every domain it contacts: WannaCry had a kill switch, and CISA told admins not to block it. One more: a laptop back from travel should be patched on a quarantine network before it rejoins the office one.', who);
   const ev0 = picks.includes('pz') ? 20 : 0;
   const s1 = {kind: 'mal', threat: 'shade', tech: 'T1210', tags: ['host'], story: true, group: 'a', ev0: ev0,
     rate: picks.includes('segment') ? 9 : 14, dwell0: 20,
@@ -565,8 +583,9 @@ async function crBossScript() {
   c.infected = crInfectedSet(); c.bossT0 = G.playMs;
   G.f.crContain = true; G.f.crContained = c.infected.length === 0; track();
   touchCSF('Respond');
-  await say('You lead containment. Sentry sees ' + c.infected.length + ' laptop' + (c.infected.length === 1 ? '' : 's') + ' scanning port 445: they show red on the map. Isolate them with the Shield Badge.', who);
-  await say('Only those. Isolate a clean laptop and a clerk loses their afternoon for nothing.' + (c.infected.length > 2 ? ' (More are infected than there needed to be: ADV-26-101 wasn’t in this week’s batch.)' : ''), who);
+  await say('You lead containment. Here is the fleet search: every laptop that touched TCP 445 in the last fifteen minutes. Nothing on the map is coloured for you.', who);
+  await crFleetSearch();
+  await say('Isolate the laptops that are spreading, with the Shield Badge, and only those. Isolate a clean laptop and a clerk loses their afternoon for nothing.' + (c.infected.length > 2 ? ' (More are infected than there needed to be: ADV-26-101 wasn’t in this week’s batch.)' : ''), who);
 }
 async function crBossFinish() {
   const who = 'Ruth Avila', c = CR(), picks = G.f.crCards || [];
@@ -584,19 +603,19 @@ async function crBossFinish() {
     {kind: 'mal', threat: 'shade', tech: 'T1486', tags: ['host'], story: true, group: 'a',
      rate: picks.includes('patch') ? 8 : 14, dwell0: picks.includes('blockall') ? 55 : (picks.includes('patch') ? 10 : 35),
      title: 'Stage 3: the kill switch', host: CR_OFFLINE + ' · isolated', enemy: {spr: 'worm', pal: 'worm'},
-     clues: ['On ' + CR_OFFLINE + ' the worm begins encrypting files.', 'Reverse engineering shows it first looks up an unregistered domain, and stops if the lookup answers. A researcher has registered it. (game, modelled on WannaCry)', picks.includes('blockall') ? 'Your new DNS block list includes that domain: the worm can’t see the switch.' : 'The town’s DNS filter would block that domain as newly seen.'],
-     truth: 'Data Encrypted for Impact, with a built-in stop switch.',
-     resp: [{label: 'Let the kill-switch lookup through, rebuild ' + CR_OFFLINE + ' from offline backup, finish patching', good: true},
-            {label: 'Block the domain: it’s malware infrastructure', good: false, why: 'During WannaCry, CISA asked admins not to block the kill-switch domain: registering it had slowed the spread. Blocking it here switches the worm back on.'},
+     clues: ['On ' + CR_OFFLINE + ' the worm begins encrypting files.', 'Reverse engineering shows that each time it starts on a new laptop, it first tries to connect to an unregistered domain and quits if the connection succeeds. A researcher has registered it: new infections stop, but a laptop that is already encrypting keeps going. (game, modelled on WannaCry)', picks.includes('blockall') ? 'Your new DNS block list includes that domain: the worm can’t see the switch.' : 'The town’s DNS filter would block that domain as newly seen.'],
+     truth: 'Data Encrypted for Impact. The kill switch stops new infections; it can’t halt encryption already running, so infected laptops are rebuilt from backup.',
+     resp: [{label: 'Let the kill-switch connection through, rebuild ' + CR_OFFLINE + ' from offline backup, finish patching', good: true},
+            {label: 'Block the domain: it’s malware infrastructure', good: false, why: 'During WannaCry, CISA asked admins not to block the kill-switch domain: registering it had slowed the spread. Blocking it here lets every new infection run again.'},
             {label: 'Decrypt with a tool from a forum', good: false, why: 'Unverified tools can destroy files, or bring more malware.'}],
      chain: [{at: 60, text: 'Encryption reaches the shared documents folder.'}]}
   ];
   for (const s of stages) await fightStory(s, 'Ruth: Regroup. Same stage, again.');
   crPatchAll();
   c.iso = {}; G.f.crBoss = true; G.f.crContain = false;
-  touchCSF('Recover'); unlock('act', 'smbblock'); unlock('act', 'restore');
+  touchCSF('Recover'); unlock('act', 'smbblock'); unlock('act', 'restore'); unlock('act', 'rejoin');
   bumpUptime(0.01); track();
-  await say('Recover: infected laptops rebuilt from offline backups, ADV-26-101 in effect on all eighteen (' + CR_OFFLINE + ' and ' + CR_DEFERRED + ' included), SMB blocked between segments, isolations released.', who);
+  await say('Recover: infected laptops rebuilt from offline backups, ADV-26-101 in effect on all eighteen (' + CR_OFFLINE + ' and ' + CR_DEFERRED + ' included), SMB blocked between segments, isolations released. From now on, laptops back from travel are patched on a quarantine network before they rejoin, and restarts have a deadline.', who);
   await say('That’s Clerks’ Row. Next stop: Market Square.', who);
   await crSummary();
 }

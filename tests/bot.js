@@ -134,7 +134,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     throw new Error('no door route ' + from + ' -> ' + to);
   }
   async function navigate(p) {
-    const o = p.objective;
+    let o = p.objective;
+    // Worm containment: no laptop is coloured, so find the spreading ones from the fleet-search evidence, as a player would.
+    if (p.map === 'clerks' && p.f.crContain && !p.f.crContained) {
+      const t = await page.evaluate(() => { const r = crFleetRows().find(x => /different laptop addresses/.test(x.text) && !crIsolated(x.h)); return r ? crHostXY(r.h) : null; });
+      if (t) o = { map: 'clerks', x: t.x, y: t.y };
+    }
     let gx, gy, tile = false;
     if (p.map !== o.map) { tile = true; [gx, gy] = await nextDoor(p.map, o.map); }
     else { gx = o.x; gy = o.y; tile = !!o.step; }

@@ -179,6 +179,7 @@ function mailDone(s, extra, party) {
   await s.settle([/exceptions go through a help-desk request/]);
   p = await s.peek();
   check('local admin removed: 18 -> 0', p.f.crAdmin && p.metrics.crAdmins === 0, p.metrics);
+  check('local admin: Windows LAPS fact unlocked (one rotated local admin password per laptop)', await s.page.evaluate(() => !!G.fm['fact:laps'] && /lateral/.test(FACTS.laps.desc)));
 
   // ---- Patch Tuesday triage: the wormable flaw left to next week, a CVSS 9.8 we don't run put first ----
   await s.goTo('clerks', 2, 1);
@@ -194,6 +195,7 @@ function mailDone(s, extra, party) {
   await s.waitUI('modal');
   const review = await s.modalText();
   check('triage: score weights known-exploited items double (9 of 11 = 82%)', /Triage score 82%/.test(review), review.slice(0, 200));
+  check('triage: only one Windows advisory (Windows fixes ship in one cumulative update)', await s.page.evaluate(() => CR_ADVISORIES.filter(a => /^Windows/.test(a.title)).length === 1));
   check('triage: review teaches CVSS is not exploitation (CISA quote) and KEV is a floor', /does not account for if the vulnerability is actually being used/.test(review) && /KEV is a floor, not a ceiling/.test(review) && /CVSS rates severity, not your exposure/.test(review));
   await s.pickLabel(/Deploy this week/);
   await s.settle();
@@ -287,13 +289,22 @@ function mailDone(s, extra, party) {
   await s.pickLabel(/Back to the investigation/);
   await s.pickLabel(/Query: PowerShell script block log/); await s.pickLabel(/Script blocks on CR-LT-09/); await s.pickLabel(/Back to the investigation/);
   await s.pickLabel(/Query: Change tickets/); await s.pickLabel(/Any change ticket/); await s.pickLabel(/Back to the investigation/);
+  p = await s.waitUI('modal');
+  check('drill 3: budget 3; after the script block log and the ticket, the sign-in log is still a decisive query',
+    p.ui.options.some(o => /I have enough/.test(o.label) && !(o.meta && o.meta.good)) && p.ui.options.some(o => /Query: Sign-in log/.test(o.label) && o.meta && o.meta.good), p.ui.options);
+  await s.pickLabel(/Query: Sign-in log/); await s.pickLabel(/Where did arlo\.adm sign in/); await s.waitUI('modal');
+  check('drill 3: the sign-in log shows a console sign-in with his security key, and no other', /security key/.test(await s.modalText()) && /No other arlo\.adm sign-in/.test(await s.modalText()));
+  await s.pickLabel(/Back to the investigation/);
   await s.pickLabel(/Budget spent/);
   await s.pickLabel(/An admin change/);
   await s.pickLabel(/command ran in arlo\.adm/);
   await s.pickLabel(/attacker using Arlo/); await s.pickLabel(/Malware switched it off/); await s.pickLabel(/Done: these are my 2/);
   await s.waitUI('modal');
   const deb3 = await s.modalText();
-  check('drill 3: full marks on the focused path; Tally’s technique-matching explained; tamper protection (5013) taught', /Score 100 \/ 100/.test(deb3) && /Tally matched the technique, not the case/.test(deb3) && /event 5013/.test(deb3), deb3.slice(0, 300));
+  check('drill 3: full marks with all three decisive queries; Tally’s technique-matching explained; tamper protection (5013) taught', /Score 100 \/ 100/.test(deb3) && /Tally matched the technique, not the case/.test(deb3) && /event 5013/.test(deb3), deb3.slice(0, 300));
+  check('drill 3 debrief: the person behind the account (sign-in, MFA, call Arlo) and troubleshooting mode', /whether the person behind the account was really him/.test(deb3) && /call to Arlo on his known number/.test(deb3) && /troubleshooting mode/.test(deb3) && /sat unanswered until morning/.test(deb3));
+  const two = await s.page.evaluate(() => { const D = CR_DRILLS.rtp, keys = D.sources.reduce((n, x) => n + x.qs.filter(q => q.key).length, 0); return { budget: D.budget, keys, twoOfThree: Math.round(20 * 2 / Math.min(keys, D.budget)) }; });
+  check('drill 3: three key queries in a budget of 3 (two of three earns 13 of 20 query points, so 93)', two.budget === 3 && two.keys === 3 && two.twoOfThree === 13, two);
   await s.settle();
   p = await s.peek();
   check('drill 3 recorded (Tally led, the player verified)', p.f.crDrill3 && p.extra.cr.drills.rtp.verdictOk && p.extra.cr.drills.rtp.ai === 'everything', p.extra.cr.drills.rtp);
@@ -377,17 +388,31 @@ function mailDone(s, extra, party) {
   // ---- The worm: a misplaced ADV-26-101 widens it; containment on the map ----
   const wider = await s.page.evaluate(() => { const G = __UPTIME.state(), keep = JSON.stringify(G.cr.patched); delete G.cr.patched['CR-LT-02']['ADV-26-101']; const n = crInfectedSet().length; G.cr.patched = JSON.parse(keep); return { n, normal: crInfectedSet().length }; });
   check('worm scope follows the patch plan: 6 infected if ADV-26-101 never went out, 2 when it did (offline + restart pending)', wider.n === 6 && wider.normal === 2, wider);
+  const rep0 = await s.page.evaluate(() => G.rep);
   await s.goTo('clerks', 14, 9);
+  await s.settle(null, /Leadership has already been told/);
+  p = await s.peek();
+  check('tabletop: Notify leadership is automatic (not one of the four cards)', !p.ui.options.some(o => /Notify leadership/.test(o.label)) && (await s.page.evaluate(() => CR_CARDS.find(x => x.id === 'notify').auto === true)), { opts: p.ui.options.map(o => o.label), rep0 });
+  await s.settle(null, /Fleet search from your endpoint tool/);
+  const fleet = await s.modalText();
   await s.settle();
   p = await s.peek();
-  check('incident: stage 1 done, containment led by the player, infected laptops red on the map', p.f.crContain && !p.f.crContained && JSON.stringify(p.extra.cr.infected) === '["CR-LT-17","CR-LT-08"]' &&
-    await s.page.evaluate(() => tileDef('clerks', 19, 5).pal === 'pcHot' && tileDef('clerks', 13, 3).pal === 'pcHot'), p.extra.cr);
+  check('incident: stage 1 done, containment led by the player; the four picks are technical cards', p.f.crContain && !p.f.crContained && JSON.stringify(p.extra.cr.infected) === '["CR-LT-17","CR-LT-08"]' && p.f.crCards.length === 4 && !p.f.crCards.includes('notify'), { cr: p.extra.cr, cards: p.f.crCards });
+  check('containment: no red laptops; the objective names no host', await s.page.evaluate(() => CR_HOSTS_ALL.every(h => { const q = crHostXY(h); return tileDef('clerks', q.x, q.y).pal !== 'pcHot'; })) && !/CR-LT-/.test(p.objective.text) && p.objective.x === 14 && p.objective.y === 9, p.objective);
+  check('fleet search: the spreading laptops fan out to other laptops; one decoy reaches only the file server', /CR-LT-17\s+outbound TCP 445 to \d+ different laptop addresses/.test(fleet) && /CR-LT-08\s+outbound TCP 445 to \d+ different laptop addresses/.test(fleet) && /CR-LT-05\s+outbound TCP 445 to FILESRV-01 only/.test(fleet), fleet.slice(0, 400));
   check('Field Manual: WannaCry (NAO) and MS17-010 facts unlocked at the incident', await s.page.evaluate(() => G.fm['fact:wannacry'] && G.fm['fact:ms17010']));
-  const ttcBefore = p.extra.cr.ttc;
-  for (let k = 0; k < 2; k++) {
-    const o = (await s.peek()).objective;
-    await s.goTo('clerks', o.x, o.y);
-    await s.settle([/Isolate \(Shield Badge\)/]);
+  // The decoy: inspecting it shows file-server traffic only; leave it.
+  await s.goTo('clerks', 19, 1); p = await s.untilChoice();
+  check('decoy laptop: its own evidence is file-server traffic, not scanning', /CR-LT-05: TCP 445 to FILESRV-01 only/.test(p.ui.text), p.ui.text);
+  await s.pickLabel(/Leave it/); await s.settle();
+  const ttcBefore = (await s.peek()).extra.cr.ttc;
+  // Isolate exactly the hosts the evidence shows spreading.
+  const targets = [...fleet.matchAll(/(CR-LT-\d\d)\s+outbound TCP 445 to \d+ different laptop addresses/g)].map(m => m[1]);
+  for (const h of targets) {
+    const q = await s.page.evaluate(h => crHostXY(h), h);
+    await s.goTo('clerks', q.x, q.y); p = await s.untilChoice();
+    if (!/different laptop addresses/.test(p.ui.text)) check('infected laptop shows its scanning evidence: ' + h, false, p.ui.text);
+    await s.pickLabel(/Isolate \(Shield Badge\)/); await s.settle();
   }
   p = await s.peek();
   check('containment holds: both infected isolated, counted as needed, time to contain recorded', p.f.crContained && p.extra.cr.isolated.length === 2 && p.extra.cr.ttc === ttcBefore + 1 && p.extra.cr.over === 1, p.extra.cr);

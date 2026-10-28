@@ -148,7 +148,7 @@ const CR_NPC_IDS = ['ruth', 'arlo', 'sunita', 'mateo', 'gus', 'yara', 'teo'];
 /* ---------- ATT&CK techniques met in Clerks' Row (verified on attack.mitre.org, 28 Oct 2026, ATT&CK v20) ---------- */
 Object.assign(TECH, {
   'T1204.002': {name: 'User Execution: Malicious File', tactic: ['Execution'], desc: 'Getting someone to open a malicious file, such as an Office document with macros, so its code runs.'},
-  'T1218.011': {name: 'System Binary Proxy Execution: Rundll32', tactic: ['Stealth'], desc: 'Using rundll32.exe, a signed Windows program, to run attacker code from a DLL, so a trusted name shows in the process list. Its tactic, Stealth (TA0005), was called Defense Evasion before ATT&CK v19.'},
+  'T1218.011': {name: 'System Binary Proxy Execution: Rundll32', tactic: ['Stealth'], desc: 'Using rundll32.exe, a signed Windows program, to run attacker code from a DLL, so a trusted name shows in the process list. Its tactic is Stealth (TA0005): ATT&CK v19 split the old Defense Evasion tactic into Stealth and Defense Impairment (TA0112).'},
   'T1218.005': {name: 'System Binary Proxy Execution: Mshta', tactic: ['Stealth'], desc: 'Using mshta.exe, a signed Windows program that runs HTML applications, to run attacker script.'},
   'T1059.001': {name: 'Command and Scripting Interpreter: PowerShell', tactic: ['Execution'], desc: 'Running PowerShell commands and scripts, often encoded (base64) to hide what they do. Script block logging records the script as it actually runs.'},
   'T1003.001': {name: 'OS Credential Dumping: LSASS Memory', tactic: ['Credential Access'], desc: 'Reading the memory of LSASS, the Windows process that handles sign-ins, to steal the credentials cached in it. ATT&CK lists comsvcs.dll’s MiniDump run through rundll32, and procdump, among the ways.'},
@@ -273,7 +273,7 @@ const CR_BRIEFS = [
 const CR_ADVISORIES = [
   {id: 'ADV-26-101', title: 'Windows file-sharing service: remote code execution', cvss: 9.8, kev: false, applies: true, prio: true, good: 'week',
    note: 'No user action needed; any laptop that can reach another on the office network can attack it. Exploit code went public this week.',
-   why: 'Not on the KEV list yet, but a wormable flaw in a service every laptop exposes, with public exploit code, can’t wait. KEV is a floor, not a ceiling.'},
+   why: 'Not on the KEV list yet, but a wormable flaw in a service every laptop exposes, with public exploit code, can’t wait. KEV is a floor, not a ceiling. Until it is in effect everywhere, block inbound file sharing at each laptop’s own firewall: clerks’ laptops reach the file servers, they don’t need to accept connections from each other.'},
   {id: 'ADV-26-102', title: 'Browser: memory corruption', cvss: 8.8, kev: true, applies: true, prio: true, good: 'week',
    note: 'On CISA’s Known Exploited Vulnerabilities list: being used in attacks now.',
    why: 'Known exploited, and every laptop browses the web. This week.'},
@@ -283,15 +283,15 @@ const CR_ADVISORIES = [
   {id: 'ADV-26-104', title: 'Database server engine: remote code execution', cvss: 9.8, kev: false, applies: false, good: 'later',
    note: 'Asset inventory: no laptop runs this database server.',
    why: 'A 9.8 on software we don’t run is not a risk to the laptops. CVSS rates severity, not your exposure. (Patch the servers that have it, through their own process.)'},
-  {id: 'ADV-26-105', title: 'Windows kernel: elevation of privilege', cvss: 7.0, kev: true, applies: true, prio: true, good: 'week',
+  {id: 'ADV-26-105', title: 'Laptop maker’s support utility: elevation of privilege', cvss: 7.0, kev: true, applies: true, prio: true, good: 'week',
    note: 'On the KEV list: ransomware crews use it after getting in.',
    why: 'Only a 7.0, but known exploited. A lower score that attackers are using beats a higher one nobody is.'},
   {id: 'ADV-26-106', title: 'Office: code execution if a crafted file is opened', cvss: 7.8, kev: false, applies: true, good: 'next',
    note: 'No exploitation known. Needs a user to open a crafted file.',
    why: 'Real, but not exploited and needs a user to act. Next week, in the normal cycle.'},
-  {id: 'ADV-26-107', title: 'Virtualization feature: guest escape', cvss: 8.4, kev: false, applies: false, good: 'later',
-   note: 'The feature is turned off on all laptops.',
-   why: 'High score, feature not enabled. Later, with the rest of the backlog.'},
+  {id: 'ADV-26-107', title: 'Desktop virtualization app (another vendor): guest escape', cvss: 8.4, kev: false, applies: false, good: 'later',
+   note: 'Asset inventory: removed from staff laptops last year; only IT’s lab machines still have it.',
+   why: 'High score, but not on the laptops. Later for this batch; the lab machines get it through their own process.'},
   {id: 'ADV-26-108', title: 'VPN client: information disclosure', cvss: 6.5, kev: false, applies: true, good: 'next',
    note: 'No exploitation known. Fixed in the next client version.',
    why: 'Applies, low urgency. Next week.'}
@@ -300,6 +300,7 @@ const CR_BUCKETS = {week: 'This week', next: 'Next week', later: 'Later'};
 const CR_OFFLINE = 'CR-LT-17';  // away at a conference during the roll-out (game)
 const CR_DEFERRED = 'CR-LT-08'; // patch installed, restart postponed five times (game)
 const CR_SPREAD = ['CR-LT-02', 'CR-LT-11', 'CR-LT-13', 'CR-LT-14']; // extra victims if ADV-26-101 wasn't patched this week (game)
+const CR_DECOY = 'CR-LT-05'; // during the worm: uses TCP 445 legitimately (the records file share), must not be isolated (game)
 
 /* ---------- Investigation drills (all cases original; artefacts are invented, fields are real-world kinds of evidence) ---------- */
 const CR_DRILLS = {
@@ -319,7 +320,7 @@ const CR_DRILLS = {
          res: ['15:12:39  GET  …/invoice/Invoice_0412.pdf.exe  200  bytes in 412,288', '(Yes, it was downloaded. You knew that from the alert: the question is whether it ran.)']},
         {q: 'All web traffic from CR-LT-04 this week', kind: 'broad', rows: 18220,
          wall: ['{t}  GET  intranet.townhall.example/records/{n}  200', '{t}  GET  mail.townhall.example/inbox  200', '{t}  GET  news.example/local  200', '{t}  GET  cdn.example/fonts/{n}.woff2  200']}]},
-      {id: 'edr', name: 'EDR process creation (Sentry, Sysmon event 1)', qs: [
+      {id: 'edr', name: 'EDR process creation (your endpoint agent; like Sysmon event 1)', qs: [
         {q: 'Any process started from a file with this SHA-256, at any path, since 15:12 yesterday?', kind: 'focus', key: true,
          res: ['No process creation event for SHA-256 9f3c…e71a on CR-LT-04, or on any other laptop.', 'Logging covered the whole period: 2,114 other process creation events on CR-LT-04 since 15:12.']},
         {q: 'Every process started on CR-LT-04 this week', kind: 'broad', rows: 9812,
@@ -329,7 +330,7 @@ const CR_DRILLS = {
          res: ['No INVOICE_0412.PDF.EXE-*.pf in C:\\Windows\\Prefetch.', 'Prefetch is working here: 212 .pf files, the newest (CHROME.EXE-…pf) written nine minutes ago.', '(Prefetch is generally reliable evidence of execution, so its absence on a laptop where it clearly works means something.)']}]},
       {id: 'amc', name: 'Amcache.hve', qs: [
         {q: 'Does Amcache list Invoice_0412.pdf.exe?', kind: 'trap',
-         res: ['Yes: an entry for C:\\Users\\sunita.rao\\Downloads\\Invoice_0412.pdf.exe, with a SHA-1.', '(Amcache records files that were present. Microsoft’s incident responders say it cannot be used to prove a binary executed.)']}]},
+         res: ['Yes: an entry for C:\\Users\\sunita.rao\\Downloads\\Invoice_0412.pdf.exe, with a SHA-1.', '(An Amcache entry is evidence the file was present. Microsoft’s incident responders say it cannot be used to prove a binary executed.)']}]},
       {id: 'user', name: 'Ask Sunita (known number)', qs: [
         {q: 'Did you open the invoice file?', kind: 'focus',
          res: ['Sunita: “I clicked the link and something downloaded. I thought it was the PDF. Then a colleague emailed me the real invoice, so I used that one.”', '(Useful context, but memory isn’t evidence: the host decides.)']}]}
@@ -346,7 +347,7 @@ const CR_DRILLS = {
       {label: 'The Zone.Identifier says ZoneId=3', why: 'That shows where the file came from, not whether it ran.'},
       {label: 'Sunita says she didn’t open it', why: 'Worth hearing, but people misremember. The host evidence decides.'}],
     alts: [
-      {label: 'It ran under a different name or from another folder', good: true, why: 'Ruled out: the search was by hash, not by name or path.'},
+      {label: 'It ran under a different name or from another folder', good: true, why: 'Ruled out: the process search was by hash, not by name or path. (The Prefetch check, by name, would miss a renamed copy; that is why you need both.)'},
       {label: 'Prefetch is turned off on this laptop', good: true, why: 'Ruled out: 212 .pf files, the newest only minutes old.'},
       {label: 'The proxy blocked the download', why: 'The file is on disk.'},
       {label: 'Antivirus deleted it on arrival', why: 'It is still in Downloads.'}],
@@ -359,13 +360,13 @@ const CR_DRILLS = {
     intro: '<p>Mateo’s laptop, CR-LT-10, registered a new scheduled task at 12:41. Mateo badged out for lunch at 12:30 and back in at 13:15 (game). He says he didn’t make it.</p>',
     artefact: '<pre class="art">Task Scheduler · Operational log · CR-LT-10 · Day {D}\n' +
       '12:41:07  Event 106  The user "TOWNHALL\\mateo.f" registered the Task Scheduler task "\\Acrobat Update Helper".</pre>' +
-      '<p class="small">Event 106 names the account the task was registered under. It doesn’t say who, or what, was at the keyboard.</p>',
+      '<p class="small">Event 106 names the account the task was registered under. It doesn’t say who, or what, was at the keyboard. (Task history is switched on for staff laptops here: check that it is on yours. game)</p>',
     question: 'Who or what created the task, and what does it run?',
     sources: [
       {id: 'def', name: 'Task definition (Task Scheduler)', qs: [
         {q: 'What does “\\Acrobat Update Helper” run, and when?', kind: 'focus', key: true,
          res: ['Triggers: at sign-in, and every 60 minutes', 'Action: rundll32.exe C:\\Users\\mateo.f\\AppData\\Roaming\\AcroHelp\\ah.dll,Start', 'The DLL is unsigned. No Acrobat product installs to that folder.']}]},
-      {id: 'edr', name: 'EDR process tree (Sentry)', qs: [
+      {id: 'edr', name: 'EDR process tree (your endpoint agent)', qs: [
         {q: 'Which process created the task at 12:41, and what started it?', kind: 'focus', key: true,
          res: ['12:41:06  schtasks.exe /create /tn "Acrobat Update Helper" …', '  parent  powershell.exe -NoProfile -WindowStyle Hidden -EncodedCommand …', '  parent  wscript.exe C:\\Users\\mateo.f\\Downloads\\Statement_Oct.js', '  parent  explorer.exe: Mateo double-clicked Statement_Oct.js at 10:05; the script waited, then acted at 12:41']},
         {q: 'Every process on every laptop today', kind: 'broad', rows: 41730,
@@ -399,9 +400,9 @@ const CR_DRILLS = {
     techs: ['T1053.005', 'T1218.011', 'T1059.001'], acts: ['triage']
   },
   rtp: {
-    id: 'rtp', title: 'Protection off, engine on', budget: 2,
-    intro: '<p>Alert at 14:03: real-time protection is off on CR-LT-09. The antivirus engine’s service is still running and its definitions are current. Tampering, or an admin change?</p>',
-    artefact: '<pre class="art">Microsoft Defender Antivirus · Operational log · CR-LT-09 · Day {D}\n' +
+    id: 'rtp', title: 'Protection off, engine on', budget: 3,
+    intro: '<p>An alert fired yesterday at 14:03 and nobody picked it up: real-time protection is off on CR-LT-09, and still off this morning. The antivirus engine’s service is still running and its definitions are current. Tampering, or an admin change?</p>',
+    artefact: '<pre class="art">Microsoft Defender Antivirus · Operational log · CR-LT-09 · Day {D-1}\n' +
       '14:02:11  Event 5007  The antimalware platform configuration changed.\n' +
       '          Old value: …\\Real-Time Protection\\DisableRealtimeMonitoring = 0x0\n' +
       '          New value: …\\Real-Time Protection\\DisableRealtimeMonitoring = 0x1\n' +
@@ -411,13 +412,13 @@ const CR_DRILLS = {
     sources: [
       {id: 'ps', name: 'PowerShell script block log (4104)', qs: [
         {q: 'Script blocks on CR-LT-09 between 14:00 and 14:03', kind: 'focus', key: true,
-         res: ['14:02:10  4104  Set-MpPreference -DisableRealtimeMonitoring $true', '          user TOWNHALL\\arlo.adm (IT’s separate admin account) · elevated session', '14:31:55  4104  msiexec /i PlotterSuite_v7.msi /qn']}]},
+         res: ['14:02:10  4104  Set-MpPreference -DisableRealtimeMonitoring $true', '          user TOWNHALL\\arlo.adm (IT’s separate admin account)', '(4104 records the script and the account. That the change took effect tells you the session had admin rights.)', '14:31:55  4104  msiexec /i PlotterSuite_v7.msi /qn']}]},
       {id: 'chg', name: 'Change tickets', qs: [
-        {q: 'Any change ticket for CR-LT-09 today?', kind: 'focus', key: true,
+        {q: 'Any change ticket for CR-LT-09 yesterday?', kind: 'focus', key: true,
          res: ['CHG-3318 (game): “Install PlotterSuite v7 on CR-LT-09. Vendor guide: turn off antivirus during install.” Assigned: Arlo Petrakis. Window 14:00–15:00.', 'Closed 14:40. Nothing about turning protection back on.']}]},
       {id: 'sign', name: 'Sign-in log', qs: [
-        {q: 'Where did arlo.adm sign in from around 14:00?', kind: 'focus',
-         res: ['13:58  arlo.adm  interactive sign-in at the CR-LT-09 console, on the deployment office bench. MFA: security key.']}]},
+        {q: 'Where did arlo.adm sign in from around 14:00, and with which MFA?', kind: 'focus', key: true,
+         res: ['13:58  arlo.adm  interactive sign-in at the CR-LT-09 console, on the deployment office bench. MFA: security key.', 'No other arlo.adm sign-in anywhere between 13:00 and 15:00.', '(The account tells you whose name was used. Where it signed in from, and with what, tells you whether it was really him.)']}]},
       {id: 'set', name: 'Defender settings', qs: [
         {q: 'Is tamper protection on for CR-LT-09?', kind: 'focus',
          res: ['Tamper protection: Off. This laptop is in a group excluded last year for an old plotter driver (game).', '(With tamper protection on, the change would have been blocked and recorded as event 5013.)']},
@@ -428,23 +429,23 @@ const CR_DRILLS = {
          res: ['Scan complete: no threats found.', '(A scan describes the files now. It can’t tell you who turned protection off, or what ran while it was off.)']}]}
     ],
     ai: {everything: {text: 'Defender on CR-LT-09 was disabled through PowerShell, a known attacker technique (T1685). Recommend isolating the laptop and treating it as compromised.', wrong: true,
-                      reveal: 'Tally matched the technique, not the case. Attackers do turn protection off this way, and so do admins following a vendor guide. The ticket, the console sign-in and the admin account decide which this was.'},
+                      reveal: 'Tally matched the technique, not the case. Attackers do turn protection off this way, and so do admins following a vendor guide. The command’s account, the ticket and the sign-in behind the account decide which this was.'},
          specific: {q: 'Is there a change ticket covering CR-LT-09 between 14:00 and 14:03?', text: 'Yes: CHG-3318, a PlotterSuite install assigned to Arlo Petrakis, window 14:00–15:00. Its notes say to turn off antivirus during the install.'}},
     verdicts: [
-      {label: 'An admin change: Arlo turned it off for a ticketed install and never turned it back on', good: true, why: 'The command ran in his admin account’s console session, inside the ticket window, as the ticket told him to.'},
+      {label: 'An admin change: Arlo turned it off for a ticketed install and never turned it back on', good: true, why: 'The command ran under his admin account, signed in at the bench with his security key, inside the ticket window, as the ticket told him to.'},
       {label: 'Tampering: an attacker turned it off', why: 'Everything points to a ticketed, on-site admin change. Still a problem, but not an intruder.'},
       {label: 'A Defender glitch: nobody turned it off', why: 'Event 5007 shows a deliberate setting change, and 4104 shows the command.'}],
     reasons: [
-      {label: 'The command ran in arlo.adm’s elevated console session inside an open change ticket that tells him to do exactly this', good: true, why: 'Who, where, when and why line up.'},
+      {label: 'The command ran in arlo.adm’s session, signed in at the bench console with his security key, inside an open change ticket that tells him to do exactly this', good: true, why: 'What ran, who was really behind the account, when and why all line up.'},
       {label: 'The engine service is still running, so it can’t be an attacker', why: 'Attackers often switch a setting off and leave the service running.'},
       {label: 'It was done with PowerShell, so it must be an attacker', why: 'Admins use PowerShell all day.'}],
     alts: [
-      {label: 'An attacker using Arlo’s admin account', good: true, why: 'Ruled out: a console sign-in on the bench with his security key, inside the ticket window, and Arlo confirms it on his known number.'},
+      {label: 'An attacker using Arlo’s admin account', good: true, why: 'The script block log and the ticket can’t rule this out on their own: a stolen arlo.adm would look the same. The sign-in log does: a console sign-in on the bench with his security key, and no other arlo.adm sign-in. Confirm with Arlo on his known number before you close.'},
       {label: 'Malware switched it off', good: true, why: 'Ruled out: the change came from a command in Arlo’s session, not from an unknown process.'},
       {label: 'The clerk turned it off', why: 'Clerks lost local admin this week; they can’t.'},
       {label: 'Group Policy turned it off', why: '4104 shows a command typed in a session.'}],
-    path: '<p>The same events (5001, 5007) mean tampering or maintenance depending on <b>who ran the change</b> (script block log 4104: the command, the account, elevated or not) and <b>whether it was authorised</b> (the change ticket). A scan can answer neither. Tamper protection would have blocked this change, and logged event 5013, whoever made it: that is its job.</p>',
-    response: ['Turn real-time protection back on now, and check what ran on CR-LT-09 while it was off', 'Talk to Arlo without blame: use an approved exclusion or a signed installer, never “antivirus off”', 'Turn tamper protection on for the excluded laptop group', 'Alert on 5001 and 5007 outside a change window', 'Add “protection back on” to the change checklist'],
+    path: '<p>The same events (5001, 5007) mean tampering or maintenance depending on <b>what ran, under which account</b> (script block log 4104: the command and the account), <b>whether it was authorised</b> (the change ticket) and <b>whether the person behind the account was really him</b> (the sign-in log: where from, and which MFA). A stolen admin account inside a known ticket window would pass the first two. A scan can answer none of them. Tamper protection would have blocked this change, and logged event 5013, whoever made it: that is its job.</p>',
+    response: ['Turn real-time protection back on now, and check what ran on CR-LT-09 while it was off', 'Confirm the person behind the account before closing: the sign-in log (where from, which MFA), then a call to Arlo on his known number', 'Talk to Arlo without blame: next time use an approved, time-limited exclusion, or Defender’s troubleshooting mode under the ticket, never “antivirus off” with nothing to turn it back on', 'Turn tamper protection on for the excluded laptop group', 'Alert on 5001 and 5007 outside a change window', 'Add “protection back on” to the change checklist', 'Find out why yesterday’s 14:03 alert sat unanswered until morning'],
     techs: ['T1685', 'T1059.001'], acts: ['tamperprot']
   }
 };
@@ -462,17 +463,17 @@ const CR_DOJO = [
    opts: ['tool.exe was on the system; neither artefact proves it ran, so confirm with execution evidence', 'tool.exe ran: two artefacts agree', 'Nothing: these artefacts are unreliable and should be ignored'], good: 0,
    explain: 'Microsoft’s incident responders say Amcache cannot prove a binary executed, and Shimcache can’t prove execution on Windows 10 or later. Both are good evidence that a file was present, and its path. Two more caveats: the Amcache SHA-1 is not always a hash of the whole file (for large files only the first 30 MB is hashed), and Shimcache is only written at shutdown or restart. Confirm execution with Prefetch, process creation events or EDR.'},
   {title: 'Build the timeline',
-   art: 'One laptop, one program (local time, game):\n09:58:31  file created in Downloads, Zone.Identifier ZoneId=3\n10:02:00  process creation event for the program\n10:02:07  its Prefetch .pf file created\n16:40:12  the .pf file last modified',
+   art: 'One laptop, one program (local time, game):\n09:58:31  file created in Downloads, Zone.Identifier ZoneId=3\n10:02:00  process creation event for the program\n10:02:07  its Prefetch .pf file created\n16:40:03  process creation event for the program\n16:40:12  the .pf file last modified',
    q: 'When did the program first run, and when did it last run?',
    opts: ['First at about 10:02, last at about 16:40', 'First at 09:58, last at 10:02', 'First at 10:02:07, and only once'], good: 0,
-   explain: '09:58 is the download, not a run. A Prefetch file is created a few seconds after the first run (Microsoft’s guide puts the gap at 0 to 10 seconds), which fits the 10:02:00 process event, and its last-modified time generally marks the most recent run, here 16:40. Put every source on one clock and one time zone, and let independent artefacts confirm each other.'}
+   explain: '09:58 is the download, not a run. A Prefetch file is created a few seconds after the first run (Microsoft’s guide puts the gap at 0 to 10 seconds), which fits the 10:02:00 process event, and its last-modified time generally marks the most recent run, here 16:40, nine seconds after the 16:40:03 process event. Put every source on one clock and one time zone, and let independent artefacts confirm each other.'}
 ];
 
 /* ---------- Endpoint Board (original) ---------- */
 const CR_BOARD_SPECS = () => [
   {kind: 'mal', threat: 'quill', tech: 'T1218.005', tags: ['host'], story: true, rate: 12, group: 'a',
    title: 'Round 1: Word starts mshta', host: 'CR-LT-06 · Clerks’ Row', enemy: {spr: 'quill', pal: 'quill'},
-   clues: ['WINWORD.EXE started mshta.exe, which ran a script from an outside address.', 'The document arrived as an email attachment an hour ago and was opened from a Trusted Location folder.', 'mshta.exe saved a new program to the user’s temp folder and started it.'],
+   clues: ['WINWORD.EXE started mshta.exe, which ran a script from an outside address.', 'The document arrived as an email attachment an hour ago. The user saved it to a shared drive someone had added as a Trusted Location, which the clean-up missed, so the internet-macro block never applied.', 'mshta.exe saved a new program to the user’s temp folder and started it.'],
    truth: 'A macro document used mshta.exe, a signed Windows program, to run attacker script (System Binary Proxy Execution: Mshta).',
    resp: [{label: 'Isolate CR-LT-06, kill the tree, collect triage, purge the email, and move the “Office child processes” rule from audit to block', good: true},
           {label: 'Delete the document and close', good: false, why: 'The script already ran and dropped a program.'},
@@ -480,9 +481,9 @@ const CR_BOARD_SPECS = () => [
    chain: [{at: 40, text: 'The new program connects out every 60 seconds.'}, {at: 75, text: 'It starts listing the laptop’s users.'}]},
   {kind: 'mal', threat: 'siphon', tech: 'T1003.001', tags: ['host'], story: true, rate: 12, group: 'a',
    title: 'Round 2: a dump of LSASS', host: 'CR-LT-15 · Clerks’ Row', enemy: {spr: 'siphon', pal: 'siphon'},
-   clues: ['rundll32.exe ran comsvcs.dll’s MiniDump against LSASS on CR-LT-15.', 'The account was a help-desk admin account, signed in from CR-LT-06 ten minutes after Round 1.', 'The dump file was copied to a share before anyone noticed.'],
+   clues: ['rundll32.exe ran comsvcs.dll’s MiniDump against LSASS on CR-LT-15.', 'The account is a help-desk admin account. A technician signed in with it on CR-LT-06 to look at Round 1, and it was taken from that laptop’s memory; ten minutes later it signed in here from CR-LT-06.', 'The dump file was copied to a share before anyone noticed.'],
    truth: 'Credential dumping from LSASS memory, with an admin account the attacker took on CR-LT-06.',
-   resp: [{label: 'Isolate CR-LT-15, reset and revoke every account that signed in there (the help-desk admin first), turn on the LSASS protection rule', good: true},
+   resp: [{label: 'Isolate CR-LT-15, reset and revoke every account that signed in there (the help-desk admin first), turn on the LSASS protection rule, and stop signing in to suspect laptops with admin accounts', good: true},
           {label: 'Delete the dump from the share and close', good: false, why: 'It has been copied; the credentials inside are what matter.'},
           {label: 'Reset only the clerk who uses CR-LT-15', good: false, why: 'The admin account is the prize. Every cached credential is exposed.'}],
    chain: [{at: 40, text: 'The help-desk admin account signs in to a third laptop.'}, {at: 75, text: 'It tries the domain controller.'}]},
@@ -499,11 +500,11 @@ const CR_BOARD_SPECS = () => [
 /* ---------- Boss tabletop cards (our own) ---------- */
 const CR_CARDS = [
   {id: 'segment', name: 'Isolate the laptop segment', csf: 'Respond', good: true, text: 'Cut the laptop network off from servers and other floors; keep the security tools connected.', fx: 'Stage 1: the worm spreads more slowly.'},
-  {id: 'smb', name: 'Block SMB at the boundaries', csf: 'Protect', good: true, text: 'Block TCP 445 and 139 at every boundary device, as CISA advised during WannaCry, and between laptop segments.', fx: 'Stage 2: the worm moves more slowly.'},
+  {id: 'smb', name: 'Block SMB at the boundaries', csf: 'Respond', good: true, text: 'Block TCP 445, with TCP 139 and UDP 137–138, at every boundary device, as CISA advised during WannaCry, and between laptop segments.', fx: 'Stage 2: the worm moves more slowly.'},
   {id: 'pz', name: 'Find patient zero', csf: 'Respond', good: true, text: 'Work back from the first laptop that scanned port 445 to how the worm got in.', fx: 'Stage 1 starts with more evidence.'},
-  {id: 'patch', name: 'Patch the flaw everywhere', csf: 'Protect', good: true, text: 'Push ADV-26-101 (game) to every laptop that missed it, and to offline laptops as soon as they reconnect.', fx: 'Stage 3 becomes much easier.'},
+  {id: 'patch', name: 'Patch the flaw everywhere', csf: 'Protect', good: true, text: 'Push ADV-26-101 (game) to every laptop that missed it. Laptops coming back from travel join a quarantine network first and rejoin the office network only once patched.', fx: 'Stage 3 becomes much easier.'},
   {id: 'backup', name: 'Restore from offline backups', csf: 'Recover', good: true, text: 'Rebuild infected laptops and restore files from backups the worm could not reach.', fx: 'Recovery is faster; reputation up.'},
-  {id: 'notify', name: 'Notify leadership', csf: 'Respond', good: true, text: 'Tell leadership what is happening, what you are doing and when you will update them.', fx: 'Reputation up.'},
+  {id: 'notify', name: 'Notify leadership', csf: 'Respond', good: true, auto: true, text: 'Tell leadership what is happening, what you are doing and when you will update them.', fx: 'Reputation up.'},
   {id: 'ransom', name: 'Pay the ransom', csf: 'Respond', text: 'Pay for the decryption key.', fx: 'No guarantee of anything, and the worm is still spreading.'},
   {id: 'unplug', name: 'Shut down the whole town network', csf: 'Respond', text: 'Turn everything off until it’s over.', fx: 'Stops the worm and every service in town: uptime falls.'},
   {id: 'blockall', name: 'Block every domain the worm contacts', csf: 'Protect', text: 'Add everything in the worm’s code to the DNS block list.', fx: 'Includes its kill-switch domain: Stage 3 gets harder.'}
@@ -511,15 +512,16 @@ const CR_CARDS = [
 
 /* ---------- Field Manual additions ---------- */
 Object.assign(EXTRA_ACTIONS, {
-  leastpriv: {name: 'Remove local admin rights', desc: 'Staff use standard accounts; IT uses separate admin accounts. Exceptions go through the help desk: the request is checked when it’s made, time-limited and logged.'},
+  leastpriv: {name: 'Remove local admin rights', desc: 'Staff use standard accounts; IT uses separate admin accounts, and every laptop has its own rotated local admin password (Windows LAPS). Don’t sign in to a laptop you suspect is compromised with an admin account: its credential can be stolen from that laptop’s memory. Exceptions go through the help desk: the request is checked when it’s made, time-limited and logged.'},
   patchprio: {name: 'Patch by priority', desc: 'Known-exploited vulnerabilities first (CISA’s KEV list), then exposed, high-impact flaws, then the rest. A CVSS score rates severity; it doesn’t know whether anyone is exploiting the flaw or whether you even run the software.'},
-  asr: {name: 'Attack surface reduction and application control', desc: 'Rules that block risky behaviour (Office starting other programs, credential theft from LSASS) and lists of what may run. Start in audit mode, review what would break, then block.'},
-  pslog: {name: 'PowerShell script block logging', desc: 'Records the content of every PowerShell script block that runs, decoded, as event 4104 in Microsoft-Windows-PowerShell/Operational (PowerShell 7 writes to PowerShellCore/Operational). Forward it to the collector.'},
+  asr: {name: 'Attack surface reduction and application control', desc: 'Rules that block risky behaviour (Office starting other programs, credential theft from LSASS) and lists of what may run. Start in audit mode, review what would break, then block. (Microsoft says the noisy LSASS rule can go straight to block, on a few devices first.)'},
+  pslog: {name: 'PowerShell script block logging', desc: 'Records the content of every PowerShell script block that runs, decoded, as event 4104 in Microsoft-Windows-PowerShell/Operational (PowerShell 7 writes to PowerShellCore/Operational). Forward it to the collector, and remove Windows PowerShell 2.0 wherever it is still installed: it predates script block logging, so scripts run in it aren’t logged.'},
   hashhunt: {name: 'Hunt a hash fleetwide', desc: 'Search every host’s telemetry for a known-bad file hash, not just the one that alerted.'},
   triage: {name: 'Collect before you clean', desc: 'Take a triage package (logs, Prefetch, Amcache, tasks, processes) before deleting or reimaging, so the scope can still be answered later.'},
-  tamperprot: {name: 'Tamper protection', desc: 'Keeps real-time protection, behaviour monitoring, cloud protection and exclusions from being switched off or changed, even through the registry or Group Policy.'},
+  tamperprot: {name: 'Tamper protection', desc: 'Keeps real-time protection, behaviour monitoring and cloud protection from being switched off, even through the registry or Group Policy, and under certain conditions keeps exclusions from being changed. When IT really must change a protected setting, Defender’s troubleshooting mode lifts tamper protection for a limited time.'},
   isolatemap: {name: 'Isolate only what’s affected', desc: 'Isolation stops spread and stops the user’s work. Isolate hosts with evidence of compromise; over-isolating clean hosts costs the town for nothing.'},
-  smbblock: {name: 'Block SMB at boundaries', desc: 'Stop file-sharing traffic (TCP 445 and 139) crossing segment and network boundaries, so a worm can’t walk from one segment to the next.'},
+  smbblock: {name: 'Block SMB at boundaries', desc: 'Stop file-sharing traffic (TCP 445, plus TCP 139 and UDP 137–138) crossing segment and network boundaries, so a worm can’t walk from one segment to the next.'},
+  rejoin: {name: 'Patch before it rejoins', desc: 'A laptop that has been away (travel, leave, a conference) joins a quarantine network first and rejoins the office network only once it is patched. Give restarts a deadline too: Windows can enforce one after a short grace period, so a postponed restart can’t leave an installed update out of effect for days.'},
   restore: {name: 'Restore from offline backups', desc: 'Backups the attacker can’t reach are what let you rebuild without paying. Test restores before you need them.'}
 });
 Object.assign(FACTS, {
@@ -530,11 +532,12 @@ Object.assign(FACTS, {
   asr_rules: {name: 'Attack surface reduction rules', desc: 'Microsoft Defender’s attack surface reduction rules include “Block all Office applications from creating child processes” and “Block credential stealing from the Windows local security authority subsystem”. Rules can run in audit mode first, then block.', src: 'Microsoft Learn, Attack surface reduction rules reference'},
   pslog4104: {name: 'Script block logging', desc: 'With script block logging on, Windows PowerShell 5.1 writes event 4104 to Microsoft-Windows-PowerShell/Operational with the content of every script block it processes. It is turned on by Group Policy (Administrative Templates > Windows Components > Windows PowerShell > Turn on PowerShell Script Block Logging). PowerShell 7 logs to PowerShellCore/Operational.', src: 'Microsoft Learn, about_Logging and about_Logging_Windows'},
   schtask_ev: {name: 'Scheduled task events', desc: 'Task Scheduler event 106 reads “The user "%2" registered the Task Scheduler task "%1"”. Security event 4698, “A scheduled task was created”, only appears where the Audit Other Object Access Events subcategory is enabled.', src: 'Microsoft Learn (event 106; Audit Other Object Access Events); CISA eviction strategies countermeasure CM0147'},
-  defender_ev: {name: 'Defender events 5001, 5007, 5013', desc: 'In Windows Defender > Operational: 5001 “Real-time protection is disabled”, 5007 “The antimalware platform configuration changed” (with old and new values; Microsoft says to review it if unexpected, as it might be malware), and 5013 “Tamper protection blocked a change to Microsoft Defender Antivirus”. Tamper protection keeps real-time protection on and exclusions unchanged, even against registry or Group Policy changes.', src: 'Microsoft Learn, Defender Antivirus event IDs; Protect security settings with tamper protection'},
+  defender_ev: {name: 'Defender events 5001, 5007, 5013', desc: 'In Windows Defender > Operational: 5001 “Real-time protection is disabled”, 5007 “The antimalware platform configuration changed” (with old and new values; Microsoft says to review it if unexpected, as it might be malware), and 5013 “Tamper protection blocked a change to Microsoft Defender Antivirus”. Tamper protection keeps real-time protection on, even against registry or Group Policy changes, and under certain conditions keeps exclusions unchanged.', src: 'Microsoft Learn, Defender Antivirus event IDs; Protect security settings with tamper protection'},
+  laps: {name: 'Windows LAPS', desc: 'Windows Local Administrator Password Solution automatically manages and backs up the password of a local administrator account on each device. Microsoft: local administrator accounts often share the same password across many devices, which attackers exploit to move laterally; LAPS rotates each device’s password, and lists protection against pass-the-hash and lateral-traversal attacks among its benefits.', src: 'Microsoft Learn, Windows LAPS overview'},
   sysmon: {name: 'Sysmon events', desc: 'Sysinternals Sysmon, installed separately, logs process creation with the full command line and file hash (event 1), processes opening other processes, such as LSASS (event 10), and file streams such as a browser’s Zone.Identifier “mark of the web” (event 15).', src: 'Microsoft Learn, Sysmon'},
   exec_art: {name: 'Execution artefacts', desc: 'Microsoft’s incident responders: Prefetch is generally reliable evidence of execution (last eight run times on Windows 8 and later) but is not enabled by default on Windows Server; Amcache cannot prove a binary executed, and its SHA-1 may cover only the first 30 MB; Shimcache can’t prove execution on Windows 10 or later and is written only at shutdown or restart.', src: 'Microsoft Incident Response, Guidance for Incident Responders'},
   wannacry: {name: 'WannaCry and the NHS (2017)', desc: 'WannaCry was released worldwide on Friday 12 May 2017. The UK National Audit Office found at least 81 of 236 NHS trusts in England affected, 603 primary care and other NHS organisations infected (595 of them GP practices), 6,912 appointments known cancelled and five A&E departments diverting patients. Infected organisations had unpatched or unsupported Windows. The NAO said it could have been prevented with basic IT security, and that a researcher activating a “kill switch” stopped it causing more disruption.', src: 'UK National Audit Office, Investigation: WannaCry cyber attack and the NHS (October 2017)'},
-  ms17010: {name: 'MS17-010', desc: 'Microsoft’s bulletin MS17-010 (14 March 2017, rated Critical) fixed SMBv1 flaws that could allow remote code execution, two months before WannaCry. In guidance dated 13 May 2017, Microsoft also made the update available for Windows XP, Windows 8 and Windows Server 2003, platforms then in custom support only. CISA advised applying it, or else disabling SMBv1 and blocking TCP 445 and 139 at boundary devices, and asked admins not to block the kill-switch domain, because registering it had reduced the spread.', src: 'Microsoft Security Bulletin MS17-010; MSRC, Customer Guidance for WannaCrypt attacks; CISA alert TA17-132A'}
+  ms17010: {name: 'MS17-010', desc: 'Microsoft’s bulletin MS17-010 (14 March 2017, rated Critical) fixed SMBv1 flaws that could allow remote code execution, two months before WannaCry. In guidance dated 13 May 2017, Microsoft also made the update available for Windows XP, Windows 8 and Windows Server 2003, platforms then in custom support only. CISA advised applying it, or else disabling SMBv1 and blocking TCP 445 and the related ports (UDP 137–138, TCP 139) at boundary devices, and asked admins not to block the kill-switch domain, because registering it had reduced the spread.', src: 'Microsoft Security Bulletin MS17-010; MSRC, Customer Guidance for WannaCrypt attacks; CISA alert TA17-132A'}
 });
 GAME_NOTES.push(
   'Clerks’ Row threats (Quill, Mimic, Cipher, Siphon, Blinder, Shade) join the alert mix with weights 5/3/4/3/3/2 once you reach Clerks’ Row; inside it they are three times as likely, and the Shield Badge halves Quill. Endpoint tools are strong against any threat that lives on a host. (game)',

@@ -39,7 +39,7 @@ async function crQtLaptop() {
   const k = opts[i].meta.k;
   if (k === 'proc') {
     await say(TOOLS[ep].name + ': at 03:07, svc-print ran netsh.exe on ' + CR_QT_HOST + '. It added a port proxy: a local port now forwards to FD-STAFF-11.');
-    await say('netsh is a built-in Windows tool. The printer’s service account has no reason to be on a clerk’s laptop at three in the morning. No rule fired: nothing was blocked, nothing failed.');
+    await say('netsh is a built-in Windows tool. The printer’s service account has no reason to be on a clerk’s laptop at three in the morning, and it is still in this laptop’s Administrators group: the local admin clean-up only counted staff. (game) No rule fired: nothing was blocked, nothing failed.');
     await qtAfterNote(qtNote('cr-portproxy'));
   } else if (k === 'log') {
     await say('Ledger, event 4104 on ' + CR_QT_HOST + ' at 03:05: svc-print ran a short PowerShell block. ipconfig /all. netsh interface portproxy show all.');
