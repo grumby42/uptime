@@ -357,7 +357,7 @@ function clerksDone(s, extra, party) {
   await s.pickLabel(/Back to the investigation/);
   await s.pickLabel(/Query: Antivirus scan/); await s.pickLabel(/Run a full scan now/); await s.pickLabel(/Back to the investigation/);
   await s.pickLabel(/Query: CMS audit log/); await s.pickLabel(/Full details of the 02:51:13 entry/); await s.waitUI('modal');
-  check('drill 3: the session was issued at the office and reused from 203.0.113.61', /issued yesterday at 16:05/.test(await s.modalText()) && /reused/.test(await s.modalText()));
+  check('drill 3: the session was issued at the office and reused on the web server itself (127.0.0.1)', /issued yesterday at 16:05/.test(await s.modalText()) && /reused/.test(await s.modalText()) && /127\.0\.0\.1/.test(await s.modalText()));
   await s.pickLabel(/Back to the investigation/);
   await s.pickLabel(/Query: Web server access log/); await s.pickLabel(/Every request from 203\.0\.113\.61/); await s.waitUI('modal');
   check('drill 3: the web shell came in before the patch day', /before you patched the upload flaw on Day \d+/.test(await s.modalText()));
@@ -376,7 +376,7 @@ function clerksDone(s, extra, party) {
   // ---- Quiet Thread: the DMZ log ----
   await s.goTo('market', 7, 5); await s.settle([/Lanternkeep: DMZ connections/]);
   p = await s.peek();
-  check('Quiet Thread: Lanternkeep finds WEB-01 talking to the closet router at 03:09 (T1090); series save updated',
+  check('Quiet Thread: Lanternkeep finds the closet router signing in to WEB-01 at 03:09 (T1090); series save updated',
     p.qt.cluesFound.includes('mk-dmzhop') && (await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).quietThread.cluesFound)).includes('mk-dmzhop'), p.qt);
   check('Quiet Thread clue is consistent: svc-print, just after 03:00, the Front Desk closet router', await s.page.evaluate(() => /svc-print/.test(QT_CLUES['mk-dmzhop'].seen) && /03:09/.test(QT_CLUES['mk-dmzhop'].seen) && /Front Desk closet/.test(QT_CLUES['mk-dmzhop'].seen) && QT_TECH[QT_CLUES['mk-dmzhop'].tech].name === 'Proxy'));
   await s.press('start'); await s.waitUI('modal'); await s.pickLabel(/Field Manual/); await s.waitUI('modal');
@@ -409,6 +409,36 @@ function clerksDone(s, extra, party) {
     TECH['T1595.002'].tactic.join() === 'Reconnaissance' && TECH['T1499.002'].tactic.join() === 'Impact' && TECH['T1550.004'].tactic.join() === 'Lateral Movement'));
   check('scanning is reconnaissance: Crawler is malicious only when attempts to get in follow the scan', await s.page.evaluate(() => /reconnaissance/.test(ALERTS.crawler.mal.truth) && /attempt to get in/.test(ALERTS.crawler.mal.truth) && /not an incident/.test(ALERTS.crawler.benign.truth)));
   check('the flood alert has a benign flash crowd', await s.page.evaluate(() => /flash crowd/.test(ALERTS.stampede.benign.truth)));
+  // Expert review (Market Square): consistency of the evidence and the lessons it teaches.
+  const rv = await s.page.evaluate(() => {
+    const adm = JSON.stringify(MK_DRILLS.admin), sq = JSON.stringify(MK_DRILLS.sqli), up = MK_WAF.find(r => r.id === 'upload');
+    const st = mkBossStages(['csp'], true), st0 = mkBossStages([], false), boss = mkBossScript.toString();
+    const card = id => MK_CARDS.find(c => c.id === id);
+    return {
+      admin127: /from 127\.0\.0\.1/.test(adm) && !/POST \/cms\/admin\/users\/new  302/.test(adm) && /the WAF never saw an admin request/.test(adm),
+      wafSample: up.seen.every(x => !/203\.0\.113\.61/.test(x)) && up.seen.filter(x => /thumb\.php|x\.phtml/.test(x)).every(x => / 400 /.test(x)) && /before the patch/.test(up.why),
+      sqliDay: !/\{D-1\}/.test(sq) && /Day \{D\} 02:44:07/.test(sq), noMinute: !/02:44:0\d  GET \/cms\/uploads/.test(adm),
+      t1539: TECH['T1539'] && TECH['T1539'].tactic.join() === 'Credential Access' && MK_DRILLS.admin.techs.includes('T1539'),
+      who: /Everyone who typed a card into our page/.test(boss) && !/completed a card payment on our page inside the window'/.test(boss) && /Before residents are told who is affected/.test(boss),
+      exposure: /Tell the processor at once/.test(EXTRA_ACTIONS.exposurewin.desc) && /typed a card/.test(EXTRA_ACTIONS.exposurewin.desc),
+      quiet: /router .*opened a short connection into the DMZ, to WEB-01/.test(QT_CLUES['mk-dmzhop'].seen) && /Front Desk closet opened a short connection into the DMZ/.test(mkQtRack.toString()) && !/WEB-01 opened/.test(mkQtRack.toString() + QT_CLUES['mk-dmzhop'].seen),
+      csp: /narrows/.test(card('csp').fx) && /WebRTC/.test(card('csp').fx) && /narrows/.test(EXTRA_ACTIONS.csp.desc) && /change the header/.test(EXTRA_ACTIONS.csp.desc) && /header itself/.test(st.s3.clues.join(' ')),
+      us: /Every US state has a breach-notification law/.test(boss) && /PCI Forensic Investigator/.test(boss) && /for comparison/.test(FACTS.ico72.name) && /US state breach laws differ/.test(sq),
+      deployKey: /deploy key saved in the pipeline/.test(st0.s3.clues.join(' ')) && !/password was reset/.test(st0.s3.clues.join(' ')) && /pipeline/.test(st0.s3.truth),
+      quietStuffing: /right first time/.test(st0.s2.clues.join(' ')) && !/failed sign-ins/.test(st0.s2.clues.join(' ')),
+      cspInbox: /nothing alerted on them/.test(boss) && /alert on any report/.test(EXTRA_ACTIONS.csp.desc),
+      hunt: /tells us nothing about old ones/.test(mkCmsPatch.toString()) && /doesn’t empty the room/.test(EXTRA_ACTIONS.patchweb.desc),
+      csf: card('csp').csf === 'Respond' && card('wafonly').csf === 'Respond' && card('restore').csf === 'Recover'
+    };
+  });
+  check('review: drill 3 admin request came from the server itself (the WAF never saw it); no shared minute with drill 1; T1539 named', rv.admin127 && rv.noMinute && rv.t1539, rv);
+  check('review: WAF upload sample shows the patched CMS refusing scripts (no post-patch 200 from the drill 3 attacker)', rv.wafSample, rv);
+  check('review: drill 1 dated Day D (the night after detection mode began); US-generic notification framing', rv.sqliDay && rv.us, rv);
+  check('review: everyone who typed a card is affected; the processor is told at once, precision gates the resident notice', rv.who && rv.exposure, rv);
+  check('review: Quiet Thread direction is one way everywhere (closet router into the DMZ, to WEB-01)', rv.quiet, rv);
+  check('review: CSP narrows exits, not a seal; the tamper check watches the header; reports must alert someone', rv.csp && rv.cspInbox, rv);
+  check('review: Stage 2 stuffing is quiet; Stage 3 is beaten by an unlisted pipeline deploy key; patch then hunt', rv.quietStuffing && rv.deployKey && rv.hunt, rv);
+  check('review: tabletop CSF functions (enforce CSP and block domain = Respond, restore = Recover)', rv.csf, rv);
 
   // ---- Dojo: one wrong answer, then the rest ----
   await s.goTo('market', 26, 10); await s.settle();

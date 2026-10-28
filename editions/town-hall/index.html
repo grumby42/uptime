@@ -165,7 +165,7 @@ pre.art.ai{border-left-color:var(--gold)}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261028-0814Z', BUILD_TS = '2026-10-28 08:14 UTC';
+const BUILD_ID = 'ARCD-20261028-0851Z', BUILD_TS = '2026-10-28 08:51 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -4230,6 +4230,7 @@ Object.assign(TECH, {
   'T1059.007': {name: 'Command and Scripting Interpreter: JavaScript', tactic: ['Execution'], desc: 'Running attacker JavaScript, often in web pages. ATT&CK lists FIN6 using malicious JavaScript to steal payment card data from e-commerce sites: a skimmer.'},
   'T1595.002': {name: 'Active Scanning: Vulnerability Scanning', tactic: ['Reconnaissance'], desc: 'Probing internet-facing services for software versions and known weaknesses. Reconnaissance: it looks, it doesn’t get in.'},
   'T1499.002': {name: 'Endpoint Denial of Service: Service Exhaustion Flood', tactic: ['Impact'], desc: 'Flooding a service, such as a website with HTTP requests, until it can’t answer real users. Floods that fill the network link instead are T1498, Network Denial of Service.'},
+  'T1539': {name: 'Steal Web Session Cookie', tactic: ['Credential Access'], desc: 'Taking a signed-in user’s session cookie, here from the web server’s session store, so it can be reused without the password.'},
   'T1550.004': {name: 'Use Alternate Authentication Material: Web Session Cookie', tactic: ['Lateral Movement'], desc: 'Reusing a stolen web session cookie to act as a signed-in user, with no password and no new MFA prompt.'}
 });
 
@@ -4312,7 +4313,7 @@ Object.assign(ALERTS, {
   crawler: {
     rule: 'Vulnerability scan against public sites',
     mal: {clues: ['One source checks every public site for old CMS versions and known admin paths.', 'It finds an admin login page someone left reachable, and goes straight to it.', 'It starts trying the CMS’s default password there: the scan has become an attempt to get in.'],
-          truth: 'Scanning followed by an attempt to get in. The scan alone is reconnaissance; the default-password attempts are the attack.',
+          truth: 'Scanning followed by an attempt to get in. The scan alone is reconnaissance; the default-password attempts are the attack (Brute Force: Password Guessing, T1110.001; Valid Accounts: Default Accounts, T1078.001, if one works).',
           resp: [{label: 'Take the exposed site off the internet, check the login attempts, confirm nothing else is exposed, watch for follow-up', good: true},
                  {label: 'Block the scanner’s address and close', good: false, why: 'It can switch addresses; the exposed login page is still there.'},
                  {label: 'Ignore: scanning is just noise', good: false, why: 'The scan was noise; the login attempts after it are not.'}]},
@@ -4328,7 +4329,7 @@ Object.assign(ALERTS, {
           resp: [{label: 'Turn on the provider’s DDoS protection, rate-limit the flood pattern, keep a way for residents to pay, tell residents', good: true},
                  {label: 'Block every address outside the country', good: false, disrupt: 1, why: 'Floods come from everywhere, including next door, and residents abroad can’t pay.'},
                  {label: 'Wait for it to stop', good: false}]},
-    benign: {clues: ['The council-tax reminder email went out at 09:00.', 'Real browsers: pages, images, scripts, payments completing.', 'The curve drops off by 11:00.'],
+    benign: {clues: ['The property-tax reminder email went out at 09:00.', 'Real browsers: pages, images, scripts, payments completing.', 'The curve drops off by 11:00.'],
              truth: 'Benign: a flash crowd. Residents paying after the reminder. Scale up; don’t block them.'},
     fp: {clues: ['The “spike” is the web team’s load test.', 'It is in a change ticket for 07:00–07:30.', 'It ran from the test network, as booked.'],
          truth: 'False positive: a booked load test.'}
@@ -4415,8 +4416,8 @@ const MK_WAF = [
    seen: ['192.0.2.140    POST /pay/submit  302  (a water bill paid)', '192.0.2.66     POST /pay/submit  302  (a parking fine paid)', '203.0.113.12  PUT  /pay/  405'],
    why: 'Paying a bill is a POST. This rule would stop every payment in town.'},
   {id: 'upload', rule: 'Block uploads of script files (.php and similar) to /cms/uploads/', cat: 'shell', atk: 30, res: 0, good: 'block',
-   seen: ['203.0.113.61  POST /cms/media/upload  thumb.php  200', '203.0.113.61  POST /cms/media/upload  x.phtml  200', '198.51.100.20  POST /cms/media/upload  agenda.pdf  200  (the comms team, from the office: not matched)'],
-   why: 'Staff upload images and PDFs. A script in the uploads folder is how a web shell gets in.'},
+   seen: ['203.0.113.67  POST /cms/media/upload  thumb.php  400  (the patched CMS refuses it)', '203.0.113.67  POST /cms/media/upload  x.phtml  400  (refused)', '198.51.100.20  POST /cms/media/upload  agenda.pdf  200  (the comms team, from the office: not matched)'],
+   why: 'Staff upload images and PDFs. A script in the uploads folder is how a web shell gets in. The patched CMS already refuses these; the rule is a second lock, and neither can remove a shell that came in before the patch.'},
   {id: 'geo', rule: 'Block every address outside the country (GeoIP)', cat: 'geo', atk: 300, res: 90, payFail: 30, good: 'off',
    seen: ['192.0.2.88    POST /pay/submit  302  (a resident on holiday paying a bill)', '203.0.113.50  GET  /portal/search?q=…  (would be blocked)', '192.0.2.209   GET  /portal/search?q=…UNION…  (an attacker on a rented server in the country: not blocked)'],
    why: 'Attackers rent servers in any country, including ours. Residents travel. Geography is not a security boundary.'}
@@ -4428,7 +4429,7 @@ const MK_DRILLS = {
   sqli: {
     id: 'sqli', title: 'Did the injection work?', budget: 2,
     intro: '<p>Overnight, with the WAF in detection mode (logging, not blocking), it matched 1,412 requests from 203.0.113.50 against its SQL injection rules (game). Paz has the council briefing at nine. One question first.</p>',
-    artefact: '<pre class="art">WAF · detection mode · Day {D-1} 02:00–03:00 (game data)\n' +
+    artefact: '<pre class="art">WAF · detection mode · Day {D} 02:00–03:00 (game data)\n' +
       'Source        203.0.113.50 · 1,412 requests matched SQL injection rules\n' +
       'Top targets   /portal/search?q=   1,180      /news?id=   232\n' +
       'Action        logged only (detection mode: nothing was blocked)</pre>' +
@@ -4440,15 +4441,15 @@ const MK_DRILLS = {
          res: ['1,412 matched · 0 blocked (detection mode)', '(A count says how hard they tried, not whether it worked.)']},
         {q: 'Every WAF event tonight, from every source', kind: 'broad', rows: 9840,
          wall: ['{t}  203.0.113.50   SQL injection rule      /portal/search  logged', '{t}  192.0.2.14     protocol rule           /               logged', '{t}  203.0.113.50   SQL injection rule      /news           logged', '{t}  192.0.2.66     no match                /pay/submit']}]},
-      {id: 'access', name: 'Web server access log (Combined Log Format)', qs: [
+      {id: 'access', name: 'Web server access log (Combined Log Format; referrer and user agent trimmed here)', qs: [
         {q: 'For 203.0.113.50: status codes and response sizes, by path', kind: 'focus', key: true,
          res: ['/news?id=…           232 requests: all 404, 1,204–1,212 bytes (the “no such article” page)', '/portal/search?q=…   1,168 × 500, 312 bytes (the server error page)', '                        11 × 200, 2,140–6,180 bytes (the size of a normal search page)', '                         1 × 200, 96,880 bytes at 02:44:07   ← a normal search page is 2–6 KB', '(In the Combined Log Format the status is %>s and the size is %b: the body sent, not counting headers.)']},
         {q: 'Every request to every town site last night', kind: 'broad', rows: 61302,
-         wall: ['192.0.2.52 - - [Day {D-1} 02:{t}] "GET /news?id={n} HTTP/1.1" 200 5120', '192.0.2.14 - - [Day {D-1} 02:{t}] "GET / HTTP/1.1" 200 18342', '192.0.2.77 - - [Day {D-1} 02:{t}] "POST /pay/submit HTTP/1.1" 302 -', '203.0.113.50 - - [Day {D-1} 02:{t}] "GET /portal/search?q=… HTTP/1.1" 500 312'],
-         buried: '203.0.113.50 - - [Day {D-1} 02:44:07] "GET /portal/search?q=x%27%20UNION%20SELECT… HTTP/1.1" 200 96880'}]},
-      {id: 'db', name: 'Application and database error log', qs: [
+         wall: ['192.0.2.52 - - [Day {D} 02:{t}] "GET /news?id={n} HTTP/1.1" 200 5120', '192.0.2.14 - - [Day {D} 02:{t}] "GET / HTTP/1.1" 200 18342', '192.0.2.77 - - [Day {D} 02:{t}] "POST /pay/submit HTTP/1.1" 302 -', '203.0.113.50 - - [Day {D} 02:{t}] "GET /portal/search?q=… HTTP/1.1" 500 312'],
+         buried: '203.0.113.50 - - [Day {D} 02:44:07] "GET /portal/search?q=x%27%20UNION%20SELECT… HTTP/1.1" 200 96880'}]},
+      {id: 'db', name: 'Application log and database error log', qs: [
         {q: 'Errors and unusual queries from /portal/search, 02:00–03:00', kind: 'focus', key: true,
-         res: ['02:31:02–02:43:55  1,168 × ERROR  SQL syntax error near “UNION” (search query)   (each one a 500 in the access log)', '02:44:07  no error · the search query returned 1,204 rows from the residents table (name, email, street)   normal maximum: 50 rows', '(The errors stop when the attacker finds a query shape that works. The big answer is the one that worked.)']}]},
+         res: ['02:31:02–02:43:55  1,168 × ERROR  SQL syntax error near “UNION” (search query)   (each one a 500 in the access log)', '02:44:07  database: no error · application log: the search returned 1,204 rows, with columns from the residents table (name, email, street)   normal maximum: 50 rows (the app logs a row count for every search: game)', '(The errors stop when the attacker finds a query shape that works. The big answer is the one that worked.)']}]},
       {id: 'geo', name: 'GeoIP lookup', qs: [
         {q: 'Where is 203.0.113.50?', kind: 'trap',
          res: ['A hosting provider abroad (game data).', '(Where a request comes from doesn’t tell you whether it worked. Attackers rent servers anywhere, including next door.)']}]},
@@ -4472,8 +4473,8 @@ const MK_DRILLS = {
       {label: 'The WAF blocked the dangerous ones', good: true, why: 'Ruled out: detection mode blocks nothing, and the access log shows every request reached the site and got an answer.'},
       {label: 'The attacker only probed /news', why: 'All 232 /news requests got 404s; search is the page that answered.'},
       {label: 'The log clock is wrong', why: 'The access log and the database log agree to the second.'}],
-    path: '<p>Success shows in the <b>answers</b>, not in the attack: the <b>access log’s status codes and response sizes</b> for the attacking address (one 200 far bigger than normal among hundreds of 500s), and the <b>application and database error log</b> (the errors stop when the injection works, and the query that worked returned rows it never should). The WAF’s match count only says how hard they tried, and in detection mode nothing was blocked. Where the address is tells you nothing about success.</p>',
-    response: ['Fix /portal/search with a parameterised query; until it ships, block the pattern at the WAF (a virtual patch) and switch the injection rule set to blocking', 'Preserve the access, WAF and database logs for 02:00–03:00', 'Work out exactly what the 1,204-row answer held (names, emails, streets), and decide with legal whether the law requires telling the people affected and the regulator; the clock starts when you became aware', 'Check everything else 203.0.113.50 touched, and look for a web shell or new accounts', 'Give the database account behind search only what search needs: it should never have been able to read the residents table'],
+    path: '<p>Success shows in the <b>answers</b>, not in the attack: the <b>access log’s status codes and response sizes</b> for the attacking address (one 200 far bigger than normal among hundreds of 500s), and the <b>application and database error log</b> (the errors stop when the injection works, and the query that worked returned rows it never should). The WAF’s match count only says how hard they tried, and in detection mode nothing was blocked. Where the address is tells you nothing about success. One caveat: sizes catch data that comes back in the page. Blind injection leaks through yes/no differences or delays instead, so for SLEEP() payloads compare the time each request took (Apache’s %D) as well.</p>',
+    response: ['Fix /portal/search with a parameterised query; until it ships, block the pattern at the WAF (a virtual patch) and switch the injection rule set to blocking', 'Preserve the access, WAF and database logs for 02:00–03:00', 'Work out exactly what the 1,204-row answer held (names, emails, streets), and take it to legal: US state breach laws differ on what data counts (many need more than a name and email, such as an account number or a password) and on deadlines and who else must be told. Either way, keep a timeline from the moment you became aware, and warn residents to expect phishing that uses their details', 'Check everything else 203.0.113.50 touched, and look for a web shell or new accounts', 'Give the database account behind search only what search needs: it should never have been able to read the residents table'],
     techs: ['T1190'], acts: ['paramq']
   },
   script: {
@@ -4488,7 +4489,7 @@ const MK_DRILLS = {
     sources: [
       {id: 'chg', name: 'Change records and file-integrity log', qs: [
         {q: 'What changed in checkout.html, when, and under which change?', kind: 'focus', key: true,
-         res: ['10:02:41  checkout.html changed: one line, the tokenize.js address (old → new). Nothing else in the page.', 'Deployed by the release pipeline under CHG-4410 (game), raised by Rafe, approved by Oona yesterday', 'CHG-4410 cites the processor’s change notice VN-26-14 (game) and gives the new address exactly']}]},
+         res: ['10:02:41  checkout.html changed: one line, the tokenize.js address (old → new). Nothing else in the page.', 'Deployed by the release pipeline, run from Rafe’s named account under CHG-4410 (game), approved by Oona yesterday; the diff matches the ticket line for line', 'CHG-4410 cites the processor’s change notice VN-26-14 (game) and gives the new address exactly']}]},
       {id: 'vend', name: 'Vendor change notice', qs: [
         {q: 'Does the processor’s notice name this exact address? (Check on their support portal, not in the email.)', kind: 'focus', key: true,
          res: ['Northgate support portal, notice VN-26-14 (game): “From Day {D}, tokenize.js moves to static.northgate-pay.example/v4/. The old address stops working next month.”', 'Same domain, same path, same day as the change. The new script still sends card data only to api.northgate-pay.example, as the old one did.', '(You checked the notice where you already have an account, not by following the email: the same rule as calling back on a known number.)']}]},
@@ -4511,7 +4512,7 @@ const MK_DRILLS = {
       {label: 'The domain has the processor’s name in it', why: 'Look-alike domains do too. The notice, checked on the portal, is what confirms it.'},
       {label: 'Oona said a change was coming', why: 'Memory isn’t a record. The ticket and the notice are.'}],
     alts: [
-      {label: 'An attacker changed the page and timed it with the vendor’s notice', good: true, why: 'Ruled out: the file-integrity log shows a single one-line change, made by the pipeline under CHG-4410; nothing else in the page or its headers changed.'},
+      {label: 'An attacker changed the page and timed it with the vendor’s notice', good: true, why: 'Ruled out: a single one-line change, deployed from Rafe’s named account under CHG-4410 and matching the ticket exactly; nothing else in the page or its headers changed. (The pipeline alone proves nothing: whoever holds a deploy credential can use it.)'},
       {label: 'A look-alike domain, one character off the processor’s', good: true, why: 'Ruled out: the address matches the notice on the processor’s portal character for character.'},
       {label: 'A resident’s browser add-on injected it', why: 'Add-ons do cause CSP reports, but this change is in our own page file.'},
       {label: 'The tamper check is broken', why: 'It caught a real change within three minutes.'}],
@@ -4529,12 +4530,12 @@ const MK_DRILLS = {
     sources: [
       {id: 'audit', name: 'CMS audit log (full entry)', qs: [
         {q: 'Full details of the 02:51:13 entry: session, address, sign-in', kind: 'focus', key: true,
-         res: ['02:51:13  user.create webmaint2  actor=rafe.l  session=7f2c…  from 203.0.113.61', 'Session 7f2c… was issued yesterday at 16:05 to rafe.l at the office (198.51.100.20), after password and MFA', 'No sign-in at 02:51: the session was reused. The CMS never expires idle sessions (game).']},
+         res: ['02:51:13  user.create webmaint2  actor=rafe.l  session=7f2c…  from 127.0.0.1 (the web server itself)', 'Session 7f2c… was issued yesterday at 16:05 to rafe.l at the office (198.51.100.20), after password and MFA', 'No sign-in at 02:51: the session was reused. The CMS never expires idle sessions (game).']},
         {q: 'Every CMS audit event this month', kind: 'broad', rows: 3108,
          wall: ['{t}  page.update  /news/{n}  actor=rafe.l  198.51.100.20', '{t}  media.upload  agenda-{n}.pdf  actor=comms.team  198.51.100.20', '{t}  login.success  rafe.l  198.51.100.20  MFA', '{t}  page.update  /events  actor=comms.team  198.51.100.20']}]},
       {id: 'access', name: 'Web server access log', qs: [
         {q: 'Every request from 203.0.113.61 in the last 30 days', kind: 'focus', key: true,
-         res: ['Day {U} 14:20  POST /cms/media/upload  (a file called thumb.php, sent as an image)  200   ← before you patched the upload flaw on Day {P}', 'Day {D} 02:44:02  GET /cms/uploads/2026/10/thumb.php?c=…  200', 'Day {D} 02:44:30–02:50:55  GET /cms/uploads/2026/10/thumb.php?c=…  200  ×14', 'Day {D} 02:51:13  POST /cms/admin/users/new  302  carrying session 7f2c…']}]},
+         res: ['Day {U} 14:20  POST /cms/media/upload  (a file called thumb.php, sent as an image)  200   ← before you patched the upload flaw on Day {P}', 'Day {D} 02:36:02  GET /cms/uploads/2026/10/thumb.php?c=…  200', 'Day {D} 02:36:30–02:50:55  GET /cms/uploads/2026/10/thumb.php?c=…  200  ×14', 'Day {D} 02:51:12  GET /cms/uploads/2026/10/thumb.php?c=…  200   (this command made the web server call its own /cms/admin/users/new with session 7f2c…: the WAF never saw an admin request)']}]},
       {id: 'files', name: 'Files in the CMS uploads folder', qs: [
         {q: 'Any script files in /cms/uploads, and what do they do?', kind: 'focus', key: true,
          res: ['/cms/uploads/2026/10/thumb.php  created Day {U} 14:20  1,904 bytes', 'It runs whatever command arrives in its c= parameter, as the web server’s account: a web shell.', 'The web server’s account can read the CMS session store. That is where rafe.l’s live session came from.', 'No other script files in uploads; the rest of the web root matches the CMS release’s file list.']}]},
@@ -4547,23 +4548,23 @@ const MK_DRILLS = {
     ],
     ai: {everything: {text: 'The audit log shows rafe.l created webmaint2 at 02:51. Recommend asking Rafe to confirm the account is needed, then closing.', wrong: true,
                       reveal: 'Tally read the actor field as a person. It names the account whose session made the change. The session, the address and the requests just before it decide who was really there.'},
-         specific: {q: 'Was session 7f2c… used from more than one address?', text: 'Yes. Issued at 16:05 yesterday to 198.51.100.20 (the office), then used at 02:51:13 from 203.0.113.61.'}},
+         specific: {q: 'Was session 7f2c… used from more than one address?', text: 'Yes. Issued at 16:05 yesterday to 198.51.100.20 (the office), then used at 02:51:13 from 127.0.0.1, the web server itself.'}},
     verdicts: [
-      {label: 'An intruder: a web shell, uploaded before the patch, read Rafe’s still-open session and used it to create the admin', good: true, why: 'Rafe’s office session was reused from 203.0.113.61 straight after fourteen commands through thumb.php, a script uploaded through the flaw before you patched it.'},
-      {label: 'Rafe made it from home and forgot', why: 'His session was issued at the office; the 02:51 request came from 203.0.113.61 through a web shell.'},
+      {label: 'An intruder: a web shell, uploaded before the patch, read Rafe’s still-open session and used it to create the admin', good: true, why: 'Rafe’s office session was replayed on the web server itself, by a command 203.0.113.61 sent through thumb.php, a script uploaded through the flaw before you patched it.'},
+      {label: 'Rafe made it from home and forgot', why: 'His session was issued at the office; the 02:51 request came from the web server itself, driven by commands from 203.0.113.61 through a web shell.'},
       {label: 'A CMS plugin created a maintenance account', why: 'Plugins don’t send requests from 203.0.113.61 through thumb.php.'}],
     reasons: [
-      {label: 'Rafe’s office session was reused from an outside address minutes after that address ran commands through a script uploaded before the patch', good: true, why: 'Who, how and how they got in, each from its own log.'},
+      {label: 'Rafe’s office session was reused on the web server itself, by a command an outside address sent through a script uploaded before the patch', good: true, why: 'Who, how and how they got in, each from its own log.'},
       {label: 'The log says rafe.l, so it was Rafe', why: 'The actor is the session’s account, not the person.'},
       {label: 'Patching the CMS fixed this', why: 'The patch closed the upload flaw. The web shell came through before it, and a patch doesn’t remove a shell already planted.'}],
     alts: [
-      {label: 'Rafe signed in from home through the VPN', good: true, why: 'Ruled out: there was no sign-in at 02:51 at all; an existing session was reused, from 203.0.113.61.'},
+      {label: 'Rafe signed in from home through the VPN', good: true, why: 'Ruled out: there was no sign-in at 02:51 at all; an existing session was reused, from the web server itself.'},
       {label: 'Another web shell or admin account is still there', good: true, why: 'Check before you close: compare the web root with the release’s file list and list every admin. Here: no other script files, and webmaint2 is the only new admin.'},
       {label: 'A password spray guessed Rafe’s password', why: 'No password was used: the session was reused.'},
-      {label: 'The CMS clock is wrong', why: 'The audit log and the access log agree to the second.'}],
-    path: '<p>The <b>audit log’s full entry</b> gives the session and the address behind the account; the <b>web server log for that address</b> shows what came before (a script in the uploads folder answering commands, then the admin request carrying Rafe’s session); and <b>checking the uploads folder for scripts</b> finds the web shell. The actor field names an account, not a person. Patching closes the hole a shell came through; it doesn’t remove one already planted.</p>',
+      {label: 'The CMS clock is wrong', why: 'The audit log and the access log line up to the second: the shell command at 02:51:12, the admin created at 02:51:13.'}],
+    path: '<p>The <b>audit log’s full entry</b> gives the session and the address behind the account; the <b>web server log for that address</b> shows what came before (a script in the uploads folder answering commands, the last of which made the server send the admin request with Rafe’s session itself, where no WAF rule can see it); and <b>checking the uploads folder for scripts</b> finds the web shell. The actor field names an account, not a person. Patching closes the hole a shell came through; it doesn’t remove one already planted.</p>',
     response: ['Put the CMS admin pages into maintenance; preserve the web shell, the logs and a disk image before cleaning', 'Remove webmaint2, revoke every CMS session and reset every CMS admin password: a stolen session works without one', 'Remove the web shell, compare every file with the release’s list, and stop the uploads folder from running scripts', 'Give CMS sessions idle and absolute timeouts', 'Scope what the shell did: database reads, outbound connections, and any change to the payment page', 'Change the database password and other secrets in the CMS configuration: the shell could read them'],
-    techs: ['T1505.003', 'T1550.004'], acts: ['revokeweb']
+    techs: ['T1505.003', 'T1539', 'T1550.004'], acts: ['revokeweb']
   }
 };
 
@@ -4618,10 +4619,10 @@ const MK_BOARD_SPECS = () => [
 const MK_CARDS = [
   {id: 'hosted', name: 'Card entry to the hosted checkout', csf: 'Respond', good: true, text: 'Turn off our own card form and send residents to the processor’s hosted payment page, which Northgate can switch on today (game).', fx: 'Stage 1: card entry is contained the moment you act.'},
   {id: 'preserve', name: 'Preserve the evidence', csf: 'Respond', good: true, text: 'Copy the changed script, the deploy and access logs, and the tamper and CSP reports before anything is cleaned.', fx: 'Every stage starts with more evidence, and the exposure window can be proved.'},
-  {id: 'csp', name: 'Enforce the Content Security Policy', csf: 'Protect', good: true, text: 'Switch the policy from report-only to enforce: scripts only from us and the processor, data sent only to the processor.', fx: 'Stage 3: a re-injected skimmer can’t send anything from browsers that enforce it.'},
+  {id: 'csp', name: 'Enforce the Content Security Policy', csf: 'Respond', good: true, text: 'Switch the policy from report-only to enforce: scripts only from us and the processor, data sent only to the processor.', fx: 'Stage 3: in browsers that enforce it, a re-injected skimmer can’t use the usual ways out (fetch, beacons, images) to reach its domain. It narrows the exits rather than sealing them: WebRTC, for one, sits outside CSP.'},
   {id: 'mfa3p', name: 'MFA on every account that can change the site', csf: 'Protect', good: true, text: 'Staff and third parties alike, including the web agency’s deploy account.', fx: 'Stage 2 becomes much easier.'},
-  {id: 'restore', name: 'Our own page back within the hour', csf: 'Govern', text: 'Bring our own payment page straight back, as the councillor asked.', fx: 'Payments resume on a page nobody has proved clean.'},
-  {id: 'wafonly', name: 'Block the skimmer’s domain at the WAF', csf: 'Protect', text: 'Add the attacker’s domain to the WAF and keep the page up.', fx: 'Does nothing: the skimmer runs in residents’ browsers and sends straight to the attacker. That traffic never passes the WAF.'},
+  {id: 'restore', name: 'Our own page back within the hour', csf: 'Recover', text: 'Bring our own payment page straight back, as the councillor asked.', fx: 'Payments resume on a page nobody has proved clean.'},
+  {id: 'wafonly', name: 'Block the skimmer’s domain at the WAF', csf: 'Respond', text: 'Add the attacker’s domain to the WAF and keep the page up.', fx: 'Does nothing: the skimmer runs in residents’ browsers and sends straight to the attacker. That traffic never passes the WAF.'},
   {id: 'quiet', name: 'Delete the bad code and say nothing yet', csf: 'Respond', text: 'Fix it quietly and see whether anyone notices.', fx: 'The evidence is gone, and nobody who needed to know was told.'},
   {id: 'shutall', name: 'Shut down every town website', csf: 'Respond', text: 'News, permits, the portal, everything, until it’s over.', fx: 'Stops the skimmer and every online service in town: uptime falls.'}
 ];
@@ -4632,18 +4633,18 @@ const MK_PAY_RATE = 30;        // card payments an hour on the page, averaged ov
 Object.assign(EXTRA_ACTIONS, {
   extinv: {name: 'Internet-facing asset inventory', desc: 'List everything the internet can reach, from more than one kind of source: names (DNS, Certificate Transparency logs) find what is hosted elsewhere; scanning your own addresses and reading your firewall rules find what has no name. A spreadsheet is a starting point, not an inventory.'},
   wafmode: {name: 'WAF: detect, tune, then block', desc: 'Run new WAF rules in detection mode first, read what they would have blocked, write exclusions for real users, and only then block. A false positive is a resident who can’t pay a bill.'},
-  csp: {name: 'Content Security Policy', desc: 'A response header that tells browsers which origins may supply scripts, and where scripts may send data (connect-src). Start with Content-Security-Policy-Report-Only to see what would break, then enforce: report-only tells you, it doesn’t stop anything.'},
+  csp: {name: 'Content Security Policy', desc: 'A response header that tells browsers which origins may supply scripts, and where scripts may send data (connect-src; img-src and form-action cover other common routes). It narrows a skimmer’s exits rather than sealing them (WebRTC, for one, sits outside CSP), and anyone who can deploy the page may be able to change the header, which is why the tamper check watches headers too. Start with Content-Security-Policy-Report-Only to see what would break, then enforce: report-only tells you, it doesn’t stop anything, and it only tells you if its reports reach someone: on a payment page, alert on any report about a domain you don’t know.'},
   sri: {name: 'Subresource Integrity', desc: 'An integrity attribute with the script’s hash: the browser refuses a file that doesn’t match. Good for third-party files that never change; a vendor script updated in place would be refused at its next release, so use change notices and the tamper check for those. Cross-origin files need CORS.'},
-  tamper: {name: 'Payment page tamper detection', desc: 'Compare the payment page’s security headers and scripts, as a browser receives them, with the approved copy, and alert people when they change. PCI DSS asks for at least weekly; how much faster depends on what the page is worth to an attacker.'},
+  tamper: {name: 'Payment page tamper detection', desc: 'Compare the payment page’s security headers and scripts, as a browser receives them, with the approved copy, and alert people when they change. PCI DSS asks for at least weekly, or the frequency the entity’s targeted risk analysis sets; how much faster you go depends on what the page is worth to an attacker.'},
   scriptinv: {name: 'Payment page script inventory', desc: 'Every script that runs on the payment page is authorised, its integrity assured, and listed with a written reason it is needed (PCI DSS 6.4.3). Fewer scripts, fewer things that can read the card fields.'},
-  patchweb: {name: 'Patch internet-facing software first', desc: 'Anything the internet can reach and attackers are already exploiting goes first: back up, test on staging, then production, the same day. A WAF rule can cover the gap; it doesn’t replace the patch.'},
+  patchweb: {name: 'Patch internet-facing software first', desc: 'Anything the internet can reach and attackers are already exploiting goes first: back up, test on staging, then production, the same day. A WAF rule can cover the gap; it doesn’t replace the patch. Then look for signs the flaw was used before you patched: a patch closes the door, it doesn’t empty the room.'},
   decom: {name: 'Retire a site in the right order', desc: 'Check its logs and keep a copy first. Then put up a maintenance page, update or remove the DNS record, wait out the DNS cache time, and only then cancel the hosting: a name left pointing at a cancelled service can be claimed by someone else (subdomain takeover).'},
   paramq: {name: 'Parameterised queries', desc: 'The query and the values travel separately, so input is always data, never code. Input validation narrows what comes in; it doesn’t make a string-built query safe.'},
   objauthz: {name: 'Check ownership on every object', desc: 'Every request for a record checks that the signed-in person may see it. Hard-to-guess IDs help; they are not access control.'},
   revokeweb: {name: 'Revoke web sessions, not just passwords', desc: 'A stolen session cookie works without the password and without MFA. After a compromise, revoke every session and token, and give sessions idle and absolute timeouts.'},
   hostedpay: {name: 'Hosted payment page', desc: 'Let the processor’s own page take the card details (a redirect, or an iframe whose every element comes from a PCI DSS validated provider). None of our code runs where the card is typed, and the PCI self-assessment shrinks (SAQ A rather than A-EP). The page that embeds an iframe still has to be protected from scripts.'},
-  mfa3p: {name: 'MFA for third parties too', desc: 'Every account that can change the website or deploy code needs MFA, including contractors’ and agencies’ accounts, and their deploy tokens need owners and expiry dates.'},
-  exposurewin: {name: 'Establish the exposure window', desc: 'From the evidence of the first malicious change to the moment card entry was contained. Everyone who paid inside it is affected; nobody outside it is. Prove both ends before anyone is told.'}
+  mfa3p: {name: 'MFA for third parties too', desc: 'Every account that can change the website or deploy code needs MFA, including contractors’ and agencies’ accounts, and every deploy token or key, including ones saved in the pipeline itself, needs an owner, an expiry date and a place on a list.'},
+  exposurewin: {name: 'Establish the exposure window', desc: 'From the evidence of the first malicious change to the moment no browser could still run it: card entry contained, and any cached copy of the bad script expired. Everyone who typed a card inside it is affected, paid or not; nobody outside it is. Tell the processor at once; prove both ends before you tell residents who is affected.'}
 });
 Object.assign(FACTS, {
   owasp10: {name: 'OWASP Top 10:2025', desc: 'The most current OWASP Top 10 is the 2025 edition (its eighth): A01 Broken Access Control, A02 Security Misconfiguration, A03 Software Supply Chain Failures, A04 Cryptographic Failures, A05 Injection (cross-site scripting included), A06 Insecure Design, A07 Authentication Failures, A08 Software or Data Integrity Failures, A09 Security Logging and Alerting Failures, A10 Mishandling of Exceptional Conditions. For injection, its preferred option is a safe API with a parameterised interface; positive server-side input validation “is not a complete defense”.', src: 'OWASP Top 10:2025'},
@@ -4652,20 +4653,20 @@ Object.assign(FACTS, {
   pci1161: {name: 'PCI DSS 11.6.1: change and tamper detection', desc: 'A change- and tamper-detection mechanism alerts personnel to unauthorised modification of the security-impacting HTTP headers and the script contents of payment pages as received by the consumer browser, at least weekly or at the frequency set by the entity’s targeted risk analysis. 6.4.3 and 11.6.1 were best practices until 31 March 2025 and have been in effect since.', src: 'PCI DSS v4.0.1; PCI SSC blog, January and March 2025'},
   saqa: {name: 'Hosted checkout and PCI scope', desc: 'PCI SSC: with a redirect or iframe, the processor produces the page that accepts payment data (SAQ A, if all its elements come from a PCI DSS validated provider); with Direct Post the merchant’s website produces part of the page (SAQ A-EP). From 31 March 2025 SAQ A dropped 6.4.3 and 11.6.1 and added a criterion: a merchant whose page embeds the processor’s form must confirm the site is not susceptible to attacks from scripts. It does not apply to a redirect.', src: 'PCI SSC FAQs 1291, 1438 and 1588; PCI SSC blog, 30 January 2025'},
   sri_csp: {name: 'SRI and CSP', desc: 'W3C Subresource Integrity lets browsers check that a fetched file arrived without unexpected manipulation, and refuse to execute one that fails (SHA-256, SHA-384 and SHA-512; cross-origin files need CORS). W3C Content Security Policy restricts where a page’s scripts load from; connect-src restricts the URLs it can load using script interfaces such as XMLHttpRequest, WebSocket and sendBeacon; the Report-Only header monitors a policy rather than enforcing it.', src: 'W3C Subresource Integrity; W3C Content Security Policy Level 2 (Recommendation, 2016) and Level 3'},
-  ct_log: {name: 'Certificate Transparency', desc: 'RFC 6962 (2013, Experimental) describes publicly logging TLS certificates as they are issued, so anyone can audit what certificate authorities issued. For a defender, that means a public list of your own names, including ones nobody remembered.', src: 'IETF RFC 6962'},
+  ct_log: {name: 'Certificate Transparency', desc: 'RFC 6962 (2013, Experimental; obsoleted by RFC 9162, Certificate Transparency Version 2.0, 2021, also Experimental) describes publicly logging TLS certificates as they are issued, so anyone can audit what certificate authorities issued. For a defender, that means a public list of your own names, including ones nobody remembered.', src: 'IETF RFC 6962'},
   clf: {name: 'Web server access logs', desc: 'Apache’s Combined Log Format: "%h %l %u %t \\"%r\\" %>s %b \\"%{Referer}i\\" \\"%{User-agent}i\\"". %>s is the status code (2xx success, 3xx redirection, 4xx client error, 5xx server error); %b is the size of the response body, without headers. The error log is where the server records errors it meets processing requests. HTTP 429 means too many requests in a given time (rate limiting).', src: 'Apache HTTP Server 2.4, Log Files; IETF RFC 6585'},
   waf_detect: {name: 'WAF detection mode', desc: 'ModSecurity’s recommended configuration ships with SecRuleEngine DetectionOnly: “Use detection only to start with, because that minimises the chances of post-installation disruption.” OWASP CRS: a false positive is a genuine transaction a rule matches in error; they are tuned away with rule exclusions; a higher paranoia level catches more attacks and gives more false positives.', src: 'ModSecurity modsecurity.conf-recommended; OWASP CRS documentation'},
   takeover: {name: 'Subdomain takeover', desc: 'OWASP: it happens when a DNS record (typically a CNAME) points to a cloud resource or third-party service that has been deprovisioned. Decommission in order: maintenance page, update or remove the DNS record, wait for propagation, then decommission the resource.', src: 'OWASP Subdomain Takeover Prevention Cheat Sheet'},
   credstuff: {name: 'Stopping credential stuffing', desc: 'OWASP: MFA is by far the best defence against most password-related attacks; IP block lists should not be the sole or primary defence, because they are easy to get around; check new passwords against breached-password datasets.', src: 'OWASP Credential Stuffing Prevention Cheat Sheet'},
   webshell: {name: 'Web shells', desc: 'NSA and the Australian Signals Directorate published joint guidance on detecting and preventing web shell malware on 22 April 2020. ATT&CK’s web shell detection looks for unexpected script files in web folders followed by the web server starting command shells or system tools, and recommends least privilege so only authorised accounts can modify the web directory.', src: 'NSA press release, 22 April 2020; MITRE ATT&CK T1505.003'},
   ddos: {name: 'Kinds of DDoS', desc: 'CISA, the FBI and MS-ISAC describe three: volumetric (consuming bandwidth), protocol (exploiting network protocols) and application (targeting specific applications or services).', src: 'CISA, FBI and MS-ISAC, Understanding and Responding to Distributed Denial-of-Service Attacks'},
-  ba2018: {name: 'British Airways, 2018', desc: 'The ICO fined British Airways £20m in October 2020. An attack it did not detect itself, which began on 22 June 2018, potentially exposed data of about 429,612 customers and staff, including names, addresses and the card numbers and CVV numbers of 244,000 customers. A third party alerted BA on 5 September 2018, more than two months later. The ICO said measures such as limiting access, testing and MFA for employee and third-party accounts were available. Its 2019 notice of intent (£183.39m) said user traffic to BA’s website was diverted to a fraudulent site where details were harvested.', src: 'ICO statement on the notice of intent (July 2019) and press release on the penalty (October 2020)'},
-  ico72: {name: 'Reporting a personal data breach (UK)', desc: 'ICO: a notifiable breach must be reported to the ICO without undue delay and not later than 72 hours after becoming aware of it; if it is likely to result in a high risk to people, you must inform those concerned directly and without undue delay.', src: 'ICO, Personal data breaches: a guide'}
+  ba2018: {name: 'British Airways, 2018', desc: 'The ICO fined British Airways £20m in October 2020. An attack it did not detect itself, which began on 22 June 2018, potentially exposed data of about 429,612 customers and staff, including names, addresses and the card numbers and CVV numbers of 244,000 customers. A third party alerted BA on 5 September 2018, more than two months later. (BA’s own statement dated the attacks it found to 21 August to 5 September 2018, as reported at the time: the intruder was in long before the skimming BA found, which is why an exposure window starts at the first malicious change the evidence shows, not at the first theft anyone noticed.) The ICO said measures such as limiting access, testing and MFA for employee and third-party accounts were available. Its 2019 notice of intent (£183.39m) said user traffic to BA’s website was diverted to a fraudulent site where details were harvested.', src: 'ICO statement on the notice of intent (July 2019) and press release on the penalty (October 2020)'},
+  ico72: {name: 'Reporting a personal data breach (UK, for comparison)', desc: 'The town follows US state law and its contracts; this is the UK rule British Airways faced. ICO: a notifiable breach must be reported to the ICO without undue delay and not later than 72 hours after becoming aware of it; if it is likely to result in a high risk to people, you must inform those concerned directly and without undue delay.', src: 'ICO, Personal data breaches: a guide'}
 });
 GAME_NOTES.push(
   'Market Square threats (Slipquote, Climber, Stuffer, Shellback, Skimlet, Crawler, Stampede) join the alert mix with weights 4/3/4/2/2/3/2 once you reach Market Square; inside it they are three times as likely, and the Lantern Badge halves Slipquote. Network tools are strong against threats aimed at public web services. (game)',
   'Hostnames, addresses, the processor (Northgate Payments), its notices, tickets, the WAF rule counts (attacks and residents a day), the payment rate (30 an hour) and the skimmer’s timings are invented. (game)',
-  'WAF false-positive rate counts residents’ requests among everything the WAF blocks in a day. Exposure window counts game hours from the skimmer’s first change to containment. Mean time to contain counts game seconds from the start of a real attack to your first containment action. (game)',
+  'WAF false-positive rate counts residents’ requests among everything the WAF blocks in a day (strictly a false discovery rate: a textbook false-positive rate divides by all residents’ requests instead). Exposure window counts game hours from the skimmer’s first change to containment. If our own page comes back before it is proved clean, a second stretch as long as the first detection time is added, and an enforced CSP cancels it: both are simplifications (an enforced CSP narrows a skimmer’s exits; it doesn’t close them all). Mean time to contain counts game seconds from the start of a real attack to your first containment action. (game)',
   'All Market Square people, sites and numbers are invented. The skimming incident is retold in outline from the 2018 British Airways breach; its details here are invented. (game)'
 );
 
@@ -4684,7 +4685,7 @@ GAME_NOTES.push(
 
 Object.assign(QT_CLUES, {
   'mk-dmzhop': {tech: 'T1090', where: 'DMZ firewall log rack (Lanternkeep or Ledger)',
-                seen: 'At 03:09, WEB-01, the town website server, opened a short connection to the old router in the Front Desk closet, and the session signed in as svc-print. Nothing in the web tier ever talks to that network, and the printer’s service account has no business in the DMZ.'}
+                seen: 'At 03:09 the old router in the Front Desk closet opened a short connection into the DMZ, to WEB-01, the town website server, and signed in to its admin service as svc-print. Nothing on that network ever talks to the web tier, and the printer’s service account has no business in the DMZ.'}
 });
 
 async function mkQtRack() {
@@ -4698,16 +4699,16 @@ async function mkQtRack() {
   const i = await choose('The DMZ firewall log. Last night, 00:00 to 06:00.', opts);
   const k = opts[i].meta.k;
   if (k === 'leave') return;
-  if (k === 'net') await say('Lanternkeep: at 03:09 WEB-01 opened a short connection inward, to the old small-office router in the Front Desk closet. An “any to any” rule from the router’s install years ago lets it through. (game) Nothing else in the web tier talks to that network.');
+  if (k === 'net') await say('Lanternkeep: at 03:09 the old small-office router in the Front Desk closet opened a short connection into the DMZ, to WEB-01’s admin service. An “any to any” rule from the router’s install years ago lets it through. (game) Nothing else on that network talks to the web tier.');
   else await say('Ledger: at 03:09 a session from the Front Desk closet router’s address signed in to WEB-01’s admin service as svc-print. Right password, first try. (game)');
-  await say('The printer’s service account has no reason to be in the DMZ at three in the morning, and the web server has no reason to talk to a closet router. No rule fired: nothing was blocked, nothing failed.');
+  await say('The printer’s service account has no reason to be in the DMZ at three in the morning, and a closet router has no reason to talk to the web server. No rule fired: nothing was blocked, nothing failed.');
   await qtAfterNote(qtNote('mk-dmzhop'));
 }
 
 function mkQtSummaryHtml() {
   const mine = qtFound('mk-dmzhop');
   if (qtCount() >= QT_SUSPECT) return '<p class="big">Something quiet is moving in the network.</p><p class="small">' + (mine ? 'It reaches the internet-facing servers now, through the same old router, as the same service account. ' : '') + 'Hunt mode opens later. Your Unexplained notes carry over.</p>';
-  if (mine) return '<p class="small">A web server talked to a closet router at three in the morning. Probably nothing.</p>';
+  if (mine) return '<p class="small">A closet router signed in to the web server at three in the morning. Probably nothing.</p>';
   return '<p class="small">In the DMZ log, one short connection at 03:09 points back toward the Front Desk.</p>';
 }
 
@@ -4732,7 +4733,7 @@ function mkQtSummaryHtml() {
 'use strict';
 
 if (typeof EDITION !== 'undefined') {
-  EDITION.creditsFacts += ' Market Square: MITRE ATT&CK v20 (T1190, T1110.004, T1505.003, T1059.007, T1595.002, T1499.002, T1498, T1550.004). OWASP Top 10:2025; OWASP cheat sheets on query parameterization, input validation, insecure direct object references, credential stuffing and subdomain takeover; OWASP CRS documentation. PCI DSS v4.0.1 requirements 6.4.3 and 11.6.1, PCI SSC FAQs 1291, 1438 and 1588, and PCI SSC blog posts (January and March 2025). W3C Subresource Integrity and Content Security Policy (Level 2 and Level 3). IETF RFC 6962 (Certificate Transparency) and RFC 6585 (HTTP 429). Apache HTTP Server log files documentation. ModSecurity recommended configuration. NSA and ASD web shell guidance (April 2020). CISA, FBI and MS-ISAC guide to DDoS attacks. UK ICO: British Airways notice of intent (July 2019) and penalty (October 2020); personal data breaches guide.';
+  EDITION.creditsFacts += ' Market Square: MITRE ATT&CK v20 (T1190, T1110.004, T1505.003, T1059.007, T1595.002, T1499.002, T1498, T1539, T1550.004, T1110.001, T1078.001). OWASP Top 10:2025; OWASP cheat sheets on query parameterization, input validation, insecure direct object references, credential stuffing and subdomain takeover; OWASP CRS documentation. PCI DSS v4.0.1 requirements 6.4.3 and 11.6.1, PCI SSC FAQs 1291, 1438 and 1588, and PCI SSC blog posts (April 2020 on breach response and PCI Forensic Investigators; January and March 2025). W3C Subresource Integrity and Content Security Policy (Level 2 and Level 3). IETF RFC 6962 (Certificate Transparency; obsoleted by RFC 9162) and RFC 6585 (HTTP 429). Apache HTTP Server log files and mod_log_config documentation. Van Acker, Hausknecht and Sabelfeld, Data Exfiltration in the Face of CSP (ASIA CCS 2016). Secondary sources, labelled as such in CREDITS.md: Sansec research on a WebRTC skimmer (March 2026), NCSL summary of US state breach-notification laws, PortSwigger Web Security Academy on blind SQL injection, TechTarget report of BA’s own attack dates (July 2019). ModSecurity recommended configuration. NSA and ASD web shell guidance (April 2020). CISA, FBI and MS-ISAC guide to DDoS attacks. UK ICO: British Airways notice of intent (July 2019) and penalty (October 2020); personal data breaches guide.';
 }
 
 /* ---------- State ---------- */
@@ -4997,7 +4998,7 @@ async function mkInventory() {
   if (missing) { await say('No single source lists everything. A spreadsheet knows what someone remembered; DNS and certificate logs know names; a scan of our own addresses knows what answers. Try another.', 'Paz Delgado'); return; }
   G.f.mkInv = true; track();
   await say('Seven. Including two nobody remembered: an old test copy of the website at an outside host, and the WAF’s own admin page answering on a public address.', 'Paz Delgado');
-  await say('I’ve closed the WAF admin page to everything but the office. The test site is yours to retire. The WAF box is next.', 'Paz Delgado');
+  await say('I’ve closed the WAF admin page to everything but the office, after reading its sign-in log: only our own admins, from the office. Found exposed means check who used it, then close it. The test site is yours to retire. The WAF box is next.', 'Paz Delgado');
 }
 async function mkWafBox() {
   const f = G.f;
@@ -5053,7 +5054,7 @@ async function mkCmsPatch() {
   const c = MK(); c.cmsDay = G.day;
   G.f.mkCms = true; unlock('act', 'patchweb'); unlock('fact', 'kev'); touchCSF('Protect'); track();
   await say('Backup taken, staging checked, production patched by lunch. The upload flaw is closed.', who);
-  await say('Patched from today. Anything that came through it before today… well. Let’s hope nothing did.', who);
+  await say('Patched from today. A patch stops new uploads through the flaw; it tells us nothing about old ones. I’ll go through the uploads folder once the WAF work is done.', who);
 }
 async function mkTestConsole() {
   const f = G.f;
@@ -5073,7 +5074,7 @@ async function mkTestConsole() {
     else await say('Still on the internet, still unpatched, and now nobody is even watching its name.');
   }
   G.f.mkTest = true; unlock('act', 'decom'); unlock('fact', 'takeover'); touchCSF('Protect'); track();
-  await say('Logs copied. Two failed sign-ins on its admin page last week, both with the CMS’s default password, from a scanner’s address; nothing else. Maintenance page up, DNS record removed, hosting cancelled after the cache time.');
+  await say('Logs copied. Two failed sign-ins on its admin page last week, both with the CMS’s default password, from a scanner’s address; nothing else. Its database holds made-up test data only (checked, not assumed), and none of its passwords or keys work on the live site. Maintenance page up, DNS record removed, hosting cancelled after the cache time.');
   await say('The console goes in the recycling. One less thing facing the internet.');
 }
 async function mkWebServer() {
@@ -5271,7 +5272,7 @@ async function mkDojoPuzzle(i) {
   while (true) {
     const k = await UI.openModal('Web security · ' + p.title, '<pre class="art">' + esc(p.art) + '</pre><p><b>' + esc(p.q) + '</b></p>', p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {closable: false, cls: 'drill'});
     if (k === p.good) break;
-    await say('Not quite. Who decides what the input means: the code, or the person typing?');
+    await say('Not quite. What does the server check for itself, and what does it just trust from the request?');
   }
   await say('Correct. ' + p.explain);
   c.dojo[i] = true; unlock('fact', 'owasp10'); if (i === 1) unlock('act', 'objauthz'); unlock('act', 'paramq'); touchCSF('Protect');
@@ -5330,7 +5331,7 @@ function mkBossStages(picks, restoreEarly) {
     s2: {kind: 'mal', threat: 'stuffer', tech: 'T1110.004', tags: ['web', 'identity'], story: true, group: 'a', ev0: ev0,
       rate: picks.includes('mfa3p') ? 8 : 14, dwell0: picks.includes('mfa3p') ? 10 : 35,
       title: 'Stage 2: the way in', host: 'deploy pipeline · web agency account', enemy: {spr: 'stuffer', pal: 'stuffer'},
-      clues: ['The change to pay.js came through the deploy pipeline, from the web agency’s account, signed in from 203.0.113.88.', 'That account had no MFA. Its password matches one leaked in another site’s breach.', 'A week ago: 40 failed sign-ins on it from 203.0.113.88, then one success.'],
+      clues: ['The change to pay.js came through the deploy pipeline, from the web agency’s account, signed in from 203.0.113.88.', 'That account had no MFA. Its password matches one leaked in another site’s breach.', 'A week ago: one sign-in from 203.0.113.88 with that leaked password, right first time. No failures, so nothing alerted.'],
       truth: 'Credential stuffing against a third party’s account that could change the website, with no MFA on it.',
       resp: [{label: 'Disable the agency account, revoke its sessions and deploy tokens, require MFA on every account that can change the site, review everything it changed', good: true},
              {label: 'Reset its password and close', good: false, why: 'Its sessions and deploy tokens work without the password. Revoke those too.'},
@@ -5339,10 +5340,10 @@ function mkBossStages(picks, restoreEarly) {
     s3: {kind: 'mal', threat: 'skimlet', tech: 'T1059.007', tags: ['web'], story: true, group: 'a', ev0: ev0,
       rate: csp ? 8 : 13, dwell0: restoreEarly && !csp ? 45 : 15,
       title: 'Stage 3: it comes back', host: 'PAY-01 · pay.js', enemy: {spr: 'skimlet', pal: 'skimlet'},
-      clues: [restoreEarly ? 'Our own page went back up at 10:30, as the councillor asked. At 10:41, pay.js changes again.' : 'Our own page is still off. On its staging copy, pay.js changes again at 10:41.', 'The agency’s password was reset at 10:30, but one of its deploy tokens was never revoked.', csp ? 'The CSP is enforcing now: browsers refuse to send anything to metrics-cdn.example.' : 'The CSP is still in report-only mode: it reports each send and lets it through.'],
-      truth: 'The skimmer re-injected with a deploy token that outlived the password reset.',
-      resp: [{label: 'Revoke every deploy token and key, redeploy pay.js from the signed release, keep card entry on the hosted page until two clean tamper checks', good: true},
-             {label: 'Reset the agency’s password again', good: false, why: 'The token doesn’t need the password. Revoke the token.'},
+      clues: [restoreEarly ? 'Our own page went back up at 10:30, as the councillor asked. At 10:41, pay.js changes again.' : 'Our own page is still off. On its staging copy, pay.js changes again at 10:41.', 'The agency account was disabled at 10:30 and its own tokens revoked, but a deploy key saved in the pipeline’s settings, under no person’s account, was missed.', csp ? 'The CSP is enforcing now: browsers refuse the skimmer’s sends to metrics-cdn.example, and the tamper check confirms the policy header itself hasn’t been loosened.' : 'The CSP is still in report-only mode: it reports each send and lets it through.'],
+      truth: 'The skimmer re-injected with a pipeline deploy key nobody had listed: it outlived the account clean-up.',
+      resp: [{label: 'List and revoke every credential that can deploy, including keys saved in the pipeline, redeploy pay.js from the signed release, keep card entry on the hosted page until two clean tamper checks', good: true},
+             {label: 'Reset the agency’s password again', good: false, why: 'The key belongs to the pipeline, not to the agency account: no password reset touches it. Find it and revoke it.'},
              {label: 'Switch the tamper check off: it keeps alerting', good: false, why: 'It is the only reason you know.'}],
       chain: [{at: 60, text: 'pay.js changes a third time.'}]}
   };
@@ -5352,8 +5353,8 @@ async function mkBossScript() {
   await surfaceMissed(true);
   const chk = c.check || 'week';
   if (chk === 'q15') await say('Incident. The payment page’s tamper check fired at 01:27 last night: pay.js, our own script, changed at ' + MK_INJECT + '. Rafe was paged and confirmed nobody on the team deployed anything.', who);
-  else await say('Incident. Northgate Payments just called: cards used on our payment page over the last three days are turning up in fraud. The tamper check runs weekly; its next run was Monday.', who);
-  await say('This is the 2018 British Airways breach, in outline. The ICO found that user traffic to BA’s website was diverted to a fraudulent site, where customers’ details were harvested. BA didn’t spot it; a third party told them more than two months after the attack began.', who);
+  else await say('Incident. Northgate Payments just called: cards used on our payment page over the last three days are turning up in fraud. The tamper check runs weekly; its next run was Monday. And the CSP reported every send to metrics-cdn.example from ' + MK_INJECT + ' onward. The reports went to Rafe’s inbox, and nothing alerted on them.', who);
+  await say('This is the 2018 British Airways breach, in outline. The ICO said that user traffic to BA’s website was diverted to a fraudulent site, where customers’ details were harvested. BA didn’t spot it; a third party told them more than two months after the attack began.', who);
   unlock('fact', 'ba2018'); unlock('fact', 'ico72');
   await say('Oona has already told Northgate, as our merchant agreement requires (game), and I’ve told leadership what we know, what we’re doing and when they’ll hear next. Telling people is never optional, so it isn’t one of your cards.', who);
   touchCSF('Respond'); G.rep += 5; toast('Processor and leadership told. Reputation up.');
@@ -5380,18 +5381,18 @@ async function mkBossScript() {
     {label: 'When the alert, or the call, reached us', meta: {k: 'alert'}},
     {label: 'When the CMS was last patched', meta: {k: 'cms'}},
     {label: 'The start of the month, to be safe', meta: {k: 'month'}}];
-  const si = await UI.openModal('Exposure window: the start', '<p>Card entry is contained. Before anyone is told anything: when did the exposure start?</p>' +
+  const si = await UI.openModal('Exposure window: the start', '<p>Card entry is contained. Before residents are told who is affected: when did the exposure start?</p>' +
     '<pre class="art">' + esc(['Deploy log      pay.js changed ' + MK_INJECT + ' by the web agency’s account (no ticket)', 'CSP reports     first send to metrics-cdn.example at ' + MK_INJECT + ':40', chk === 'q15' ? 'Tamper check    flagged at 01:27' : 'Processor call  three days later, fraud on cards used here']) + '</pre>', startOpts.map(o => ({label: o.label, meta: o.meta})), {closable: false, cls: 'drill'});
   const startOk = startOpts[si].meta.k === 'inject';
   if (!startOk) await say(startOpts[si].meta.k === 'alert' ? 'That would leave out everyone skimmed before we noticed. The window starts at the first malicious change the evidence shows.' : startOpts[si].meta.k === 'month' ? 'That tells thousands of residents who weren’t affected to cancel their cards. Use the evidence: the deploy log and the first report agree on ' + MK_INJECT + '.' : 'The patch has nothing to do with this change. The deploy log does: ' + MK_INJECT + '.', who);
   const whoOpts = [
-    {label: 'Everyone who completed a card payment on our page inside the window', meta: {good: true, k: 'paid'}},
+    {label: 'Everyone who typed a card into our page inside the window: completed payments, and declined or abandoned attempts too', meta: {good: true, k: 'paid'}},
     {label: 'Everyone who visited the payment page', meta: {k: 'visited'}},
     {label: 'Every resident with a portal account', meta: {k: 'all'}},
     {label: 'Nobody: the CSP reported it', meta: {k: 'none'}}];
   const wi = await choose('Who was affected?', whoOpts);
   const whoOk = whoOpts[wi].meta.k === 'paid';
-  if (!whoOk) await say(whoOpts[wi].meta.k === 'none' ? 'Report-only reports and lets everything through. Every card typed in the window went to the attacker.' : 'The skimmer read card fields as people typed. Visitors who never entered a card had nothing taken; everyone who paid in the window did.', who);
+  if (!whoOk) await say(whoOpts[wi].meta.k === 'none' ? 'Report-only reports and lets everything through. Every card typed in the window went to the attacker.' : 'The skimmer read card fields as people typed. Visitors who never typed a card had nothing taken; everyone who typed one did, whether or not the payment went through. Northgate’s records show declined attempts as well as completed ones; people who gave up before pressing Pay never reached Northgate, so a public notice covers them.', who);
   unlock('act', 'exposurewin');
   // The councillor's hour.
   await say('It’s been an hour, and I’m getting calls. Payments?', 'Councillor Bram Whitlock');
@@ -5413,9 +5414,9 @@ async function mkBossScript() {
   G.f.mkBoss = true; G.f.mkScopeDone = true;
   touchCSF('Recover'); unlock('act', 'mfa3p'); unlock('act', 'revokeweb'); unlock('act', 'hostedpay');
   bumpUptime(0.01); track();
-  await say('Exposure window: ' + MK_INJECT + ' to containment, ' + mkFmtH(w.window) + (w.again ? ' (including the second stretch after our own page came back early)' : '') + '. About ' + w.affected + ' card payments were made inside it (game). Those residents are being told directly, with what to do: call their bank, watch their statements.', who);
-  await say('Legal is handling the regulator. Where the law requires it, a breach like this is reported within a deadline: in the UK, the ICO expects a notifiable breach within 72 hours of becoming aware, and people told directly if the risk to them is high. The ICO fined British Airways £20m for theirs.', who);
-  await say('Recover: card entry now runs on Northgate’s hosted page for good (the contract change, brought forward). Nothing we serve runs where residents type card numbers, and our PCI self-assessment shrinks to SAQ A. The agency has named accounts with MFA, and deploy tokens with owners and expiry dates. The CSP enforces.', who);
+  await say('Exposure window: ' + MK_INJECT + ' to containment, ' + mkFmtH(w.window) + (w.again ? ' (including the second stretch after our own page came back early)' : '') + '. About ' + w.affected + ' card payments were made inside it, and Northgate is pulling the declined attempts too (game); anyone who typed a card and gave up before pressing Pay never reached Northgate, so a public notice on the site covers them. Everyone we can identify is being told directly, with what to do: call their bank, watch their statements.', who);
+  await say('Legal is handling notification. Every US state has a breach-notification law, and they differ: who they cover (some include government bodies like ours), what data counts, how fast people must be told, and whether the state attorney general must hear too. Card numbers with the code needed to use them are commonly covered. Our merchant agreement adds its own duties, and the card brands may require an independent PCI Forensic Investigator, which is one more reason we preserved the evidence before cleaning. (For comparison, the UK’s ICO expects a notifiable breach within 72 hours; it fined British Airways £20m for theirs.)', who);
+  await say('Recover: card entry now runs on Northgate’s hosted page for good (the contract change, brought forward). Nothing we serve runs where residents type card numbers, and our PCI self-assessment should shrink to SAQ A (Northgate’s bank confirms which). The tamper check stays on our page that sends residents there: whoever can change that page can change where it sends them. The agency has named accounts with MFA, and every deploy token and key, including the pipeline’s own, is on a list with an owner and an expiry date. The CSP enforces.', who);
   await evolveCheck();
   await say('That’s Market Square. Next stop: Records Hall.', who);
   await mkSummary();
@@ -5432,7 +5433,7 @@ async function mkSummary() {
     '<p>Rank <b>' + G.rank + '</b> · Badges <b>Key Badge, Seal Badge, Shield Badge' + (G.f.mkLantern ? ', Lantern Badge' : '') + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b></p>' +
     scorecardHtml() +
     '<p>Investigation drills (game scores): ' + dl + '. WAF rule review: <b>' + (c.wafScore === null ? '—' : c.wafScore + '%') + '</b>' + (c.wafStats ? ', residents blocked a day <b>' + c.wafStats.res + '</b>' : '') + '. Inventory: <b>' + c.found.length + ' of ' + MK_ASSETS.length + '</b>.</p>' +
-    (b ? '<p>Skimming incident: exposure window <b>' + mkFmtH(b.window) + '</b>, card payments exposed <b>' + b.affected + '</b> (game). Start of the window from evidence: <b>' + (b.startOk ? 'yes' : 'corrected') + '</b>. Who was told: <b>' + (b.whoOk ? 'everyone who paid in the window' : 'corrected') + '</b>. The councillor’s hour: <b>' + ({hosted: 'met on the hosted page', ours: 'met by bringing back an unproven page', off: 'missed: payments off for a week'}[c.directiveBoss] || '—') + '</b>.</p>' : '') +
+    (b ? '<p>Skimming incident: exposure window <b>' + mkFmtH(b.window) + '</b>, card payments exposed <b>' + b.affected + '</b> (game). Start of the window from evidence: <b>' + (b.startOk ? 'yes' : 'corrected') + '</b>. Who was told: <b>' + (b.whoOk ? 'everyone who typed a card in the window' : 'corrected') + '</b>. The councillor’s hour: <b>' + ({hosted: 'met on the hosted page', ours: 'met by bringing back an unproven page', off: 'missed: payments off for a week'}[c.directiveBoss] || '—') + '</b>.</p>' : '') +
     '<p>Missed attacks found in review: <b>' + G.m.surfaced + '</b>.</p>' +
     mkQtSummaryHtml() +
     '<p class="big">Next: Records Hall.</p>';

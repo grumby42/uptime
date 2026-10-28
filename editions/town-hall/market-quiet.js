@@ -12,7 +12,7 @@
 
 Object.assign(QT_CLUES, {
   'mk-dmzhop': {tech: 'T1090', where: 'DMZ firewall log rack (Lanternkeep or Ledger)',
-                seen: 'At 03:09, WEB-01, the town website server, opened a short connection to the old router in the Front Desk closet, and the session signed in as svc-print. Nothing in the web tier ever talks to that network, and the printer’s service account has no business in the DMZ.'}
+                seen: 'At 03:09 the old router in the Front Desk closet opened a short connection into the DMZ, to WEB-01, the town website server, and signed in to its admin service as svc-print. Nothing on that network ever talks to the web tier, and the printer’s service account has no business in the DMZ.'}
 });
 
 async function mkQtRack() {
@@ -26,15 +26,15 @@ async function mkQtRack() {
   const i = await choose('The DMZ firewall log. Last night, 00:00 to 06:00.', opts);
   const k = opts[i].meta.k;
   if (k === 'leave') return;
-  if (k === 'net') await say('Lanternkeep: at 03:09 WEB-01 opened a short connection inward, to the old small-office router in the Front Desk closet. An “any to any” rule from the router’s install years ago lets it through. (game) Nothing else in the web tier talks to that network.');
+  if (k === 'net') await say('Lanternkeep: at 03:09 the old small-office router in the Front Desk closet opened a short connection into the DMZ, to WEB-01’s admin service. An “any to any” rule from the router’s install years ago lets it through. (game) Nothing else on that network talks to the web tier.');
   else await say('Ledger: at 03:09 a session from the Front Desk closet router’s address signed in to WEB-01’s admin service as svc-print. Right password, first try. (game)');
-  await say('The printer’s service account has no reason to be in the DMZ at three in the morning, and the web server has no reason to talk to a closet router. No rule fired: nothing was blocked, nothing failed.');
+  await say('The printer’s service account has no reason to be in the DMZ at three in the morning, and a closet router has no reason to talk to the web server. No rule fired: nothing was blocked, nothing failed.');
   await qtAfterNote(qtNote('mk-dmzhop'));
 }
 
 function mkQtSummaryHtml() {
   const mine = qtFound('mk-dmzhop');
   if (qtCount() >= QT_SUSPECT) return '<p class="big">Something quiet is moving in the network.</p><p class="small">' + (mine ? 'It reaches the internet-facing servers now, through the same old router, as the same service account. ' : '') + 'Hunt mode opens later. Your Unexplained notes carry over.</p>';
-  if (mine) return '<p class="small">A web server talked to a closet router at three in the morning. Probably nothing.</p>';
+  if (mine) return '<p class="small">A closet router signed in to the web server at three in the morning. Probably nothing.</p>';
   return '<p class="small">In the DMZ log, one short connection at 03:09 points back toward the Front Desk.</p>';
 }
