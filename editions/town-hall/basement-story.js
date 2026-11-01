@@ -359,7 +359,7 @@ async function bmFwReview() {
     const i = await choose('The last rule, at the bottom of the list, is “allow everything else”. What replaces it?', [
       {label: 'Deny everything not expressly permitted, inbound and outbound, and log the denials: what isn’t needed stays shut', meta: {good: true}},
       {label: 'Block everything inbound, allow everything outbound: staff need the internet, and the proxy already inspects their web traffic on the way out'},
-      {label: 'Leave it: the rules above already allow only what each owner asked for, so the last line never matches anything that matters'}], {shuffle: true});
+      {label: 'No change: the rules above already allow only what each owner asked for, so the last line never matches anything that matters'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Outbound is how stolen data and command channels leave. NIST SP 800-41 says firewalls should block all inbound and outbound traffic that hasn’t been expressly permitted. R2 already permits staff browsing.');
     else await say('Then anything the rules above don’t mention is allowed. That’s how R3 lived for seven years.');
@@ -605,8 +605,8 @@ function bmBossStages(picks, t) {
       clues: ['MGMT-01’s Security log starts at 02:41 with event 1102: cleared by svc-vpnldap.', 'The collector holds MGMT-01’s events up to 02:40:52. Forwarded as they were written, they survived the clearing: svc-vpnldap signed in at 02:20 over remote desktop from 10.20.200.14, an address in the VPN pool.', 'svc-vpnldap is the account VPN-01 uses to look users up in the directory: it has no reason to sign in anywhere. The directory’s sign-in log shows its first ever sign-in last Saturday at 02:04, to MGMT-01, and more on the nights since, always after 02:00. Nobody had a rule for it. Its password lives in the appliance’s settings.'],
       truth: 'Clear Windows Event Logs (T1685.005), to hide the session. The forwarded copies and the synchronised clocks put it back in order. Signing in with the appliance’s service account is Valid Accounts (T1078).',
       resp: [{label: 'Preserve the collector’s copies and MGMT-01’s disk and memory; isolate it powered, so memory survives; disable svc-vpnldap, end its sessions; tell leadership the VPN is down', good: true},
-             {label: 'Restore MGMT-01’s Security log from last night’s backup so the record is whole again, then close: the forwarded copies already show the 02:20 session', good: false, why: 'Last night’s backup predates tonight’s session, so it can’t show it, and the intruder still has the account. (A copy read in the lab is still useful: MGMT-01 has been theirs since last Saturday.)'},
-             {label: 'Reimage MGMT-01 now from the golden image and put it back in service: the collector already holds every event it forwarded, so nothing on its disk is still needed for the case', good: false, disrupt: 1, why: 'Preserve first: the disk and memory are the evidence of what they did.'}],
+             {label: 'Restore MGMT-01’s Security log from last night’s backup so the record is whole again: the forwarded copies already show the 02:20 session', good: false, why: 'Last night’s backup predates tonight’s session, so it can’t show it, and the intruder still has the account. (A copy read in the lab is still useful: MGMT-01 has been theirs since last Saturday.)'},
+             {label: 'Preserve the collector’s copies, then reimage MGMT-01 from the golden image and put it back in service: they hold every event it forwarded, so nothing on its disk is still needed as evidence', good: false, disrupt: 1, why: 'Preserve first: the disk and memory are the evidence of what they did.'}],
       chain: [{at: 40, text: 'svc-vpnldap opens a second remote-desktop session.'}, {at: 75, text: 'Another server’s Security log is cleared.'}]},
     s2: {kind: 'mal', threat: 'hinge', tech: 'T1686.002', tags: ['edge'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('rule') ? 8 : 13, dwell0: picks.includes('rule') ? 10 : 40,
@@ -615,7 +615,7 @@ function bmBossStages(picks, t) {
       truth: 'Modifying a network device firewall (T1686.002): the intruder opened its own way out. The way in was a rule far broader than anyone needed.',
       resp: [{label: 'Delete the new rule, narrow R4 today by emergency change, isolate and image VPN-01, then rebuild it per the vendor’s advisory; rotate what it stored, reset its users since Saturday, block 203.0.113.50', good: true},
              {label: 'Delete the new rule, block 203.0.113.50 at the edge and close: default deny already stops anything else going out, and R4’s narrowing is booked for Friday', good: false, why: 'VPN-01 is still the intruder’s, and R4 still lets the VPN pool reach everything.'},
-             {label: 'Set every firewall rule to deny until morning, VPN included, so nothing moves in or out while we work out what VPN-01 did, then restore the rules one at a time from the reviewed binder, with owners signing each one back on', good: false, disrupt: 2, why: 'That stops the town, not the intruder, who is already inside.'}],
+             {label: 'Set every firewall rule to deny until morning, VPN included, so nothing moves in or out while we hunt for what VPN-01 did, then restore the rules one at a time from the reviewed binder, with owners signing each one back on', good: false, disrupt: 2, why: 'That stops the town, not the intruder, who is already inside.'}],
       chain: [{at: 60, text: 'A second outbound rule appears.'}]},
     s3: {kind: 'mal', threat: 'sweep', tech: 'T1046', tags: ['recon'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('hunt') ? 8 : 14, dwell0: Math.max(0, (picks.includes('hunt') ? 10 : 35) + (hidden ? 15 : 0) - (reopened ? 5 : 0)),
@@ -624,8 +624,8 @@ function bmBossStages(picks, t) {
         'Last week’s alert from MGMT-01 at Sat 02:10, closed as “IT admin activity” with no ticket, was this intruder’s first look around.' + (reopened ? ' Your reopened ticket had MGMT-01 on tomorrow’s review list.' : ' Nobody had reopened it.'),
         'The hunt (event 1102 and svc-vpnldap sign-ins, on every server) finds one more: svc-vpnldap signed in to APP-02 at 03:29, and APP-02’s Security log was cleared at 03:31.'],
       truth: 'Network Service Discovery (T1046): mapping what the stolen account could reach. Hunting for the same behaviour found the second server.',
-      resp: [{label: 'Isolate APP-02 too, preserve its disk, scope what svc-vpnldap touched on both, and keep hunting: there may be a third', good: true},
-             {label: 'Close: svc-vpnldap is disabled and MGMT-01 isolated, so whatever the scan of 52 hosts found, the intruder can no longer use it', good: false, why: 'It found APP-02.'},
+      resp: [{label: 'Isolate APP-02 too, image its disk, scope what svc-vpnldap touched on both, and keep hunting: there may be a third', good: true},
+             {label: 'Preserve MGMT-01’s disk: svc-vpnldap is disabled and MGMT-01 isolated, so whatever the scan of 52 hosts found, the intruder can no longer use it', good: false, why: 'It found APP-02.'},
              {label: 'Exclude MGMT-01 from the scan rule: it’s a management server', good: false, why: 'That is how its first scan went unseen.'}],
       chain: [{at: 60, text: 'svc-vpnldap tries a third server.'}]}
   };

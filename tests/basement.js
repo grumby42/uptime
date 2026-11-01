@@ -49,7 +49,8 @@ async function session(browser, ctxOpts) {
   async function waitUI(type) { for (let i = 0; i < 300; i++) { const p = await peek(); if (p.ui && (!type || p.ui.type === type)) return p; await sleep(15); } throw new Error('no ui ' + type + ' ' + JSON.stringify((await peek()).ui)); }
   async function pickLabel(re) {
     const p = await waitUI(); const u = p.ui;
-    const idx = u.options.findIndex(o => re.test(o.label) && !o.disabled);
+    // '@good' picks the option flagged good (meta.good), so a test doesn't depend on the right answer's wording.
+    const idx = re === '@good' ? u.options.findIndex(o => o.meta && o.meta.good && !o.disabled) : u.options.findIndex(o => re.test(o.label) && !o.disabled);
     if (idx < 0) throw new Error('no option ' + re + ' in ' + JSON.stringify(u.options.map(o => o.label)));
     let guard = 0;
     while ((await peek()).ui.cursor !== idx && guard++ < 40) await press(u.type === 'modal' ? 'down' : (u.cols > 1 ? 'right' : 'down'));
@@ -338,7 +339,7 @@ async function recordsDone(s, extra, party) {
   await s.untilChoice();
   await s.pickLabel(/Start investigating/);
   await s.pickLabel(/I have enough/);
-  await s.pickLabel(/^Collector outage/);
+  await s.pickLabel('@good'); // Collector outage
   await s.pickLabel(/^FS-02’s local log still holds/);
   await s.pickLabel(/cleared FS-02’s Security log/); await s.pickLabel(/stopped FS-02’s forwarding/); await s.pickLabel(/Done: these are my 2/);
   await s.waitUI('modal');
@@ -385,7 +386,7 @@ async function recordsDone(s, extra, party) {
   check('drill 2: one connection both devices recorded gives the exact correction', /14:00:05/.test(await s.modalText()) && /14:10:35/.test(await s.modalText()));
   await s.pickLabel(/Back to the investigation/);
   await s.pickLabel(/Budget spent/);
-  await s.pickLabel(/^The sign-in came first/);
+  await s.pickLabel('@good'); // The sign-in came first
   await s.pickLabel(/^MGMT-01 wasn’t synchronised/);
   await s.pickLabel(/attacker used fw-devraj/); await s.pickLabel(/firewall’s clock is the wrong one/); await s.pickLabel(/Done: these are my 2/);
   await s.waitUI('modal');

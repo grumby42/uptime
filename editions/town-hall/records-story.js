@@ -255,8 +255,8 @@ async function rhRestoreTest() {
   while (true) {
     const i = await choose('How do you test the backups?', [
       {label: 'Restore real systems into the isolated lab, time each one end to end, and have its owner check the data', meta: {good: true}},
-      {label: 'Read the job reports for every system: a job that finishes green every night has proved it can be restored'},
-      {label: 'Restore over the live permits server tonight, after hours, to make it a real test with the real data and the real users'},
+      {label: 'Check the job reports for every system: a job that finishes green every night has proved it can be restored'},
+      {label: 'Restore over the live permits server tonight, after hours, and check it with the real data and the real users'},
       {label: 'Restore one small file from each job into a temporary folder and open it, so every job is proved restorable'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Green means the job finished. It doesn’t say you can restore from it, or how long it takes.');
@@ -361,7 +361,7 @@ async function rhOfflineCopy() {
   while (true) {
     const i = await choose('Coverage check: 4 of the 5 critical systems are on the weekly tapes. The directory’s job writes to the appliance only.', [
       {label: 'Add the directory’s backup to the tapes: everyone signs in through it', meta: {good: true}},
-      {label: 'Leave it: the directory is small, and it’s quick to rebuild from scratch'}], {shuffle: true});
+      {label: 'Skip it: the directory is small, and it’s quick to rebuild from scratch'}], {shuffle: true});
     if (i === 0) break;
     await say('Every account, group and policy the town has is in it, and nothing else signs anyone in without it. Rebuilding it from memory takes weeks.');
   }
@@ -524,7 +524,7 @@ function rhBossStages(picks, d) {
       clues: ['At ' + RH_ENCRYPT + ' a scheduled task started the same program on every server except the directory and FS-03, an old server outside the group the policy targets. Files are renamed and turned to noise, and a ransom note sits in every share.', 'At 02:38 every volume shadow copy on the file servers was deleted, by svc-scanbak, a domain admin account nobody on the team created.', 'The task came from a new group policy, “Printer Mapping Update”, created by svc-scanbak at ' + RH_GPO + ' last night.'],
       truth: 'Data Encrypted for Impact, pushed to every server at once through group policy, after the shadow copies were deleted (Inhibit System Recovery). Pushing the task through a group policy is Group Policy Modification, ATT&CK T1484.001.',
       resp: [{label: 'Isolate the servers at the switch, powered on so memory survives; disable svc-scanbak, unlink the policy, keep the backup network sealed, preserve evidence', good: true},
-             {label: 'Restore the file shares from last night now, so the departments can work again while the investigation goes on', good: false, why: 'Last night’s copies were taken after the policy went out at ' + RH_GPO + ': whole-server restores bring the scheduled task back. Contain first.'},
+             {label: 'Restore the file shares from last night now, so the departments can work again while the evidence is preserved', good: false, why: 'Last night’s copies were taken after the policy went out at ' + RH_GPO + ': whole-server restores bring the scheduled task back. Contain first.'},
              {label: 'Pull the power on every server right now, so the encryption stops mid-file before it can reach the backups, the directory or anything else on the town’s network', good: false, disrupt: 1, why: 'Isolate at the switch first; power down only what you can’t disconnect. Memory evidence goes when the power does.'}],
       chain: [{at: 40, text: 'Another share fills with ransom notes.'}, {at: 75, text: 'The encryptor reaches the scanned-image archive.'}]},
     s2: {kind: 'mal', threat: 'lapse', tech: 'T1490', tags: ['backup', 'host'], story: true, group: 'c', ev0: ev0,

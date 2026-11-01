@@ -47,7 +47,8 @@ async function session(browser, ctxOpts) {
   async function waitUI(type) { for (let i = 0; i < 300; i++) { const p = await peek(); if (p.ui && (!type || p.ui.type === type)) return p; await sleep(15); } throw new Error('no ui ' + type + ' ' + JSON.stringify((await peek()).ui)); }
   async function pickLabel(re) {
     const p = await waitUI(); const u = p.ui;
-    const idx = u.options.findIndex(o => re.test(o.label) && !o.disabled);
+    // '@good' picks the option flagged good (meta.good), so a test doesn't depend on the right answer's wording.
+    const idx = re === '@good' ? u.options.findIndex(o => o.meta && o.meta.good && !o.disabled) : u.options.findIndex(o => re.test(o.label) && !o.disabled);
     if (idx < 0) throw new Error('no option ' + re + ' in ' + JSON.stringify(u.options.map(o => o.label)));
     let guard = 0;
     while ((await peek()).ui.cursor !== idx && guard++ < 40) await press(u.type === 'modal' ? 'down' : (u.cols > 1 ? 'right' : 'down'));
@@ -233,7 +234,7 @@ function mailDone(s, extra, party) {
   await s.untilChoice();
   await s.pickLabel(/Start investigating/);
   await s.pickLabel(/I have enough/);
-  await s.pickLabel(/Downloaded, not executed/);
+  await s.pickLabel('@good'); // Downloaded, not executed
   await s.pickLabel(/No process creation for the hash/);
   await s.pickLabel(/different name/); await s.pickLabel(/Prefetch is turned off/); await s.pickLabel(/Done: these are my 2/);
   await s.waitUI('modal');

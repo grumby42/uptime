@@ -47,7 +47,8 @@ async function session(browser, ctxOpts) {
   async function waitUI(type) { for (let i = 0; i < 300; i++) { const p = await peek(); if (p.ui && (!type || p.ui.type === type)) return p; await sleep(15); } throw new Error('no ui ' + type + ' ' + JSON.stringify((await peek()).ui)); }
   async function pickLabel(re) {
     const p = await waitUI(); const u = p.ui;
-    const idx = u.options.findIndex(o => re.test(o.label) && !o.disabled);
+    // '@good' picks the option flagged good (meta.good), so a test doesn't depend on the right answer's wording.
+    const idx = re === '@good' ? u.options.findIndex(o => o.meta && o.meta.good && !o.disabled) : u.options.findIndex(o => re.test(o.label) && !o.disabled);
     if (idx < 0) throw new Error('no option ' + re + ' in ' + JSON.stringify(u.options.map(o => o.label)));
     let guard = 0;
     while ((await peek()).ui.cursor !== idx && guard++ < 40) await press(u.type === 'modal' ? 'down' : (u.cols > 1 ? 'right' : 'down'));
@@ -372,7 +373,7 @@ function clerksDone(s, extra, party) {
   check('drill 2: the notice was checked on the processor’s portal, not in the email', /not by following the email/.test(await s.modalText()));
   await s.pickLabel(/Back to the investigation/);
   await s.pickLabel(/Budget spent/);
-  await s.pickLabel(/A legitimate vendor change/);
+  await s.pickLabel('@good'); // A legitimate vendor change
   await s.pickLabel(/The page changed by exactly one line/);
   await s.pickLabel(/attacker changed the page/); await s.pickLabel(/look-alike domain/); await s.pickLabel(/Done: these are my 2/);
   await s.waitUI('modal');

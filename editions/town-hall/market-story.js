@@ -347,7 +347,7 @@ async function mkCmsPatch() {
   await say('The CMS vendor put out a fix this week: ADV-26-201 (game), a file upload flaw that lets anyone upload any file. It’s on CISA’s Known Exploited list. Our site is three versions behind.', who);
   while (true) {
     const i = await choose('When does it go on?', [
-      {label: 'Today: take a backup, apply it on staging and check the site, then production', meta: {good: true}},
+      {label: 'Today: take a backup, apply it on staging and test the site, then production', meta: {good: true}},
       {label: 'At the quarterly maintenance window next month, with the other CMS updates'},
       {label: 'Never: a WAF rule can block the upload instead'},
       {label: 'Turn off uploads for good and email agendas instead'}], {shuffle: true});
@@ -369,9 +369,9 @@ async function mkTestConsole() {
   await say('The old test site’s console. test.townhall.example: a copy of the website from three years ago, at an outside hosting company, still answering. The DNS name points at the host with a CNAME. (game)');
   while (true) {
     const i = await choose('How do you retire it?', [
-      {label: 'Copy and read its logs, show a maintenance page, drop the DNS record, wait out the cache, then cancel, so nobody can take the name', meta: {good: true}},
+      {label: 'Copy and read its logs, show a holding page, drop the DNS record, wait out the cache, then close the account, so nobody can take the name', meta: {good: true}},
       {label: 'Cancel the hosting account now: it’s only a test site, nobody uses it, and every day it stays up is another day it can be attacked'},
-      {label: 'Leave it: nobody links to it, it holds no resident data, and the team may want it again for the next redesign of the town website'},
+      {label: 'Let it be: nobody links to it, it holds no resident data, and the team may want it again for the next redesign of the town website'},
       {label: 'Remove the DNS record so nobody can find it, and keep the site running at the host, just in case the team needs it again later'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Two problems. You lose its logs before anyone has read them, and the town’s name still points at a hosting account nobody owns. Someone else could claim it and serve anything from test.townhall.example: a subdomain takeover.');
@@ -654,7 +654,7 @@ function mkBossStages(picks, restoreEarly) {
       clues: [restoreEarly ? 'Our own page went back up at 10:30, as the councillor asked. At 10:41, pay.js changes again.' : 'Our own page is still off. On its staging copy, pay.js changes again at 10:41.', 'The agency account was disabled at 10:30 and its own tokens revoked, but a deploy key saved in the pipeline’s settings, under no person’s account, was missed.', csp ? 'The CSP is enforcing now: browsers refuse the skimmer’s sends to metrics-cdn.example, and the tamper check confirms the policy header itself hasn’t been loosened.' : 'The CSP is still in report-only mode: it reports each send and lets it through.'],
       truth: 'The skimmer re-injected with a pipeline deploy key nobody had listed: it outlived the account clean-up.',
       resp: [{label: 'List and revoke every deploy credential, pipeline keys included: one was missed. Redeploy pay.js from the signed release; keep the hosted page until two clean tamper checks', good: true},
-             {label: 'Reset the agency’s password again and turn on MFA for it: the account was used once, and it can’t be used without the second factor', good: false, why: 'The key belongs to the pipeline, not to the agency account: no password reset touches it. Find it and revoke it.'},
+             {label: 'Reset the agency’s password again, turn on MFA for it and check its sign-ins: the account was used once, and it can’t be used without the second factor', good: false, why: 'The key belongs to the pipeline, not to the agency account: no password reset touches it. Find it and revoke it.'},
              {label: 'Switch the tamper check off for a day: it keeps alerting on the same file, and the team is busy redeploying pay.js and checking every change the agency made over the last month', good: false, why: 'It is the only reason you know.'}],
       chain: [{at: 60, text: 'pay.js changes a third time.'}]}
   };

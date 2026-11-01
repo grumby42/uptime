@@ -193,7 +193,7 @@ Object.assign(ALERTS, {
     rule: 'Staff report: suspicious text message',
     mal: {clues: ['The text says a toll is unpaid and links to a page asking for card details.', 'The link’s domain was registered last week and does not belong to any toll agency.', 'Four staff got the same text on their work phones today.'],
           truth: 'Smishing: texts steering people to a payment-harvesting site.',
-          resp: [{label: 'Warn staff, block the domain, report the texts: it’s after cards, not phones', good: true}, {label: 'Wipe the four work phones that got the text, in case the link installed something', good: false, disrupt: 2, why: 'The page harvests card details; nothing points to anything installed, and wiping costs four people their phones.'}, {label: 'Ignore it: texts land on phones, outside the mail filters we monitor', good: false, why: 'Smishing targets the same staff. A warning and a domain block still protect them.'}]},
+          resp: [{label: 'Warn staff, block the domain, report the texts: it’s after cards, not phones', good: true}, {label: 'Wipe the four work phones that got the text, in case the link installed something', good: false, disrupt: 2, why: 'The page harvests card details; nothing points to anything installed, and wiping costs four people their phones.'}, {label: 'Not ours: texts land on phones, outside the mail filters we monitor', good: false, why: 'Smishing targets the same staff. A warning and a domain block still protect them.'}]},
     benign: {clues: ['It is the town’s emergency alert service: a road closure.', 'It asks for nothing and matches the notice on the town website.', 'Staff signed up for these alerts last year.'],
              truth: 'Benign: a real community alert.'},
     fp: {clues: ['The rule flags any text with a short link.', 'The link belongs to the staff scheduling app.', 'It is the weekly shift reminder.'],
@@ -313,13 +313,13 @@ const MR_SMS = [
 const MR_CALLS = [
   {caller: '“Kofi from the help desk”', open: 'Hi, Kofi from the help desk. Your account is being attacked and I need to lock it. I’ve just sent a code to your phone. Read it back to me so I can verify you.',
    opts: [{label: 'Read him the code: he’s from the help desk and only verifying you', why: 'That code is the second factor for a sign-in happening right now. Reading it out hands over the account.'},
-          {label: 'Ask for his employee number and his manager’s name, and read the code only if both check out', why: 'A caller proving himself with details he controls proves nothing: employee numbers and managers’ names leak or get invented. And no real help desk needs your code.'},
+          {label: 'Ask for his employee number and his manager’s name, and read the code only once both are verified', why: 'A caller proving himself with details he controls proves nothing: employee numbers and managers’ names leak or get invented. And no real help desk needs your code.'},
           {label: 'Say you’ll call the help desk back on the directory number, and hang up', good: true}],
    result: 'You dial the help-desk number from the staff directory. The real Kofi answers: “We didn’t call you. Thanks for checking: I’m logging it and warning the team.”'},
   {caller: '“Mara Finch, Harrow & Finch Paving”', open: 'Hello, Mara from Harrow & Finch. Our bank has changed and I’m emailing the new details now. Can you update them before today’s payment run? Call me back on this number if you need to.',
    opts: [{label: 'Update the details now: she knows the invoice numbers and sounds legitimate', why: 'Voices, names and invoice numbers can all be faked or stolen. A bank change is exactly what this pretext is for.'},
           {label: 'Call back the number she just gave you, to confirm it really reaches Harrow & Finch', why: 'That number belongs to whoever is calling. A call-back only proves something if you dial a number you already had.'},
-          {label: 'Call Harrow & Finch on the number in the vendor master file', good: true}],
+          {label: 'Confirm with Harrow & Finch on the number in the vendor master file', good: true}],
    result: 'You call the number in the vendor file. The real Mara Finch: “We haven’t changed banks. Please don’t pay anything new.”'}
 ];
 

@@ -229,7 +229,7 @@ async function kioskTask() {
     const i = await choose('Change it to…', [
       {label: 'A long random passphrase in the team password vault: nobody has to remember it', meta: {good: true}},
       {label: '“Kiosk2026!”: it has a capital, a digit and a symbol, and the team can remember it'},
-      {label: 'Leave it: visitors never see the admin screen, and the kiosk sits behind reception'}], {shuffle: true});
+      {label: 'Keep it: visitors never see the admin screen, and the kiosk sits behind reception'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Short and predictable: a year and a symbol are the first things spraying tools try. Length matters more than symbols.');
     else await say('Default passwords are public. Anyone who reads the manual has the keys.');
@@ -289,7 +289,7 @@ const PORT_SPEC = () => ({
   clues: ['A remote-desktop session to ANNEX-PC-03 came straight in from the internet at 01:47.', 'It used the HVAC contractor’s account. The port was opened for him last week.', 'The contractor says he hasn’t connected since Tuesday, and the address is on another continent.'],
   truth: 'An attacker used the open remote-desktop port and the contractor’s password: External Remote Services.',
   resp: [{label: 'End the session, close the port, reset the contractor’s account, check ANNEX-PC-03 and what was copied', good: true},
-         {label: 'Leave it until morning and ask the contractor then: the sign-in used his real account and password, so it’s probably him', good: false, why: 'He already said he hasn’t connected since Tuesday, the address is on another continent, and the session is reaching into the file share now.'},
+         {label: 'Leave it until morning and check with the contractor then: the sign-in used his real account and password, so it’s probably him', good: false, why: 'He already said he hasn’t connected since Tuesday, the address is on another continent, and the session is reaching into the file share now.'},
          {label: 'Unplug the whole district from the internet', good: false, disrupt: 2}],
   chain: [{at: 35, text: 'The session starts browsing the Annex file share.'}, {at: 70, text: 'Large files are being copied out over the session.'}]
 });
@@ -348,9 +348,9 @@ async function owenTalk() {
   await say('Maybe they’ll find out how it feels when nobody knows where the files are.', who);
   f.insider = 'seen';
   const opts = [
-    {label: 'Search Owen’s email and files first, so the report has evidence behind it'},
+    {label: 'Hunt through Owen’s email and files first, so the report has evidence behind it'},
     {label: 'Tell the team leads to keep a quiet eye on Owen and note anything odd'},
-    {label: 'Ignore it: he’s just venting, and a report would only get him in trouble'},
+    {label: 'Let it go: he’s just venting, and a report would only get him in trouble'},
     {label: 'Report what you heard, factually, to the insider-risk process (HR)', meta: {good: true}}];
   while (true) {
     const i = await choose('(Resentment after a reorg can be an early warning sign. What do you do?)', opts, {shuffle: true});

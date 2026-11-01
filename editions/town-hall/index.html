@@ -204,7 +204,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261101-1243Z', BUILD_TS = '2026-11-01 12:43 UTC';
+const BUILD_ID = 'ARCD-20261101-1336Z', BUILD_TS = '2026-11-01 13:36 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -1465,7 +1465,7 @@ const ALERTS = {
     rule:'Many failed sign-ins across accounts',
     mal:{clues:['Failures hit 40 different accounts in six minutes, two tries each: just under the lockout limit.','Every attempt comes from one hosting-provider address range never seen here before.','After the burst, one account (reception-02) signed in successfully from that range.'],
          truth:'Password spraying: one common password tried against many accounts. One account fell.',
-         resp:[{label:'Reset reception-02, revoke its sessions, block the source range',good:true},{label:'Isolate every reception PC until we know which one the sprayer reached',good:false,disrupt:2,why:'The spray came from a hosting range against accounts, not from a reception PC. Isolating PCs stops reception working and leaves reception-02’s session open.'},{label:'Lock all 40 sprayed accounts for a day so the sprayer can’t try them again',good:false,disrupt:1,why:'Locking 40 people out stops their work, and the one account that fell already has a session: reset it and revoke its sessions.'}]},
+         resp:[{label:'Reset reception-02, revoke its sessions, block the source range',good:true},{label:'Isolate every reception PC until we have checked which one the sprayer reached',good:false,disrupt:2,why:'The spray came from a hosting range against accounts, not from a reception PC. Isolating PCs stops reception working and leaves reception-02’s session open.'},{label:'Lock all 40 sprayed accounts for a day so the sprayer can’t try them again',good:false,disrupt:1,why:'Locking 40 people out stops their work, and the one account that fell already has a session: reset it and revoke its sessions.'}]},
     benign:{clues:['Failures come from the office’s own network, spread over an hour.','Each account succeeded within a few tries, from its usual PC.','IT forced a reset on Friday after a vendor’s breach; Monday morning staff are mistyping new passwords.'],
          truth:'Benign: staff mistyping new passwords after a forced reset.'},
     fp:{clues:['Every “failure” comes from the visitor kiosk, exactly every 15 minutes.','The event code is a session timeout, not a wrong password.','Nobody typed anything: it’s the kiosk’s scheduled auto-logout.'],
@@ -1475,7 +1475,7 @@ const ALERTS = {
     rule:'Staff report: suspicious “IT” phone call',
     mal:{clues:['Caller ID showed an outside number labelled with our company name.','The caller asked Dee to read back the sign-in code just texted to her.','The real help desk made no outbound calls today.'],
          truth:'Voice phishing: someone posing as IT tried to get a sign-in code over the phone.',
-         resp:[{label:'Reset Dee’s password, check her sign-ins, warn staff',good:true},{label:'Isolate Dee’s PC for a scan, warn staff',good:false,disrupt:2,why:'The caller was after a sign-in code, not her PC: nothing points to anything running on it. The risk is her account.'},{label:'Block all outside calls to staff for today',good:false,disrupt:1,why:'Staff need outside lines, and the caller can switch channels. Protect the account and warn staff instead.'}]},
+         resp:[{label:'Reset Dee’s password, go through her sign-ins, warn staff',good:true},{label:'Isolate Dee’s PC for a scan, warn staff',good:false,disrupt:2,why:'The caller was after a sign-in code, not her PC: nothing points to anything running on it. The risk is her account.'},{label:'Block all outside calls to staff for today',good:false,disrupt:1,why:'Staff need outside lines, and the caller can switch channels. Protect the account and warn staff instead.'}]},
     benign:{clues:['A help-desk ticket shows Lin asked a software vendor to call her back.','The number matches the vendor’s published support line.','The caller asked for nothing sensitive.'],
          truth:'Benign: a vendor support callback the user had requested.'},
     fp:{clues:['The alert came from a keyword rule on voicemail transcripts.','The trigger word was “urgent”.','The voicemail is a dentist’s appointment reminder.'],
@@ -1505,7 +1505,7 @@ const ALERTS = {
     rule:'Odd requests to the visitor kiosk web app',
     mal:{clues:['Requests put database commands into the visitor-name field.','The app version has a publicly known flaw that is not yet patched.','One request returned far more data than a normal page.'],
          truth:'Exploiting a public-facing app: injecting commands through a known flaw.',
-         resp:[{label:'Block the source, patch the app, check what data was returned',good:true},{label:'Isolate the reception PCs that share the kiosk’s network segment',good:false,disrupt:2,why:'The requests hit the kiosk web app from the internet; nothing points to the reception PCs, and isolating them stops reception working.'},{label:'Restart the kiosk app, clear its cache, and close it',good:false,why:'A restart doesn’t fix the flaw or tell you what data left. Block, patch, and check what was returned.'}]},
+         resp:[{label:'Block the source, patch the app, list what data was returned',good:true},{label:'Isolate the reception PCs that share the kiosk’s network segment',good:false,disrupt:2,why:'The requests hit the kiosk web app from the internet; nothing points to the reception PCs, and isolating them stops reception working.'},{label:'Restart the kiosk app, clear its cache, and close it',good:false,why:'A restart doesn’t fix the flaw or tell you what data left. Block, patch, and check what was returned.'}]},
     benign:{clues:['Errors began right after an app update.','They come from visitors’ normal sign-in attempts.','The vendor confirmed a display bug in the new version.'],
          truth:'Benign: a buggy update causing harmless errors.'},
     fp:{clues:['The rule looks for the word “select” in requests.','The match is a menu label: “Select your host”.','Nothing unusual reached the database.'],
@@ -1912,7 +1912,7 @@ async function kioskTask() {
     const i = await choose('Change it to…', [
       {label: 'A long random passphrase in the team password vault: nobody has to remember it', meta: {good: true}},
       {label: '“Kiosk2026!”: it has a capital, a digit and a symbol, and the team can remember it'},
-      {label: 'Leave it: visitors never see the admin screen, and the kiosk sits behind reception'}], {shuffle: true});
+      {label: 'Keep it: visitors never see the admin screen, and the kiosk sits behind reception'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Short and predictable: a year and a symbol are the first things spraying tools try. Length matters more than symbols.');
     else await say('Default passwords are public. Anyone who reads the manual has the keys.');
@@ -1972,7 +1972,7 @@ const PORT_SPEC = () => ({
   clues: ['A remote-desktop session to ANNEX-PC-03 came straight in from the internet at 01:47.', 'It used the HVAC contractor’s account. The port was opened for him last week.', 'The contractor says he hasn’t connected since Tuesday, and the address is on another continent.'],
   truth: 'An attacker used the open remote-desktop port and the contractor’s password: External Remote Services.',
   resp: [{label: 'End the session, close the port, reset the contractor’s account, check ANNEX-PC-03 and what was copied', good: true},
-         {label: 'Leave it until morning and ask the contractor then: the sign-in used his real account and password, so it’s probably him', good: false, why: 'He already said he hasn’t connected since Tuesday, the address is on another continent, and the session is reaching into the file share now.'},
+         {label: 'Leave it until morning and check with the contractor then: the sign-in used his real account and password, so it’s probably him', good: false, why: 'He already said he hasn’t connected since Tuesday, the address is on another continent, and the session is reaching into the file share now.'},
          {label: 'Unplug the whole district from the internet', good: false, disrupt: 2}],
   chain: [{at: 35, text: 'The session starts browsing the Annex file share.'}, {at: 70, text: 'Large files are being copied out over the session.'}]
 });
@@ -2031,9 +2031,9 @@ async function owenTalk() {
   await say('Maybe they’ll find out how it feels when nobody knows where the files are.', who);
   f.insider = 'seen';
   const opts = [
-    {label: 'Search Owen’s email and files first, so the report has evidence behind it'},
+    {label: 'Hunt through Owen’s email and files first, so the report has evidence behind it'},
     {label: 'Tell the team leads to keep a quiet eye on Owen and note anything odd'},
-    {label: 'Ignore it: he’s just venting, and a report would only get him in trouble'},
+    {label: 'Let it go: he’s just venting, and a report would only get him in trouble'},
     {label: 'Report what you heard, factually, to the insider-risk process (HR)', meta: {good: true}}];
   while (true) {
     const i = await choose('(Resentment after a reorg can be an early warning sign. What do you do?)', opts, {shuffle: true});
@@ -2445,7 +2445,7 @@ Object.assign(ALERTS, {
     rule: 'Staff report: suspicious text message',
     mal: {clues: ['The text says a toll is unpaid and links to a page asking for card details.', 'The link’s domain was registered last week and does not belong to any toll agency.', 'Four staff got the same text on their work phones today.'],
           truth: 'Smishing: texts steering people to a payment-harvesting site.',
-          resp: [{label: 'Warn staff, block the domain, report the texts: it’s after cards, not phones', good: true}, {label: 'Wipe the four work phones that got the text, in case the link installed something', good: false, disrupt: 2, why: 'The page harvests card details; nothing points to anything installed, and wiping costs four people their phones.'}, {label: 'Ignore it: texts land on phones, outside the mail filters we monitor', good: false, why: 'Smishing targets the same staff. A warning and a domain block still protect them.'}]},
+          resp: [{label: 'Warn staff, block the domain, report the texts: it’s after cards, not phones', good: true}, {label: 'Wipe the four work phones that got the text, in case the link installed something', good: false, disrupt: 2, why: 'The page harvests card details; nothing points to anything installed, and wiping costs four people their phones.'}, {label: 'Not ours: texts land on phones, outside the mail filters we monitor', good: false, why: 'Smishing targets the same staff. A warning and a domain block still protect them.'}]},
     benign: {clues: ['It is the town’s emergency alert service: a road closure.', 'It asks for nothing and matches the notice on the town website.', 'Staff signed up for these alerts last year.'],
              truth: 'Benign: a real community alert.'},
     fp: {clues: ['The rule flags any text with a short link.', 'The link belongs to the staff scheduling app.', 'It is the weekly shift reminder.'],
@@ -2565,13 +2565,13 @@ const MR_SMS = [
 const MR_CALLS = [
   {caller: '“Kofi from the help desk”', open: 'Hi, Kofi from the help desk. Your account is being attacked and I need to lock it. I’ve just sent a code to your phone. Read it back to me so I can verify you.',
    opts: [{label: 'Read him the code: he’s from the help desk and only verifying you', why: 'That code is the second factor for a sign-in happening right now. Reading it out hands over the account.'},
-          {label: 'Ask for his employee number and his manager’s name, and read the code only if both check out', why: 'A caller proving himself with details he controls proves nothing: employee numbers and managers’ names leak or get invented. And no real help desk needs your code.'},
+          {label: 'Ask for his employee number and his manager’s name, and read the code only once both are verified', why: 'A caller proving himself with details he controls proves nothing: employee numbers and managers’ names leak or get invented. And no real help desk needs your code.'},
           {label: 'Say you’ll call the help desk back on the directory number, and hang up', good: true}],
    result: 'You dial the help-desk number from the staff directory. The real Kofi answers: “We didn’t call you. Thanks for checking: I’m logging it and warning the team.”'},
   {caller: '“Mara Finch, Harrow & Finch Paving”', open: 'Hello, Mara from Harrow & Finch. Our bank has changed and I’m emailing the new details now. Can you update them before today’s payment run? Call me back on this number if you need to.',
    opts: [{label: 'Update the details now: she knows the invoice numbers and sounds legitimate', why: 'Voices, names and invoice numbers can all be faked or stolen. A bank change is exactly what this pretext is for.'},
           {label: 'Call back the number she just gave you, to confirm it really reaches Harrow & Finch', why: 'That number belongs to whoever is calling. A call-back only proves something if you dial a number you already had.'},
-          {label: 'Call Harrow & Finch on the number in the vendor master file', good: true}],
+          {label: 'Confirm with Harrow & Finch on the number in the vendor master file', good: true}],
    result: 'You call the number in the vendor file. The real Mara Finch: “We haven’t changed banks. Please don’t pay anything new.”'}
 ];
 
@@ -3255,7 +3255,7 @@ const MR_BOARD_SPECS = () => [
    title: 'Round 2: “the mayor” needs a wire today', host: 'jonah.abara · accounts payable', enemy: {spr: 'invoice', pal: 'invoice'},
    clues: ['The email is signed by the mayor but comes from mayor.office@townhall-gov.example, not townhall.example.', 'It asks Jonah to wire $92,000 for a “confidential land deal” today and to tell nobody.', 'The mayor’s office, called on the directory number, knows nothing about it.'],
    truth: 'Business email compromise by impersonation: a look-alike domain posing as an executive.',
-   resp: [{label: 'Don’t pay; block the look-alike domain; warn Accounts; report it', good: true}, {label: 'Pay: the email is signed by the mayor and marked confidential', good: false, why: 'It comes from townhall-gov.example, not our domain, and the mayor’s office knows nothing about it.'}, {label: 'Reply to ask the mayor to confirm; hold the wire until then', good: false, why: 'The reply goes to the look-alike domain, so the attacker confirms it.'}],
+   resp: [{label: 'Don’t pay; confirm by phone; block the look-alike domain; warn Accounts; report it', good: true}, {label: 'Pay: the email is signed by the mayor and marked confidential', good: false, why: 'It comes from townhall-gov.example, not our domain, and the mayor’s office knows nothing about it.'}, {label: 'Reply to ask the mayor to confirm; hold the wire until then', good: false, why: 'The reply goes to the look-alike domain, so the attacker confirms it.'}],
    chain: [{at: 40, text: 'A follow-up arrives: “Why isn’t this done yet?”'}, {at: 75, text: 'Jonah opens the payments system.'}]},
   {kind: 'mal', threat: 'caller', tech: 'T1566.004', tags: ['voice'], story: true, rate: 11, group: 'a',
    title: 'Round 3: a live call to the help desk', host: 'help desk line', enemy: {spr: 'caller', pal: 'impostor'},
@@ -3332,7 +3332,7 @@ async function mrBossScript() {
      title: 'Stage 2: last week’s transfer', host: 'payments system · our bank', enemy: {spr: 'invoice', pal: 'impostor'},
      clues: ['One transfer of $31,200 went to a new account last Thursday.', 'The receiving account was opened three weeks ago.', 'Our bank says a recall has the best chance in the first hours, before the money moves on.'],
      truth: 'Financial theft: money already sent to an attacker-controlled account.',
-     resp: [{label: 'Ask our bank to recall it now, file at ic3.gov, keep every record', good: true}, {label: 'Wait for the supplier to confirm it never got the money, then ask our bank', good: false, why: 'A recall has the best chance in the first hours; by the time the supplier answers, the money has moved on.'}, {label: 'Pay the supplier again from a different account so the roadworks contract isn’t held up', good: false, why: 'That pays twice and does nothing to get the stolen money back.'}],
+     resp: [{label: 'Ask our bank to recall it now, file at ic3.gov, keep every record', good: true}, {label: 'Wait for the supplier to say it never got the money, then ask our bank', good: false, why: 'A recall has the best chance in the first hours; by the time the supplier answers, the money has moved on.'}, {label: 'Pay the supplier again from a different account so the roadworks contract isn’t held up', good: false, why: 'That pays twice and does nothing to get the stolen money back.'}],
      chain: [{at: 60, text: 'The receiving bank reports part of the money moved to another account.'}]},
     {kind: 'mal', threat: 'lure', tech: 'T1566.002', tags: ['mail'], story: true, group: 'a', ev0: bad ? 0 : ev0,
      rate: picks.includes('search') ? 8 : 14, dwell0: picks.includes('search') ? 10 : (bad ? 55 : 45),
@@ -3554,7 +3554,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['Word opened “Remittance_0412.docm” from an email attachment, then started a script host.', 'The script contacted an address registered last week and saved a file to the user’s temp folder.', 'The document was saved into a Trusted Location folder a vendor set up years ago: Office skips its internet-macro block there.'],
           truth: 'Malicious document: macros in the file ran code (User Execution: Malicious File).',
           resp: [{label: 'Isolate the laptop, kill the process tree, collect triage, block the address, purge the email, reset the user’s password', good: true},
-                 {label: 'Delete the document, purge the email from every inbox, block the address, and close', good: false, why: 'The code already ran; whatever it saved is still on the laptop. Purging and blocking stop the next copy, not this one.'},
+                 {label: 'Delete the document, purge the email from every inbox, and block the address', good: false, why: 'The code already ran; whatever it saved is still on the laptop. Purging and blocking stop the next copy, not this one.'},
                  {label: 'Reimage every laptop in the row tonight, in case the document was opened on more than one, and restore their files from backup', good: false, disrupt: 2, why: 'Nothing shows it opened anywhere else. Reimaging the row stops the whole office and destroys the evidence on the one laptop that matters.'}]},
     benign: {clues: ['The document is the finance team’s budget workbook, with a macro signed by IT.', 'The program it started is the town’s reporting add-in, launched the same way every month.', 'Same file, same add-in, same day last month.'],
              truth: 'Benign: a known business workbook starting an approved add-in.'},
@@ -3567,7 +3567,7 @@ Object.assign(ALERTS, {
           truth: 'System binary proxy execution: a signed Windows program used to run attacker code (Rundll32).',
           resp: [{label: 'Isolate the laptop and kill rundll32’s tree: the DLL is unsigned and new. Collect triage, block the address and its hash', good: true},
                  {label: 'Block rundll32.exe on every laptop with an application control rule, so this trick can’t be repeated anywhere in town', good: false, disrupt: 2, why: 'Windows and many apps use rundll32. Block the DLL and the behaviour, not the system program.'},
-                 {label: 'Close: rundll32.exe is a signed Microsoft program, and the antivirus raised nothing when it loaded the DLL from Downloads', good: false, why: 'It is signed; that is the point. Attackers borrow trusted programs so antivirus stays quiet, and the DLL it loaded is unsigned and two minutes old.'}]},
+                 {label: 'Benign: rundll32.exe is a signed Microsoft program, and the antivirus raised nothing when it loaded the DLL from Downloads', good: false, why: 'It is signed; that is the point. Attackers borrow trusted programs so antivirus stays quiet, and the DLL it loaded is unsigned and two minutes old.'}]},
     benign: {clues: ['The DLL sits in a meeting app’s per-user install folder under AppData.', 'It is signed by the app’s publisher and hasn’t changed since the last update.', 'Every laptop with the app does the same at sign-in.'],
              truth: 'Benign: a per-user app using rundll32 to load its own signed DLL.'},
     fp: {clues: ['The match is a file named rundll32.exe.txt in a training folder.', 'Nothing ran: it is last year’s workshop notes.', 'The rule matches file names, not process starts.'],
@@ -3579,7 +3579,7 @@ Object.assign(ALERTS, {
           truth: 'PowerShell abuse: an encoded command hiding a download-and-run script.',
           resp: [{label: 'Isolate the laptop, kill the process: it pulls in code. Keep the 4104 logs, collect triage, remove its launcher', good: true},
                  {label: 'Uninstall PowerShell on every laptop, so encoded commands can’t run anywhere again', good: false, disrupt: 2, why: 'Admins and management tools depend on it. Log it, restrict it, and catch abuse instead.'},
-                 {label: 'Close: IT’s management tools run encoded PowerShell on every laptop, and the clerk’s account is allowed to run it', good: false, why: 'IT’s scripts are known and logged; this one hides what it does, ran while the laptop sat locked, and downloads code to run in memory.'}]},
+                 {label: 'Expected activity: IT’s management tools run encoded PowerShell on every laptop, and the clerk’s account is allowed to run it', good: false, why: 'IT’s scripts are known and logged; this one hides what it does, ran while the laptop sat locked, and downloads code to run in memory.'}]},
     benign: {clues: ['The encoded command comes from the town’s device-management agent.', 'Event 4104 shows the decoded script: it reads the battery health report.', 'Same script, every laptop, every Monday.'],
              truth: 'Benign: a management agent that encodes its scripts.'},
     fp: {clues: ['The match was the word “encoded” in a file name passed to a normal script.', 'The script is plain text and signed by IT.', 'The rule looks for the word, not the parameter.'],
@@ -3590,7 +3590,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['rundll32.exe ran comsvcs.dll’s MiniDump against the LSASS process.', 'A 60 MB .dmp file appeared in C:\\Windows\\Temp a second later.', 'It ran with admin rights, from an admin account that signed in from another laptop an hour ago.'],
           truth: 'Credential dumping from LSASS memory: whoever has that dump may have every credential cached on this laptop.',
           resp: [{label: 'Isolate the laptop, preserve then remove the dump, reset and revoke every account that signed in there, trace the admin account', good: true},
-                 {label: 'Delete the .dmp file, run a full antivirus scan, and close if the scan comes back clean', good: false, why: 'The dump may already be copied out; the credentials in it are what matter, and a clean scan doesn’t change that.'},
+                 {label: 'Delete the .dmp file, run a full antivirus scan, and treat it as handled if the scan comes back clean', good: false, why: 'The dump may already be copied out; the credentials in it are what matter, and a clean scan doesn’t change that.'},
                  {label: 'Reset the clerk’s password and revoke her sessions: her account is the one that signs in to this laptop every day, so it’s the exposed one', good: false, why: 'Every account cached on that laptop is exposed, including the admin account that ran the dump.'}]},
     benign: {clues: ['The read came from the antivirus engine’s own memory scan.', 'It is signed, it touches LSASS on every laptop, and it wrote no file.', 'The same pattern follows every definition update.'],
              truth: 'Benign: the security product’s own memory scan.'},
@@ -3613,9 +3613,9 @@ Object.assign(ALERTS, {
     rule: 'Volume shadow copies deleted',
     mal: {clues: ['vssadmin.exe deleted every volume shadow copy on the laptop at 03:02.', 'Minutes earlier the same account copied a tool to five laptops over file sharing.', 'Deleting shadow copies removes Windows’ easy restore points: a classic step just before ransomware encrypts.'],
           truth: 'Inhibit System Recovery: a ransomware precursor. Encryption may be minutes away.',
-          resp: [{label: 'Isolate all six laptops now: encryption is next. Disable the account, revoke its sessions, check offline backups, hunt the tool', good: true},
-                 {label: 'Recreate the shadow copies on every laptop and close: Windows can restore files from them again, so nothing is lost', good: false, why: 'They can be deleted again in a second, and the attacker is still here, with a tool on five laptops.'},
-                 {label: 'Isolate this one laptop, then watch the other five and act only if files start getting encrypted, so nobody loses a day for nothing', good: false, why: 'This is the warning. The same account copied the tool to five laptops: act on all of them now.'}]},
+          resp: [{label: 'Isolate all six laptops now: encryption is next. Disable the account, revoke its sessions, check offline backups, find the tool', good: true},
+                 {label: 'Recreate the shadow copies on every laptop: Windows can restore files from them again, so nothing is lost', good: false, why: 'They can be deleted again in a second, and the attacker is still here, with a tool on five laptops.'},
+                 {label: 'Isolate this one laptop, hunt on the other five, and act only if files start getting encrypted, so nobody loses a day for nothing', good: false, why: 'This is the warning. The same account copied the tool to five laptops: act on all of them now.'}]},
     benign: {clues: ['The backup software rotated its own shadow copies on schedule.', 'Its service account, its usual time, its usual command.', 'New copies were created right after.'],
              truth: 'Benign: the backup tool managing its own snapshots.'},
     fp: {clues: ['The match was “vssadmin list shadows”, a read-only check by the help desk.', 'Nothing was deleted.', 'The rule matches the program name, not the delete command.'],
@@ -3713,7 +3713,7 @@ const CR_DRILLS = {
                       reveal: 'Tally was wrong in a very common way: it read an Amcache entry as proof of execution. Amcache records that a file was present; Microsoft’s incident responders say it cannot prove a binary ran. Ask specific questions, and check the answer against the evidence.'},
          specific: {q: 'Is there any process creation event for SHA-256 9f3c…e71a on CR-LT-04 since 15:12 yesterday?', text: 'No. No process creation event matches that hash on CR-LT-04, or on any other laptop, since 15:12 yesterday, and process logging ran throughout.'}},
     verdicts: [
-      {label: 'Downloaded, not executed: remove it, block the hash, no reimage needed', good: true, why: 'No process ever started from that hash, and Prefetch, which is working on this laptop, has no file for it.'},
+      {label: 'Downloaded, not executed: remove it, block the hash, close without a reimage', good: true, why: 'No process ever started from that hash, and Prefetch, which is working on this laptop, has no file for it.'},
       {label: 'Executed: Amcache lists it with its SHA-1, so reimage CR-LT-04', why: 'Amcache shows the file was present, not that it ran.'},
       {label: 'Executed: it was downloaded, so assume it ran and reimage to be safe', why: 'A download is not execution. Assuming the worst costs Sunita a day of work and teaches nothing.'}],
     reasons: [
@@ -3829,7 +3829,7 @@ const CR_DOJO = [
   {title: 'Prefetch, and where it isn’t',
    art: 'FILESRV-01 runs Windows Server. A tool called sweep.exe was found on it. There is no SWEEP.EXE-*.pf in C:\\Windows\\Prefetch. (game)',
    q: 'What does the missing Prefetch file tell you?',
-   opts: ['Almost nothing: Prefetch is not enabled by default on Windows Server, so look for other evidence', 'sweep.exe never ran on FILESRV-01: if it had, Windows would have written a Prefetch file for it there', 'Someone deleted SWEEP.EXE’s Prefetch file to hide that it ran, so treat FILESRV-01 as compromised'], good: 0,
+   opts: ['Almost nothing: Prefetch is not enabled by default on Windows Server, so look for other traces', 'sweep.exe never ran on FILESRV-01: if it had, Windows would have written a Prefetch file for it there', 'Someone deleted SWEEP.EXE’s Prefetch file to hide that it ran, so treat FILESRV-01 as compromised'], good: 0,
    explain: 'On desktop Windows, Prefetch is generally reliable evidence of execution: Windows 8 and later record the last eight run times, and the folder keeps about 1,024 files, oldest out first. But Prefetch is not enabled by default on Windows Server, so its absence there proves nothing. Check process creation logs or EDR instead. (Source: Microsoft Incident Response, Guidance for Incident Responders.)'},
   {title: 'Present is not executed',
    art: 'On a Windows 11 laptop, Amcache.hve has an entry for tool.exe with a SHA-1, and Shimcache (AppCompatCache) lists tool.exe too. (game)',
@@ -3858,14 +3858,14 @@ const CR_BOARD_SPECS = () => [
    clues: ['rundll32.exe ran comsvcs.dll’s MiniDump against LSASS on CR-LT-15.', 'The account is a help-desk admin account. A technician signed in with it on CR-LT-06 to look at Round 1, and it was taken from that laptop’s memory; ten minutes later it signed in here from CR-LT-06.', 'The dump file was copied to a share before anyone noticed.'],
    truth: 'Credential dumping from LSASS memory, with an admin account the attacker took on CR-LT-06.',
    resp: [{label: 'Isolate CR-LT-15; reset and revoke every account cached there, help-desk admin first: the dump holds them all. Turn on the LSASS protection rule; no admin sign-ins to suspect laptops', good: true},
-          {label: 'Delete the dump from the share, isolate CR-LT-15, and close: the copy on the share was the only one', good: false, why: 'It has been copied; the credentials inside are what matter.'},
+          {label: 'Delete the dump from the share and isolate CR-LT-15: the copy on the share was the only one', good: false, why: 'It has been copied; the credentials inside are what matter.'},
           {label: 'Reset the password of the clerk who uses CR-LT-15 and revoke her sessions: her credentials were in the dump', good: false, why: 'The admin account is the prize. Every cached credential is exposed.'}],
    chain: [{at: 40, text: 'The help-desk admin account signs in to a third laptop.'}, {at: 75, text: 'It tries the domain controller.'}]},
   {kind: 'mal', threat: 'blinder', tech: 'T1685', tags: ['host'], story: true, rate: 11, group: 'a',
    title: 'Round 3: the lights go out', host: 'CR-LT-16 · Clerks’ Row', enemy: {spr: 'blinder', pal: 'blinder'},
    clues: ['Event 5001 on CR-LT-16 at 19:12: real-time protection disabled. No change ticket.', 'The command ran under the stolen help-desk admin account.', 'Tamper protection was off for that laptop group, so nothing blocked it.'],
    truth: 'Defense impairment: switching off protection before the next step (Disable or Modify Tools).',
-   resp: [{label: 'Isolate CR-LT-16, disable the stolen admin account (it can do this anywhere), turn both protections on, hunt for what ran in the gap', good: true},
+   resp: [{label: 'Isolate CR-LT-16, disable the stolen admin account (it can do this anywhere), turn both protections on, find what ran in the gap', good: true},
           {label: 'Turn protection and tamper protection back on for that laptop group, then close: with tamper protection on, nobody can switch it off again', good: false, why: 'Tamper protection makes it harder, not impossible: it can still be changed centrally, and attackers look for ways around it. The account that did it is still active, and something ran in the gap.'},
           {label: 'Uninstall the antivirus and reinstall it on every laptop with tamper protection on, since the stolen account may have changed its settings anywhere', good: false, disrupt: 1, why: 'Reinstalling doesn’t disable the stolen account or find what ran in the gap, and every laptop is unprotected while it runs.'}],
    chain: [{at: 40, text: 'A new service is created on CR-LT-16.'}, {at: 75, text: 'The same account turns off protection on CR-LT-14.'}]}
@@ -4435,7 +4435,7 @@ async function crException() {
   const c = CR();
   while (true) {
     const i = await choose('Gus’s request.', [
-      {label: 'Log a help-desk request: IT checks it, installs the signed driver for him, and records it', meta: {good: true}},
+      {label: 'Log a help-desk request: IT checks it, installs the signed driver for him, records it and closes it', meta: {good: true}},
       {label: 'Give Gus admin rights for one hour, logged, through the help desk'},
       {label: 'Make Gus a permanent admin: he’s trustworthy, has been here for years, and installs drivers every few months'},
       {label: 'Tell Gus no, and to find a plotter that doesn’t need a driver'}], {shuffle: true});
@@ -4815,8 +4815,8 @@ Object.assign(ALERTS, {
     rule: 'SQL injection pattern in a request',
     mal: {clues: ['Requests to /portal/search carry “UNION SELECT” in the search box.', 'Hundreds of 500 errors, then one 200 response forty times bigger than a normal search page.', 'The database log shows that one query returned rows from the residents table.'],
           truth: 'Exploit Public-Facing Application: SQL injection that worked once, and data left.',
-          resp: [{label: 'Block the pattern at the WAF, fix the query with parameters, preserve the logs, and scope exactly which rows left', good: true},
-                 {label: 'Block the source address at the firewall, keep the logs, and close: every injected request came from it', good: false, why: 'The flaw is still in the code, and the next request comes from a new address.'},
+          resp: [{label: 'Block the pattern at the WAF, fix the query with parameters, keep the logs, and work out exactly which rows left', good: true},
+                 {label: 'Block the source address at the firewall and keep the logs: every injected request came from it', good: false, why: 'The flaw is still in the code, and the next request comes from a new address.'},
                  {label: 'Take every town website offline until the code has been reviewed', good: false, disrupt: 2, why: 'Only one query is flawed. Taking every site offline stops residents paying and finding services; block the pattern and fix that query.'}]},
     benign: {clues: ['The source is the penetration tester the town hired this month.', 'The test is in a ticket, with this address and this week’s dates agreed.', 'Every response was a normal error page; the tester reports the field as safe.'],
              truth: 'Benign: an authorised penetration test, inside its agreed scope.'},
@@ -4827,7 +4827,7 @@ Object.assign(ALERTS, {
     rule: 'Path traversal (../) in a request',
     mal: {clues: ['GET /docs/view?file=../../../../etc/passwd from an outside address.', 'The response is a 200 of 1,843 bytes. A normal agenda PDF is 200 KB or more.', 'The document viewer opens any file name it is given, relative to its folder.'],
           truth: 'Exploit Public-Facing Application: path traversal read a system file through the document viewer.',
-          resp: [{label: 'Block ../ and its encodings at the WAF, fix the viewer to open only files on its list, check what else was read', good: true},
+          resp: [{label: 'Block ../ and its encodings at the WAF, fix the viewer to open only files on its list, list what else was read', good: true},
                  {label: 'Rename the agenda folder and move the files the attacker reached, so the paths used in the requests stop working', good: false, why: 'The viewer will still open whatever path it is handed.'},
                  {label: 'Shut down the document viewer for a month while the vendor rewrites it, and post the agendas as plain links instead', good: false, disrupt: 1, why: 'Residents lose the viewer for a month, and nobody has checked what else was read. Block the pattern and fix how the viewer picks files.'}]},
     benign: {clues: ['The source is the town’s own vulnerability scanner, on its weekly schedule from the IT network.', 'It tries ../ against every parameter, as it does every week.', 'Every response was a 404 or the WAF’s 403: nothing was read.'],
@@ -4852,7 +4852,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['A new file, avatar.php, appeared in the portal’s uploads folder.', 'The web server process started /bin/sh, then a download tool, to an outside address.', 'Requests to avatar.php carry commands in a parameter.'],
           truth: 'Server Software Component: Web Shell. Someone can run commands on the web server.',
           resp: [{label: 'Cut it off from the internal network, keep the shell and logs, remove it, diff the release; revoke sessions, rotate secrets: the shell saw them', good: true},
-                 {label: 'Delete avatar.php, run a full antivirus scan of the web root, and close if the scan finds nothing else: that file was the attacker’s only foothold', good: false, why: 'Preserve it first, find how it got there, and look for others: a scan can miss a second shell, and sessions and secrets it touched still work.'},
+                 {label: 'Delete avatar.php, run a full antivirus scan of the web root, and call it handled if the scan finds nothing else: that file was the attacker’s only foothold', good: false, why: 'Preserve it first, find how it got there, and look for others: a scan can miss a second shell, and sessions and secrets it touched still work.'},
                  {label: 'Rebuild every server in town from clean images this weekend, in case the attacker moved on from the web server to the rest of the town’s network', good: false, disrupt: 2, why: 'Nothing shows the attacker beyond the web server. Rebuilding everything stops the town for days and destroys the evidence; contain the one server and scope from there.'}]},
     benign: {clues: ['Rafe deployed this month’s CMS update at 14:00 under a change ticket.', 'The new .php files are in the plugins folder, not uploads.', 'Their hashes match the vendor’s release list.'],
              truth: 'Benign: a ticketed CMS update.'},
@@ -4864,7 +4864,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['The payment page as browsers receive it now loads an extra script from metrics-cdn.example.', 'No change ticket; the town has never used that domain.', 'The script reads the card fields and sends them to that domain as residents type.'],
           truth: 'A skimmer: malicious JavaScript stealing card details from the payment page.',
           resp: [{label: 'Switch card entry to the processor’s hosted page; keep the script and logs: they date the exposure window. Remove it; tell the processor', good: true},
-                 {label: 'Delete the script from the page and carry on: card entry is safe again the moment it’s gone', good: false, why: 'Without evidence you can’t say who was affected, and you haven’t found how it got there.'},
+                 {label: 'Delete the script, check the page is clean, and carry on: card entry is safe again the moment it’s gone', good: false, why: 'Without evidence you can’t say who was affected, and you haven’t found how it got there.'},
                  {label: 'Block the skimmer’s domain at the WAF and keep the payment page up, so residents can still pay', good: false, why: 'The skimmer runs in residents’ browsers and sends straight to the attacker. That traffic never passes the WAF.'}]},
     benign: {clues: ['The new script comes from the processor’s new address.', 'A change ticket, approved yesterday, cites the processor’s notice.', 'The notice on the processor’s portal names the same address.'],
              truth: 'Benign: an approved vendor change. Update the script inventory.'},
@@ -4875,8 +4875,8 @@ Object.assign(ALERTS, {
     rule: 'Vulnerability scan against public sites',
     mal: {clues: ['One source checks every public site for old CMS versions and known admin paths.', 'It finds an admin login page someone left reachable, and goes straight to it.', 'It starts trying the CMS’s default password there: the scan has become an attempt to get in.'],
           truth: 'Scanning followed by an attempt to get in. The scan alone is reconnaissance; the default-password attempts are the attack (Brute Force: Password Guessing, T1110.001; Valid Accounts: Default Accounts, T1078.001, if one works).',
-          resp: [{label: 'Take the exposed site off the internet, since it shouldn’t be there; check the login attempts and what else is exposed', good: true},
-                 {label: 'Block the scanner’s address at the firewall and close: the login attempts all come from it, so they stop too', good: false, why: 'It can switch addresses; the exposed login page is still there.'},
+          resp: [{label: 'Take the exposed site off the internet, since it shouldn’t be there; review the login attempts; find what else is exposed', good: true},
+                 {label: 'Block the scanner’s address at the firewall: the login attempts all come from it, so they stop too', good: false, why: 'It can switch addresses; the exposed login page is still there.'},
                  {label: 'Ignore: scanners sweep every public address all day long, and nobody has signed in successfully, so this is all just noise', good: false, why: 'The scan was noise; the login attempts after it are not, and the login page they found shouldn’t be on the internet at all.'}]},
     benign: {clues: ['The source is a well-known internet-wide research scanner.', 'It touched each public site once, read the banners, and moved on.', 'No login attempts followed.'],
              truth: 'Benign: routine internet-wide scanning. Reconnaissance, not an incident: confirm nothing unexpected is exposed.'},
@@ -5065,7 +5065,7 @@ const MK_DRILLS = {
          res: ['Oona: “They emailed about a new address last week. I approved Rafe’s change yesterday.”', '(A good sign. Memory isn’t a record: the ticket and the notice are.)']}]}
     ],
     verdicts: [
-      {label: 'A legitimate vendor change: approved, deployed under a ticket, and named in the processor’s own notice', good: true, why: 'One line changed, through the pipeline, under CHG-4410, and the processor’s portal names the same address and day.'},
+      {label: 'A legitimate vendor change, so close it: approved, deployed under a ticket, named in the processor’s notice', good: true, why: 'One line changed, through the pipeline, under CHG-4410, and the processor’s portal names the same address and day.'},
       {label: 'A skimmer: an unknown script appeared on the payment page, loaded from a domain the page has never used before', why: 'It is new, not unknown: the ticket, the pipeline and the processor’s notice all name it.'},
       {label: 'A skimmer: the script is minified so nobody can read it, which is exactly how skimmers hide what they collect', why: 'Vendors minify their code too.'}],
     reasons: [
@@ -5154,16 +5154,16 @@ const MK_BOARD_SPECS = () => [
    title: 'Round 1: the encoded UNION', host: 'PORTAL-01 · portal.townhall.example', enemy: {spr: 'slipquote', pal: 'slipquote'},
    clues: ['Requests to /permits/lookup carry UNION SELECT, URL-encoded twice.', 'The WAF blocks the plain form; this double-encoded one gets a 200 of 38 KB, where a normal answer is 3 KB.', 'The database log shows rows from the permit applicants table going out.'],
    truth: 'Exploit Public-Facing Application: SQL injection slipping past the WAF in a double-encoded form.',
-   resp: [{label: 'Block the variant at the WAF now, fix the lookup with a parameterised query, and scope which rows left', good: true},
+   resp: [{label: 'Block the variant at the WAF now, fix the lookup with a parameterised query, and find which rows left', good: true},
           {label: 'Add the attacker’s address to the block list and close: the WAF already stops the original pattern, so only the source needs blocking', good: false, why: 'One address, endless variants, and the flaw is still in the code.'},
-          {label: 'Take every town website offline for a week while the developers review every query for the same mistake', good: false, disrupt: 2, why: 'Only one lookup is flawed. A week offline stops residents paying and the town working; block the variant and fix that query.'}],
+          {label: 'Take every town website offline for a week while the developers check every query for the same kind of mistake', good: false, disrupt: 2, why: 'Only one lookup is flawed. A week offline stops residents paying and the town working; block the variant and fix that query.'}],
    chain: [{at: 40, text: 'The injection reaches a second table.'}, {at: 75, text: 'Another large answer leaves the server.'}]},
   {kind: 'mal', threat: 'shellback', tech: 'T1505.003', tags: ['web', 'host'], story: true, rate: 12, group: 'a',
    title: 'Round 2: a script in the uploads', host: 'PORTAL-01 · portal.townhall.example', enemy: {spr: 'shellback', pal: 'shellback'},
    clues: ['A new file, avatar.php, appeared in the portal’s uploads folder.', 'The web server process started /bin/sh, then a download tool, to an outside address.', 'Requests to avatar.php carry commands in a parameter.'],
    truth: 'Server Software Component: Web Shell.',
    resp: [{label: 'Cut it off from the internal network, keep the shell and logs, remove it, diff the release; revoke sessions, rotate secrets: the shell saw them', good: true},
-          {label: 'Delete avatar.php, run a full antivirus scan of the web root, and close if the scan finds nothing else: that file was the attacker’s only foothold', good: false, why: 'Preserve it first, find how it got there, and look for others: a scan can miss a second shell, and sessions and secrets it touched still work.'},
+          {label: 'Delete avatar.php, run a full antivirus scan of the web root, and call it handled if the scan finds nothing else: that file was the attacker’s only foothold', good: false, why: 'Preserve it first, find how it got there, and look for others: a scan can miss a second shell, and sessions and secrets it touched still work.'},
           {label: 'Rebuild every server in town from clean images this weekend, in case the attacker moved on from the web server to the rest of the town’s network', good: false, disrupt: 2, why: 'Nothing shows the attacker beyond the web server. Rebuilding everything stops the town for days and destroys the evidence; contain the one server and scope from there.'}],
    chain: [{at: 40, text: 'The shell lists the internal network.'}, {at: 75, text: 'It tries the database server.'}]},
   {kind: 'mal', threat: 'stuffer', tech: 'T1110.004', tags: ['web', 'identity'], story: true, rate: 11, group: 'a',
@@ -5623,7 +5623,7 @@ async function mkCmsPatch() {
   await say('The CMS vendor put out a fix this week: ADV-26-201 (game), a file upload flaw that lets anyone upload any file. It’s on CISA’s Known Exploited list. Our site is three versions behind.', who);
   while (true) {
     const i = await choose('When does it go on?', [
-      {label: 'Today: take a backup, apply it on staging and check the site, then production', meta: {good: true}},
+      {label: 'Today: take a backup, apply it on staging and test the site, then production', meta: {good: true}},
       {label: 'At the quarterly maintenance window next month, with the other CMS updates'},
       {label: 'Never: a WAF rule can block the upload instead'},
       {label: 'Turn off uploads for good and email agendas instead'}], {shuffle: true});
@@ -5645,9 +5645,9 @@ async function mkTestConsole() {
   await say('The old test site’s console. test.townhall.example: a copy of the website from three years ago, at an outside hosting company, still answering. The DNS name points at the host with a CNAME. (game)');
   while (true) {
     const i = await choose('How do you retire it?', [
-      {label: 'Copy and read its logs, show a maintenance page, drop the DNS record, wait out the cache, then cancel, so nobody can take the name', meta: {good: true}},
+      {label: 'Copy and read its logs, show a holding page, drop the DNS record, wait out the cache, then close the account, so nobody can take the name', meta: {good: true}},
       {label: 'Cancel the hosting account now: it’s only a test site, nobody uses it, and every day it stays up is another day it can be attacked'},
-      {label: 'Leave it: nobody links to it, it holds no resident data, and the team may want it again for the next redesign of the town website'},
+      {label: 'Let it be: nobody links to it, it holds no resident data, and the team may want it again for the next redesign of the town website'},
       {label: 'Remove the DNS record so nobody can find it, and keep the site running at the host, just in case the team needs it again later'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Two problems. You lose its logs before anyone has read them, and the town’s name still points at a hosting account nobody owns. Someone else could claim it and serve anything from test.townhall.example: a subdomain takeover.');
@@ -5930,7 +5930,7 @@ function mkBossStages(picks, restoreEarly) {
       clues: [restoreEarly ? 'Our own page went back up at 10:30, as the councillor asked. At 10:41, pay.js changes again.' : 'Our own page is still off. On its staging copy, pay.js changes again at 10:41.', 'The agency account was disabled at 10:30 and its own tokens revoked, but a deploy key saved in the pipeline’s settings, under no person’s account, was missed.', csp ? 'The CSP is enforcing now: browsers refuse the skimmer’s sends to metrics-cdn.example, and the tamper check confirms the policy header itself hasn’t been loosened.' : 'The CSP is still in report-only mode: it reports each send and lets it through.'],
       truth: 'The skimmer re-injected with a pipeline deploy key nobody had listed: it outlived the account clean-up.',
       resp: [{label: 'List and revoke every deploy credential, pipeline keys included: one was missed. Redeploy pay.js from the signed release; keep the hosted page until two clean tamper checks', good: true},
-             {label: 'Reset the agency’s password again and turn on MFA for it: the account was used once, and it can’t be used without the second factor', good: false, why: 'The key belongs to the pipeline, not to the agency account: no password reset touches it. Find it and revoke it.'},
+             {label: 'Reset the agency’s password again, turn on MFA for it and check its sign-ins: the account was used once, and it can’t be used without the second factor', good: false, why: 'The key belongs to the pipeline, not to the agency account: no password reset touches it. Find it and revoke it.'},
              {label: 'Switch the tamper check off for a day: it keeps alerting on the same file, and the team is busy redeploying pay.js and checking every change the agency made over the last month', good: false, why: 'It is the only reason you know.'}],
       chain: [{at: 60, text: 'pay.js changes a third time.'}]}
   };
@@ -6208,9 +6208,9 @@ Object.assign(ALERTS, {
     rule: 'Mass file rename spike on a file share',
     mal: {clues: ['4,800 files on \\\\FS-03\\Finance renamed in six minutes, each with a new extension.', 'The writer is a domain admin account, from a server that never touches that share.', 'Opened in the lab, a renamed file is unreadable noise, and every volume shadow copy on FS-03 was deleted two minutes before.'],
           truth: 'Data Encrypted for Impact: ransomware, and it started by removing the ways back.',
-          resp: [{label: 'Isolate FS-03 and the writing server at the switch, disable the account, protect the backup copies, preserve evidence, hunt for the same tool elsewhere', good: true},
-                 {label: 'Restore the folder from last night’s backup, confirm the files open, and close', good: false, why: 'The attacker is still in, with an admin account. Contain first, then restore from a copy you know is clean.'},
-                 {label: 'Shut down every server in town until the tool is found', good: false, disrupt: 2, why: 'Isolating at the switch contains it. Shutting everything down stops the town and throws away the memory evidence.'}]},
+          resp: [{label: 'Isolate FS-03 and the writing server at the switch, disable the account, protect the backup copies, image memory and disks, search for the same tool elsewhere', good: true},
+                 {label: 'Restore the folder from last night’s backup, verify the files open, and preserve the logs', good: false, why: 'The attacker is still in, with an admin account. Contain first, then restore from a copy you know is clean.'},
+                 {label: 'Shut down every server in town while you hunt for the tool', good: false, disrupt: 2, why: 'Isolating at the switch contains it. Shutting everything down stops the town and throws away the memory evidence.'}]},
     benign: {clues: ['The writer is svc-dmsimport, from DMS-01, the new document system’s server.', 'A change ticket covers tonight’s import of the Finance archive.', 'Renamed files open normally; the shadow copies are untouched.'],
              truth: 'Benign: the records migration renaming files it has imported. The volume looks like ransomware; the writer and the files say otherwise.'},
     fp: {clues: ['The “renames” are the scanner’s temporary files: .tmp to .pdf as each scan finishes.', 'Same account, same folder, every weekday.', 'The rule counts every rename as suspicious.'],
@@ -6220,7 +6220,7 @@ Object.assign(ALERTS, {
     rule: 'Bulk deletion on a file share',
     mal: {clues: ['Files on the old NAS backup share are being overwritten, then deleted.', 'The account is the NAS’s local admin, whose password was the same as a domain admin’s.', 'The retention-locked copies on the appliance refuse every delete; the NAS copies don’t.'],
           truth: 'Data Destruction aimed at the backups, the way back.',
-          resp: [{label: 'Cut the NAS off; give it its own admin password with MFA; reset the domain admin that shared it and hunt for its use; check the locked and offline copies are intact; rebuild the share from them', good: true},
+          resp: [{label: 'Cut the NAS off; give it its own admin password with MFA; reset the domain admin that shared it and trace its use; make sure the locked and offline copies are intact; rebuild the share from them', good: true},
                  {label: 'Restore the NAS share from its own snapshots tonight, give the NAS a new long admin password, reset the domain admin too, and close once the department confirms every file is back where it belongs', good: false, why: 'Those copies are the ones being destroyed. Restore from copies the attacker can’t reach.'},
                  {label: 'Switch off the deletion alerts for the NAS: they’re too noisy to work through', good: false, why: 'That alert is the only reason you know.'}]},
     benign: {clues: ['The deletions follow the town’s records retention schedule: files past their keep-until date.', 'Hester signed off the disposal list last week.', 'The run is the scheduled disposal job, at its usual time.'],
@@ -6232,9 +6232,9 @@ Object.assign(ALERTS, {
     rule: 'Large upload to cloud storage',
     mal: {clues: ['9 GB left FS-03 for a cloud storage service the town has never used, between 03:41 and 03:55.', 'A compression utility packed the files into password-protected parts first.', 'The account is a help-desk admin signed in from another server at 03:30.'],
           truth: 'Exfiltration to Cloud Storage: data taken before encryption, so the attacker can threaten to publish it.',
-          resp: [{label: 'Block the destination, isolate the host, disable the account, preserve the logs, scope which files left: that decides who is told', good: true},
-                 {label: 'Block the destination at the firewall and close: nothing more can leave, and the files that already left can’t be called back anyway', good: false, why: 'The account and the host are still the attacker’s, and you don’t yet know what left.'},
-                 {label: 'Wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'Data theft usually comes before encryption: this is the warning. Password-protected parts to a service the town never uses are no backup, and every minute you wait, more files leave.'}]},
+          resp: [{label: 'Block the destination, isolate the host, disable the account, keep the logs, find out which files left: that decides who is told', good: true},
+                 {label: 'Block the destination at the firewall and preserve the logs: nothing more can leave, and the files that already left can’t be called back anyway', good: false, why: 'The account and the host are still the attacker’s, and you don’t yet know what left.'},
+                 {label: 'Scope it quietly and wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'Data theft usually comes before encryption: this is the warning. Password-protected parts to a service the town never uses are no backup, and every minute you wait, more files leave.'}]},
     benign: {clues: ['Hester is copying the 1960s council minutes to the regional archive’s storage.', 'The transfer is ticketed and the destination is on the approved list.', 'It runs under her own account, in working hours, file by file.'],
              truth: 'Benign: the archivist’s approved migration to the regional archive.'},
     fp: {clues: ['The “upload” is the backup appliance replicating to its own second site.', 'The destination is ours, on the firewall’s list.', 'The rule doesn’t know the backup network.'],
@@ -6245,7 +6245,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['Every backup job for FS-03 has failed since 04:30: the backup agent’s service on FS-03 was stopped at 04:29.', 'At 04:28 wbadmin deleted the Windows backup catalog on FS-03, run by a domain admin account.', 'A minute later the same account tried to sign in to the backup console.'],
           truth: 'Inhibit System Recovery: removing the backups and catalogs that let you restore. Ransomware often comes next.',
           resp: [{label: 'Isolate FS-03, disable the account, lock retention on its copies, check the offline copy: ransomware often comes next. Hunt for it', good: true},
-                 {label: 'Rerun the failed backup jobs now so tonight’s copies exist, check they finish with Success, and close the alert first thing in the morning', good: false, why: 'The jobs failed because someone removed the way back on purpose. They’re still in.'},
+                 {label: 'Rerun the failed backup jobs now so tonight’s copies exist, check they finish with Success, and hunt for the cause first thing in the morning', good: false, why: 'The jobs failed because someone removed the way back on purpose. They’re still in.'},
                  {label: 'Watch FS-03 closely tonight and act only if files start changing, so nobody is disturbed over what may only be a scheduling fault', good: false, why: 'This is the warning. Act now.'}]},
     benign: {clues: ['The appliance’s disk is 100% full.', 'Every job that wrote after 01:40 failed with “no space”.', 'Nico’s dashboard warned about space last week.'],
              truth: 'Benign: a full disk. Real, needs fixing today, and not an attack. (An expired service-account password gives the same symptom.)'},
@@ -6378,7 +6378,7 @@ const RH_DRILLS = {
                       reveal: 'Tally matched the volume and speed to ransomware and stopped there. It never asked who wrote the files or whether the shadow copies were touched, and isolating FS-02 would have stopped the whole Planning department for a migration. Ask specific questions, and check the answer against the evidence.'},
          specific: {q: 'Which account and host renamed the files on FS-02 last night?', text: 'svc-dmsimport, from DMS-01: every one of the 12,406.'}},
     verdicts: [
-      {label: 'The approved records migration: its own service account, from its own server, in its change window, shadow copies untouched', good: true, why: 'The audit log names svc-dmsimport on DMS-01 for every rename, CHG-5120 covers it, and nothing touched the ways back.'},
+      {label: 'The approved migration, so close it: its own service account, from its own server, in its change window, shadow copies untouched', good: true, why: 'The audit log names svc-dmsimport on DMS-01 for every rename, CHG-5120 covers it, and nothing touched the ways back.'},
       {label: 'Ransomware: twelve thousand files renamed in under an hour, all with the same new extension, which is what mass encryption looks like', why: 'Volume and speed fit both. The writer and the shadow copies decide.'},
       {label: 'Ransomware: an extension nobody here has ever seen before, appended to every single file in the department’s shared folder at once', why: 'Extensions are chosen by whoever renames the files. They decide nothing.'}],
     reasons: [
@@ -6519,22 +6519,22 @@ const RH_BOARD_SPECS = () => [
    clues: ['vssadmin deleted every volume shadow copy on FS-03 at 04:12.', 'The account is a domain admin signed in from a server nobody uses at night.', 'A minute later wbadmin deleted FS-03’s Windows backup catalog.'],
    truth: 'Inhibit System Recovery: removing the ways back before encrypting.',
    resp: [{label: 'Isolate FS-03, disable the account, confirm the separate backup copies are locked and intact, and hunt for the encryptor before it runs', good: true},
-          {label: 'Recreate the shadow copies on FS-03, check they hold, and close', good: false, why: 'The attacker is still there, with an admin account, and will delete them again.'},
-          {label: 'Shut down every server in town until the encryptor is found', good: false, disrupt: 2, why: 'Isolate FS-03 and disable the account: that contains it. Shutting every server down stops the town and loses the memory evidence.'}],
+          {label: 'Recreate the shadow copies on FS-03, check they hold, and preserve the logs', good: false, why: 'The attacker is still there, with an admin account, and will delete them again.'},
+          {label: 'Shut down every server in town while you hunt for the encryptor', good: false, disrupt: 2, why: 'Isolate FS-03 and disable the account: that contains it. Shutting every server down stops the town and loses the memory evidence.'}],
    chain: [{at: 40, text: 'The same account reaches a second file server.'}, {at: 75, text: 'Files on FS-03 start being renamed.'}]},
   {kind: 'mal', threat: 'sluice', tech: 'T1567.002', tags: ['files'], story: true, rate: 12, group: 'c',
    title: 'Round 2: gigabytes to the cloud at 2 a.m.', host: 'HR-01 · HR file share', enemy: {spr: 'sluice', pal: 'sluice'},
    clues: ['A compression utility packs the HR share into password-protected parts.', 'A sync tool uploads 9 GB to a storage service the town has never used.', 'The account is a domain admin, signed in from a workstation at 00:50.'],
    truth: 'Exfiltration to Cloud Storage: data taken first, so the attacker can threaten to publish it.',
-   resp: [{label: 'Block the destination, isolate the host, disable the account, preserve the logs, scope which files left: that decides who is told', good: true},
-          {label: 'Block the destination at the firewall and close: nothing more can leave, and the files that already left can’t be called back anyway', good: false, why: 'The account and the host are still the attacker’s.'},
-          {label: 'Wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'This is the warning. Act now.'}],
+   resp: [{label: 'Block the destination, isolate the host, disable the account, keep the logs, find out which files left: that decides who is told', good: true},
+          {label: 'Block the destination at the firewall and preserve the logs: nothing more can leave, and the files that already left can’t be called back anyway', good: false, why: 'The account and the host are still the attacker’s.'},
+          {label: 'Scope it quietly and wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'This is the warning. Act now.'}],
    chain: [{at: 40, text: 'A second batch starts uploading.'}, {at: 75, text: 'The upload moves on to the payroll folder.'}]},
   {kind: 'mal', threat: 'shredwick', tech: 'T1485', tags: ['files', 'backup'], story: true, rate: 11, group: 'c',
    title: 'Round 3: the backup share is being wiped', host: 'NAS-02 · old backup share', enemy: {spr: 'shredwick', pal: 'shredwick'},
    clues: ['Files on the old NAS backup share are being overwritten, then deleted.', 'The account is the NAS’s local admin, whose password was the same as a domain admin’s.', 'The retention-locked copies on the appliance refuse every delete; the NAS copies don’t.'],
    truth: 'Data Destruction aimed at the backups.',
-   resp: [{label: 'Cut the NAS off; give it its own admin password with MFA; reset the domain admin that shared it and hunt for its use; check the locked and offline copies are intact; rebuild the share from them', good: true},
+   resp: [{label: 'Cut the NAS off; give it its own admin password with MFA; reset the domain admin that shared it and trace its use; make sure the locked and offline copies are intact; rebuild the share from them', good: true},
           {label: 'Restore the NAS share from its own snapshots tonight, give the NAS a new long admin password, reset the domain admin too, and close once the department confirms every file is back where it belongs', good: false, why: 'Those are the copies being destroyed.'},
           {label: 'Switch off the deletion alerts for the NAS until the clean-up is done', good: false, why: 'They are the only reason you know.'}],
    chain: [{at: 40, text: 'The next backup folder is overwritten.'}, {at: 75, text: 'The NAS’s own snapshots are deleted.'}]}
@@ -6892,8 +6892,8 @@ async function rhRestoreTest() {
   while (true) {
     const i = await choose('How do you test the backups?', [
       {label: 'Restore real systems into the isolated lab, time each one end to end, and have its owner check the data', meta: {good: true}},
-      {label: 'Read the job reports for every system: a job that finishes green every night has proved it can be restored'},
-      {label: 'Restore over the live permits server tonight, after hours, to make it a real test with the real data and the real users'},
+      {label: 'Check the job reports for every system: a job that finishes green every night has proved it can be restored'},
+      {label: 'Restore over the live permits server tonight, after hours, and check it with the real data and the real users'},
       {label: 'Restore one small file from each job into a temporary folder and open it, so every job is proved restorable'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Green means the job finished. It doesn’t say you can restore from it, or how long it takes.');
@@ -6998,7 +6998,7 @@ async function rhOfflineCopy() {
   while (true) {
     const i = await choose('Coverage check: 4 of the 5 critical systems are on the weekly tapes. The directory’s job writes to the appliance only.', [
       {label: 'Add the directory’s backup to the tapes: everyone signs in through it', meta: {good: true}},
-      {label: 'Leave it: the directory is small, and it’s quick to rebuild from scratch'}], {shuffle: true});
+      {label: 'Skip it: the directory is small, and it’s quick to rebuild from scratch'}], {shuffle: true});
     if (i === 0) break;
     await say('Every account, group and policy the town has is in it, and nothing else signs anyone in without it. Rebuilding it from memory takes weeks.');
   }
@@ -7161,7 +7161,7 @@ function rhBossStages(picks, d) {
       clues: ['At ' + RH_ENCRYPT + ' a scheduled task started the same program on every server except the directory and FS-03, an old server outside the group the policy targets. Files are renamed and turned to noise, and a ransom note sits in every share.', 'At 02:38 every volume shadow copy on the file servers was deleted, by svc-scanbak, a domain admin account nobody on the team created.', 'The task came from a new group policy, “Printer Mapping Update”, created by svc-scanbak at ' + RH_GPO + ' last night.'],
       truth: 'Data Encrypted for Impact, pushed to every server at once through group policy, after the shadow copies were deleted (Inhibit System Recovery). Pushing the task through a group policy is Group Policy Modification, ATT&CK T1484.001.',
       resp: [{label: 'Isolate the servers at the switch, powered on so memory survives; disable svc-scanbak, unlink the policy, keep the backup network sealed, preserve evidence', good: true},
-             {label: 'Restore the file shares from last night now, so the departments can work again while the investigation goes on', good: false, why: 'Last night’s copies were taken after the policy went out at ' + RH_GPO + ': whole-server restores bring the scheduled task back. Contain first.'},
+             {label: 'Restore the file shares from last night now, so the departments can work again while the evidence is preserved', good: false, why: 'Last night’s copies were taken after the policy went out at ' + RH_GPO + ': whole-server restores bring the scheduled task back. Contain first.'},
              {label: 'Pull the power on every server right now, so the encryption stops mid-file before it can reach the backups, the directory or anything else on the town’s network', good: false, disrupt: 1, why: 'Isolate at the switch first; power down only what you can’t disconnect. Memory evidence goes when the power does.'}],
       chain: [{at: 40, text: 'Another share fills with ransom notes.'}, {at: 75, text: 'The encryptor reaches the scanned-image archive.'}]},
     s2: {kind: 'mal', threat: 'lapse', tech: 'T1490', tags: ['backup', 'host'], story: true, group: 'c', ev0: ev0,
@@ -7519,8 +7519,8 @@ Object.assign(ALERTS, {
     mal: {clues: ['On LOG-02, the Linux relay for the building-system logs, /var/log/auth.log shrank to nothing at 03:22.', 'The last lines the collector received before that show an SSH sign-in as root from a staff workstation that never manages servers.', 'The forwarded copies on the collector are now the only record of that session.'],
           truth: 'Clearing a Linux server’s logs to hide a sign-in. The copies already on the collector are the evidence now.',
           resp: [{label: 'Preserve the collector’s copies and LOG-02’s disk: they’re the evidence. Disable the account and its key, isolate its workstation, hunt for the same sign-in', good: true},
-                 {label: 'Restart logging on LOG-02 and confirm auth.log is being written, then close: the collector holds every line of the session, so nothing is lost', good: false, why: 'The account and the workstation are still the intruder’s, and you haven’t asked what the session did.'},
-                 {label: 'Reimage LOG-02 tonight from a clean build, so nothing the intruder left survives', good: false, disrupt: 1, why: 'Preserve first: the disk is evidence, and the intruder came from somewhere else.'}]},
+                 {label: 'Restart logging on LOG-02, confirm auth.log is being written, and preserve the collector’s copy: it holds every line of the session, so nothing is lost', good: false, why: 'The account and the workstation are still the intruder’s, and you haven’t asked what the session did.'},
+                 {label: 'Preserve the collector’s copies, then reimage LOG-02 tonight from a clean build, so nothing the intruder left survives', good: false, disrupt: 1, why: 'Preserve first: the disk is evidence, and the intruder came from somewhere else.'}]},
     benign: {clues: ['The log collector restarted at 02:00 for its upgrade; every source shows a gap until 02:06.', 'Each server’s own log still holds those six minutes.', 'Change ticket CHG-6011 (game) covers the upgrade.'],
              truth: 'Benign: the collector’s planned restart. Pull the six minutes from the servers’ own logs, and alert when a source goes quiet.'},
     fp: {clues: ['FS-01’s log timestamps jumped back three minutes at 04:10.', 'That was NTP correcting FS-01’s drifting clock: the drift alarm fired at 04:09.', 'No lines are missing; the rule reads “time went backwards” as “lines removed”.'],
@@ -7531,7 +7531,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['At 23:10 a rule letting any outside address reach FS-03 on remote desktop (TCP 3389) was added to the edge firewall.', 'The change was made with a network engineer’s admin account while he was on leave, from a Clerks’ Row laptop that never manages the firewall.', 'Within ten minutes, remote-desktop sign-in attempts from abroad start arriving at FS-03.'],
           truth: 'Modifying a network device firewall: a stolen admin account opened a way in.',
           resp: [{label: 'Remove the rule; disable the engineer’s account and revoke its sessions; isolate the laptop; check FS-03’s sign-ins and the account’s other changes', good: true},
-                 {label: 'Remove the rule, confirm FS-03 had no successful remote-desktop sign-in, and close: with the rule gone, nothing from abroad can reach FS-03', good: false, why: 'The account and the laptop that made the change are still the intruder’s.'},
+                 {label: 'Remove the rule, verify FS-03 had no successful remote-desktop sign-in: with the rule gone, nothing from abroad can reach FS-03', good: false, why: 'The account and the laptop that made the change are still the intruder’s.'},
                  {label: 'Lock everyone out of the firewall for a week', good: false, disrupt: 1}]},
     benign: {clues: ['Devraj changed rule R8 at 11:20.', 'Change ticket CHG-6020 (game) covers it: letting the new second resolver, DNS-02, answer lookups.', 'He signed in with his own firewall admin account and MFA, from the network team’s admin workstation.'],
              truth: 'Benign: an approved, ticketed change, made by the rule’s owner.'},
@@ -7543,7 +7543,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['A staff workstation touched 140 hosts on TCP 445 and 3389 in four minutes.', 'The program doing it is an unsigned file in a user’s temp folder, started under that user’s account.', 'Minutes later the same workstation tried to sign in to two servers with an admin account.'],
           truth: 'Network Service Discovery: an intruder mapping what it can reach next.',
           resp: [{label: 'Isolate the workstation, collect triage, reset the account it used, and check the two servers’ sign-ins: it may have got in', good: true},
-                 {label: 'Block the workstation’s address at its switch port so it can’t reach any other host, and close: nothing scans from behind a port that is shut', good: false, why: 'The program is still on the machine, and the account it tried is still at risk.'},
+                 {label: 'Block the workstation’s address at its switch port so it can’t reach any other host: nothing scans from behind a port that is shut', good: false, why: 'The program is still on the machine, and the account it tried is still at risk.'},
                  {label: 'Ignore it: scans like this hit the town every day, from inside and out, and none of them has ever turned into anything', good: false, why: 'Outside scans are routine. A staff workstation scanning inside the network is not.'}]},
     benign: {clues: ['The source is VS-01, the town’s own vulnerability scanner.', 'Its scan is approved and scheduled: Tuesdays 22:00 to 02:00, with a written scope.', 'It touched only the subnets in scope.'],
              truth: 'Benign: the town’s own authorised vulnerability scan. Exclude it narrowly, with a reason and an expiry.'},
@@ -7555,7 +7555,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['A workstation made 6,000 lookups of long random names under one domain in three hours.', 'Endpoint telemetry: the lookups come from an unsigned program in a temp folder, not the browser or a security agent.', 'The domain was registered last week and appears in no vendor’s documentation.'],
           truth: 'DNS used as a command channel: commands and data hidden in lookups.',
           resp: [{label: 'Isolate the workstation, sinkhole the domain at the resolver, collect triage, and search the DNS logs for other hosts that asked for it', good: true},
-                 {label: 'Block the domain at the town’s resolver and close: with no answers coming back the program has no channel left, so the workstation can stay in use', good: false, why: 'The program is still running, and it can try another domain.'},
+                 {label: 'Block the domain at the town’s resolver: with no answers coming back the program has no channel left, so the workstation can stay in use', good: false, why: 'The program is still running, and it can try another domain.'},
                  {label: 'Block all DNS for that floor', good: false, disrupt: 2}]},
     benign: {clues: ['The lookups come from the endpoint security agent, a signed process.', 'Its vendor’s documentation (game) says the agent checks file reputations by DNS, under the vendor’s own domain.', 'That domain is on the town’s approved list.'],
              truth: 'Benign: the security agent’s documented reputation lookups. The process and the domain’s owner decide it, not the shape of the names.'},
@@ -7567,7 +7567,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['A server holds an SSH session open all night to an outside address on TCP 443, where the firewall expects TLS.', 'While it is open, FS-03 logs remote-desktop sign-ins coming from that server, which never uses remote desktop: the outside end is reaching FS-03 through the tunnel.', 'The process is a portable tunnelling tool copied to the server yesterday by an admin account, from a laptop that never manages servers.'],
           truth: 'Protocol Tunneling: remote desktop wrapped inside an SSH tunnel. SSH on TCP 443, a port it doesn’t normally use, is also Non-Standard Port (T1571).',
           resp: [{label: 'Block the destination, isolate the server, collect the tool, disable the account that copied it, and check what crossed the tunnel', good: true},
-                 {label: 'Close: outbound TCP 443 is allowed for this server, and blocking it would break every web connection it makes, updates included', good: false, why: 'The port is allowed. What’s inside it isn’t.'},
+                 {label: 'Benign: outbound TCP 443 is allowed for this server, and blocking it would break every web connection it makes, updates included', good: false, why: 'The port is allowed. What’s inside it isn’t.'},
                  {label: 'Block all outbound TCP 443 for the town', good: false, disrupt: 2}]},
     benign: {clues: ['It’s the network team’s documented out-of-band management link to the internet provider’s router.', 'The firewall rule that allows it names an owner and gives that reason.', 'Endpoints and times match the documentation.'],
              truth: 'Benign: a documented, owned management tunnel.'},
@@ -7708,7 +7708,7 @@ const BM_DRILLS = {
                       reveal: 'Tally saw a hole and named a technique. It never asked whether FS-02’s own log still held the forty minutes, or whether every other source went quiet at the same moment. Ask specific questions, and check the answer against the evidence.'},
          specific: {q: 'Is there an event 1102 in FS-02’s local Security log?', text: 'No. The local log runs unbroken back to Day {D-12}.'}},
     verdicts: [
-      {label: 'Collector outage: its disk filled and it dropped every source’s events for 40 minutes; FS-02’s own log was never cleared', good: true, why: 'The local log holds the window with no 1102, and the collector logged the drop for all 61 sources.'},
+      {label: 'Collector outage: its disk filled and it dropped 40 minutes of every source’s events; FS-02’s log is intact, so close it', good: true, why: 'The local log holds the window with no 1102, and the collector logged the drop for all 61 sources.'},
       {label: 'Log clearing on FS-02: an intruder cleared the Security log around 01:20 to hide 40 minutes, and the SIEM’s overnight drop is the hole it left', why: 'A cleared Security log starts with event 1102, and the window would be gone from the server too. Both are still there.'},
       {label: 'Can’t tell either way: whatever FS-02 wrote in those 40 minutes never reached the SIEM, so the record we would need is gone', why: 'They aren’t gone. They’re on FS-02, where they were written.'}],
     reasons: [
@@ -7753,7 +7753,7 @@ const BM_DRILLS = {
                       reveal: 'Tally put the two timestamps side by side as if both clocks were right. MGMT-01’s clock was ten and a half minutes fast: corrected, Devraj signed in at 13:59:30, then changed the rule. Check every clock before you trust an order.'},
          specific: {q: 'Was MGMT-01’s clock synchronised yesterday afternoon?', text: 'No. It runs on its own hardware clock, about 10 min 30 s fast.'}},
     verdicts: [
-      {label: 'The sign-in came first (13:59:30, once MGMT-01’s clock is corrected), then the change at 14:03:10: the ticketed change, in order', good: true, why: 'MGMT-01 was 10 min 30 s fast; the shared connection proves it.'},
+      {label: 'The sign-in came first (13:59:30, once MGMT-01’s clock is corrected), then the change at 14:03:10: the ticketed change. Close it', good: true, why: 'MGMT-01 was 10 min 30 s fast; the shared connection proves it.'},
       {label: 'The rule changed first, at 14:03, seven minutes before Devraj sat down: someone else used his firewall account inside the window', why: 'Only if both clocks were right. MGMT-01’s wasn’t.'},
       {label: 'The change came first: the SIEM, which stamps every event with one clock, lists the change above the sign-in', why: 'The SIEM shows when it received events, not when they happened.'}],
     reasons: [
@@ -7862,8 +7862,8 @@ const BM_BOARD_SPECS = () => [
    title: 'Round 1: the log that shrank', host: 'LOG-02 · Linux log relay', enemy: {spr: 'scrub', pal: 'scrub'},
    clues: ['/var/log/auth.log on LOG-02 is empty since 03:22; the collector still has everything up to 03:21.', 'The collector’s copy shows root signing in over SSH from a desktop that never manages servers.', 'The desktop’s user is on holiday, and her account signed in to it at 03:15.'],
    truth: 'Clearing Linux system logs to hide a sign-in. Forwarding as events are written kept the evidence.',
-   resp: [{label: 'Preserve the collector’s copies and the disk; disable the account and the root key; isolate the desktop; hunt for the same sign-in', good: true},
-          {label: 'Restart logging on LOG-02 and close: the collector kept everything up to 03:21, so the record is complete and the session is already documented', good: false, why: 'The intruder’s account and desktop are still live.'},
+   resp: [{label: 'Secure the collector’s copies and the disk; disable the account and the root key; isolate the desktop; search for the same sign-in', good: true},
+          {label: 'Restart logging on LOG-02: the collector kept everything up to 03:21, so the record is complete and the session is already documented', good: false, why: 'The intruder’s account and desktop are still live.'},
           {label: 'Wipe LOG-02 now', good: false, disrupt: 1, why: 'Preserve first.'}],
    chain: [{at: 40, text: 'The same key opens a second server.'}, {at: 75, text: 'That server’s log empties too.'}]},
   {kind: 'mal', threat: 'hinge', tech: 'T1686.002', tags: ['edge'], story: true, rate: 12, group: 'c',
@@ -7871,8 +7871,8 @@ const BM_BOARD_SPECS = () => [
    clues: ['A new rule at the top of the list lets any outside address reach FS-03 on remote desktop.', 'Made at 23:10 by a network admin account whose owner is on leave, from a laptop that never manages the firewall.', 'Sign-in attempts from abroad start arriving at FS-03 within minutes.'],
    truth: 'Modifying a network device firewall to let an attacker in.',
    resp: [{label: 'Remove the rule; disable the account, end its sessions: its owner is on leave. Isolate the laptop; check FS-03 and the account’s other changes', good: true},
-          {label: 'Remove the rule and close: it is tonight’s only change, and with it gone nothing outside can reach FS-03 on remote desktop', good: false, why: 'The account that made it is still the attacker’s.'},
-          {label: 'Ignore it: rules change every day', good: false, why: 'Not without a ticket, at 23:10, from that laptop.'}],
+          {label: 'Remove the rule: it is tonight’s only change, and with it gone nothing outside can reach FS-03 on remote desktop', good: false, why: 'The account that made it is still the attacker’s.'},
+          {label: 'Let it pass: rules change every day', good: false, why: 'Not without a ticket, at 23:10, from that laptop.'}],
    chain: [{at: 40, text: 'Remote-desktop attempts on FS-03 multiply.'}, {at: 75, text: 'One sign-in on FS-03 succeeds.'}]},
   {kind: 'mal', threat: 'burrow', tech: 'T1071.004', tags: [], story: true, rate: 11, group: 'c',
    title: 'Round 3: whispers in the lookups', host: 'FIN-WS-02 · finance workstation', enemy: {spr: 'burrow', pal: 'burrow'},
@@ -7891,9 +7891,9 @@ const BM_CARDS = [
   {id: 'rule', name: 'Close the rule', csf: 'Respond', good: true, text: 'Narrow “VPN address pool → internal network, ANY” to the few services VPN users need, today, under an emergency change. Deny and log the rest.', fx: 'Stage 2 becomes much easier: the path the intruder used is shut.'},
   {id: 'hunt', name: 'Hunt for the same behaviour elsewhere', csf: 'Detect', good: true, text: 'Search every server, and the collector’s copies, for event 1102, for the event log service stopping (1100) and for windows where a host holds fewer events than it forwarded (selective deletion writes no 1102); for the intruder’s account and for its tools; and replay the scan detection over the last month.', fx: 'Stage 3 becomes much easier.'},
   {id: 'wipe', name: 'Reimage MGMT-01 tonight', csf: 'Recover', text: 'A clean build, before anyone has looked.', fx: 'The disk and memory go with it, and nobody knows yet how the intruder got in.'},
-  {id: 'restorelog', name: 'Restore MGMT-01’s Security log from backup', csf: 'Recover', text: 'Bring last night’s copy of the log file back and call the gap closed.', fx: 'Last night’s copy was taken before tonight’s session, so it can’t fill tonight’s gap, and writing it back over MGMT-01 destroys what is left. (Read as a separate copy in the lab, it is worth having: the intruder has been on MGMT-01 since last Saturday.)'},
+  {id: 'restorelog', name: 'Restore MGMT-01’s Security log from backup', csf: 'Recover', text: 'Bring last night’s copy of the log file back and call the gap filled.', fx: 'Last night’s copy was taken before tonight’s session, so it can’t fill tonight’s gap, and writing it back over MGMT-01 destroys what is left. (Read as a separate copy in the lab, it is worth having: the intruder has been on MGMT-01 since last Saturday.)'},
   {id: 'blockip', name: 'Block one address and close', csf: 'Respond', text: 'Block the outside address in the alert and close the case.', fx: 'The intruder has an account and a foothold inside: one address is nothing.'},
-  {id: 'wait', name: 'Wait for more alerts', csf: 'Detect', text: 'Leave everything running to learn more.', fx: 'They’re clearing logs: waiting loses evidence, not gains it.'}
+  {id: 'wait', name: 'Wait for more alerts', csf: 'Detect', text: 'Keep everything running to gather more evidence.', fx: 'They’re clearing logs: waiting loses evidence, not gains it.'}
 ];
 
 /* ---------- Field Manual additions ---------- */
@@ -8350,7 +8350,7 @@ async function bmFwReview() {
     const i = await choose('The last rule, at the bottom of the list, is “allow everything else”. What replaces it?', [
       {label: 'Deny everything not expressly permitted, inbound and outbound, and log the denials: what isn’t needed stays shut', meta: {good: true}},
       {label: 'Block everything inbound, allow everything outbound: staff need the internet, and the proxy already inspects their web traffic on the way out'},
-      {label: 'Leave it: the rules above already allow only what each owner asked for, so the last line never matches anything that matters'}], {shuffle: true});
+      {label: 'No change: the rules above already allow only what each owner asked for, so the last line never matches anything that matters'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Outbound is how stolen data and command channels leave. NIST SP 800-41 says firewalls should block all inbound and outbound traffic that hasn’t been expressly permitted. R2 already permits staff browsing.');
     else await say('Then anything the rules above don’t mention is allowed. That’s how R3 lived for seven years.');
@@ -8596,8 +8596,8 @@ function bmBossStages(picks, t) {
       clues: ['MGMT-01’s Security log starts at 02:41 with event 1102: cleared by svc-vpnldap.', 'The collector holds MGMT-01’s events up to 02:40:52. Forwarded as they were written, they survived the clearing: svc-vpnldap signed in at 02:20 over remote desktop from 10.20.200.14, an address in the VPN pool.', 'svc-vpnldap is the account VPN-01 uses to look users up in the directory: it has no reason to sign in anywhere. The directory’s sign-in log shows its first ever sign-in last Saturday at 02:04, to MGMT-01, and more on the nights since, always after 02:00. Nobody had a rule for it. Its password lives in the appliance’s settings.'],
       truth: 'Clear Windows Event Logs (T1685.005), to hide the session. The forwarded copies and the synchronised clocks put it back in order. Signing in with the appliance’s service account is Valid Accounts (T1078).',
       resp: [{label: 'Preserve the collector’s copies and MGMT-01’s disk and memory; isolate it powered, so memory survives; disable svc-vpnldap, end its sessions; tell leadership the VPN is down', good: true},
-             {label: 'Restore MGMT-01’s Security log from last night’s backup so the record is whole again, then close: the forwarded copies already show the 02:20 session', good: false, why: 'Last night’s backup predates tonight’s session, so it can’t show it, and the intruder still has the account. (A copy read in the lab is still useful: MGMT-01 has been theirs since last Saturday.)'},
-             {label: 'Reimage MGMT-01 now from the golden image and put it back in service: the collector already holds every event it forwarded, so nothing on its disk is still needed for the case', good: false, disrupt: 1, why: 'Preserve first: the disk and memory are the evidence of what they did.'}],
+             {label: 'Restore MGMT-01’s Security log from last night’s backup so the record is whole again: the forwarded copies already show the 02:20 session', good: false, why: 'Last night’s backup predates tonight’s session, so it can’t show it, and the intruder still has the account. (A copy read in the lab is still useful: MGMT-01 has been theirs since last Saturday.)'},
+             {label: 'Preserve the collector’s copies, then reimage MGMT-01 from the golden image and put it back in service: they hold every event it forwarded, so nothing on its disk is still needed as evidence', good: false, disrupt: 1, why: 'Preserve first: the disk and memory are the evidence of what they did.'}],
       chain: [{at: 40, text: 'svc-vpnldap opens a second remote-desktop session.'}, {at: 75, text: 'Another server’s Security log is cleared.'}]},
     s2: {kind: 'mal', threat: 'hinge', tech: 'T1686.002', tags: ['edge'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('rule') ? 8 : 13, dwell0: picks.includes('rule') ? 10 : 40,
@@ -8606,7 +8606,7 @@ function bmBossStages(picks, t) {
       truth: 'Modifying a network device firewall (T1686.002): the intruder opened its own way out. The way in was a rule far broader than anyone needed.',
       resp: [{label: 'Delete the new rule, narrow R4 today by emergency change, isolate and image VPN-01, then rebuild it per the vendor’s advisory; rotate what it stored, reset its users since Saturday, block 203.0.113.50', good: true},
              {label: 'Delete the new rule, block 203.0.113.50 at the edge and close: default deny already stops anything else going out, and R4’s narrowing is booked for Friday', good: false, why: 'VPN-01 is still the intruder’s, and R4 still lets the VPN pool reach everything.'},
-             {label: 'Set every firewall rule to deny until morning, VPN included, so nothing moves in or out while we work out what VPN-01 did, then restore the rules one at a time from the reviewed binder, with owners signing each one back on', good: false, disrupt: 2, why: 'That stops the town, not the intruder, who is already inside.'}],
+             {label: 'Set every firewall rule to deny until morning, VPN included, so nothing moves in or out while we hunt for what VPN-01 did, then restore the rules one at a time from the reviewed binder, with owners signing each one back on', good: false, disrupt: 2, why: 'That stops the town, not the intruder, who is already inside.'}],
       chain: [{at: 60, text: 'A second outbound rule appears.'}]},
     s3: {kind: 'mal', threat: 'sweep', tech: 'T1046', tags: ['recon'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('hunt') ? 8 : 14, dwell0: Math.max(0, (picks.includes('hunt') ? 10 : 35) + (hidden ? 15 : 0) - (reopened ? 5 : 0)),
@@ -8615,8 +8615,8 @@ function bmBossStages(picks, t) {
         'Last week’s alert from MGMT-01 at Sat 02:10, closed as “IT admin activity” with no ticket, was this intruder’s first look around.' + (reopened ? ' Your reopened ticket had MGMT-01 on tomorrow’s review list.' : ' Nobody had reopened it.'),
         'The hunt (event 1102 and svc-vpnldap sign-ins, on every server) finds one more: svc-vpnldap signed in to APP-02 at 03:29, and APP-02’s Security log was cleared at 03:31.'],
       truth: 'Network Service Discovery (T1046): mapping what the stolen account could reach. Hunting for the same behaviour found the second server.',
-      resp: [{label: 'Isolate APP-02 too, preserve its disk, scope what svc-vpnldap touched on both, and keep hunting: there may be a third', good: true},
-             {label: 'Close: svc-vpnldap is disabled and MGMT-01 isolated, so whatever the scan of 52 hosts found, the intruder can no longer use it', good: false, why: 'It found APP-02.'},
+      resp: [{label: 'Isolate APP-02 too, image its disk, scope what svc-vpnldap touched on both, and keep hunting: there may be a third', good: true},
+             {label: 'Preserve MGMT-01’s disk: svc-vpnldap is disabled and MGMT-01 isolated, so whatever the scan of 52 hosts found, the intruder can no longer use it', good: false, why: 'It found APP-02.'},
              {label: 'Exclude MGMT-01 from the scan rule: it’s a management server', good: false, why: 'That is how its first scan went unseen.'}],
       chain: [{at: 60, text: 'svc-vpnldap tries a third server.'}]}
   };
@@ -8885,7 +8885,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['A staff workstation requested Kerberos service tickets (event 4769) for 14 different service accounts in six minutes.', 'Every request asked for RC4 (ticket encryption type 0x17), the kind easiest to crack offline, not the AES the town’s services use.', 'The requesting account is a planning clerk’s; the process is an unsigned program in that user’s profile, and the clerk has no reason to reach any of those services.'],
           truth: 'Kerberoasting: service tickets gathered to crack service-account passwords offline. The requesting account and the RC4 encryption type decide it.',
           resp: [{label: 'Isolate the workstation and reset the clerk, because the program is still there; rotate the roasted accounts and move them to AES after a test', good: true},
-                 {label: 'Rotate the 14 service accounts and stop there: with new 30-character passwords the stolen tickets can’t be cracked, so the attacker gains nothing from them', good: false, why: 'Rotation does make the stolen tickets worthless: cracking one now yields a dead password. But the clerk’s account and the program on the workstation are still the attacker’s, and they will simply ask again.'},
+                 {label: 'Rotate all 14 roasted service accounts tonight: with new 30-character passwords the stolen tickets can’t be cracked, so the attacker gains nothing from them', good: false, why: 'Rotation does make the stolen tickets worthless: cracking one now yields a dead password. But the clerk’s account and the program on the workstation are still the attacker’s, and they will simply ask again.'},
                  {label: 'Block RC4 across the domain tonight', good: false, disrupt: 2, why: 'AES first, tested: some old service still needs RC4, and turning it off blind breaks sign-ins.'}]},
     benign: {clues: ['The source is MON-01, the monitoring server (svc-monitor).', 'It requests service tickets for the services it checks every night, about 1,900 of them, all AES256 (0x12).', 'Change CHG-7140 (game) documents the monitoring job and its account.'],
              truth: 'Benign: the monitoring server’s nightly health checks. The account is documented and the tickets are AES, not RC4.'},
@@ -8898,7 +8898,7 @@ Object.assign(ALERTS, {
           truth: 'A privileged-group membership used for ten minutes to reach data, then removed. The change event’s Subject and that account’s actions in the window decide it, not the group’s current membership.',
           resp: [{label: 'Isolate the host and reset both accounts, because the credential is still live; take the help desk’s rights over the group; scope the payroll share before closing', good: true},
                  {label: 'Note that the group’s membership is clean now and close the case, because the account was removed at 14:30 and nobody is left holding the extra rights any more', good: false, why: 'The membership is clean because they removed it. The ten minutes in between is the incident.'},
-                 {label: 'Disable every help-desk account until the review is done', good: false, disrupt: 2, why: 'One help-desk credential was misused, from one host. Scope that; don’t take the whole desk offline.'}]},
+                 {label: 'Disable every help-desk account until the investigation is done', good: false, disrupt: 2, why: 'One help-desk credential was misused, from one host. Scope that; don’t take the whole desk offline.'}]},
     benign: {clues: ['An account was added to a privileged group at 10:30 by the identity team’s own admin.', 'Change CHG-7151 (game) covers it: a new server administrator joining the team.', 'A second approver signed the change, as privileged-group changes now require.'],
              truth: 'Benign: an approved, two-person-approved change, made by the group’s owner.'},
     fp: {clues: ['The “new member” is a group being renamed; the directory logged a group change (4735, 4737 or 4755 by the group’s scope, and a 5136), not a membership change.', 'No account’s rights changed: the same members, under a new name.', 'The rule reads any 5136 on the group object as a new member.'],
@@ -8934,7 +8934,7 @@ Object.assign(ALERTS, {
           truth: 'A DCSync-style replication request from somewhere that should never make one: the account and the source host decide it, not how much data moved.',
           resp: [{label: 'Isolate the host and disable the account; every password is exposed, because one replication pulls them all; plan to reset every account and the krbtgt twice', good: true},
                  {label: 'Block replication from that host at the firewall: with the one host blocked, no more password data can be replicated out of the domain tonight', good: false, why: 'If it replicated once, the hashes are out: a block doesn’t recall them. This is a domain-level incident.'},
-                 {label: 'Reset the one account that made the request and close the case', good: false, why: 'The replication already happened; treat every credential as exposed and scope the whole domain.'}]},
+                 {label: 'Reset the one account that made the request, scope its sign-ins, and close the case', good: false, why: 'The replication already happened; treat every credential as exposed and scope the whole domain.'}]},
     benign: {clues: ['The request comes from SYNC-02, the identity sync server (Entra Connect), by its MSOL_ connector account.', 'That account is documented for replication: Entra Connect needs “Replicate Directory Changes” and “Replicate Directory Changes All” to sync password hashes.', 'SYNC-02 is owned by the identity team and sits in Tier 0; change CHG-7104 (game) covers it.'],
              truth: 'Benign: the identity sync product’s documented replication, by its own connector account, from an owned Tier 0 server.'},
     fp: {clues: ['The “replication” is a monitoring probe reading a directory attribute, not a replication right.', 'Event 4662 fired because the object’s audit list is broad; no replication right was used.', 'The rule reads any 4662 on the domain object as a replication request.'],
@@ -8997,11 +8997,11 @@ const SV_TIER_CROSS = [
    why: 'A lower tier must not control a higher one. Delegate the help desk the Tier 2 scope it needs, and nothing above it.'},
   {id: 'backup', text: 'One backup account is a domain admin and backs up both the domain controllers and the member servers.',
    fix: 'Split it: a Tier 0 account for the DCs, a Tier 1 account for the servers, each with only the rights it needs',
-   bad: ['Give the backup account a 30-character random password in the vault, rotated monthly, and leave its rights as they are', 'Run the backups weekly instead of nightly, so the powerful account is signed in for a far smaller share of the time'],
+   bad: ['Give the backup account a 30-character random password in the vault, rotated monthly, with its rights as they are', 'Run the backups weekly instead of nightly, so the powerful account is signed in for a far smaller share of the time'],
    why: 'One account that spans tiers lets a Tier 1 compromise reach Tier 0. Split it along the tier line.'},
   {id: 'sync', text: 'The identity sync server holds replication rights but sits on the ordinary server network, administered from everyday machines.',
    fix: 'Treat the sync server as Tier 0: admin it from a PAW only, and protect it like a domain controller',
-   bad: ['Leave it on the server network, alert on every sign-in to it, and keep its replication rights limited to the connector account', 'Move its replication rights to a domain admin account instead'],
+   bad: ['Keep it on the server network, alert on every sign-in to it, and keep its replication rights limited to the connector account', 'Move its replication rights to a domain admin account instead'],
    why: 'A server that can replicate password data is effectively Tier 0. It belongs behind the same controls as a DC.'},
   {id: 'monitor', text: 'The domain-controller monitoring collector runs on a Tier 2 workstation that staff also use.',
    fix: 'Move the DC monitoring to a dedicated Tier 0 collector that nothing else logs in to',
@@ -9162,16 +9162,16 @@ const SV_FINDINGS = [
    finding: 'The assessment report: APP-07 is configured to be trusted for delegation to any service (unconstrained delegation). Any privileged account that authenticates to APP-07 leaves a usable ticket on it. If APP-07 is compromised, those tickets can be reused against other services, up to and including a domain controller.',
    q: 'What is the right remediation, and who owns it?',
    opts: ['Change APP-07 to constrained delegation for the services it needs, and mark privileged accounts “sensitive and cannot be delegated” or add them to Protected Users',
-          'Restrict who can log on to APP-07 and review its sign-in logs, leaving the delegation setting as it is, since limiting who signs in limits who could abuse the tickets it keeps',
+          'Restrict who can log on to APP-07 and watch its sign-in logs, keeping the delegation setting as it is, since limiting who signs in limits who could abuse the tickets it keeps',
           'Reset APP-07’s computer account password, which clears the tickets currently cached on it'], good: 0,
    owner: ['The identity team (with the application’s owner)', 'APP-07’s application owner (with the network team), since it is their server’s setting', 'The network team'], ownerGood: 0,
    explain: 'Unconstrained delegation is the broad, risky form; Microsoft’s guidance is to move to constrained delegation and to protect privileged accounts from being delegated at all (the “sensitive and cannot be delegated” flag, or the Protected Users group). Domain controllers are expected to delegate; ordinary servers should not. The identity team owns delegation settings, with the app’s owner.'},
   {title: 'A data share open to everyone',
    finding: 'The assessment report: the hidden administrative paths on FS-06 are reachable, but a data share on it, \\\\FS-06\\Archive, has its permissions set to allow Everyone to read and write. Every signed-in account can read or change the archive (the folder’s own permissions don’t narrow it), and a share this open is a common way for an intruder to spread files between machines.',
    q: 'What is the right remediation, and who owns it?',
-   opts: ['Replace the Everyone permission with the groups that need the archive, read or write as each needs, and check what was written while it was open',
+   opts: ['Replace the Everyone permission with the groups that need the archive, read or write as each needs, and review what was written while it was open',
           'Hide the share by adding a $ to its name, so that it no longer shows up when people browse to the server over the network',
-          'Move the archive to a different server and leave the old share in place until everyone has the new path'], good: 0,
+          'Move the archive to a different server and keep the old share in place until everyone has the new path'], good: 0,
    owner: ['The team that owns FS-06 and the archive data (with the identity team)', 'The identity team (with the help desk), which manages the groups used in every permission', 'The outside assessor who found it, since it is their finding to follow up to closure'], ownerGood: 0,
    explain: 'An “Everyone” share is an access-control failure: replace it with the groups that actually need the data, least privilege again, and check what the open window allowed. Hiding a share with a $ does not restrict access; it only hides it from browsing. The data’s owner owns the fix, with the identity team.'}
 ];
@@ -9183,14 +9183,14 @@ const SV_BOARD_SPECS = () => [
    clues: ['One workstation requested service tickets for every service account with a name, all RC4.', 'The account is an ordinary user’s; the process is unsigned, in the user’s profile.', 'None of those services is one that user ever reaches.'],
    truth: 'Kerberoasting: service tickets gathered to crack service-account passwords offline.',
    resp: [{label: 'Isolate the host and reset the user, because the program still runs; rotate the roasted accounts, AES after a test', good: true},
-          {label: 'Rotate the service accounts and stand down: new long passwords make the stolen tickets useless, so the attacker gains nothing', good: false, why: 'The user’s account and the program are still live.'},
+          {label: 'Rotate every roasted service account at once: new long passwords make the stolen tickets useless, so the attacker gains nothing', good: false, why: 'The user’s account and the program are still live.'},
           {label: 'Turn RC4 off for every account in the domain tonight, services and old line-of-business apps included, without a test first', good: false, disrupt: 1, why: 'AES first, tested.'}],
    chain: [{at: 40, text: 'A roasted account’s password is tried on a server.'}, {at: 75, text: 'The same workstation asks for more tickets.'}]},
   {kind: 'mal', threat: 'elevate', tech: 'T1098.007', tags: [], story: true, rate: 12, group: 'c',
    title: 'Round 2: ten minutes in the group', host: 'Server Admins · directory', enemy: {spr: 'hinge', pal: 'elevate'},
    clues: ['An account was added to Server Admins and removed ten minutes later; the Subject is a help-desk account.', 'In between, the added account read a payroll share it had no reason to touch.', 'The group’s membership is clean now.'],
    truth: 'A privileged-group membership borrowed for ten minutes to reach data, then returned.',
-   resp: [{label: 'Isolate the host and reset both accounts, because the credential is live; take the help desk’s rights; scope the share', good: true},
+   resp: [{label: 'Isolate the host and reset both accounts, because the credential is live; take the help desk’s rights; audit the share', good: true},
           {label: 'Note the membership is clean and log it as resolved, because the account was removed and nobody is left holding the extra rights tonight', good: false, why: 'The ten minutes in between is the incident.'},
           {label: 'Disable every help-desk account in town, and route all password resets through the identity team until the review is done', good: false, disrupt: 1, why: 'Scope the one credential and host.'}],
    chain: [{at: 40, text: 'The added account opens a second share.'}, {at: 75, text: 'It is removed to cover the trail.'}]},
@@ -9200,7 +9200,7 @@ const SV_BOARD_SPECS = () => [
    truth: 'A DCSync-style replication request from a host that should never make one.',
    resp: [{label: 'Isolate the host and disable the account; every password is exposed, because one replication pulls them all; reset them all and krbtgt twice', good: true},
           {label: 'Block replication from that host, since with the one host blocked no more password data can be replicated out of the domain tonight', good: false, why: 'If it replicated once, the hashes are already out.'},
-          {label: 'Reset the one account that made the request and move on', good: false, why: 'Scope the whole domain: the replication already happened.'}],
+          {label: 'Reset the one account that made the request, then watch it', good: false, why: 'Scope the whole domain: the replication already happened.'}],
    chain: [{at: 40, text: 'The account signs in to a second server.'}, {at: 75, text: 'A privileged account’s hash is used elsewhere.'}]}
 ];
 
@@ -9509,7 +9509,7 @@ async function beatrizPriv() {
       {label: 'Give each admin a separate Tier 0 account and drop the everyday ones, because an email account must not hold Tier 0; svc-permits waits', meta: {good: true}},
       {label: 'Make everyone in Tier 0 use a longer password and turn on MFA, but leave the memberships, so nobody loses the access they rely on day to day'},
       {label: 'Remove everyone except two senior admins today, so the group is as small as possible, and let the rest ask for access back when something breaks'},
-      {label: 'Leave the memberships as they are and just watch Tier 0 closely, with these trusted staff and the tiering work left for a later phase'}], {shuffle: true});
+      {label: 'Keep the memberships as they are and just watch Tier 0 closely, with these trusted staff and the tiering work left for a later phase'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('MFA helps, but an everyday account that is also a domain admin still exposes Tier 0 every time it opens an attachment. Split the roles.');
     else if (i === 2) await say('Cutting blind to two breaks the jobs the other seven do and teaches people to work around you. Give each a separate admin account instead.');
@@ -9663,7 +9663,7 @@ async function hugoTalk() {
       {label: 'Test the vendor’s documented rights in staging with a rollback, rotate the roasted 2019 password today in a window Hugo picks, then leave Domain Admins; Hugo signs', meta: {good: true, k: 'test'}},
       {label: 'Agree: leave svc-permits a domain admin with its 2019 password, since permits must stay up and the vendor hasn’t confirmed anything else works'},
       {label: 'Overrule Hugo: pull svc-permits out of Domain Admins today, because a domain-admin service account is a risk the town can’t carry whatever Permits wants'},
-      {label: 'Leave the rights, but rotate the 2019 password tonight in a short window to fix at least the oldest problem even if the access stays'}], {shuffle: true});
+      {label: 'Accept the rights, but rotate the 2019 password tonight in a short window to fix at least the oldest problem even if the access stays'}], {shuffle: true});
     if (i === 0) { c.directive = 'test'; break; }
     if (i === 1) await say('A domain-admin account whose 2019 password was roasted last night is the single worst thing in this room. Keeping it because it once broke isn’t a decision, it’s a deferral. Test the smaller rights.');
     else if (i === 2) await say('Pulling it blind is how it broke last time. You’re the analyst; the risk is Hugo’s to own. Give him a tested smaller set and a rollback, and let him accept what’s left.');
@@ -9803,8 +9803,8 @@ function svBossStages(picks) {
       clues: ['From APP-03, NTLM network sign-ins (4624 type 3) as svc-sql to FS-04 and DB-01 at 03:10–03:25: svc-sql’s hash came out with the replication at 03:02.', 'APP-03 itself: at 02:44 a new service was installed (4697), a kernel driver on Microsoft’s vulnerable-driver blocklist, which the servers ran in audit mode only (game), so it was logged, not blocked; the EDR agent stopped reporting at 02:46. The session that installed it came from IT-WS-03, Ravi’s old laptop, where a signed updater has loaded a planted library from its own folder since Day ' + Math.max(1, SV().day0 - 12) + '. k.hale could install a driver because it is in APP-03’s local Administrators group: a direct entry with no ticket, found in the scoping.', 'The hunt finds nothing linking the earlier drills (PK-WS-11, HD-WS-02) to k.hale or IT-WS-03: those were separate cases.'],
       truth: 'Pass-the-hash with a hash taken in the replication: the intruder moving to the file and database servers. Scoping finds the origin (IT-WS-03) and the silenced agent (the vulnerable driver), and marks every host and account to reset.',
       resp: [{label: 'Scope every affected account and host and build the full reset list first, because a reset that misses one tips them off', good: true},
-             {label: 'Reset svc-sql now and cut FS-04 and DB-01 off, since those are the servers it reached and stopping it there should contain the move for now', good: false, why: 'Reset svc-sql alone and you tip the intruder off while they still hold other hashes. Scope first, reset together.'},
-             {label: 'Reimage APP-03 immediately from the clean golden image and put it straight back into service before the morning shift starts', good: false, disrupt: 1, why: 'Preserve APP-03 first: it holds the evidence of the driver and the origin. Reimage in the eviction, from a known-good image.'}],
+             {label: 'Reset svc-sql now and cut FS-04 and DB-01 off, the servers it reached, and scope the rest tomorrow: that should contain the move for now', good: false, why: 'Reset svc-sql alone and you tip the intruder off while they still hold other hashes. Scope first, reset together.'},
+             {label: 'Copy APP-03’s logs as evidence, then reimage it from the clean golden image and put it straight back into service before the morning shift', good: false, disrupt: 1, why: 'Preserve APP-03 first: it holds the evidence of the driver and the origin. Reimage in the eviction, from a known-good image.'}],
       chain: [{at: 60, text: 'svc-sql’s hash is tried on a third server.'}]},
     s3: {kind: 'mal', threat: 'harvest', tech: 'T1558.001', tags: ['identity'], story: true, group: 'c', ev0: ev0,
       rate: evicted ? 8 : 14, dwell0: evicted ? 8 : 40,
@@ -9812,7 +9812,7 @@ function svBossStages(picks) {
       clues: ['Because the krbtgt hash came out in the replication, the intruder can forge ticket-granting tickets: forged tickets would survive an ordinary password reset. The krbtgt must be reset twice, the first allowed to replicate before the second.', 'The eviction runs from the Tier 0 PAWs from 22:00: the first krbtgt reset at 22:05; every privileged account and all 21 service accounts reset, then every staff and computer account; LAPS rotates every local and DSRM password; k.hale disabled and its ACL entry removed; APP-03 and IT-WS-03 rebuilt from clean images; the driver blocklist moved from audit to enforce. The second krbtgt reset follows at 08:10, once the first has replicated and ten hours have passed.', 'At 03:40 that night, inside the ten-hour wait: from IT-WS-07, a laptop the scoping missed (the same side-loaded updater), an NTLM sign-in as svc-sql with the old hash fails: the password changed. The watch rule catches it; IT-WS-07 is isolated and the scope extended. That is the return the monitoring is for.'],
       truth: 'Eviction: scope, then reset every credential, and the krbtgt twice, in one coordinated operation from clean workstations, so no surviving ticket or hash rides back in. A forged-ticket risk is why the krbtgt is reset twice (Golden Ticket).',
       resp: [{label: 'Evict as one planned operation from the PAWs: reset every account, the krbtgt twice ten hours apart, remove k.hale’s ACL entry, rebuild the two hosts, watch', good: true},
-             {label: 'Reset the accounts you have confirmed so far and reset the krbtgt once, then restore service and keep resetting the rest over the week as you confirm them', good: false, why: 'Piecemeal resets tip the intruder off and leave a credential to return on, and one krbtgt reset leaves forged tickets working. Reset together, krbtgt twice.'},
+             {label: 'Reset the accounts you have confirmed so far and reset the krbtgt once, then restore service and keep scoping and resetting the rest over the week', good: false, why: 'Piecemeal resets tip the intruder off and leave a credential to return on, and one krbtgt reset leaves forged tickets working. Reset together, krbtgt twice.'},
              {label: 'Reset every account and the krbtgt twice, but do it from the usual admin laptops to move faster, since speed matters and the eviction really has to land tonight', good: false, disrupt: 1, why: 'A reset typed on a machine that may be compromised hands the new credential straight back. Do it from clean PAWs.'}],
       chain: [{at: 60, text: 'A forged ticket is tried before the second krbtgt reset lands.'}]}
   };
@@ -9860,7 +9860,7 @@ async function raeServerTalk() {
   await say('The registry found how svc-print held rights everywhere: a group nested in a group, local admin across the town, added in 2019 by an account that’s been gone since 2021.', who);
   while (true) {
     const i = await UI.openModal('svc-print on the suspicion file', '<p>Tamsin traced svc-print’s rights: PRN-Mgmt, nested in SRV-Ops-Legacy, in the local Administrators group of every member server and the 2019 laptops. Added in 2019 by a.kerr-adm, an account deleted in 2021. The group-change event is long gone; the directory’s own metadata dates the nesting to 2019, and only the change ticket says who. It is the account from the Basement suspicion file. (game)</p>', [
-      {label: 'Add it to the suspicion file and keep Rae’s rule: nothing changes on svc-print without her. Note what the nesting grants; don’t touch it yet', meta: {good: true, k: 'file'}},
+      {label: 'Add it to the suspicion file and keep Rae’s rule: nothing changes on svc-print without her. Review what the nesting grants; leave it in place', meta: {good: true, k: 'file'}},
       {label: 'Strip svc-print out of SRV-Ops-Legacy tonight and disable it: it has local admin everywhere it shouldn’t, and every night it keeps that is a night of exposure', meta: {k: 'strip'}},
       {label: 'File it as legacy cruft: a 2019 printer rollout left it over-privileged, there’s no sign it’s been used, and the account that made it is long gone', meta: {k: 'cruft'}},
       {label: 'Rebuild SRV-Ops-Legacy’s membership from scratch across every server, so the nesting is cleaned up everywhere at once tonight', meta: {k: 'rebuild'}}], {shuffle: true, closable: false, cls: 'drill'});

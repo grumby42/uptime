@@ -175,8 +175,8 @@ Object.assign(ALERTS, {
     mal: {clues: ['On LOG-02, the Linux relay for the building-system logs, /var/log/auth.log shrank to nothing at 03:22.', 'The last lines the collector received before that show an SSH sign-in as root from a staff workstation that never manages servers.', 'The forwarded copies on the collector are now the only record of that session.'],
           truth: 'Clearing a Linux server’s logs to hide a sign-in. The copies already on the collector are the evidence now.',
           resp: [{label: 'Preserve the collector’s copies and LOG-02’s disk: they’re the evidence. Disable the account and its key, isolate its workstation, hunt for the same sign-in', good: true},
-                 {label: 'Restart logging on LOG-02 and confirm auth.log is being written, then close: the collector holds every line of the session, so nothing is lost', good: false, why: 'The account and the workstation are still the intruder’s, and you haven’t asked what the session did.'},
-                 {label: 'Reimage LOG-02 tonight from a clean build, so nothing the intruder left survives', good: false, disrupt: 1, why: 'Preserve first: the disk is evidence, and the intruder came from somewhere else.'}]},
+                 {label: 'Restart logging on LOG-02, confirm auth.log is being written, and preserve the collector’s copy: it holds every line of the session, so nothing is lost', good: false, why: 'The account and the workstation are still the intruder’s, and you haven’t asked what the session did.'},
+                 {label: 'Preserve the collector’s copies, then reimage LOG-02 tonight from a clean build, so nothing the intruder left survives', good: false, disrupt: 1, why: 'Preserve first: the disk is evidence, and the intruder came from somewhere else.'}]},
     benign: {clues: ['The log collector restarted at 02:00 for its upgrade; every source shows a gap until 02:06.', 'Each server’s own log still holds those six minutes.', 'Change ticket CHG-6011 (game) covers the upgrade.'],
              truth: 'Benign: the collector’s planned restart. Pull the six minutes from the servers’ own logs, and alert when a source goes quiet.'},
     fp: {clues: ['FS-01’s log timestamps jumped back three minutes at 04:10.', 'That was NTP correcting FS-01’s drifting clock: the drift alarm fired at 04:09.', 'No lines are missing; the rule reads “time went backwards” as “lines removed”.'],
@@ -187,7 +187,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['At 23:10 a rule letting any outside address reach FS-03 on remote desktop (TCP 3389) was added to the edge firewall.', 'The change was made with a network engineer’s admin account while he was on leave, from a Clerks’ Row laptop that never manages the firewall.', 'Within ten minutes, remote-desktop sign-in attempts from abroad start arriving at FS-03.'],
           truth: 'Modifying a network device firewall: a stolen admin account opened a way in.',
           resp: [{label: 'Remove the rule; disable the engineer’s account and revoke its sessions; isolate the laptop; check FS-03’s sign-ins and the account’s other changes', good: true},
-                 {label: 'Remove the rule, confirm FS-03 had no successful remote-desktop sign-in, and close: with the rule gone, nothing from abroad can reach FS-03', good: false, why: 'The account and the laptop that made the change are still the intruder’s.'},
+                 {label: 'Remove the rule, verify FS-03 had no successful remote-desktop sign-in: with the rule gone, nothing from abroad can reach FS-03', good: false, why: 'The account and the laptop that made the change are still the intruder’s.'},
                  {label: 'Lock everyone out of the firewall for a week', good: false, disrupt: 1}]},
     benign: {clues: ['Devraj changed rule R8 at 11:20.', 'Change ticket CHG-6020 (game) covers it: letting the new second resolver, DNS-02, answer lookups.', 'He signed in with his own firewall admin account and MFA, from the network team’s admin workstation.'],
              truth: 'Benign: an approved, ticketed change, made by the rule’s owner.'},
@@ -199,7 +199,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['A staff workstation touched 140 hosts on TCP 445 and 3389 in four minutes.', 'The program doing it is an unsigned file in a user’s temp folder, started under that user’s account.', 'Minutes later the same workstation tried to sign in to two servers with an admin account.'],
           truth: 'Network Service Discovery: an intruder mapping what it can reach next.',
           resp: [{label: 'Isolate the workstation, collect triage, reset the account it used, and check the two servers’ sign-ins: it may have got in', good: true},
-                 {label: 'Block the workstation’s address at its switch port so it can’t reach any other host, and close: nothing scans from behind a port that is shut', good: false, why: 'The program is still on the machine, and the account it tried is still at risk.'},
+                 {label: 'Block the workstation’s address at its switch port so it can’t reach any other host: nothing scans from behind a port that is shut', good: false, why: 'The program is still on the machine, and the account it tried is still at risk.'},
                  {label: 'Ignore it: scans like this hit the town every day, from inside and out, and none of them has ever turned into anything', good: false, why: 'Outside scans are routine. A staff workstation scanning inside the network is not.'}]},
     benign: {clues: ['The source is VS-01, the town’s own vulnerability scanner.', 'Its scan is approved and scheduled: Tuesdays 22:00 to 02:00, with a written scope.', 'It touched only the subnets in scope.'],
              truth: 'Benign: the town’s own authorised vulnerability scan. Exclude it narrowly, with a reason and an expiry.'},
@@ -211,7 +211,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['A workstation made 6,000 lookups of long random names under one domain in three hours.', 'Endpoint telemetry: the lookups come from an unsigned program in a temp folder, not the browser or a security agent.', 'The domain was registered last week and appears in no vendor’s documentation.'],
           truth: 'DNS used as a command channel: commands and data hidden in lookups.',
           resp: [{label: 'Isolate the workstation, sinkhole the domain at the resolver, collect triage, and search the DNS logs for other hosts that asked for it', good: true},
-                 {label: 'Block the domain at the town’s resolver and close: with no answers coming back the program has no channel left, so the workstation can stay in use', good: false, why: 'The program is still running, and it can try another domain.'},
+                 {label: 'Block the domain at the town’s resolver: with no answers coming back the program has no channel left, so the workstation can stay in use', good: false, why: 'The program is still running, and it can try another domain.'},
                  {label: 'Block all DNS for that floor', good: false, disrupt: 2}]},
     benign: {clues: ['The lookups come from the endpoint security agent, a signed process.', 'Its vendor’s documentation (game) says the agent checks file reputations by DNS, under the vendor’s own domain.', 'That domain is on the town’s approved list.'],
              truth: 'Benign: the security agent’s documented reputation lookups. The process and the domain’s owner decide it, not the shape of the names.'},
@@ -223,7 +223,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['A server holds an SSH session open all night to an outside address on TCP 443, where the firewall expects TLS.', 'While it is open, FS-03 logs remote-desktop sign-ins coming from that server, which never uses remote desktop: the outside end is reaching FS-03 through the tunnel.', 'The process is a portable tunnelling tool copied to the server yesterday by an admin account, from a laptop that never manages servers.'],
           truth: 'Protocol Tunneling: remote desktop wrapped inside an SSH tunnel. SSH on TCP 443, a port it doesn’t normally use, is also Non-Standard Port (T1571).',
           resp: [{label: 'Block the destination, isolate the server, collect the tool, disable the account that copied it, and check what crossed the tunnel', good: true},
-                 {label: 'Close: outbound TCP 443 is allowed for this server, and blocking it would break every web connection it makes, updates included', good: false, why: 'The port is allowed. What’s inside it isn’t.'},
+                 {label: 'Benign: outbound TCP 443 is allowed for this server, and blocking it would break every web connection it makes, updates included', good: false, why: 'The port is allowed. What’s inside it isn’t.'},
                  {label: 'Block all outbound TCP 443 for the town', good: false, disrupt: 2}]},
     benign: {clues: ['It’s the network team’s documented out-of-band management link to the internet provider’s router.', 'The firewall rule that allows it names an owner and gives that reason.', 'Endpoints and times match the documentation.'],
              truth: 'Benign: a documented, owned management tunnel.'},
@@ -364,7 +364,7 @@ const BM_DRILLS = {
                       reveal: 'Tally saw a hole and named a technique. It never asked whether FS-02’s own log still held the forty minutes, or whether every other source went quiet at the same moment. Ask specific questions, and check the answer against the evidence.'},
          specific: {q: 'Is there an event 1102 in FS-02’s local Security log?', text: 'No. The local log runs unbroken back to Day {D-12}.'}},
     verdicts: [
-      {label: 'Collector outage: its disk filled and it dropped every source’s events for 40 minutes; FS-02’s own log was never cleared', good: true, why: 'The local log holds the window with no 1102, and the collector logged the drop for all 61 sources.'},
+      {label: 'Collector outage: its disk filled and it dropped 40 minutes of every source’s events; FS-02’s log is intact, so close it', good: true, why: 'The local log holds the window with no 1102, and the collector logged the drop for all 61 sources.'},
       {label: 'Log clearing on FS-02: an intruder cleared the Security log around 01:20 to hide 40 minutes, and the SIEM’s overnight drop is the hole it left', why: 'A cleared Security log starts with event 1102, and the window would be gone from the server too. Both are still there.'},
       {label: 'Can’t tell either way: whatever FS-02 wrote in those 40 minutes never reached the SIEM, so the record we would need is gone', why: 'They aren’t gone. They’re on FS-02, where they were written.'}],
     reasons: [
@@ -409,7 +409,7 @@ const BM_DRILLS = {
                       reveal: 'Tally put the two timestamps side by side as if both clocks were right. MGMT-01’s clock was ten and a half minutes fast: corrected, Devraj signed in at 13:59:30, then changed the rule. Check every clock before you trust an order.'},
          specific: {q: 'Was MGMT-01’s clock synchronised yesterday afternoon?', text: 'No. It runs on its own hardware clock, about 10 min 30 s fast.'}},
     verdicts: [
-      {label: 'The sign-in came first (13:59:30, once MGMT-01’s clock is corrected), then the change at 14:03:10: the ticketed change, in order', good: true, why: 'MGMT-01 was 10 min 30 s fast; the shared connection proves it.'},
+      {label: 'The sign-in came first (13:59:30, once MGMT-01’s clock is corrected), then the change at 14:03:10: the ticketed change. Close it', good: true, why: 'MGMT-01 was 10 min 30 s fast; the shared connection proves it.'},
       {label: 'The rule changed first, at 14:03, seven minutes before Devraj sat down: someone else used his firewall account inside the window', why: 'Only if both clocks were right. MGMT-01’s wasn’t.'},
       {label: 'The change came first: the SIEM, which stamps every event with one clock, lists the change above the sign-in', why: 'The SIEM shows when it received events, not when they happened.'}],
     reasons: [
@@ -518,8 +518,8 @@ const BM_BOARD_SPECS = () => [
    title: 'Round 1: the log that shrank', host: 'LOG-02 · Linux log relay', enemy: {spr: 'scrub', pal: 'scrub'},
    clues: ['/var/log/auth.log on LOG-02 is empty since 03:22; the collector still has everything up to 03:21.', 'The collector’s copy shows root signing in over SSH from a desktop that never manages servers.', 'The desktop’s user is on holiday, and her account signed in to it at 03:15.'],
    truth: 'Clearing Linux system logs to hide a sign-in. Forwarding as events are written kept the evidence.',
-   resp: [{label: 'Preserve the collector’s copies and the disk; disable the account and the root key; isolate the desktop; hunt for the same sign-in', good: true},
-          {label: 'Restart logging on LOG-02 and close: the collector kept everything up to 03:21, so the record is complete and the session is already documented', good: false, why: 'The intruder’s account and desktop are still live.'},
+   resp: [{label: 'Secure the collector’s copies and the disk; disable the account and the root key; isolate the desktop; search for the same sign-in', good: true},
+          {label: 'Restart logging on LOG-02: the collector kept everything up to 03:21, so the record is complete and the session is already documented', good: false, why: 'The intruder’s account and desktop are still live.'},
           {label: 'Wipe LOG-02 now', good: false, disrupt: 1, why: 'Preserve first.'}],
    chain: [{at: 40, text: 'The same key opens a second server.'}, {at: 75, text: 'That server’s log empties too.'}]},
   {kind: 'mal', threat: 'hinge', tech: 'T1686.002', tags: ['edge'], story: true, rate: 12, group: 'c',
@@ -527,8 +527,8 @@ const BM_BOARD_SPECS = () => [
    clues: ['A new rule at the top of the list lets any outside address reach FS-03 on remote desktop.', 'Made at 23:10 by a network admin account whose owner is on leave, from a laptop that never manages the firewall.', 'Sign-in attempts from abroad start arriving at FS-03 within minutes.'],
    truth: 'Modifying a network device firewall to let an attacker in.',
    resp: [{label: 'Remove the rule; disable the account, end its sessions: its owner is on leave. Isolate the laptop; check FS-03 and the account’s other changes', good: true},
-          {label: 'Remove the rule and close: it is tonight’s only change, and with it gone nothing outside can reach FS-03 on remote desktop', good: false, why: 'The account that made it is still the attacker’s.'},
-          {label: 'Ignore it: rules change every day', good: false, why: 'Not without a ticket, at 23:10, from that laptop.'}],
+          {label: 'Remove the rule: it is tonight’s only change, and with it gone nothing outside can reach FS-03 on remote desktop', good: false, why: 'The account that made it is still the attacker’s.'},
+          {label: 'Let it pass: rules change every day', good: false, why: 'Not without a ticket, at 23:10, from that laptop.'}],
    chain: [{at: 40, text: 'Remote-desktop attempts on FS-03 multiply.'}, {at: 75, text: 'One sign-in on FS-03 succeeds.'}]},
   {kind: 'mal', threat: 'burrow', tech: 'T1071.004', tags: [], story: true, rate: 11, group: 'c',
    title: 'Round 3: whispers in the lookups', host: 'FIN-WS-02 · finance workstation', enemy: {spr: 'burrow', pal: 'burrow'},
@@ -547,9 +547,9 @@ const BM_CARDS = [
   {id: 'rule', name: 'Close the rule', csf: 'Respond', good: true, text: 'Narrow “VPN address pool → internal network, ANY” to the few services VPN users need, today, under an emergency change. Deny and log the rest.', fx: 'Stage 2 becomes much easier: the path the intruder used is shut.'},
   {id: 'hunt', name: 'Hunt for the same behaviour elsewhere', csf: 'Detect', good: true, text: 'Search every server, and the collector’s copies, for event 1102, for the event log service stopping (1100) and for windows where a host holds fewer events than it forwarded (selective deletion writes no 1102); for the intruder’s account and for its tools; and replay the scan detection over the last month.', fx: 'Stage 3 becomes much easier.'},
   {id: 'wipe', name: 'Reimage MGMT-01 tonight', csf: 'Recover', text: 'A clean build, before anyone has looked.', fx: 'The disk and memory go with it, and nobody knows yet how the intruder got in.'},
-  {id: 'restorelog', name: 'Restore MGMT-01’s Security log from backup', csf: 'Recover', text: 'Bring last night’s copy of the log file back and call the gap closed.', fx: 'Last night’s copy was taken before tonight’s session, so it can’t fill tonight’s gap, and writing it back over MGMT-01 destroys what is left. (Read as a separate copy in the lab, it is worth having: the intruder has been on MGMT-01 since last Saturday.)'},
+  {id: 'restorelog', name: 'Restore MGMT-01’s Security log from backup', csf: 'Recover', text: 'Bring last night’s copy of the log file back and call the gap filled.', fx: 'Last night’s copy was taken before tonight’s session, so it can’t fill tonight’s gap, and writing it back over MGMT-01 destroys what is left. (Read as a separate copy in the lab, it is worth having: the intruder has been on MGMT-01 since last Saturday.)'},
   {id: 'blockip', name: 'Block one address and close', csf: 'Respond', text: 'Block the outside address in the alert and close the case.', fx: 'The intruder has an account and a foothold inside: one address is nothing.'},
-  {id: 'wait', name: 'Wait for more alerts', csf: 'Detect', text: 'Leave everything running to learn more.', fx: 'They’re clearing logs: waiting loses evidence, not gains it.'}
+  {id: 'wait', name: 'Wait for more alerts', csf: 'Detect', text: 'Keep everything running to gather more evidence.', fx: 'They’re clearing logs: waiting loses evidence, not gains it.'}
 ];
 
 /* ---------- Field Manual additions ---------- */

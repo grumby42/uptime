@@ -454,7 +454,7 @@ async function crException() {
   const c = CR();
   while (true) {
     const i = await choose('Gus’s request.', [
-      {label: 'Log a help-desk request: IT checks it, installs the signed driver for him, and records it', meta: {good: true}},
+      {label: 'Log a help-desk request: IT checks it, installs the signed driver for him, records it and closes it', meta: {good: true}},
       {label: 'Give Gus admin rights for one hour, logged, through the help desk'},
       {label: 'Make Gus a permanent admin: he’s trustworthy, has been here for years, and installs drivers every few months'},
       {label: 'Tell Gus no, and to find a plotter that doesn’t need a driver'}], {shuffle: true});

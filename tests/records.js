@@ -48,7 +48,8 @@ async function session(browser, ctxOpts) {
   async function waitUI(type) { for (let i = 0; i < 300; i++) { const p = await peek(); if (p.ui && (!type || p.ui.type === type)) return p; await sleep(15); } throw new Error('no ui ' + type + ' ' + JSON.stringify((await peek()).ui)); }
   async function pickLabel(re) {
     const p = await waitUI(); const u = p.ui;
-    const idx = u.options.findIndex(o => re.test(o.label) && !o.disabled);
+    // '@good' picks the option flagged good (meta.good), so a test doesn't depend on the right answer's wording.
+    const idx = re === '@good' ? u.options.findIndex(o => o.meta && o.meta.good && !o.disabled) : u.options.findIndex(o => re.test(o.label) && !o.disabled);
     if (idx < 0) throw new Error('no option ' + re + ' in ' + JSON.stringify(u.options.map(o => o.label)));
     let guard = 0;
     while ((await peek()).ui.cursor !== idx && guard++ < 40) await press(u.type === 'modal' ? 'down' : (u.cols > 1 ? 'right' : 'down'));
@@ -222,7 +223,7 @@ async function settleTo(s, re) {
   // ---- Fieldwork 1: the timed restore test ----
   await s.goTo('records', 5, 11);
   await s.untilChoice();
-  await s.pickLabel(/Read the job reports/);
+  await s.pickLabel(/^Check the job reports/);
   p = await s.waitUI('say');
   check('restore test: “green means it works” is refused', /Green means the job finished/.test(p.ui.text), p.ui.text);
   await s.untilChoice(); await s.pickLabel(/Restore real systems into the isolated lab/);
@@ -274,7 +275,7 @@ async function settleTo(s, re) {
   await s.untilChoice(); await s.pickLabel(/^In the key vault, with an escrowed copy/);
   p = await s.untilChoice();
   check('offline coverage starts at 80%: the directory’s job writes to the appliance only', (await s.peek()).metrics.rhOffline === 80 && /4 of the 5 critical systems/.test(p.ui.text), p.ui.text);
-  await s.pickLabel(/Leave it/);
+  await s.pickLabel(/^Skip it: the directory/);
   p = await s.waitUI('say');
   check('leaving the directory off the tapes is refused', /Rebuilding it from memory/.test(p.ui.text), p.ui.text);
   await s.untilChoice(); await s.pickLabel(/Add the directory’s backup/);
@@ -318,7 +319,7 @@ async function settleTo(s, re) {
   await s.untilChoice();
   await s.pickLabel(/Start investigating/);
   await s.pickLabel(/I have enough/);
-  await s.pickLabel(/^The approved records migration/);
+  await s.pickLabel('@good'); // the migration verdict
   await s.pickLabel(/Every rename came from/);
   await s.pickLabel(/harmless-looking extension/); await s.pickLabel(/migration’s service account/); await s.pickLabel(/Done: these are my 2/);
   await s.waitUI('modal');
