@@ -192,7 +192,7 @@ async function settleTo(s, re) {
   throw new Error('settleTo timed out: ' + re);
 }
 
-// Front Desk to Records Hall finished: Tier 2, Vault Badge, standing on the plaza just east of the old stairs.
+// Front Desk to Records Hall finished: Tier 2, Vault Badge, standing on the plaza just north of the old stairs.
 async function recordsDone(s, extra, party) {
   await marketDone(s, null, party);
   await s.page.evaluate((extra) => {
@@ -200,7 +200,7 @@ async function recordsDone(s, extra, party) {
     Object.assign(G.f, { rhMet: true, rhTest: true, rhBia: true, rhOffline: true, rhCreds: true, rhNight1: true, rhDrill1: true, rhDirective: true, rhDrill2: true, rhNight2: true, rhDrill3: true,
       rhDojoMet: true, rhDojoDone: true, rhBoard: true, rhVault: true, rhNight3: true, rhBoss: true, rhSummary: true }, extra || {});
     RH(); G.rh.obj = true; G.rh.offline = 100; G.day = 10;
-    G.map = 'hub'; G.x = 3; G.y = 10; G.dir = 'left';
+    G.map = 'hub'; G.x = 2; G.y = 9; G.dir = 'down';
   }, extra || null);
 }
 
@@ -213,7 +213,7 @@ async function recordsDone(s, extra, party) {
 
   // ---- The Vault Badge door: the stairs locked since slice 1 ----
   await recordsDone(s, { rhVault: false });
-  await s.press('left'); await sleep(60);
+  await s.press('down'); await sleep(60);
   p = await s.waitUI('say');
   check('the old stairs stay locked without the Vault Badge', /Vault Badge/.test(p.ui.text) && (await s.peek()).map === 'hub', p.ui.text);
   await s.settle();
@@ -221,10 +221,10 @@ async function recordsDone(s, extra, party) {
 
   // ---- Arrival ----
   await recordsDone(s);
-  await s.press('left'); await sleep(200);
+  await s.press('down'); await sleep(200);
   await s.settle();
   p = await s.peek();
-  check('the Vault Badge opens the stairs into the IT Basement', p.map === 'basement' && p.x === 14 && p.y === 14, { map: p.map, x: p.x, y: p.y });
+  check('the Vault Badge opens the stairs into the IT Basement', p.map === 'basement' && p.x === 14 && p.y === 1 && p.dir === 'down', { map: p.map, x: p.x, y: p.y });
   await s.goTo('basement', 14, 7);
   await s.settle();
   p = await s.peek();
@@ -234,7 +234,7 @@ async function recordsDone(s, extra, party) {
   check('scorecard shows the five basement metrics with targets', /Log source coverage/.test(sc0) && /Largest clock skew/.test(sc0) && /Detection precision/.test(sc0) && /Firewall rules with a named owner/.test(sc0) && /Mean time to detect, modelled/.test(sc0) && /≤ 1 s/.test(sc0));
   check('the basement map: racks with the collector, the clock, SIEM consoles, firewall and binder, two Dojos, the Board door, the stairs up', await s.page.evaluate(() => {
     const r = MAPS.basement.rows; return r.length === 16 && r.every(x => x.length === 30) && r[0][17] === '@' && r[1][3] === '#' && r[1].includes('%%') && r[1].includes('&&') && r[1].split('$').length === 3 &&
-      r[11].split('*').length === 4 && r[11].split('+').length === 4 && r[7][29] === 'D' && r[15][14] === 'E'; }));
+      r[11].split('*').length === 4 && r[11].split('+').length === 4 && r[7][29] === 'D' && r[0][14] === 'E' && r[15][14] === 'w'; }));
 
   // ---- Fieldwork 1: coverage ----
   await s.goTo('basement', 3, 1);

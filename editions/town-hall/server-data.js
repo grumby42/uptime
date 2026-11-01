@@ -87,19 +87,19 @@ Object.assign(MAPS, {
       "w;;,;;,;;w,,,,,,,,w,,,,,,,,,w",
       "wwwwwwwwwwww,,,wwwwwwwwwwwwww",
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
-      "D,,,,,,,,,,,,,),),,,,,,,,,,,D",
+      "w,,,,,,,,,,,,,),),,,,,,,,,,,D",
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
       "wwwwww,wwwwwwwwwwwwwww,wwwwww",
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
       "w,,/,/,/,,,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,D",
       "w;;;,,,,,,,,Y,,,,,,,,,,,;;;,w",
       "w;;;,,,,,,,,,,,,,,,,,,,,;;;,w",
-      "wwwwwwwwwwwwwEwwwwwwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'0,7': {to: 'basement', x: 1, y: 7, dir: 'right',
-      get locked() { return (typeof G !== 'undefined' && G && G.f.bmBeacon) ? undefined : 'A sealed door in the west wall. A card reader: “Beacon Badge required.”'; }},
-      '28,7': {to: 'svboard', x: 8, y: 8, dir: 'up'}}
+    doors: {'28,12': {to: 'basement', x: 1, y: 7, dir: 'right',
+      get locked() { return (typeof G !== 'undefined' && G && G.f.bmBeacon) ? undefined : 'A sealed door in the east wall. A card reader: “Beacon Badge required.”'; }},
+      '28,7': {to: 'svboard', x: 1, y: 5, dir: 'right'}}
   },
   svboard: {
     name: 'Server Board',
@@ -109,18 +109,18 @@ Object.assign(MAPS, {
       "w::,,,,,,,,,,,,::w",
       "w,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwEwwwwwwwww"
+      "wwwwwwwwwwwwwwwwww"
     ],
-    doors: {'8,9': {to: 'server', x: 27, y: 7, dir: 'left'}}
+    doors: {'0,5': {to: 'server', x: 27, y: 7, dir: 'left'}}
   }
 });
 // The one change to earlier data: the Basement's west wall becomes the door to the Server Room (Beacon Badge opens it).
 MAPS.basement.rows[7] = 'D' + MAPS.basement.rows[7].slice(1);
-MAPS.basement.doors['0,7'] = {to: 'server', x: 1, y: 7, dir: 'right',
+MAPS.basement.doors['0,7'] = {to: 'server', x: 27, y: 12, dir: 'left',
   get locked() { return (typeof G !== 'undefined' && G && G.f.bmBeacon) ? undefined : 'A door in the west wall. A card reader: “Server Room. Beacon Badge required.”'; }};
 
 const SV_MAPS = ['server', 'svboard'];

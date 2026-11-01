@@ -106,7 +106,7 @@ Object.assign(MAPS, {
       "w,,,,,,,Y,,,,,,,,,,,,,,,,,,,,w",
       "wwwwwwwwwwwwwwEwwwwwwwwwwwwwww"
     ],
-    doors: {'14,15': {to: 'hub', x: 15, y: 18, dir: 'down'}, '29,7': {to: 'rboard', x: 9, y: 9, dir: 'up'}}
+    doors: {'14,15': {to: 'hub', x: 15, y: 18, dir: 'down'}, '29,7': {to: 'rboard', x: 1, y: 6, dir: 'right'}}
   },
   rboard: {
     name: 'Records Board',
@@ -117,13 +117,13 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwwEwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'9,10': {to: 'records', x: 28, y: 7, dir: 'left'}}
+    doors: {'0,6': {to: 'records', x: 28, y: 7, dir: 'left'}}
   }
 });
 // The one change to earlier data: a Records Hall building in the south of the plaza, between the Identity Board

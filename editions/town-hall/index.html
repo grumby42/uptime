@@ -23,24 +23,28 @@ body{font-family:var(--mono);-webkit-text-size-adjust:100%;touch-action:manipula
   -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 button{font-family:inherit}
 #app{display:flex;flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;width:100%}
+body.portrait #app{height:100vh;height:100dvh;min-height:0}
 #stage{position:relative;max-width:100vw}
 #screen{position:relative;overflow:hidden;background:#000;margin:0 auto}
 #cv{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 
-/* HUD over the map */
-#hud{position:absolute;left:0;right:0;top:0;padding:2px 6px;font-size:calc(var(--fs) * .8);line-height:1.3;
-  background:rgba(16,20,31,.72);color:#fff;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#hud div{overflow:hidden;text-overflow:ellipsis}
+/* HUD: its own band above the map (never over it); both lines wrap, nothing is cut off */
+#hud{flex:none;width:var(--hudW,100%);max-width:100vw;padding:3px 8px 4px;font-size:13px;line-height:1.3;color:#fff;background:#161b29;
+  pointer-events:none;white-space:normal;overflow-wrap:anywhere;min-height:calc(2 * 1.3em + 7px)}
+body.portrait #hud{width:100%;font-size:11.5px;min-height:calc(3 * 1.3em + 7px)}
+#hud.off{visibility:hidden}
 #hud .obj{color:var(--gold)}
 #toast{position:absolute;left:50%;top:24%;transform:translateX(-50%);background:#1b2233;color:#fff;border:2px solid var(--gold);
   padding:3px 8px;font-size:calc(var(--fs) * .8);opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:96%;overflow:hidden;text-overflow:ellipsis}
 #toast.show{opacity:1}
+#screen.battle #toast{top:50%}
 
 /* Battle panels (real text over the canvas) */
 .bpanel{position:absolute;display:none;background:#fff;color:#1b2233;border:2px solid #1b2233;padding:3px 6px;font-size:var(--fs);line-height:1.25}
 .bpanel.show{display:block}
-#bcard{left:2.5%;top:4%;width:47%}
-#btool{left:50.5%;top:46%;width:47%}
+/* positions match BATTLE_LAYOUT in game.js: alert card top-left, opponent top-right; tool bottom-left, tool card bottom-right */
+#bcard{left:2.5%;top:3%;width:52%}
+#btool{right:2.5%;bottom:4%;width:52%}
 .bt{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bcard .bt{white-space:normal}
 .bs{font-size:.8em;color:#4a5163;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -54,7 +58,11 @@ button{font-family:inherit}
 #panel{background:#fff;color:#1b2233;font-size:var(--fs);line-height:1.4;display:none}
 #panel.show{display:block}
 body.landscape #panel{position:absolute;left:0;right:0;bottom:0;max-height:58%;overflow:auto;border-top:3px solid #1b2233;padding:.5em .9em;z-index:5}
-body.portrait #panel{display:block;visibility:hidden;width:100%;min-height:150px;font-size:14px;padding:8px 12px;border-top:3px solid #1b2233}
+/* Desktop with room to spare: the dialogue sits below the map instead of over it (the battle scene stays whole) */
+body.landscape.below #panel{position:static;display:block;visibility:hidden;width:var(--hudW);height:var(--panelH,180px);max-height:none}
+body.landscape.below #panel.show{visibility:visible}
+body.portrait #stage{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;width:100%}
+body.portrait #panel{display:block;visibility:hidden;width:100%;flex:1 1 auto;min-height:150px;overflow:auto;font-size:14px;padding:8px 12px;border-top:3px solid #1b2233}
 body.portrait #panel.show{visibility:visible}
 #pwho{font-weight:700;color:var(--accent)}
 #ptext{white-space:pre-wrap;min-height:1.4em}
@@ -73,7 +81,8 @@ body.portrait #popts .opt{min-height:36px}
 /* On-screen pad */
 #pad{display:none}
 body.portrait #pad, body.touch #pad{display:grid}
-body.portrait #pad{grid-template-columns:1fr auto 1fr;align-items:center;width:100%;max-width:420px;padding:10px 8px 6px;gap:4px}
+/* Portrait: the controls sit at the bottom of the screen and stay above any open modal */
+body.portrait #pad{flex:none;grid-template-columns:1fr auto 1fr;align-items:center;width:100%;max-width:440px;padding:8px 10px 4px;gap:4px;position:relative;z-index:60}
 .dpad{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,46px);justify-self:start}
 .dpad button,.ab button,.sys button{touch-action:none;border:none;color:#e9edf5;cursor:pointer}
 .dpad button{background:#3a4a6b;font-size:20px;border-radius:6px}
@@ -85,24 +94,28 @@ body.portrait #pad{grid-template-columns:1fr auto 1fr;align-items:center;width:1
 .ab .ba{background:#b8432f;margin-top:-26px}.ab .bb{background:#8a4b2f;margin-top:26px}
 .sys{display:flex;flex-direction:column;gap:10px;align-items:center}
 .sys button{background:#4a5163;border-radius:12px;font-size:10px;padding:8px 6px;letter-spacing:.5px}
-body.landscape.touch #pad{position:fixed;inset:0;pointer-events:none;display:block}
+body.landscape.touch #pad{position:fixed;inset:0;pointer-events:none;display:block;z-index:60}
 body.landscape.touch .dpad{position:fixed;left:14px;bottom:20px;pointer-events:auto}
 body.landscape.touch .ab{position:fixed;right:18px;bottom:30px;pointer-events:auto}
 body.landscape.touch .sys{position:fixed;right:18px;top:14px;flex-direction:row;pointer-events:auto}
 #foot{font-size:11px;color:#8b93a7;padding:6px 10px;text-align:center;max-width:100vw}
+body.portrait #foot{flex:none;padding:2px 10px calc(4px + env(safe-area-inset-bottom))}
 body.portrait #foot .keys{display:none}
 
 /* Modal pages */
 #modal{position:fixed;inset:0;background:rgba(8,10,16,.8);display:none;align-items:center;justify-content:center;z-index:50;padding:8px}
+/* Modals fit in the area above the on-screen controls (portrait) or between them (touch landscape); they scroll inside */
+body.portrait #modal{bottom:var(--padZone,0px);padding:6px}
+body.landscape.touch #modal{padding:8px 150px 8px 168px}
 #modal.show{display:flex}
 .mbox{background:var(--paper);color:var(--paper-ink);width:min(760px,100%);max-height:100%;display:flex;flex-direction:column;border:3px solid #1b2233;box-shadow:0 0 0 3px var(--paper)}
 .mhead{font-weight:700;padding:10px 14px 0;font-size:17px;letter-spacing:1px}
 .mhead:empty{display:none}
-.mbody{overflow:auto;padding:6px 14px;font-size:15px;line-height:1.45;-webkit-user-select:text;user-select:text;overscroll-behavior:contain}
+.mbody{overflow:auto;flex:1 1 auto;min-height:0;padding:6px 14px;font-size:15px;line-height:1.45;-webkit-user-select:text;user-select:text;overscroll-behavior:contain}
 .mbody p{margin:.5em 0}
 .mbody h3{font-size:14px;margin:1em 0 .3em;color:var(--accent);letter-spacing:1px;text-transform:uppercase}
-.mopts{padding:6px 10px 10px;display:flex;flex-direction:column;gap:3px;max-height:48%;overflow:auto;flex:none}
-.mopts .opt{font-size:15px;min-height:40px;padding:6px 8px;color:var(--paper-ink)}
+.mopts{padding:6px 10px 10px;display:flex;flex-direction:column;gap:3px;overflow:auto;flex:0 1 auto;min-height:0}
+.mopts .opt{flex:none;font-size:15px;min-height:40px;padding:6px 8px;color:var(--paper-ink)}
 .mopts .opt.cur{background:var(--cur);border-color:var(--paper-ink)}
 .mopts .opt .note{color:var(--muted)}
 .mopts .opt.sel{font-weight:700}
@@ -113,6 +126,8 @@ body.portrait #foot .keys{display:none}
 table.sc{border-collapse:collapse;width:100%;font-size:13px;margin:.4em 0}
 table.sc th,table.sc td{border-bottom:1px solid rgba(127,127,127,.35);padding:3px 4px;text-align:left}
 table.sc th{font-size:12px;color:var(--muted)}
+/* Scorecard / summary: numbers and targets never split; only the metric name wraps */
+table.sc.score td+td,table.sc.score th+th{white-space:nowrap;text-align:right}
 .dir{color:var(--warn);font-weight:700}
 .card{border:2px solid var(--paper-ink);padding:6px 8px;margin:6px 0;font-size:14px}
 .tag{font-size:11px;border:1px solid var(--muted);padding:0 4px;color:var(--muted)}
@@ -140,10 +155,10 @@ pre.art.ai{border-left-color:var(--gold)}
 </head>
 <body>
 <div id="app">
+  <div id="hud"><div class="st"></div><div class="obj"></div></div>
   <div id="stage">
     <div id="screen">
       <canvas id="cv" width="320" height="180" aria-label="Game screen"></canvas>
-      <div id="hud"></div>
       <div id="bcard" class="bpanel"></div>
       <div id="btool" class="bpanel"></div>
       <div id="toast"></div>
@@ -165,7 +180,7 @@ pre.art.ai{border-left-color:var(--gold)}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261028-1643Z', BUILD_TS = '2026-10-28 16:43 UTC';
+const BUILD_ID = 'ARCD-20261101-0245Z', BUILD_TS = '2026-11-01 02:45 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -217,6 +232,10 @@ const S = {
 };
 
 /* ---------- Palettes (index 1..4) ---------- */
+// Exit arrows for doors in side and top walls: the down arrow turned to point out through the wall.
+S.exitU = S.exit.slice().reverse();
+S.exitR = S.exit.map((_, y) => S.exit.map(r => r[y]).join(''));
+S.exitL = S.exitR.map(r => r.split('').reverse().join(''));
 const PAL = {
   G: ['#1f3d2b','#2f6e3e','#5aa64b','#a6d96a'],
   R: ['#2b2f3a','#4a5163','#8b93a7','#d7dbe4'],
@@ -371,7 +390,10 @@ const CSF = {
    ============================================================ */
 'use strict';
 
-const VW = 320, VH = 180, TS = 16;
+const VW = 320, TS = 16, VH0 = 180;
+// The logical screen is 320x180. On a portrait phone the map is as wide as the screen allows at a whole-number
+// pixel scale, so the height freed above the controls shows more map rows instead (up to 20 rows, map only).
+let VH = VH0;
 
 /* ---------- RNG (mulberry32, seedable for tests) ---------- */
 function makeRng(seed) {
@@ -395,7 +417,11 @@ function weighted(list) { // [{w,...}]
 /* Answer order: a deterministic shuffle for lists that have a right answer, so position never gives it
    away. Opt in with {shuffle: true}. Navigation items (Back, Done, decide, ask the AI, or pin: true)
    keep their places. Seeded from the save's seed and the labels, so a list keeps its order on reload,
-   and it never touches the game's own random stream. Callers still get the index into their own array. */
+   and it never touches the game's own random stream. Callers still get the index into their own array.
+   The highlight starts on display position 0 (the first enabled item), never on the caller's item 0, so it
+   lands on a random answer; pass {cursor: i} (a caller index) to start somewhere on purpose.
+   Pure navigation/confirmation menus stay in order; when one marks a preferred item with meta.good (a hint
+   for the test bot), it says so with {nav: true} so the tests can tell it from a graded list. */
 function shuffleOrder(items, o) {
   const perm = items.map((_, i) => i);
   if (!o || !o.shuffle) return perm;
@@ -411,6 +437,11 @@ function shuffleOrder(items, o) {
   return perm; // perm[display position] = caller's index
 }
 // The first arr.length items of a shuffled list, in the order the player sees them (for card text in the body).
+function initialCursor(shown, perm, o) {
+  let c = o && o.cursor !== undefined && o.cursor !== null ? Math.max(0, perm.indexOf(o.cursor)) : 0;
+  for (let k = 0; k < shown.length && shown[c] && shown[c].disabled; k++) c = (c + 1) % shown.length;
+  return c;
+}
 function shownOrder(arr, items) { return shuffleOrder(items, {shuffle: true}).filter(i => i < arr.length).map(i => arr[i]); }
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -450,7 +481,7 @@ function tunedGrid(grid) {
 
 /* ---------- Screen & scaling ---------- */
 const Screen = {
-  canvas: null, ctx: null, k: 1, s: 1,
+  canvas: null, ctx: null, k: 1, s: 1, tallOK: false, tall: false,
   init() {
     this.canvas = document.getElementById('cv');
     this.ctx = this.canvas.getContext('2d');
@@ -465,20 +496,35 @@ const Screen = {
     const portrait = H > W * 1.05 || W < 560;
     document.body.classList.toggle('portrait', portrait);
     document.body.classList.toggle('landscape', !portrait);
+    // Room for the map: below the HUD band; in portrait also above the dialogue panel and the controls at the bottom.
+    const hh = id => { const e = document.getElementById(id); return e ? e.getBoundingClientRect().height : 0; };
     let availW, availH;
-    if (portrait) { availW = W; availH = Math.max(180, H * 0.42); }
-    else { availW = W - (touch ? 300 : 24); availH = H - 34; }
+    if (portrait) { availW = W; availH = Math.max(90, H - hh('hud') - 150 - hh('pad') - hh('foot')); }
+    else { availW = W - (touch ? 300 : 24); availH = H - 34 - hh('hud'); }
     // largest whole number of device pixels per logical pixel that fits
-    let k = Math.floor(Math.min(availW * dpr / VW, availH * dpr / VH));
-    if (k < 1) k = 1;
-    // keep the CSS scale a whole number where the screen is big enough (desktop: 2x, 3x, 4x...)
-    if (dpr <= 1.01 || k / dpr >= 2) { const cssK = Math.max(1, Math.floor(k / dpr)); k = Math.round(cssK * dpr); }
+    const scaleFor = h => {
+      let k = Math.floor(Math.min(availW * dpr / VW, h * dpr / VH0));
+      if (k < 1) k = 1;
+      // keep the CSS scale a whole number where the screen is big enough (desktop: 2x, 3x, 4x...)
+      if (dpr <= 1.01 || k / dpr >= 2) { const cssK = Math.max(1, Math.floor(k / dpr)); k = Math.round(cssK * dpr); }
+      return k;
+    };
+    let k = scaleFor(availH);
+    // Desktop / keyboard landscape: if the map keeps its scale with a dialogue band below it, put the dialogue there.
+    const PANEL_H = 170, below = !portrait && !touch && scaleFor(availH - PANEL_H) === k;
+    document.body.classList.toggle('below', below);
+    if (below) document.documentElement.style.setProperty('--panelH', Math.floor(Math.min(260, availH - VH0 * k / dpr)) + 'px');
     this.k = k; this.s = k / dpr;
+    this.tall = portrait && this.tallOK;
+    VH = this.tall ? clamp(Math.floor(availH / this.s / TS) * TS, VH0, 20 * TS) : VH0;
     this.canvas.width = VW * k; this.canvas.height = VH * k;
     const wrap = document.getElementById('screen');
     wrap.style.width = (VW * this.s) + 'px'; wrap.style.height = (VH * this.s) + 'px';
     document.documentElement.style.setProperty('--s', this.s);
     document.documentElement.style.setProperty('--fs', Math.max(10, Math.round(4.6 * this.s)) + 'px');
+    document.documentElement.style.setProperty('--hudW', (VW * this.s) + 'px');
+    const pad = document.getElementById('pad');
+    document.documentElement.style.setProperty('--padZone', portrait && pad ? Math.max(0, Math.ceil(H - pad.getBoundingClientRect().top)) + 'px' : '0px');
     this.ctx.setTransform(k, 0, 0, k, 0, 0);
     this.ctx.imageSmoothingEnabled = false;
   }
@@ -568,9 +614,8 @@ const UI = {
     const shown = perm.map(i => items[i]);
     return new Promise(res => {
       this.mode = 'choice';
-      this.choice = {items: shown, perm, cursor: Math.max(0, perm.indexOf(o.cursor || 0)), cols: o.cols || 1, resolve: res, cancel: !!o.cancel};
+      this.choice = {items: shown, perm, cursor: initialCursor(shown, perm, o), cols: o.cols || 1, resolve: res, cancel: !!o.cancel, opts: o};
       this.openedAt = performance.now();
-      while (this.choice.items[this.choice.cursor] && this.choice.items[this.choice.cursor].disabled && this.choice.cursor < shown.length - 1) this.choice.cursor++;
       this.who.textContent = o.who || ''; this.who.style.display = o.who ? '' : 'none';
       this.text.textContent = prompt || '';
       this.more.style.visibility = 'hidden';
@@ -590,6 +635,7 @@ const UI = {
       const i = +b.dataset.i; if (c.items[i].disabled) return;
       c.cursor = i; this.finishChoice(i);
     }));
+    const cur = this.opts.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
   },
   finishChoice(i) {
     const c = this.choice;
@@ -623,7 +669,8 @@ const UI = {
     o = o || {};
     const perm = shuffleOrder(items, o);
     return new Promise(res => {
-      this.modal = {items: perm.map(i => items[i]), perm, cursor: Math.max(0, perm.indexOf(o.cursor || 0)), resolve: res, closable: o.closable !== false, multi: o.multi || 0, sel: new Set()};
+      const shown = perm.map(i => items[i]);
+      this.modal = {items: shown, perm, cursor: initialCursor(shown, perm, o), resolve: res, closable: o.closable !== false, multi: o.multi || 0, sel: new Set(), opts: o};
       this.openedAt = performance.now();
       this.modalEl.innerHTML =
         '<div class="mbox ' + (o.cls || '') + '"><div class="mhead">' + esc(title) + '</div>' +
@@ -827,8 +874,8 @@ const MAPS = {
       "h.aaDa..bbDb..==..ddDd.......h",
       "h.............==.............h",
       "h============================h",
-      "h.S.cccc......==.............h",
-      "h.X.ccDc......==......3333GGGh",
+      "hS..cccc......==.............h",
+      "hhXhccDc......==......3333GGGh",
       "hhhhhhhhhhhhh.==.hhhhh3333GGGh",
       "hGGGGGGGGGGGG.==.GGGGGGGGGGGGh",
       "hGGGGGGGGGGGGGGGGGGGGGGGGGGGGh",
@@ -1360,7 +1407,7 @@ async function raeTalk() {
     await say('Our job: keep the district running and notice when someone is trying to break in. Every alert is a question. Some are attacks; most aren’t.', who);
     await say('First you need a tool. I have budget for one starter. Pick the one that fits how you think.', who);
     const ids = ['sentry', 'lantern', 'ledger'];
-    const i = await choose('Choose your starter tool:', ids.map(id => ({label: TOOLS[id].name + ' (' + CLASSES[TOOLS[id].cls].label + ' · ' + TOOLS[id].sub + ')', note: TOOLS[id].blurb, meta: {good: id === 'sentry'}})), {who: who});
+    const i = await choose('Choose your starter tool:', ids.map(id => ({label: TOOLS[id].name + ' (' + CLASSES[TOOLS[id].cls].label + ' · ' + TOOLS[id].sub + ')', note: TOOLS[id].blurb, meta: {good: id === 'sentry'}})), {who: who, nav: true});
     const id = ids[i];
     addTool(id, 3); f.starter = id;
     await say(TOOLS[id].name + ' is installed on your console. Tools aren’t thrown at problems: you run them, and their abilities cost Focus.', who);
@@ -1451,7 +1498,7 @@ async function deskEnd() {
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}];
   if (qtDeskReady()) opts.push({label: 'Ledger console: overnight sign-ins', meta: {k: 'console'}});
   opts.push({label: 'Not yet', meta: {k: 'no'}});
-  const i = await choose('Your desk. End your shift?', opts);
+  const i = await choose('Your desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k === 'end') await endShift('desk');
   else if (opts[i].meta.k === 'console') await qtDeskConsole();
 }
@@ -1528,7 +1575,7 @@ async function owenTalk() {
     {label: 'Ignore it: he’s just venting, and a report would only get him in trouble'},
     {label: 'Report what you heard, factually, to the insider-risk process (HR)', meta: {good: true}}];
   while (true) {
-    const i = await choose('(Resentment after a reorg can be an early warning sign. What do you do?)', opts);
+    const i = await choose('(Resentment after a reorg can be an early warning sign. What do you do?)', opts, {shuffle: true});
     if (i === 3) break;
     if (i === 0) await say('Don’t snoop. Looking through someone’s mail without authorisation breaks policy, maybe the law, and ruins any real investigation. That’s for the formal process.');
     else if (i === 1) await say('That turns one remark into gossip and can wreck a person’s reputation. One sign proves nothing.');
@@ -1592,7 +1639,7 @@ async function evolveCheck() {
   if (!G.items.guide) return;
   const t = G.party.find(p => p.lvl >= 5 && !p.tuned);
   if (!t) return;
-  const i = await choose(TOOLS[t.id].name + ' (Lv ' + t.lvl + ') is ready to be Tuned. Use the Tuning Guide?', [{label: 'Tune it', meta: {good: true}}, {label: 'Later'}]);
+  const i = await choose(TOOLS[t.id].name + ' (Lv ' + t.lvl + ') is ready to be Tuned. Use the Tuning Guide?', [{label: 'Tune it', meta: {good: true}}, {label: 'Later'}], {nav: true});
   if (i !== 0) return;
   G.items.guide = 0; t.tuned = true;
   await say(TOOLS[t.id].name + ' was Tuned! Fewer noisy detections, sharper abilities (power ×1.25).');
@@ -1637,7 +1684,7 @@ async function boardScript() {
   touchCSF('Protect');
   if (hasTool('ledger')) {
     const i = await choose('Rae: With Tier 1 comes automation. Ledger can auto-close alerts matching known false-positive patterns while you walk. Risk: about 1 in 50 auto-closed alerts might be real (game), and nobody looks at those. Turn it on?',
-      [{label: 'Turn automation on', meta: {good: true}}, {label: 'Not now (toggle later in the Start menu)'}]);
+      [{label: 'Turn automation on', meta: {good: true}}, {label: 'Not now (toggle later in the Start menu)'}], {nav: true});
     G.f.autoUnlocked = true; G.auto = i === 0;
   }
   await evolveCheck();
@@ -1731,7 +1778,7 @@ async function summary() {
     qtSummaryHtml() +
     '<p class="big">Next: the Mail Room.</p>';
   Series.markEdition(EDITION.id, {done: true});
-  const i = await UI.openModal('End of slice 1', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of slice 1', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -1848,7 +1895,7 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
       "wwwwwwwwwwwwwwEwwwwwwwwwwwwwww"
     ],
-    doors: {'14,15': {to: 'hub', x: 19, y: 11, dir: 'down'}, '29,10': {to: 'mboard', x: 9, y: 9, dir: 'up'}}
+    doors: {'14,15': {to: 'hub', x: 19, y: 11, dir: 'down'}, '29,10': {to: 'mboard', x: 1, y: 6, dir: 'right'}}
   },
   mboard: {
     name: 'Mail Board',
@@ -1859,19 +1906,19 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwwEwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'9,10': {to: 'mail', x: 28, y: 10, dir: 'left'}}
+    doors: {'0,6': {to: 'mail', x: 28, y: 10, dir: 'left'}}
   }
 });
 // The one change to Front Desk data: a Mail Room building east of the records office on the plaza,
 // with a gap in the hedge so its door can be reached from the cabling. The door opens with the Key Badge.
-MAPS.hub.rows[9] = "h.S.cccc......==.MMMM........h";
-MAPS.hub.rows[10] = "h.X.ccDc......==.MMDM.3333GGGh";
+MAPS.hub.rows[9] = "hS..cccc......==.MMMM........h";
+MAPS.hub.rows[10] = "hhXhccDc......==.MMDM.3333GGGh";
 MAPS.hub.rows[11] = "hhhhhhhhhhhhh.==.hh.hh3333GGGh";
 MAPS.hub.doors['19,10'] = {to: 'mail', x: 14, y: 14, dir: 'up',
   get locked() { return (typeof G !== 'undefined' && G && G.f.boardDone) ? undefined : 'The Mail Room. A note on the door: “Staff with a Key Badge only.”'; }};
@@ -2495,7 +2542,7 @@ async function mrTalk(npc) {
 async function mrDesk() {
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
   if (!G.f.mrDrill2) { await say('Your desk in the Mail Room. Too early to go home.'); return; }
-  const i = await choose('Your Mail Room desk. End your shift?', opts);
+  const i = await choose('Your Mail Room desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (!G.f.mrNight) {
@@ -2559,13 +2606,13 @@ async function mrInboxRoom() {
     while (true) {
       const code = MR_DOORCODE.split('').map((c, j) => m.inbox[j] ? c : '_').join(' ');
       const items = [
-        {label: 'Inspect the sender', disabled: !!rev.sender, meta: {k: 'sender'}},
-        {label: msg.linkText ? 'Hover over the link' : 'Check the link or attachment', disabled: !!rev.link, meta: {k: 'link'}},
-        {label: 'Read the tone', disabled: !!rev.tone, meta: {k: 'tone'}},
-        {label: 'Check authentication results', disabled: !!rev.auth, meta: {k: 'auth'}},
-        {label: 'A · Trust it', meta: {k: 'trust', good: msg.good === 'trust'}},
-        {label: 'B · Report it', meta: {k: 'report', good: msg.good === 'report'}}];
-      const i = await UI.openModal('Inbox room · message ' + (n + 1) + ' of 6 · code ' + code, mrMailHtml(msg, rev), items, {closable: false, cls: 'drill'});
+        {label: 'Inspect the sender', pin: true, disabled: !!rev.sender, meta: {k: 'sender'}},
+        {label: msg.linkText ? 'Hover over the link' : 'Check the link or attachment', pin: true, disabled: !!rev.link, meta: {k: 'link'}},
+        {label: 'Read the tone', pin: true, disabled: !!rev.tone, meta: {k: 'tone'}},
+        {label: 'Check authentication results', pin: true, disabled: !!rev.auth, meta: {k: 'auth'}},
+        {label: 'Trust it', meta: {k: 'trust', good: msg.good === 'trust'}},
+        {label: 'Report it', meta: {k: 'report', good: msg.good === 'report'}}];
+      const i = await UI.openModal('Inbox room · message ' + (n + 1) + ' of 6 · code ' + code, mrMailHtml(msg, rev), items, {shuffle: true, closable: false, cls: 'drill'});
       const k = items[i].meta.k;
       if (k !== 'trust' && k !== 'report') { rev[k] = true; continue; }
       const ok = k === msg.good;
@@ -2640,7 +2687,7 @@ async function mrTexts() {
         {label: 'Tap the link or reply', meta: {k: 'tap'}},
         {label: 'Report it (and don’t reply)', meta: {k: 'report', good: m.good === 'report'}},
         {label: 'Nothing to do: it’s legitimate', meta: {k: 'none', good: m.good === 'none'}}];
-      const i = await UI.openModal('Text stream', '<div class="sms"><span class="from">' + esc(m.from) + '</span>' + esc(m.text) + '</div>', items, {closable: false, cls: 'drill'});
+      const i = await UI.openModal('Text stream', '<div class="sms"><span class="from">' + esc(m.from) + '</span>' + esc(m.text) + '</div>', items, {shuffle: true, closable: false, cls: 'drill'});
       const k = items[i].meta.k;
       if (k === m.good) { await UI.openModal(k === 'report' ? 'Reported' : 'Fine', '<p>' + esc(m.why) + '</p>', [{label: 'Next text', meta: {good: true}}], {closable: false}); break; }
       await UI.openModal('Not quite', '<p>' + (k === 'tap' ? 'Never tap links in, or reply to, unexpected texts. ' : '') + esc(m.why) + '</p>', [{label: 'Try again', meta: {good: true}}], {closable: false});
@@ -2730,7 +2777,7 @@ async function mrEvolveCheck() {
   if (!G.mr || !G.mr.rulebook) return;
   const t = G.party.find(p => p.id === 'sieve' && p.lvl >= 5);
   if (!t) return;
-  const i = await choose('Sieve (Lv ' + t.lvl + ') can use the Filter Rulebook. Evolve it?', [{label: 'Evolve Sieve', meta: {good: true}}, {label: 'Later'}]);
+  const i = await choose('Sieve (Lv ' + t.lvl + ') can use the Filter Rulebook. Evolve it?', [{label: 'Evolve Sieve', meta: {good: true}}, {label: 'Later'}], {nav: true});
   if (i !== 0) return;
   G.mr.rulebook = false; t.id = 'sifter';
   await say('Sieve is evolving! Sieve → Sifter. New ability: Search and purge, every copy from every inbox.');
@@ -2757,8 +2804,8 @@ async function mrGauntlet() {
   for (let n = 0; n < MR_GAUNTLET.length; n++) {
     const g = MR_GAUNTLET[n];
     while (true) {
-      const items = [{label: 'A · Trust', meta: {k: 'trust', good: g.good === 'trust'}}, {label: 'B · Report', meta: {k: 'report', good: g.good === 'report'}}];
-      const i = await UI.openModal('Round 1 · triage gauntlet ' + (n + 1) + '/' + MR_GAUNTLET.length, '<div class="mail">' + esc(g.line) + '</div>', items, {closable: false, cls: 'drill'});
+      const items = [{label: 'Trust', meta: {k: 'trust', good: g.good === 'trust'}}, {label: 'Report', meta: {k: 'report', good: g.good === 'report'}}];
+      const i = await UI.openModal('Round 1 · triage gauntlet ' + (n + 1) + '/' + MR_GAUNTLET.length, '<div class="mail">' + esc(g.line) + '</div>', items, {shuffle: true, closable: false, cls: 'drill'});
       if (items[i].meta.k === g.good) break;
       mistakes++;
       await UI.openModal('Miss', '<p>' + esc(g.why) + '</p>', [{label: 'Again', meta: {good: true}}], {closable: false});
@@ -2853,7 +2900,7 @@ async function mrSummary() {
     mrQtSummaryHtml() +
     '<p class="big">Next: Clerks’ Row.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true});
-  const i = await UI.openModal('End of the Mail Room', body, [{label: 'Keep exploring the Mail Room', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of the Mail Room', body, [{label: 'Keep exploring the Mail Room', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -2957,7 +3004,7 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
       "wwwwwwwwwwwwwwEwwwwwwwwwwwwwww"
     ],
-    doors: {'14,15': {to: 'hub', x: 25, y: 11, dir: 'down'}, '29,10': {to: 'eboard', x: 9, y: 9, dir: 'up'}}
+    doors: {'14,15': {to: 'hub', x: 25, y: 11, dir: 'down'}, '29,10': {to: 'eboard', x: 1, y: 6, dir: 'right'}}
   },
   eboard: {
     name: 'Endpoint Board',
@@ -2968,19 +3015,19 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwwEwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'9,10': {to: 'clerks', x: 28, y: 10, dir: 'left'}}
+    doors: {'0,6': {to: 'clerks', x: 28, y: 10, dir: 'left'}}
   }
 });
 // The one change to earlier data: a Clerks' Row building east of the Mail Room on the plaza.
 // Its door opens with the Seal Badge.
-MAPS.hub.rows[9] = "h.S.cccc......==.MMMM..RRRR..h";
-MAPS.hub.rows[10] = "h.X.ccDc......==.MMDM.3RRDRGGh";
+MAPS.hub.rows[9] = "hS..cccc......==.MMMM..RRRR..h";
+MAPS.hub.rows[10] = "hhXhccDc......==.MMDM.3RRDRGGh";
 MAPS.hub.doors['25,10'] = {to: 'clerks', x: 14, y: 14, dir: 'up',
   get locked() { return (typeof G !== 'undefined' && G && G.f.mrSeal) ? undefined : 'Clerks’ Row. A note on the door: “Staff with a Seal Badge only.”'; }};
 
@@ -3675,7 +3722,7 @@ async function crTalk(npc) {
 async function crDesk() {
   if (!G.f.crDrill2) { await say('Your desk in Clerks’ Row. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Clerks’ Row desk. End your shift?', opts);
+  const i = await choose('Your Clerks’ Row desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   const c = CR();
@@ -3775,7 +3822,7 @@ async function crTriage() {
     const a = CR_ADVISORIES[n];
     const items = ['week', 'next', 'later'].map(b => ({label: CR_BUCKETS[b], meta: {b: b, good: a.good === b}}));
     const i = await UI.openModal('Patch Tuesday triage · ' + (n + 1) + ' of ' + CR_ADVISORIES.length,
-      '<p>Put each advisory in a batch. This week’s batch goes out today.</p>' + crAdvCard(a), items, {closable: false, cls: 'drill'});
+      '<p>Put each advisory in a batch. This week’s batch goes out today.</p>' + crAdvCard(a), items, {shuffle: true, closable: false, cls: 'drill'});
     plan[a.id] = items[i].meta.b;
   }
   // Score (game): known-exploited advisories count double.
@@ -3790,7 +3837,7 @@ async function crTriage() {
   const body = '<p class="big">Triage score ' + score + '% <span class="small">(game: known-exploited items count double)</span></p>' +
     '<table class="sc"><tr><th>Advisory</th><th>CVSS</th><th>Your batch</th><th>Better</th></tr>' + rows + '</table>' +
     '<p>Known exploited first: CISA keeps the KEV list for exactly this. A CVSS base score rates how bad a flaw could be; as CISA puts it, it “does not account for if the vulnerability is actually being used to attack systems.” Exposure and public exploit code matter too.</p>';
-  const j = await UI.openModal('Patch plan review', body, [{label: 'Deploy this week’s batch', meta: {good: true}}, {label: 'Redo the triage'}], {closable: false, cls: 'drill'});
+  const j = await UI.openModal('Patch plan review', body, [{label: 'Deploy this week’s batch', meta: {good: true}}, {label: 'Redo the triage'}], {nav: true, closable: false, cls: 'drill'});
   if (j === 1) return crTriage();
   c.triage = plan; c.triageScore = score; G.f.crTriage = true;
   const n = crDeploy('week');
@@ -3853,7 +3900,7 @@ async function crLaptop(x, y) {
   else opts.push({label: 'Release isolation', meta: {k: 'rel'}});
   if (h === CR_QT_HOST && !crIsolated(h)) opts.push({label: 'Look closer', meta: {k: 'qt'}});
   opts.push({label: 'Leave it', meta: {k: 'leave', good: !crInfectedLive(h)}});
-  const i = await choose(h + ': ' + state + '.', opts);
+  const i = await choose(h + ': ' + state + '.', opts, {shuffle: true});
   const k = opts[i].meta.k;
   if (k === 'iso') await crIsolate(h);
   else if (k === 'rel') {
@@ -3983,7 +4030,7 @@ async function crEvolveCheck() {
   if (!t || G.f.crOverwatchAsked === G.day) return;
   if (!hasTool('ledger') || !G.f.crPslog) return;
   G.f.crOverwatchAsked = G.day;
-  const i = await choose('Sentry (Lv ' + t.lvl + ') can send its telemetry into Ledger. Integrate them?', [{label: 'Integrate Sentry with Ledger', meta: {good: true}}, {label: 'Later'}]);
+  const i = await choose('Sentry (Lv ' + t.lvl + ') can send its telemetry into Ledger. Integrate them?', [{label: 'Integrate Sentry with Ledger', meta: {good: true}}, {label: 'Later'}], {nav: true});
   if (i !== 0) return;
   t.id = 'overwatch'; touchCSF('Detect');
   await say('Sentry is evolving! Sentry + Ledger → Overwatch. Every laptop’s telemetry in one place. New abilities: Fleet search and Collect triage.');
@@ -4103,7 +4150,7 @@ async function crSummary() {
     crQtSummaryHtml() +
     '<p class="big">Next: Market Square.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true});
-  const i = await UI.openModal('End of Clerks’ Row', body, [{label: 'Keep exploring Clerks’ Row', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of Clerks’ Row', body, [{label: 'Keep exploring Clerks’ Row', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -4222,7 +4269,7 @@ Object.assign(MAPS, {
       "h.............==.............h",
       "hhhhhhhhhhhhhhEhhhhhhhhhhhhhhh"
     ],
-    doors: {'14,15': {to: 'hub', x: 26, y: 7, dir: 'down'}, '29,6': {to: 'wboard', x: 9, y: 9, dir: 'up'}},
+    doors: {'14,15': {to: 'hub', x: 26, y: 7, dir: 'down'}, '29,6': {to: 'wboard', x: 1, y: 6, dir: 'right'}},
     outdoor: true
   },
   wboard: {
@@ -4234,13 +4281,13 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwwEwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'9,10': {to: 'market', x: 28, y: 6, dir: 'left'}}
+    doors: {'0,6': {to: 'market', x: 28, y: 6, dir: 'left'}}
   }
 });
 // The one change to earlier data: a Market Square building by the firewall, north-east of the plaza.
@@ -4963,7 +5010,7 @@ async function mkDesk() {
   const ready = (f.mkCsp && !f.mkNight1) || (f.mkDrill2 && !f.mkNight2) || f.mkDrill3;
   if (!ready) { await say('Your desk in the web team’s office. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Market Square desk. End your shift?', opts);
+  const i = await choose('Your Market Square desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.mkCsp && !f.mkNight1) {
@@ -5050,7 +5097,7 @@ async function mkWafBox() {
   if (!f.mkWafDetect) { await mkWafDetect(); return; }
   if (f.mkDrill1 && !f.mkWafBlock) { await mkWafReview(); return; }
   if (f.mkWafBlock) {
-    const i = await choose('The WAF is blocking. Residents’ requests blocked today: ' + MK().wafStats.res + '.', [{label: 'Leave it', meta: {good: true}}, {label: 'Review the rules again'}]);
+    const i = await choose('The WAF is blocking. Residents’ requests blocked today: ' + MK().wafStats.res + '.', [{label: 'Leave it', meta: {good: true}}, {label: 'Review the rules again'}], {nav: true});
     if (i === 1) await mkWafReview();
     return;
   }
@@ -5164,7 +5211,7 @@ async function mkPaymentPage() {
     const s = MK_SCRIPTS[n];
     const items = ['keep', 'remove'].map(k => ({label: k === 'keep' ? 'Keep, with a written reason' : 'Remove from the payment page', meta: {k: k, good: s.good === k}}));
     const j = await UI.openModal('Payment page scripts · ' + (n + 1) + ' of ' + MK_SCRIPTS.length,
-      '<p>Every script on the payment page can read what residents type. Keep it only if the page needs it.</p><div class="card"><b>' + esc(s.name) + '</b><br>' + esc(s.what) + '</div>', items, {closable: false, cls: 'drill'});
+      '<p>Every script on the payment page can read what residents type. Keep it only if the page needs it.</p><div class="card"><b>' + esc(s.name) + '</b><br>' + esc(s.what) + '</div>', items, {shuffle: true, closable: false, cls: 'drill'});
     plan[s.id] = items[j].meta.k;
   }
   const right = MK_SCRIPTS.filter(s => plan[s.id] === s.good).length;
@@ -5210,7 +5257,7 @@ async function mkWafReview() {
     const r = MK_WAF[n];
     const items = ['block', 'log', 'off'].map(k => ({label: MK_WAF_ACTS[k], meta: {k: k, good: k === r.good}}));
     const i = await UI.openModal('WAF rule review · ' + (n + 1) + ' of ' + MK_WAF.length,
-      '<div class="card"><b>' + esc(r.rule) + '</b></div><p class="small">What it matched in detection mode (a sample):</p>' + drillPre(r.seen), items, {closable: false, cls: 'drill'});
+      '<div class="card"><b>' + esc(r.rule) + '</b></div><p class="small">What it matched in detection mode (a sample):</p>' + drillPre(r.seen), items, {shuffle: true, closable: false, cls: 'drill'});
     plan[r.id] = items[i].meta.k;
   }
   // Score (game): rules that would block residents count double.
@@ -5226,7 +5273,7 @@ async function mkWafReview() {
     '<p>With these rules blocking, a day looks like: attack requests blocked <b>' + st.atk.toLocaleString('en-US') + '</b> · residents’ requests blocked <b>' + st.res.toLocaleString('en-US') + '</b> · false-positive rate <b>' + st.fp + '%</b> · bill payments failing <b>' + st.payFail + '</b> (game).</p>' +
     '<table class="sc"><tr><th>Rule</th><th>You</th><th>Better</th></tr>' + rows + '</table>' +
     '<p>A false positive is a real resident blocked: a bill not paid, a call to Oona, a fine for being late. Tune with exclusions for real users, keep rules that only ever match attacks, and let parameterised queries and MFA do the work a WAF can’t.</p>';
-  const j = await UI.openModal('WAF review', body, [{label: 'Switch the WAF to blocking with these rules', meta: {good: true}}, {label: 'Redo the review'}], {closable: false, cls: 'drill'});
+  const j = await UI.openModal('WAF review', body, [{label: 'Switch the WAF to blocking with these rules', meta: {good: true}}, {label: 'Redo the review'}], {nav: true, closable: false, cls: 'drill'});
   if (j === 1) return mkWafReview();
   c.wafPlan = plan; c.wafScore = score; c.wafStats = st; c.wafReviews++;
   const first = !G.f.mkWafBlock;
@@ -5481,7 +5528,7 @@ async function mkSummary() {
     mkQtSummaryHtml() +
     '<p class="big">Next: Records Hall.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true});
-  const i = await UI.openModal('End of Market Square', body, [{label: 'Keep exploring Market Square', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of Market Square', body, [{label: 'Keep exploring Market Square', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -5595,7 +5642,7 @@ Object.assign(MAPS, {
       "w,,,,,,,Y,,,,,,,,,,,,,,,,,,,,w",
       "wwwwwwwwwwwwwwEwwwwwwwwwwwwwww"
     ],
-    doors: {'14,15': {to: 'hub', x: 15, y: 18, dir: 'down'}, '29,7': {to: 'rboard', x: 9, y: 9, dir: 'up'}}
+    doors: {'14,15': {to: 'hub', x: 15, y: 18, dir: 'down'}, '29,7': {to: 'rboard', x: 1, y: 6, dir: 'right'}}
   },
   rboard: {
     name: 'Records Board',
@@ -5606,13 +5653,13 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwwEwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'9,10': {to: 'records', x: 28, y: 7, dir: 'left'}}
+    doors: {'0,6': {to: 'records', x: 28, y: 7, dir: 'left'}}
   }
 });
 // The one change to earlier data: a Records Hall building in the south of the plaza, between the Identity Board
@@ -6287,7 +6334,7 @@ async function rhDesk() {
   const ready = (f.rhCreds && !f.rhNight1) || (f.rhDrill2 && !f.rhNight2) || (f.rhBoard && !f.rhNight3) || f.rhBoss;
   if (!ready) { await say('Your desk in the corner of the restore lab. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Records Hall desk. End your shift?', opts);
+  const i = await choose('Your Records Hall desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.rhCreds && !f.rhNight1) {
@@ -6686,7 +6733,7 @@ async function rhRestoreGame(d) {
     const body = (last ? '<p><b>' + esc(last) + '</b></p>' : '<p>One restore crew, ' + RH_RESTORE_BUDGET + ' hours of crew time (game). Pick what to restore next, then which copy to restore it from. The clock starts when recovery starts.</p>') +
       '<p>Hour <b>' + st.clock + '</b> of ' + RH_RESTORE_BUDGET + ' · reinfections ' + st.reinfect + ' · out-of-order starts ' + st.depFail + '</p>' + prog + rhEvidenceHtml(d);
     const items = left.slice().sort((a, b) => RH_SYS_NAME[a].localeCompare(RH_SYS_NAME[b])).map(s => ({label: RH_SYS_NAME[s], note: 'RTO ' + RH_OBJ[s].rto + ' h', meta: {good: s === next, sys: s}}));
-    const i = await UI.openModal('Restore order · hour ' + st.clock, body, items, {closable: false, cls: 'drill'});
+    const i = await UI.openModal('Restore order · hour ' + st.clock, body, items, {shuffle: true, closable: false, cls: 'drill'});
     const sys = items[i].meta.sys;
     const S = RH_RESTORE[sys];
     const optItems = S.opts.map(o => ({label: rhFill(o.label, d), note: o.hrs + ' h', meta: {good: !!o.good, k: o.k}}));
@@ -6791,7 +6838,7 @@ async function rhSummary() {
     rhQtSummaryHtml() +
     '<p class="big">Next: IT Basement.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true, recordsHall: true});
-  const i = await UI.openModal('End of Records Hall', body, [{label: 'Keep exploring Records Hall', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of Records Hall', body, [{label: 'Keep exploring Records Hall', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -6884,7 +6931,7 @@ Object.assign(MAPS, {
   basement: {
     name: 'IT Basement',
     rows: [
-      "wwwwwwwwwwwwwwwww@wwwwwwwwwwww",
+      "wwwwwwwwwwwwwwEww@wwwwwwwwwwww",
       "wKK#KK,KKw,,,$,$,,,w%%,,,&&,,w",
       "w~~,~~,~~w,,,,,,,,,w,,,,,,,,,w",
       "w~~,~~,~~,,,,,,,,,,,,,,,,,,,,w",
@@ -6899,9 +6946,9 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
       "w~~~,,,,,,,,,Y,,,,,,,,,,,,~~~w",
       "w~~~,,,,,,,,,,,,,,,,,,,,,,~~~w",
-      "wwwwwwwwwwwwwwEwwwwwwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'14,15': {to: 'hub', x: 3, y: 10, dir: 'right'}, '29,7': {to: 'bboard', x: 9, y: 9, dir: 'up'}}
+    doors: {'14,0': {to: 'hub', x: 2, y: 9, dir: 'up'}, '29,7': {to: 'bboard', x: 1, y: 6, dir: 'right'}}
   },
   bboard: {
     name: 'Basement Board',
@@ -6912,17 +6959,17 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwwEwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'9,10': {to: 'basement', x: 28, y: 7, dir: 'left'}}
+    doors: {'0,6': {to: 'basement', x: 28, y: 7, dir: 'left'}}
   }
 });
 // The one change to earlier data: the stairs on the plaza (locked since slice 1) become the door down. The Vault Badge opens it.
-MAPS.hub.doors['2,10'] = {to: 'basement', x: 14, y: 14, dir: 'up',
+MAPS.hub.doors['2,10'] = {to: 'basement', x: 14, y: 1, dir: 'down',
   get locked() { return (typeof G !== 'undefined' && G && G.f.rhVault) ? undefined : 'IT Basement. A sign on the door: “Staff with a Vault Badge only.”'; }};
 
 const BM_MAPS = ['basement', 'bboard'];
@@ -7622,7 +7669,7 @@ async function bmDesk() {
   const ready = (f.bmTune && !f.bmNight1) || (f.bmDrill2 && !f.bmNight2) || (f.bmBoard && !f.bmNight3) || f.bmBoss;
   if (!ready) { await say('Your desk in the basement, under a pipe that ticks. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your basement desk. End your shift?', opts);
+  const i = await choose('Your basement desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.bmTune && !f.bmNight1) {
@@ -8162,7 +8209,7 @@ async function bmSummary() {
     bmQtSummaryHtml() +
     '<p class="big">Next: the Server Room.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true, recordsHall: true, itBasement: true});
-  const i = await UI.openModal('End of the IT Basement', body, [{label: 'Keep exploring the IT Basement', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of the IT Basement', body, [{label: 'Keep exploring the IT Basement', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -8257,19 +8304,19 @@ Object.assign(MAPS, {
       "w;;,;;,;;w,,,,,,,,w,,,,,,,,,w",
       "wwwwwwwwwwww,,,wwwwwwwwwwwwww",
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
-      "D,,,,,,,,,,,,,),),,,,,,,,,,,D",
+      "w,,,,,,,,,,,,,),),,,,,,,,,,,D",
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
       "wwwwww,wwwwwwwwwwwwwww,wwwwww",
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
       "w,,/,/,/,,,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,D",
       "w;;;,,,,,,,,Y,,,,,,,,,,,;;;,w",
       "w;;;,,,,,,,,,,,,,,,,,,,,;;;,w",
-      "wwwwwwwwwwwwwEwwwwwwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'0,7': {to: 'basement', x: 1, y: 7, dir: 'right',
-      get locked() { return (typeof G !== 'undefined' && G && G.f.bmBeacon) ? undefined : 'A sealed door in the west wall. A card reader: “Beacon Badge required.”'; }},
-      '28,7': {to: 'svboard', x: 8, y: 8, dir: 'up'}}
+    doors: {'28,12': {to: 'basement', x: 1, y: 7, dir: 'right',
+      get locked() { return (typeof G !== 'undefined' && G && G.f.bmBeacon) ? undefined : 'A sealed door in the east wall. A card reader: “Beacon Badge required.”'; }},
+      '28,7': {to: 'svboard', x: 1, y: 5, dir: 'right'}}
   },
   svboard: {
     name: 'Server Board',
@@ -8279,18 +8326,18 @@ Object.assign(MAPS, {
       "w::,,,,,,,,,,,,::w",
       "w,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwEwwwwwwwww"
+      "wwwwwwwwwwwwwwwwww"
     ],
-    doors: {'8,9': {to: 'server', x: 27, y: 7, dir: 'left'}}
+    doors: {'0,5': {to: 'server', x: 27, y: 7, dir: 'left'}}
   }
 });
 // The one change to earlier data: the Basement's west wall becomes the door to the Server Room (Beacon Badge opens it).
 MAPS.basement.rows[7] = 'D' + MAPS.basement.rows[7].slice(1);
-MAPS.basement.doors['0,7'] = {to: 'server', x: 1, y: 7, dir: 'right',
+MAPS.basement.doors['0,7'] = {to: 'server', x: 27, y: 12, dir: 'left',
   get locked() { return (typeof G !== 'undefined' && G && G.f.bmBeacon) ? undefined : 'A door in the west wall. A card reader: “Server Room. Beacon Badge required.”'; }};
 
 const SV_MAPS = ['server', 'svboard'];
@@ -8905,7 +8952,7 @@ async function svDesk() {
   const ready = (f.svTier && !f.svNight1) || (f.svDrill2 && !f.svNight2) || (f.svBoard && !f.svNight3);
   if (!ready) { await say('Your desk in the Server Room, under the cage’s cold air. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Server Room desk. End your shift?', opts);
+  const i = await choose('Your Server Room desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.svTier && !f.svNight1) {
@@ -9349,7 +9396,7 @@ async function svSummary() {
     svQtSummaryHtml() +
     '<p class="big">Next: the Water Plant.</p>';
   Series.markEdition(EDITION.id, {done: true, serverRoom: true});
-  const i = await UI.openModal('End of the Server Room', body, [{label: 'Keep exploring the Server Room', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of the Server Room', body, [{label: 'Keep exploring the Server Room', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -9586,6 +9633,7 @@ function tileDef(map, x, y) {
   const ch = tileChar(map, x, y); if (ch === null) return null;
   let d = Object.assign({ch: ch}, TILES[ch]);
   if (d.group) { const lit = groupFixed(d.group); d.spr = lit ? 'L' : 'B'; d.pal = lit ? 'L' : 'B'; }
+  if (d.spr === 'exit') { const r = mapRows(map); d.spr = x === 0 ? 'exitL' : x === r[0].length - 1 ? 'exitR' : y === 0 ? 'exitU' : 'exit'; } // the arrow points out through its wall
   return editionTile(d, ch, x, y);
 }
 function doorAt(map, x, y) { const d = MAPS[map].doors; return d && d[x + ',' + y]; }
@@ -9626,6 +9674,7 @@ function drawWorld(ctx) {
     const variant = e.dir === 'up' && e.spr === 'player' ? 'back' : (e.step ? 'step' : '');
     ctx.drawImage(sprite(e.spr, e.pal, {variant: variant}), Math.round(e.x - cam.cx), Math.round(e.y - cam.cy - (e.step ? 1 : 0)));
   }
+  drawMarker(ctx, cam);
   if (fade > 0) { ctx.fillStyle = 'rgba(16,20,31,' + fade + ')'; ctx.fillRect(0, 0, VW, VH); }
 }
 function ellipse(ctx, cx, cy, rx, ry, c1, c2) {
@@ -9634,15 +9683,19 @@ function ellipse(ctx, cx, cy, rx, ry, c1, c2) {
     if (d <= 1) { ctx.fillStyle = d > 0.7 ? c1 : c2; ctx.fillRect(cx + x, cy + y, 1, 1); }
   }
 }
+// Battle scene layout in logical pixels (the alert card and tool card are HTML, placed by style.css; tests read this).
+const BATTLE_LAYOUT = {enemy: {x: 236, y: 42, w: 32, h: 32}, enemyPad: {cx: 252, cy: 76, rx: 40, ry: 7},
+  tool: {x: 52, y: 112, w: 32, h: 32}, toolPad: {cx: 68, cy: 146, rx: 44, ry: 7}};
 let platformCache = null;
 function drawBattle(ctx) {
+  const L = BATTLE_LAYOUT;
   if (!platformCache) {
-    const c = document.createElement('canvas'); c.width = VW; c.height = VH;
+    const c = document.createElement('canvas'); c.width = VW; c.height = VH0;
     const x = c.getContext('2d');
     x.fillStyle = '#dbeaf7'; x.fillRect(0, 0, VW, 96);
-    x.fillStyle = '#c9e3a8'; x.fillRect(0, 96, VW, VH - 96);
-    ellipse(x, 252, 84, 40, 7, '#5aa64b', '#a6d96a');
-    ellipse(x, 76, 114, 44, 7, '#5aa64b', '#a6d96a');
+    x.fillStyle = '#c9e3a8'; x.fillRect(0, 96, VW, VH0 - 96);
+    ellipse(x, L.enemyPad.cx, L.enemyPad.cy, L.enemyPad.rx, L.enemyPad.ry, '#5aa64b', '#a6d96a');
+    ellipse(x, L.toolPad.cx, L.toolPad.cy, L.toolPad.rx, L.toolPad.ry, '#5aa64b', '#a6d96a');
     platformCache = c;
   }
   ctx.drawImage(platformCache, 0, 0);
@@ -9651,24 +9704,52 @@ function drawBattle(ctx) {
   let es = B.spec.enemy;
   if (!B.spec.story && !B.revealed) es = {spr: 'beacon', pal: 'beacon'};
   const bob = Math.round(Math.sin(performance.now() / 300) * 1);
-  ctx.drawImage(sprite(es.spr, es.pal), 236 + sh, 50 + bob, 32, 32);
+  ctx.drawImage(sprite(es.spr, es.pal), L.enemy.x + sh, L.enemy.y + bob, L.enemy.w, L.enemy.h);
   const t = tool();
-  if (t) ctx.drawImage(sprite(TOOLS[t.id].spr, TOOLS[t.id].spr, {variant: t.tuned ? 'tuned' : ''}), 60, 80, 32, 32);
+  if (t) ctx.drawImage(sprite(TOOLS[t.id].spr, TOOLS[t.id].spr, {variant: t.tuned ? 'tuned' : ''}), L.tool.x, L.tool.y, L.tool.w, L.tool.h);
 }
 
 /* ---------- HUD ---------- */
+// The HUD is its own band above the map (never over it); the objective wraps instead of being cut off.
 let hudStr = '';
 function hudUpdate() {
   const el = document.getElementById('hud');
-  if (!G || !started || B) { if (hudStr !== '') { el.innerHTML = ''; hudStr = ''; } el.style.display = 'none'; return; }
-  el.style.display = '';
+  if (!G || !started || B) { el.classList.add('off'); return; }
+  el.classList.remove('off');
   const v = metricVals();
-  const s = 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · Queue ' + G.queue +
-    ' · Up ' + v.uptime.toFixed(2) + '%|' + objective().text;
-  if (s !== hudStr) {
-    hudStr = s; const p = s.split('|');
-    el.innerHTML = '<div>' + esc(p[0]) + '</div><div class="obj">▸ ' + esc(p[1]) + '</div>';
+  const st = 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · Queue ' + G.queue + ' · Up ' + v.uptime.toFixed(2) + '%';
+  const ob = objective().text;
+  if (st + '|' + ob !== hudStr) {
+    const lines = hudLines();
+    hudStr = st + '|' + ob;
+    el.firstChild.textContent = st; el.lastChild.textContent = '▸ ' + ob;
+    if (hudLines() !== lines) Screen.fit(); // the band grew or shrank: refit the map below it
   }
+}
+function hudLines() { const el = document.getElementById('hud'); return el ? Math.round(el.getBoundingClientRect().height) : 0; }
+
+/* ---------- Objective marker ---------- */
+// A small bouncing marker on the door that leads toward the current objective (or on the objective's own door).
+function markerDoor() {
+  if (!G || !started) return null;
+  const o = objective(); if (!o || !o.map || o.done) return null;
+  if (o.map === G.map) { const d = doorAt(G.map, o.x, o.y); return d && d.to && !d.locked ? {x: o.x, y: o.y} : null; }
+  const prev = new Map([[G.map, null]]), q = [G.map];
+  while (q.length) {
+    const m = q.shift();
+    if (m === o.map) { let k = m, hop = null; while (prev.get(k)) { hop = prev.get(k); k = hop[0]; } const [x, y] = hop[1].split(',').map(Number); return {x: x, y: y}; }
+    const ds = MAPS[m].doors || {};
+    for (const xy in ds) { const d = ds[xy]; if (d.to && !d.locked && !prev.has(d.to)) { prev.set(d.to, [m, xy]); q.push(d.to); } }
+  }
+  return null;
+}
+function drawMarker(ctx, cam) {
+  const d = markerDoor(); if (!d) return;
+  const bob = Math.round(Math.sin(performance.now() / 220) * 1.5);
+  const cx = d.x * TS - cam.cx + 8, cy = d.y * TS - cam.cy + 3 + bob;
+  // a gold down-pointing chevron with a dark outline, inside the door tile
+  const rows = ['1111111', '1444441', '0144410', '0014100', '0001000'];
+  rows.forEach((r, yy) => { for (let xx = 0; xx < 7; xx++) { const c = r[xx]; if (c === '0') continue; ctx.fillStyle = c === '1' ? '#1b2233' : '#ffd96a'; ctx.fillRect(cx - 3 + xx, cy + yy, 1, 1); } });
 }
 
 /* ---------- Script runner ---------- */
@@ -9739,7 +9820,7 @@ async function briefing() {
     '<ol><li>' + esc(a.text) + '</li><li>' + esc(b.text) + '</li></ol>' +
     '<p>Act on one and that threat’s odds drop by half for a week (game).</p>';
   const i = await UI.openModal('Morning briefing', body, [
-    {label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither'}], {closable: false});
+    {label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither', pin: true}], {shuffle: true, closable: false});
   touchCSF('Identify');
   if (i === 0 || i === 1) { const it = i === 0 ? a : b; G.brief[it.t] = G.day + 6; toast(THREATS[it.t].name + ' odds halved this week'); }
 }
@@ -9801,6 +9882,7 @@ function power() { const t = tool(); return (1 + 0.08 * (t.lvl - 3)) * (t.tuned 
 function effLabel(m) { return m >= 2 ? 'strong ×2' : m <= 0.5 ? 'weak ×0.5' : ''; }
 function bhud() {
   const card = document.getElementById('bcard'), tp = document.getElementById('btool');
+  document.getElementById('screen').classList.toggle('battle', !!B);
   if (!B) { card.classList.remove('show'); tp.classList.remove('show'); return; }
   const s = B.spec, t = tool();
   card.innerHTML = '<div class="bt">ALERT · ' + esc(s.title) + '</div><div class="bs">' + esc(s.host) + '</div>' +
@@ -9928,7 +10010,7 @@ async function closeFlow() {
     {label: 'False positive', note: 'the rule is wrong', meta: {verdict: 'fp'}},
     {label: 'Benign', note: 'real, but expected', meta: {verdict: 'benign'}},
     {label: 'Malicious', note: 'an attack', meta: {verdict: 'mal'}},
-    {label: 'Back', meta: {back: true}}], {cancel: true});
+    {label: 'Back', meta: {back: true}}], {cancel: true, cursor: 3}); // fixed scale; the highlight starts on Back, never on a verdict
   if (v < 0 || v === 3) return 'back';
   const verdict = ['fp', 'benign', 'mal'][v];
   let resp;
@@ -10032,7 +10114,7 @@ function scorecardHtml() {
     const na = d.tier1 && G.rank === 'Intern';
     return '<tr><td>' + d.label + (na ? ' <small>(Tier 1)</small>' : '') + '</td><td><b>' + fmt(d, v[d.k]) + '</b></td><td>' + fmt(d, tr.best) + '</td><td>' + fmt(d, tr.worst) + '</td><td>' + tgtS + '</td></tr>';
   }).join('');
-  return '<table class="sc"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
+  return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
     (G.f.directive ? '<p class="dir">Directive: time-to-acknowledge target cut from 20 s to 15 s.</p>' : '') +
     (typeof editionScoreHtml === 'function' ? editionScoreHtml() : '') +
     '<p>Rank <b>' + G.rank + '</b> · Day ' + G.day + ' · Reputation ' + G.rep + ' · Badge: ' + (G.badge ? 'Key Badge' : 'none') + '</p>' +
@@ -10186,6 +10268,8 @@ document.addEventListener('input', e => { if (e.target && e.target.id === 'codeb
 function frame(t) {
   const dt = Math.min(50, t - (lastT || t)); lastT = t;
   UI.tick(dt);
+  const tallOK = !!(G && started && !B && !titleOpen);
+  if (tallOK !== Screen.tallOK) { Screen.tallOK = tallOK; Screen.fit(); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) document.getElementById('toast').classList.remove('show'); }
   if (shake > 0) shake -= dt;
   if (G && started) {
@@ -10243,7 +10327,7 @@ window.__UPTIME = {
     const solid = mapRows(G.map).map((r, y) => r.split('').map((c, x) => blocked(G.map, x, y) ? 1 : 0));
     return {
       started: started, map: G.map, x: G.x, y: G.y, dir: G.dir, moving: !!moving, busy: busy, day: G.day, focus: G.focus,
-      f: G.f, rank: G.rank, ui: ui, objective: objective(), solid: solid, doors: MAPS[G.map].doors,
+      f: G.f, rank: G.rank, ui: ui, objective: objective(), marker: markerDoor(), solid: solid, doors: MAPS[G.map].doors,
       battle: B ? {kind: B.spec.kind, ev: B.ev, dwell: B.dwell, story: !!B.spec.story, tech: B.spec.tech} : null,
       party: G.party, metrics: metricVals(), m: G.m, fm: fmPct(), queue: G.queue, mfa: G.mfaSet.length, summary: !!G.f.summaryShown,
       qt: Series.qt(),

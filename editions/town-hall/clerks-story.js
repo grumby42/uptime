@@ -207,7 +207,7 @@ async function crTalk(npc) {
 async function crDesk() {
   if (!G.f.crDrill2) { await say('Your desk in Clerks’ Row. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Clerks’ Row desk. End your shift?', opts);
+  const i = await choose('Your Clerks’ Row desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   const c = CR();
@@ -307,7 +307,7 @@ async function crTriage() {
     const a = CR_ADVISORIES[n];
     const items = ['week', 'next', 'later'].map(b => ({label: CR_BUCKETS[b], meta: {b: b, good: a.good === b}}));
     const i = await UI.openModal('Patch Tuesday triage · ' + (n + 1) + ' of ' + CR_ADVISORIES.length,
-      '<p>Put each advisory in a batch. This week’s batch goes out today.</p>' + crAdvCard(a), items, {closable: false, cls: 'drill'});
+      '<p>Put each advisory in a batch. This week’s batch goes out today.</p>' + crAdvCard(a), items, {shuffle: true, closable: false, cls: 'drill'});
     plan[a.id] = items[i].meta.b;
   }
   // Score (game): known-exploited advisories count double.
@@ -322,7 +322,7 @@ async function crTriage() {
   const body = '<p class="big">Triage score ' + score + '% <span class="small">(game: known-exploited items count double)</span></p>' +
     '<table class="sc"><tr><th>Advisory</th><th>CVSS</th><th>Your batch</th><th>Better</th></tr>' + rows + '</table>' +
     '<p>Known exploited first: CISA keeps the KEV list for exactly this. A CVSS base score rates how bad a flaw could be; as CISA puts it, it “does not account for if the vulnerability is actually being used to attack systems.” Exposure and public exploit code matter too.</p>';
-  const j = await UI.openModal('Patch plan review', body, [{label: 'Deploy this week’s batch', meta: {good: true}}, {label: 'Redo the triage'}], {closable: false, cls: 'drill'});
+  const j = await UI.openModal('Patch plan review', body, [{label: 'Deploy this week’s batch', meta: {good: true}}, {label: 'Redo the triage'}], {nav: true, closable: false, cls: 'drill'});
   if (j === 1) return crTriage();
   c.triage = plan; c.triageScore = score; G.f.crTriage = true;
   const n = crDeploy('week');
@@ -385,7 +385,7 @@ async function crLaptop(x, y) {
   else opts.push({label: 'Release isolation', meta: {k: 'rel'}});
   if (h === CR_QT_HOST && !crIsolated(h)) opts.push({label: 'Look closer', meta: {k: 'qt'}});
   opts.push({label: 'Leave it', meta: {k: 'leave', good: !crInfectedLive(h)}});
-  const i = await choose(h + ': ' + state + '.', opts);
+  const i = await choose(h + ': ' + state + '.', opts, {shuffle: true});
   const k = opts[i].meta.k;
   if (k === 'iso') await crIsolate(h);
   else if (k === 'rel') {
@@ -515,7 +515,7 @@ async function crEvolveCheck() {
   if (!t || G.f.crOverwatchAsked === G.day) return;
   if (!hasTool('ledger') || !G.f.crPslog) return;
   G.f.crOverwatchAsked = G.day;
-  const i = await choose('Sentry (Lv ' + t.lvl + ') can send its telemetry into Ledger. Integrate them?', [{label: 'Integrate Sentry with Ledger', meta: {good: true}}, {label: 'Later'}]);
+  const i = await choose('Sentry (Lv ' + t.lvl + ') can send its telemetry into Ledger. Integrate them?', [{label: 'Integrate Sentry with Ledger', meta: {good: true}}, {label: 'Later'}], {nav: true});
   if (i !== 0) return;
   t.id = 'overwatch'; touchCSF('Detect');
   await say('Sentry is evolving! Sentry + Ledger → Overwatch. Every laptop’s telemetry in one place. New abilities: Fleet search and Collect triage.');
@@ -635,7 +635,7 @@ async function crSummary() {
     crQtSummaryHtml() +
     '<p class="big">Next: Market Square.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true});
-  const i = await UI.openModal('End of Clerks’ Row', body, [{label: 'Keep exploring Clerks’ Row', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of Clerks’ Row', body, [{label: 'Keep exploring Clerks’ Row', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

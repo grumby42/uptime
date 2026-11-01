@@ -85,7 +85,7 @@ Object.assign(MAPS, {
   basement: {
     name: 'IT Basement',
     rows: [
-      "wwwwwwwwwwwwwwwww@wwwwwwwwwwww",
+      "wwwwwwwwwwwwwwEww@wwwwwwwwwwww",
       "wKK#KK,KKw,,,$,$,,,w%%,,,&&,,w",
       "w~~,~~,~~w,,,,,,,,,w,,,,,,,,,w",
       "w~~,~~,~~,,,,,,,,,,,,,,,,,,,,w",
@@ -100,9 +100,9 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
       "w~~~,,,,,,,,,Y,,,,,,,,,,,,~~~w",
       "w~~~,,,,,,,,,,,,,,,,,,,,,,~~~w",
-      "wwwwwwwwwwwwwwEwwwwwwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'14,15': {to: 'hub', x: 3, y: 10, dir: 'right'}, '29,7': {to: 'bboard', x: 9, y: 9, dir: 'up'}}
+    doors: {'14,0': {to: 'hub', x: 2, y: 9, dir: 'up'}, '29,7': {to: 'bboard', x: 1, y: 6, dir: 'right'}}
   },
   bboard: {
     name: 'Basement Board',
@@ -113,17 +113,17 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwwEwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'9,10': {to: 'basement', x: 28, y: 7, dir: 'left'}}
+    doors: {'0,6': {to: 'basement', x: 28, y: 7, dir: 'left'}}
   }
 });
 // The one change to earlier data: the stairs on the plaza (locked since slice 1) become the door down. The Vault Badge opens it.
-MAPS.hub.doors['2,10'] = {to: 'basement', x: 14, y: 14, dir: 'up',
+MAPS.hub.doors['2,10'] = {to: 'basement', x: 14, y: 1, dir: 'down',
   get locked() { return (typeof G !== 'undefined' && G && G.f.rhVault) ? undefined : 'IT Basement. A sign on the door: “Staff with a Vault Badge only.”'; }};
 
 const BM_MAPS = ['basement', 'bboard'];

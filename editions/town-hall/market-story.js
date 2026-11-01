@@ -206,7 +206,7 @@ async function mkDesk() {
   const ready = (f.mkCsp && !f.mkNight1) || (f.mkDrill2 && !f.mkNight2) || f.mkDrill3;
   if (!ready) { await say('Your desk in the web team’s office. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Market Square desk. End your shift?', opts);
+  const i = await choose('Your Market Square desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.mkCsp && !f.mkNight1) {
@@ -293,7 +293,7 @@ async function mkWafBox() {
   if (!f.mkWafDetect) { await mkWafDetect(); return; }
   if (f.mkDrill1 && !f.mkWafBlock) { await mkWafReview(); return; }
   if (f.mkWafBlock) {
-    const i = await choose('The WAF is blocking. Residents’ requests blocked today: ' + MK().wafStats.res + '.', [{label: 'Leave it', meta: {good: true}}, {label: 'Review the rules again'}]);
+    const i = await choose('The WAF is blocking. Residents’ requests blocked today: ' + MK().wafStats.res + '.', [{label: 'Leave it', meta: {good: true}}, {label: 'Review the rules again'}], {nav: true});
     if (i === 1) await mkWafReview();
     return;
   }
@@ -407,7 +407,7 @@ async function mkPaymentPage() {
     const s = MK_SCRIPTS[n];
     const items = ['keep', 'remove'].map(k => ({label: k === 'keep' ? 'Keep, with a written reason' : 'Remove from the payment page', meta: {k: k, good: s.good === k}}));
     const j = await UI.openModal('Payment page scripts · ' + (n + 1) + ' of ' + MK_SCRIPTS.length,
-      '<p>Every script on the payment page can read what residents type. Keep it only if the page needs it.</p><div class="card"><b>' + esc(s.name) + '</b><br>' + esc(s.what) + '</div>', items, {closable: false, cls: 'drill'});
+      '<p>Every script on the payment page can read what residents type. Keep it only if the page needs it.</p><div class="card"><b>' + esc(s.name) + '</b><br>' + esc(s.what) + '</div>', items, {shuffle: true, closable: false, cls: 'drill'});
     plan[s.id] = items[j].meta.k;
   }
   const right = MK_SCRIPTS.filter(s => plan[s.id] === s.good).length;
@@ -453,7 +453,7 @@ async function mkWafReview() {
     const r = MK_WAF[n];
     const items = ['block', 'log', 'off'].map(k => ({label: MK_WAF_ACTS[k], meta: {k: k, good: k === r.good}}));
     const i = await UI.openModal('WAF rule review · ' + (n + 1) + ' of ' + MK_WAF.length,
-      '<div class="card"><b>' + esc(r.rule) + '</b></div><p class="small">What it matched in detection mode (a sample):</p>' + drillPre(r.seen), items, {closable: false, cls: 'drill'});
+      '<div class="card"><b>' + esc(r.rule) + '</b></div><p class="small">What it matched in detection mode (a sample):</p>' + drillPre(r.seen), items, {shuffle: true, closable: false, cls: 'drill'});
     plan[r.id] = items[i].meta.k;
   }
   // Score (game): rules that would block residents count double.
@@ -469,7 +469,7 @@ async function mkWafReview() {
     '<p>With these rules blocking, a day looks like: attack requests blocked <b>' + st.atk.toLocaleString('en-US') + '</b> · residents’ requests blocked <b>' + st.res.toLocaleString('en-US') + '</b> · false-positive rate <b>' + st.fp + '%</b> · bill payments failing <b>' + st.payFail + '</b> (game).</p>' +
     '<table class="sc"><tr><th>Rule</th><th>You</th><th>Better</th></tr>' + rows + '</table>' +
     '<p>A false positive is a real resident blocked: a bill not paid, a call to Oona, a fine for being late. Tune with exclusions for real users, keep rules that only ever match attacks, and let parameterised queries and MFA do the work a WAF can’t.</p>';
-  const j = await UI.openModal('WAF review', body, [{label: 'Switch the WAF to blocking with these rules', meta: {good: true}}, {label: 'Redo the review'}], {closable: false, cls: 'drill'});
+  const j = await UI.openModal('WAF review', body, [{label: 'Switch the WAF to blocking with these rules', meta: {good: true}}, {label: 'Redo the review'}], {nav: true, closable: false, cls: 'drill'});
   if (j === 1) return mkWafReview();
   c.wafPlan = plan; c.wafScore = score; c.wafStats = st; c.wafReviews++;
   const first = !G.f.mkWafBlock;
@@ -724,7 +724,7 @@ async function mkSummary() {
     mkQtSummaryHtml() +
     '<p class="big">Next: Records Hall.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true});
-  const i = await UI.openModal('End of Market Square', body, [{label: 'Keep exploring Market Square', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of Market Square', body, [{label: 'Keep exploring Market Square', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

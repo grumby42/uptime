@@ -5,7 +5,10 @@
    ============================================================ */
 'use strict';
 
-const VW = 320, VH = 180, TS = 16;
+const VW = 320, TS = 16, VH0 = 180;
+// The logical screen is 320x180. On a portrait phone the map is as wide as the screen allows at a whole-number
+// pixel scale, so the height freed above the controls shows more map rows instead (up to 20 rows, map only).
+let VH = VH0;
 
 /* ---------- RNG (mulberry32, seedable for tests) ---------- */
 function makeRng(seed) {
@@ -29,7 +32,11 @@ function weighted(list) { // [{w,...}]
 /* Answer order: a deterministic shuffle for lists that have a right answer, so position never gives it
    away. Opt in with {shuffle: true}. Navigation items (Back, Done, decide, ask the AI, or pin: true)
    keep their places. Seeded from the save's seed and the labels, so a list keeps its order on reload,
-   and it never touches the game's own random stream. Callers still get the index into their own array. */
+   and it never touches the game's own random stream. Callers still get the index into their own array.
+   The highlight starts on display position 0 (the first enabled item), never on the caller's item 0, so it
+   lands on a random answer; pass {cursor: i} (a caller index) to start somewhere on purpose.
+   Pure navigation/confirmation menus stay in order; when one marks a preferred item with meta.good (a hint
+   for the test bot), it says so with {nav: true} so the tests can tell it from a graded list. */
 function shuffleOrder(items, o) {
   const perm = items.map((_, i) => i);
   if (!o || !o.shuffle) return perm;
@@ -45,6 +52,11 @@ function shuffleOrder(items, o) {
   return perm; // perm[display position] = caller's index
 }
 // The first arr.length items of a shuffled list, in the order the player sees them (for card text in the body).
+function initialCursor(shown, perm, o) {
+  let c = o && o.cursor !== undefined && o.cursor !== null ? Math.max(0, perm.indexOf(o.cursor)) : 0;
+  for (let k = 0; k < shown.length && shown[c] && shown[c].disabled; k++) c = (c + 1) % shown.length;
+  return c;
+}
 function shownOrder(arr, items) { return shuffleOrder(items, {shuffle: true}).filter(i => i < arr.length).map(i => arr[i]); }
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -84,7 +96,7 @@ function tunedGrid(grid) {
 
 /* ---------- Screen & scaling ---------- */
 const Screen = {
-  canvas: null, ctx: null, k: 1, s: 1,
+  canvas: null, ctx: null, k: 1, s: 1, tallOK: false, tall: false,
   init() {
     this.canvas = document.getElementById('cv');
     this.ctx = this.canvas.getContext('2d');
@@ -99,20 +111,35 @@ const Screen = {
     const portrait = H > W * 1.05 || W < 560;
     document.body.classList.toggle('portrait', portrait);
     document.body.classList.toggle('landscape', !portrait);
+    // Room for the map: below the HUD band; in portrait also above the dialogue panel and the controls at the bottom.
+    const hh = id => { const e = document.getElementById(id); return e ? e.getBoundingClientRect().height : 0; };
     let availW, availH;
-    if (portrait) { availW = W; availH = Math.max(180, H * 0.42); }
-    else { availW = W - (touch ? 300 : 24); availH = H - 34; }
+    if (portrait) { availW = W; availH = Math.max(90, H - hh('hud') - 150 - hh('pad') - hh('foot')); }
+    else { availW = W - (touch ? 300 : 24); availH = H - 34 - hh('hud'); }
     // largest whole number of device pixels per logical pixel that fits
-    let k = Math.floor(Math.min(availW * dpr / VW, availH * dpr / VH));
-    if (k < 1) k = 1;
-    // keep the CSS scale a whole number where the screen is big enough (desktop: 2x, 3x, 4x...)
-    if (dpr <= 1.01 || k / dpr >= 2) { const cssK = Math.max(1, Math.floor(k / dpr)); k = Math.round(cssK * dpr); }
+    const scaleFor = h => {
+      let k = Math.floor(Math.min(availW * dpr / VW, h * dpr / VH0));
+      if (k < 1) k = 1;
+      // keep the CSS scale a whole number where the screen is big enough (desktop: 2x, 3x, 4x...)
+      if (dpr <= 1.01 || k / dpr >= 2) { const cssK = Math.max(1, Math.floor(k / dpr)); k = Math.round(cssK * dpr); }
+      return k;
+    };
+    let k = scaleFor(availH);
+    // Desktop / keyboard landscape: if the map keeps its scale with a dialogue band below it, put the dialogue there.
+    const PANEL_H = 170, below = !portrait && !touch && scaleFor(availH - PANEL_H) === k;
+    document.body.classList.toggle('below', below);
+    if (below) document.documentElement.style.setProperty('--panelH', Math.floor(Math.min(260, availH - VH0 * k / dpr)) + 'px');
     this.k = k; this.s = k / dpr;
+    this.tall = portrait && this.tallOK;
+    VH = this.tall ? clamp(Math.floor(availH / this.s / TS) * TS, VH0, 20 * TS) : VH0;
     this.canvas.width = VW * k; this.canvas.height = VH * k;
     const wrap = document.getElementById('screen');
     wrap.style.width = (VW * this.s) + 'px'; wrap.style.height = (VH * this.s) + 'px';
     document.documentElement.style.setProperty('--s', this.s);
     document.documentElement.style.setProperty('--fs', Math.max(10, Math.round(4.6 * this.s)) + 'px');
+    document.documentElement.style.setProperty('--hudW', (VW * this.s) + 'px');
+    const pad = document.getElementById('pad');
+    document.documentElement.style.setProperty('--padZone', portrait && pad ? Math.max(0, Math.ceil(H - pad.getBoundingClientRect().top)) + 'px' : '0px');
     this.ctx.setTransform(k, 0, 0, k, 0, 0);
     this.ctx.imageSmoothingEnabled = false;
   }
@@ -202,9 +229,8 @@ const UI = {
     const shown = perm.map(i => items[i]);
     return new Promise(res => {
       this.mode = 'choice';
-      this.choice = {items: shown, perm, cursor: Math.max(0, perm.indexOf(o.cursor || 0)), cols: o.cols || 1, resolve: res, cancel: !!o.cancel};
+      this.choice = {items: shown, perm, cursor: initialCursor(shown, perm, o), cols: o.cols || 1, resolve: res, cancel: !!o.cancel, opts: o};
       this.openedAt = performance.now();
-      while (this.choice.items[this.choice.cursor] && this.choice.items[this.choice.cursor].disabled && this.choice.cursor < shown.length - 1) this.choice.cursor++;
       this.who.textContent = o.who || ''; this.who.style.display = o.who ? '' : 'none';
       this.text.textContent = prompt || '';
       this.more.style.visibility = 'hidden';
@@ -224,6 +250,7 @@ const UI = {
       const i = +b.dataset.i; if (c.items[i].disabled) return;
       c.cursor = i; this.finishChoice(i);
     }));
+    const cur = this.opts.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
   },
   finishChoice(i) {
     const c = this.choice;
@@ -257,7 +284,8 @@ const UI = {
     o = o || {};
     const perm = shuffleOrder(items, o);
     return new Promise(res => {
-      this.modal = {items: perm.map(i => items[i]), perm, cursor: Math.max(0, perm.indexOf(o.cursor || 0)), resolve: res, closable: o.closable !== false, multi: o.multi || 0, sel: new Set()};
+      const shown = perm.map(i => items[i]);
+      this.modal = {items: shown, perm, cursor: initialCursor(shown, perm, o), resolve: res, closable: o.closable !== false, multi: o.multi || 0, sel: new Set(), opts: o};
       this.openedAt = performance.now();
       this.modalEl.innerHTML =
         '<div class="mbox ' + (o.cls || '') + '"><div class="mhead">' + esc(title) + '</div>' +

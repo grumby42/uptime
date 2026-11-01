@@ -96,7 +96,7 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
       "wwwwwwwwwwwwwwEwwwwwwwwwwwwwww"
     ],
-    doors: {'14,15': {to: 'hub', x: 25, y: 11, dir: 'down'}, '29,10': {to: 'eboard', x: 9, y: 9, dir: 'up'}}
+    doors: {'14,15': {to: 'hub', x: 25, y: 11, dir: 'down'}, '29,10': {to: 'eboard', x: 1, y: 6, dir: 'right'}}
   },
   eboard: {
     name: 'Endpoint Board',
@@ -107,19 +107,19 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwwEwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'9,10': {to: 'clerks', x: 28, y: 10, dir: 'left'}}
+    doors: {'0,6': {to: 'clerks', x: 28, y: 10, dir: 'left'}}
   }
 });
 // The one change to earlier data: a Clerks' Row building east of the Mail Room on the plaza.
 // Its door opens with the Seal Badge.
-MAPS.hub.rows[9] = "h.S.cccc......==.MMMM..RRRR..h";
-MAPS.hub.rows[10] = "h.X.ccDc......==.MMDM.3RRDRGGh";
+MAPS.hub.rows[9] = "hS..cccc......==.MMMM..RRRR..h";
+MAPS.hub.rows[10] = "hhXhccDc......==.MMDM.3RRDRGGh";
 MAPS.hub.doors['25,10'] = {to: 'clerks', x: 14, y: 14, dir: 'up',
   get locked() { return (typeof G !== 'undefined' && G && G.f.mrSeal) ? undefined : 'Clerks’ Row. A note on the door: “Staff with a Seal Badge only.”'; }};
 

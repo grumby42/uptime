@@ -184,7 +184,7 @@ async function raeTalk() {
     await say('Our job: keep the district running and notice when someone is trying to break in. Every alert is a question. Some are attacks; most aren’t.', who);
     await say('First you need a tool. I have budget for one starter. Pick the one that fits how you think.', who);
     const ids = ['sentry', 'lantern', 'ledger'];
-    const i = await choose('Choose your starter tool:', ids.map(id => ({label: TOOLS[id].name + ' (' + CLASSES[TOOLS[id].cls].label + ' · ' + TOOLS[id].sub + ')', note: TOOLS[id].blurb, meta: {good: id === 'sentry'}})), {who: who});
+    const i = await choose('Choose your starter tool:', ids.map(id => ({label: TOOLS[id].name + ' (' + CLASSES[TOOLS[id].cls].label + ' · ' + TOOLS[id].sub + ')', note: TOOLS[id].blurb, meta: {good: id === 'sentry'}})), {who: who, nav: true});
     const id = ids[i];
     addTool(id, 3); f.starter = id;
     await say(TOOLS[id].name + ' is installed on your console. Tools aren’t thrown at problems: you run them, and their abilities cost Focus.', who);
@@ -275,7 +275,7 @@ async function deskEnd() {
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}];
   if (qtDeskReady()) opts.push({label: 'Ledger console: overnight sign-ins', meta: {k: 'console'}});
   opts.push({label: 'Not yet', meta: {k: 'no'}});
-  const i = await choose('Your desk. End your shift?', opts);
+  const i = await choose('Your desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k === 'end') await endShift('desk');
   else if (opts[i].meta.k === 'console') await qtDeskConsole();
 }
@@ -352,7 +352,7 @@ async function owenTalk() {
     {label: 'Ignore it: he’s just venting, and a report would only get him in trouble'},
     {label: 'Report what you heard, factually, to the insider-risk process (HR)', meta: {good: true}}];
   while (true) {
-    const i = await choose('(Resentment after a reorg can be an early warning sign. What do you do?)', opts);
+    const i = await choose('(Resentment after a reorg can be an early warning sign. What do you do?)', opts, {shuffle: true});
     if (i === 3) break;
     if (i === 0) await say('Don’t snoop. Looking through someone’s mail without authorisation breaks policy, maybe the law, and ruins any real investigation. That’s for the formal process.');
     else if (i === 1) await say('That turns one remark into gossip and can wreck a person’s reputation. One sign proves nothing.');
@@ -416,7 +416,7 @@ async function evolveCheck() {
   if (!G.items.guide) return;
   const t = G.party.find(p => p.lvl >= 5 && !p.tuned);
   if (!t) return;
-  const i = await choose(TOOLS[t.id].name + ' (Lv ' + t.lvl + ') is ready to be Tuned. Use the Tuning Guide?', [{label: 'Tune it', meta: {good: true}}, {label: 'Later'}]);
+  const i = await choose(TOOLS[t.id].name + ' (Lv ' + t.lvl + ') is ready to be Tuned. Use the Tuning Guide?', [{label: 'Tune it', meta: {good: true}}, {label: 'Later'}], {nav: true});
   if (i !== 0) return;
   G.items.guide = 0; t.tuned = true;
   await say(TOOLS[t.id].name + ' was Tuned! Fewer noisy detections, sharper abilities (power ×1.25).');
@@ -461,7 +461,7 @@ async function boardScript() {
   touchCSF('Protect');
   if (hasTool('ledger')) {
     const i = await choose('Rae: With Tier 1 comes automation. Ledger can auto-close alerts matching known false-positive patterns while you walk. Risk: about 1 in 50 auto-closed alerts might be real (game), and nobody looks at those. Turn it on?',
-      [{label: 'Turn automation on', meta: {good: true}}, {label: 'Not now (toggle later in the Start menu)'}]);
+      [{label: 'Turn automation on', meta: {good: true}}, {label: 'Not now (toggle later in the Start menu)'}], {nav: true});
     G.f.autoUnlocked = true; G.auto = i === 0;
   }
   await evolveCheck();
@@ -555,7 +555,7 @@ async function summary() {
     qtSummaryHtml() +
     '<p class="big">Next: the Mail Room.</p>';
   Series.markEdition(EDITION.id, {done: true});
-  const i = await UI.openModal('End of slice 1', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of slice 1', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

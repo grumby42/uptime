@@ -76,6 +76,7 @@ function tileDef(map, x, y) {
   const ch = tileChar(map, x, y); if (ch === null) return null;
   let d = Object.assign({ch: ch}, TILES[ch]);
   if (d.group) { const lit = groupFixed(d.group); d.spr = lit ? 'L' : 'B'; d.pal = lit ? 'L' : 'B'; }
+  if (d.spr === 'exit') { const r = mapRows(map); d.spr = x === 0 ? 'exitL' : x === r[0].length - 1 ? 'exitR' : y === 0 ? 'exitU' : 'exit'; } // the arrow points out through its wall
   return editionTile(d, ch, x, y);
 }
 function doorAt(map, x, y) { const d = MAPS[map].doors; return d && d[x + ',' + y]; }
@@ -116,6 +117,7 @@ function drawWorld(ctx) {
     const variant = e.dir === 'up' && e.spr === 'player' ? 'back' : (e.step ? 'step' : '');
     ctx.drawImage(sprite(e.spr, e.pal, {variant: variant}), Math.round(e.x - cam.cx), Math.round(e.y - cam.cy - (e.step ? 1 : 0)));
   }
+  drawMarker(ctx, cam);
   if (fade > 0) { ctx.fillStyle = 'rgba(16,20,31,' + fade + ')'; ctx.fillRect(0, 0, VW, VH); }
 }
 function ellipse(ctx, cx, cy, rx, ry, c1, c2) {
@@ -124,15 +126,19 @@ function ellipse(ctx, cx, cy, rx, ry, c1, c2) {
     if (d <= 1) { ctx.fillStyle = d > 0.7 ? c1 : c2; ctx.fillRect(cx + x, cy + y, 1, 1); }
   }
 }
+// Battle scene layout in logical pixels (the alert card and tool card are HTML, placed by style.css; tests read this).
+const BATTLE_LAYOUT = {enemy: {x: 236, y: 42, w: 32, h: 32}, enemyPad: {cx: 252, cy: 76, rx: 40, ry: 7},
+  tool: {x: 52, y: 112, w: 32, h: 32}, toolPad: {cx: 68, cy: 146, rx: 44, ry: 7}};
 let platformCache = null;
 function drawBattle(ctx) {
+  const L = BATTLE_LAYOUT;
   if (!platformCache) {
-    const c = document.createElement('canvas'); c.width = VW; c.height = VH;
+    const c = document.createElement('canvas'); c.width = VW; c.height = VH0;
     const x = c.getContext('2d');
     x.fillStyle = '#dbeaf7'; x.fillRect(0, 0, VW, 96);
-    x.fillStyle = '#c9e3a8'; x.fillRect(0, 96, VW, VH - 96);
-    ellipse(x, 252, 84, 40, 7, '#5aa64b', '#a6d96a');
-    ellipse(x, 76, 114, 44, 7, '#5aa64b', '#a6d96a');
+    x.fillStyle = '#c9e3a8'; x.fillRect(0, 96, VW, VH0 - 96);
+    ellipse(x, L.enemyPad.cx, L.enemyPad.cy, L.enemyPad.rx, L.enemyPad.ry, '#5aa64b', '#a6d96a');
+    ellipse(x, L.toolPad.cx, L.toolPad.cy, L.toolPad.rx, L.toolPad.ry, '#5aa64b', '#a6d96a');
     platformCache = c;
   }
   ctx.drawImage(platformCache, 0, 0);
@@ -141,24 +147,52 @@ function drawBattle(ctx) {
   let es = B.spec.enemy;
   if (!B.spec.story && !B.revealed) es = {spr: 'beacon', pal: 'beacon'};
   const bob = Math.round(Math.sin(performance.now() / 300) * 1);
-  ctx.drawImage(sprite(es.spr, es.pal), 236 + sh, 50 + bob, 32, 32);
+  ctx.drawImage(sprite(es.spr, es.pal), L.enemy.x + sh, L.enemy.y + bob, L.enemy.w, L.enemy.h);
   const t = tool();
-  if (t) ctx.drawImage(sprite(TOOLS[t.id].spr, TOOLS[t.id].spr, {variant: t.tuned ? 'tuned' : ''}), 60, 80, 32, 32);
+  if (t) ctx.drawImage(sprite(TOOLS[t.id].spr, TOOLS[t.id].spr, {variant: t.tuned ? 'tuned' : ''}), L.tool.x, L.tool.y, L.tool.w, L.tool.h);
 }
 
 /* ---------- HUD ---------- */
+// The HUD is its own band above the map (never over it); the objective wraps instead of being cut off.
 let hudStr = '';
 function hudUpdate() {
   const el = document.getElementById('hud');
-  if (!G || !started || B) { if (hudStr !== '') { el.innerHTML = ''; hudStr = ''; } el.style.display = 'none'; return; }
-  el.style.display = '';
+  if (!G || !started || B) { el.classList.add('off'); return; }
+  el.classList.remove('off');
   const v = metricVals();
-  const s = 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · Queue ' + G.queue +
-    ' · Up ' + v.uptime.toFixed(2) + '%|' + objective().text;
-  if (s !== hudStr) {
-    hudStr = s; const p = s.split('|');
-    el.innerHTML = '<div>' + esc(p[0]) + '</div><div class="obj">▸ ' + esc(p[1]) + '</div>';
+  const st = 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · Queue ' + G.queue + ' · Up ' + v.uptime.toFixed(2) + '%';
+  const ob = objective().text;
+  if (st + '|' + ob !== hudStr) {
+    const lines = hudLines();
+    hudStr = st + '|' + ob;
+    el.firstChild.textContent = st; el.lastChild.textContent = '▸ ' + ob;
+    if (hudLines() !== lines) Screen.fit(); // the band grew or shrank: refit the map below it
   }
+}
+function hudLines() { const el = document.getElementById('hud'); return el ? Math.round(el.getBoundingClientRect().height) : 0; }
+
+/* ---------- Objective marker ---------- */
+// A small bouncing marker on the door that leads toward the current objective (or on the objective's own door).
+function markerDoor() {
+  if (!G || !started) return null;
+  const o = objective(); if (!o || !o.map || o.done) return null;
+  if (o.map === G.map) { const d = doorAt(G.map, o.x, o.y); return d && d.to && !d.locked ? {x: o.x, y: o.y} : null; }
+  const prev = new Map([[G.map, null]]), q = [G.map];
+  while (q.length) {
+    const m = q.shift();
+    if (m === o.map) { let k = m, hop = null; while (prev.get(k)) { hop = prev.get(k); k = hop[0]; } const [x, y] = hop[1].split(',').map(Number); return {x: x, y: y}; }
+    const ds = MAPS[m].doors || {};
+    for (const xy in ds) { const d = ds[xy]; if (d.to && !d.locked && !prev.has(d.to)) { prev.set(d.to, [m, xy]); q.push(d.to); } }
+  }
+  return null;
+}
+function drawMarker(ctx, cam) {
+  const d = markerDoor(); if (!d) return;
+  const bob = Math.round(Math.sin(performance.now() / 220) * 1.5);
+  const cx = d.x * TS - cam.cx + 8, cy = d.y * TS - cam.cy + 3 + bob;
+  // a gold down-pointing chevron with a dark outline, inside the door tile
+  const rows = ['1111111', '1444441', '0144410', '0014100', '0001000'];
+  rows.forEach((r, yy) => { for (let xx = 0; xx < 7; xx++) { const c = r[xx]; if (c === '0') continue; ctx.fillStyle = c === '1' ? '#1b2233' : '#ffd96a'; ctx.fillRect(cx - 3 + xx, cy + yy, 1, 1); } });
 }
 
 /* ---------- Script runner ---------- */
@@ -229,7 +263,7 @@ async function briefing() {
     '<ol><li>' + esc(a.text) + '</li><li>' + esc(b.text) + '</li></ol>' +
     '<p>Act on one and that threat’s odds drop by half for a week (game).</p>';
   const i = await UI.openModal('Morning briefing', body, [
-    {label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither'}], {closable: false});
+    {label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither', pin: true}], {shuffle: true, closable: false});
   touchCSF('Identify');
   if (i === 0 || i === 1) { const it = i === 0 ? a : b; G.brief[it.t] = G.day + 6; toast(THREATS[it.t].name + ' odds halved this week'); }
 }
@@ -291,6 +325,7 @@ function power() { const t = tool(); return (1 + 0.08 * (t.lvl - 3)) * (t.tuned 
 function effLabel(m) { return m >= 2 ? 'strong ×2' : m <= 0.5 ? 'weak ×0.5' : ''; }
 function bhud() {
   const card = document.getElementById('bcard'), tp = document.getElementById('btool');
+  document.getElementById('screen').classList.toggle('battle', !!B);
   if (!B) { card.classList.remove('show'); tp.classList.remove('show'); return; }
   const s = B.spec, t = tool();
   card.innerHTML = '<div class="bt">ALERT · ' + esc(s.title) + '</div><div class="bs">' + esc(s.host) + '</div>' +
@@ -418,7 +453,7 @@ async function closeFlow() {
     {label: 'False positive', note: 'the rule is wrong', meta: {verdict: 'fp'}},
     {label: 'Benign', note: 'real, but expected', meta: {verdict: 'benign'}},
     {label: 'Malicious', note: 'an attack', meta: {verdict: 'mal'}},
-    {label: 'Back', meta: {back: true}}], {cancel: true});
+    {label: 'Back', meta: {back: true}}], {cancel: true, cursor: 3}); // fixed scale; the highlight starts on Back, never on a verdict
   if (v < 0 || v === 3) return 'back';
   const verdict = ['fp', 'benign', 'mal'][v];
   let resp;
@@ -522,7 +557,7 @@ function scorecardHtml() {
     const na = d.tier1 && G.rank === 'Intern';
     return '<tr><td>' + d.label + (na ? ' <small>(Tier 1)</small>' : '') + '</td><td><b>' + fmt(d, v[d.k]) + '</b></td><td>' + fmt(d, tr.best) + '</td><td>' + fmt(d, tr.worst) + '</td><td>' + tgtS + '</td></tr>';
   }).join('');
-  return '<table class="sc"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
+  return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
     (G.f.directive ? '<p class="dir">Directive: time-to-acknowledge target cut from 20 s to 15 s.</p>' : '') +
     (typeof editionScoreHtml === 'function' ? editionScoreHtml() : '') +
     '<p>Rank <b>' + G.rank + '</b> · Day ' + G.day + ' · Reputation ' + G.rep + ' · Badge: ' + (G.badge ? 'Key Badge' : 'none') + '</p>' +
@@ -676,6 +711,8 @@ document.addEventListener('input', e => { if (e.target && e.target.id === 'codeb
 function frame(t) {
   const dt = Math.min(50, t - (lastT || t)); lastT = t;
   UI.tick(dt);
+  const tallOK = !!(G && started && !B && !titleOpen);
+  if (tallOK !== Screen.tallOK) { Screen.tallOK = tallOK; Screen.fit(); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) document.getElementById('toast').classList.remove('show'); }
   if (shake > 0) shake -= dt;
   if (G && started) {
@@ -733,7 +770,7 @@ window.__UPTIME = {
     const solid = mapRows(G.map).map((r, y) => r.split('').map((c, x) => blocked(G.map, x, y) ? 1 : 0));
     return {
       started: started, map: G.map, x: G.x, y: G.y, dir: G.dir, moving: !!moving, busy: busy, day: G.day, focus: G.focus,
-      f: G.f, rank: G.rank, ui: ui, objective: objective(), solid: solid, doors: MAPS[G.map].doors,
+      f: G.f, rank: G.rank, ui: ui, objective: objective(), marker: markerDoor(), solid: solid, doors: MAPS[G.map].doors,
       battle: B ? {kind: B.spec.kind, ev: B.ev, dwell: B.dwell, story: !!B.spec.story, tech: B.spec.tech} : null,
       party: G.party, metrics: metricVals(), m: G.m, fm: fmPct(), queue: G.queue, mfa: G.mfaSet.length, summary: !!G.f.summaryShown,
       qt: Series.qt(),

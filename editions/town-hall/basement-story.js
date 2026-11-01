@@ -177,7 +177,7 @@ async function bmDesk() {
   const ready = (f.bmTune && !f.bmNight1) || (f.bmDrill2 && !f.bmNight2) || (f.bmBoard && !f.bmNight3) || f.bmBoss;
   if (!ready) { await say('Your desk in the basement, under a pipe that ticks. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your basement desk. End your shift?', opts);
+  const i = await choose('Your basement desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.bmTune && !f.bmNight1) {
@@ -717,7 +717,7 @@ async function bmSummary() {
     bmQtSummaryHtml() +
     '<p class="big">Next: the Server Room.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true, recordsHall: true, itBasement: true});
-  const i = await UI.openModal('End of the IT Basement', body, [{label: 'Keep exploring the IT Basement', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of the IT Basement', body, [{label: 'Keep exploring the IT Basement', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

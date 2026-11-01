@@ -48,6 +48,10 @@ const S = {
 };
 
 /* ---------- Palettes (index 1..4) ---------- */
+// Exit arrows for doors in side and top walls: the down arrow turned to point out through the wall.
+S.exitU = S.exit.slice().reverse();
+S.exitR = S.exit.map((_, y) => S.exit.map(r => r[y]).join(''));
+S.exitL = S.exitR.map(r => r.split('').reverse().join(''));
 const PAL = {
   G: ['#1f3d2b','#2f6e3e','#5aa64b','#a6d96a'],
   R: ['#2b2f3a','#4a5163','#8b93a7','#d7dbe4'],

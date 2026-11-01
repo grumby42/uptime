@@ -111,7 +111,7 @@ Object.assign(MAPS, {
       "h.............==.............h",
       "hhhhhhhhhhhhhhEhhhhhhhhhhhhhhh"
     ],
-    doors: {'14,15': {to: 'hub', x: 26, y: 7, dir: 'down'}, '29,6': {to: 'wboard', x: 9, y: 9, dir: 'up'}},
+    doors: {'14,15': {to: 'hub', x: 26, y: 7, dir: 'down'}, '29,6': {to: 'wboard', x: 1, y: 6, dir: 'right'}},
     outdoor: true
   },
   wboard: {
@@ -123,13 +123,13 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwwEwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'9,10': {to: 'market', x: 28, y: 6, dir: 'left'}}
+    doors: {'0,6': {to: 'market', x: 28, y: 6, dir: 'left'}}
   }
 });
 // The one change to earlier data: a Market Square building by the firewall, north-east of the plaza.

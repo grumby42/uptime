@@ -27,6 +27,29 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   page.on('request', r => { if (!r.url().startsWith('file://') && !r.url().startsWith('data:') && !r.url().startsWith('blob:')) requests.push(r.url()); });
+  // UPTIME_HIGHLIGHT_LOG=path: record every answer list the game opens (tests/highlight.js reads it).
+  if (process.env.UPTIME_HIGHLIGHT_LOG) {
+    const logPath = process.env.UPTIME_HIGHLIGHT_LOG; fs.writeFileSync(logPath, '');
+    await page.exposeFunction('__hlLog', rec => fs.appendFileSync(logPath, JSON.stringify(rec) + '\n'));
+    await page.addInitScript(() => {
+      window.addEventListener('DOMContentLoaded', () => {
+        const pinned = it => !!(it.pin || it.done || (it.meta && (it.meta.back || it.meta.done || it.meta.decide || it.meta.ai)));
+        for (const kind of ['openModal', 'choose']) {
+          const orig = UI[kind].bind(UI);
+          UI[kind] = function (...args) {
+            const items = kind === 'openModal' ? args[2] : args[1], o = (kind === 'openModal' ? args[3] : args[2]) || {};
+            const pr = orig(...args);
+            const st = kind === 'openModal' ? UI.modal : UI.choice;
+            const cur = st.items[st.cursor] || {};
+            window.__hlLog({kind, title: String(args[0] || '').slice(0, 80), shuffle: !!o.shuffle, nav: !!o.nav, cursorOpt: o.cursor !== undefined,
+              items: items.map(it => ({label: it.label, good: !!(it.meta && it.meta.good), pin: pinned(it), dis: !!it.disabled, verdict: !!(it.meta && it.meta.verdict), back: !!(it.meta && it.meta.back)})),
+              cursorLabel: cur.label, cursorGood: !!(cur.meta && cur.meta.good), cursorPinned: pinned(cur)});
+            return pr;
+          };
+        }
+      });
+    });
+  }
   await page.goto(FILE);
   await page.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
   await page.evaluate(() => { __UPTIME.seed(20261027); __UPTIME.turbo(true); });

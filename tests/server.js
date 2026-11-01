@@ -214,7 +214,7 @@ async function basementDone(s, extra, party) {
   await s.press('left'); await sleep(200);
   await s.settle();
   p = await s.peek();
-  check('the Beacon Badge opens the door into the Server Room', p.map === 'server' && p.x === 1 && p.y === 7, { map: p.map, x: p.x, y: p.y });
+  check('the Beacon Badge opens the door into the Server Room', p.map === 'server' && p.x === 27 && p.y === 12 && p.dir === 'left', { map: p.map, x: p.x, y: p.y });
   await s.goTo('server', 14, 7);
   await s.settle();
   p = await s.peek();
@@ -223,7 +223,7 @@ async function basementDone(s, extra, party) {
   const sc0 = await s.page.evaluate(() => scorecardHtml());
   check('scorecard shows the five Tier 3 metrics with targets', /Privileged \(Tier 0\) accounts/.test(sc0) && /Service accounts with a named owner/.test(sc0) && /Tier-crossing sign-ins a day/.test(sc0) && /Mean time to scope/.test(sc0) && /Investigations led/.test(sc0));
   check('the Server map: DC cage, PAWs, registry, identity whiteboard, Assessment terminals, Board door, door back to the Basement', await s.page.evaluate(() => {
-    const r = MAPS.server.rows; return r.length === 16 && r.every(x => x.length === 29) && r[1][1] === '!' && r[1].includes('9') && r[1].includes('(') && r[7][0] === 'D' && r[7][28] === 'D' && r[11].split('/').length === 4 && r[15][13] === 'E';
+    const r = MAPS.server.rows; return r.length === 16 && r.every(x => x.length === 29) && r[1][1] === '!' && r[1].includes('9') && r[1].includes('(') && r[7][0] === 'w' && r[7][28] === 'D' && r[12][28] === 'D' && MAPS.server.doors['28,12'].to === 'basement' && MAPS.server.doors['28,7'].to === 'svboard' && r[11].split('/').length === 4 && !r[15].includes('E');
   }));
 
   // ---- Fieldwork 1: privileged accounts ----

@@ -109,7 +109,7 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
       "wwwwwwwwwwwwwwEwwwwwwwwwwwwwww"
     ],
-    doors: {'14,15': {to: 'hub', x: 19, y: 11, dir: 'down'}, '29,10': {to: 'mboard', x: 9, y: 9, dir: 'up'}}
+    doors: {'14,15': {to: 'hub', x: 19, y: 11, dir: 'down'}, '29,10': {to: 'mboard', x: 1, y: 6, dir: 'right'}}
   },
   mboard: {
     name: 'Mail Board',
@@ -120,19 +120,19 @@ Object.assign(MAPS, {
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
       "w,,,,,,,,,,,,,,,,,,w",
-      "w,,,,,,,,,,,,,,,,,,w",
-      "wwwwwwwwwEwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwwwww"
     ],
-    doors: {'9,10': {to: 'mail', x: 28, y: 10, dir: 'left'}}
+    doors: {'0,6': {to: 'mail', x: 28, y: 10, dir: 'left'}}
   }
 });
 // The one change to Front Desk data: a Mail Room building east of the records office on the plaza,
 // with a gap in the hedge so its door can be reached from the cabling. The door opens with the Key Badge.
-MAPS.hub.rows[9] = "h.S.cccc......==.MMMM........h";
-MAPS.hub.rows[10] = "h.X.ccDc......==.MMDM.3333GGGh";
+MAPS.hub.rows[9] = "hS..cccc......==.MMMM........h";
+MAPS.hub.rows[10] = "hhXhccDc......==.MMDM.3333GGGh";
 MAPS.hub.rows[11] = "hhhhhhhhhhhhh.==.hh.hh3333GGGh";
 MAPS.hub.doors['19,10'] = {to: 'mail', x: 14, y: 14, dir: 'up',
   get locked() { return (typeof G !== 'undefined' && G && G.f.boardDone) ? undefined : 'The Mail Room. A note on the door: “Staff with a Key Badge only.”'; }};

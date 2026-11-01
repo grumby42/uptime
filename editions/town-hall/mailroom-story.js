@@ -153,7 +153,7 @@ async function mrTalk(npc) {
 async function mrDesk() {
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
   if (!G.f.mrDrill2) { await say('Your desk in the Mail Room. Too early to go home.'); return; }
-  const i = await choose('Your Mail Room desk. End your shift?', opts);
+  const i = await choose('Your Mail Room desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (!G.f.mrNight) {
@@ -217,13 +217,13 @@ async function mrInboxRoom() {
     while (true) {
       const code = MR_DOORCODE.split('').map((c, j) => m.inbox[j] ? c : '_').join(' ');
       const items = [
-        {label: 'Inspect the sender', disabled: !!rev.sender, meta: {k: 'sender'}},
-        {label: msg.linkText ? 'Hover over the link' : 'Check the link or attachment', disabled: !!rev.link, meta: {k: 'link'}},
-        {label: 'Read the tone', disabled: !!rev.tone, meta: {k: 'tone'}},
-        {label: 'Check authentication results', disabled: !!rev.auth, meta: {k: 'auth'}},
-        {label: 'A · Trust it', meta: {k: 'trust', good: msg.good === 'trust'}},
-        {label: 'B · Report it', meta: {k: 'report', good: msg.good === 'report'}}];
-      const i = await UI.openModal('Inbox room · message ' + (n + 1) + ' of 6 · code ' + code, mrMailHtml(msg, rev), items, {closable: false, cls: 'drill'});
+        {label: 'Inspect the sender', pin: true, disabled: !!rev.sender, meta: {k: 'sender'}},
+        {label: msg.linkText ? 'Hover over the link' : 'Check the link or attachment', pin: true, disabled: !!rev.link, meta: {k: 'link'}},
+        {label: 'Read the tone', pin: true, disabled: !!rev.tone, meta: {k: 'tone'}},
+        {label: 'Check authentication results', pin: true, disabled: !!rev.auth, meta: {k: 'auth'}},
+        {label: 'Trust it', meta: {k: 'trust', good: msg.good === 'trust'}},
+        {label: 'Report it', meta: {k: 'report', good: msg.good === 'report'}}];
+      const i = await UI.openModal('Inbox room · message ' + (n + 1) + ' of 6 · code ' + code, mrMailHtml(msg, rev), items, {shuffle: true, closable: false, cls: 'drill'});
       const k = items[i].meta.k;
       if (k !== 'trust' && k !== 'report') { rev[k] = true; continue; }
       const ok = k === msg.good;
@@ -298,7 +298,7 @@ async function mrTexts() {
         {label: 'Tap the link or reply', meta: {k: 'tap'}},
         {label: 'Report it (and don’t reply)', meta: {k: 'report', good: m.good === 'report'}},
         {label: 'Nothing to do: it’s legitimate', meta: {k: 'none', good: m.good === 'none'}}];
-      const i = await UI.openModal('Text stream', '<div class="sms"><span class="from">' + esc(m.from) + '</span>' + esc(m.text) + '</div>', items, {closable: false, cls: 'drill'});
+      const i = await UI.openModal('Text stream', '<div class="sms"><span class="from">' + esc(m.from) + '</span>' + esc(m.text) + '</div>', items, {shuffle: true, closable: false, cls: 'drill'});
       const k = items[i].meta.k;
       if (k === m.good) { await UI.openModal(k === 'report' ? 'Reported' : 'Fine', '<p>' + esc(m.why) + '</p>', [{label: 'Next text', meta: {good: true}}], {closable: false}); break; }
       await UI.openModal('Not quite', '<p>' + (k === 'tap' ? 'Never tap links in, or reply to, unexpected texts. ' : '') + esc(m.why) + '</p>', [{label: 'Try again', meta: {good: true}}], {closable: false});
@@ -388,7 +388,7 @@ async function mrEvolveCheck() {
   if (!G.mr || !G.mr.rulebook) return;
   const t = G.party.find(p => p.id === 'sieve' && p.lvl >= 5);
   if (!t) return;
-  const i = await choose('Sieve (Lv ' + t.lvl + ') can use the Filter Rulebook. Evolve it?', [{label: 'Evolve Sieve', meta: {good: true}}, {label: 'Later'}]);
+  const i = await choose('Sieve (Lv ' + t.lvl + ') can use the Filter Rulebook. Evolve it?', [{label: 'Evolve Sieve', meta: {good: true}}, {label: 'Later'}], {nav: true});
   if (i !== 0) return;
   G.mr.rulebook = false; t.id = 'sifter';
   await say('Sieve is evolving! Sieve → Sifter. New ability: Search and purge, every copy from every inbox.');
@@ -415,8 +415,8 @@ async function mrGauntlet() {
   for (let n = 0; n < MR_GAUNTLET.length; n++) {
     const g = MR_GAUNTLET[n];
     while (true) {
-      const items = [{label: 'A · Trust', meta: {k: 'trust', good: g.good === 'trust'}}, {label: 'B · Report', meta: {k: 'report', good: g.good === 'report'}}];
-      const i = await UI.openModal('Round 1 · triage gauntlet ' + (n + 1) + '/' + MR_GAUNTLET.length, '<div class="mail">' + esc(g.line) + '</div>', items, {closable: false, cls: 'drill'});
+      const items = [{label: 'Trust', meta: {k: 'trust', good: g.good === 'trust'}}, {label: 'Report', meta: {k: 'report', good: g.good === 'report'}}];
+      const i = await UI.openModal('Round 1 · triage gauntlet ' + (n + 1) + '/' + MR_GAUNTLET.length, '<div class="mail">' + esc(g.line) + '</div>', items, {shuffle: true, closable: false, cls: 'drill'});
       if (items[i].meta.k === g.good) break;
       mistakes++;
       await UI.openModal('Miss', '<p>' + esc(g.why) + '</p>', [{label: 'Again', meta: {good: true}}], {closable: false});
@@ -511,7 +511,7 @@ async function mrSummary() {
     mrQtSummaryHtml() +
     '<p class="big">Next: Clerks’ Row.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true});
-  const i = await UI.openModal('End of the Mail Room', body, [{label: 'Keep exploring the Mail Room', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of the Mail Room', body, [{label: 'Keep exploring the Mail Room', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

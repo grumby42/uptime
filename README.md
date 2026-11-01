@@ -16,9 +16,9 @@ Planned home: GitHub Pages at `grumby42/uptime` (open `index.html` for the serie
 ```
 index.html                  series menu (generated)
 engine/                     shared code
-  shell.html, style.css     page skeleton and layout (phone portrait: map above pad; desktop/landscape: overlays)
+  shell.html, style.css     page skeleton and layout (HUD band above the map; phone portrait: taller map view, dialogue, then the pad at the bottom, modals above the pad; desktop: dialogue below the map when there is room)
   core-data.js              sprites, palettes, tile legend, tool classes, tools, abilities, NIST CSF function names
-  engine.js                 RNG, sprite cache, integer scaling, input, dialogue/choice/modal UI (answer lists opt into a seeded shuffle, so position never gives the answer away), save codec
+  engine.js                 RNG, sprite cache, integer scaling, input, dialogue/choice/modal UI (answer lists opt into a seeded shuffle and the highlight starts on a random answer, so neither position nor highlight gives it away; fixed menus that hint a choice say {nav: true}), save codec
   drill.js                  investigation drills: one artefact, a query budget, verdict, reasoning, alternatives, AI helper
   series.js                 series save ('uptime.series') and the Quiet Thread core
   game.js                   overworld, battles, alerts, scorecard, Field Manual, menus, save/load, title, debug hooks
@@ -47,7 +47,7 @@ editions/town-hall/
   server-story.js           Server Room objectives, fieldwork (privileged accounts, PAWs, LAPS, Protected Users, audit, tiering), directive, drills, Assessment Findings, Server Board, domain-compromise incident, metrics, summary
   index.html                the built game (generated)
 tools/build.py              builds every edition and the menu
-tests/                      Playwright checks
+tests/                      Playwright checks (district suites, quiet, layout, highlight, doors, bot)
 ```
 
 An edition supplies `EDITION`, `newState`, `objective`, `interact`, `triggers`, `editionTile`, `introScript`, `summary`, `surfaceMissed`, `evolveCheck` and its data tables; the engine calls them.

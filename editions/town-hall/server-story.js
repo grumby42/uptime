@@ -156,7 +156,7 @@ async function svDesk() {
   const ready = (f.svTier && !f.svNight1) || (f.svDrill2 && !f.svNight2) || (f.svBoard && !f.svNight3);
   if (!ready) { await say('Your desk in the Server Room, under the cage’s cold air. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Server Room desk. End your shift?', opts);
+  const i = await choose('Your Server Room desk. End your shift?', opts, {nav: true});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.svTier && !f.svNight1) {
@@ -600,7 +600,7 @@ async function svSummary() {
     svQtSummaryHtml() +
     '<p class="big">Next: the Water Plant.</p>';
   Series.markEdition(EDITION.id, {done: true, serverRoom: true});
-  const i = await UI.openModal('End of the Server Room', body, [{label: 'Keep exploring the Server Room', meta: {good: true}}, {label: 'Title screen'}], {closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of the Server Room', body, [{label: 'Keep exploring the Server Room', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
