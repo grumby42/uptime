@@ -79,6 +79,7 @@ const EXTRA = [
   ['brief', /\bbrief(s|ed|ing|ings)?\b/i], ['council', /\bcouncil(s|lor|lors)?\b/i], ['stakeholder', /\bstakeholders?\b/i],
   ['transparent', /\b(transparen(t|cy)|open with|open about|being open)\b/i], ['accountable', /\baccountab(le|ility)\b/i],
   ['risk', /\brisks?\b/i], ['owner', /\bown(s|ed|er|ers|ership|ing)?\b/i], ['budget', /\bbudget(s|ed)?\b|\$\d/i],
+  ['counsel', /\b(Noor|counsel|legal|attorney|lawyers?)\b/i],
   // The broad investigate family (every enforced investigative word above, plus their synonyms). Reported, not
   // enforced: right answers to an open question naturally include an investigative step; each word in it is enforced.
   // Synonym families for the containment and credential words enforced above, so a move to synonyms stays visible.
@@ -215,8 +216,9 @@ if (report) {
 // 35–65% band on each of them at n >= MIN_N.
 const WATER_BAND = ['G:shutdown', 'operator', 'compare', 'G:urgent'];
 const waterBand = WATER_BAND.map(n => { const st = stat(inScope('water'), EXTRA.find(w => w[0] === n)[1]); return {n, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
-// Council Chambers is held to the same band on the leadership words, and on the hurry words (G:urgent).
-const COUNCIL_BAND = ['brief', 'council', 'stakeholder', 'transparent', 'accountable', 'risk', 'owner', 'budget', 'G:urgent'];
+// Council Chambers is held to the same band on the leadership words, the counsel words (Noor, counsel, legal, attorney,
+// lawyer: report-only game-wide) and the hurry words (G:urgent).
+const COUNCIL_BAND = ['brief', 'council', 'stakeholder', 'transparent', 'accountable', 'risk', 'owner', 'budget', 'counsel', 'G:urgent'];
 const councilBand = COUNCIL_BAND.map(n => { const st = stat(inScope('council'), EXTRA.find(w => w[0] === n)[1]); return {n, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
 const checks = [
   ['source scan found graded lists in every district', DISTRICTS.every(d => graded.some(L => district(L.file) === d))],

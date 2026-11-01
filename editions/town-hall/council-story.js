@@ -17,7 +17,7 @@
 'use strict';
 
 if (typeof EDITION !== 'undefined') {
-  EDITION.creditsFacts += ' Council Chambers: NIST CSF 2.0 (CSWP 29) Govern categories and the CSF 2.0 Implementation Examples (risk register, risk responses); NIST SP 800-61 Rev. 3 (April 2025) incident response roles; NICE Framework work roles (PD-WRL-003 Incident Response, OG-WRL-007, OG-WRL-006; components v2.2.0); CISA Tabletop Exercise Packages (CTEP); CIRCIA (2022) and the status of CISA’s rule on 1 November 2026 (proposed April 2024, final rule not yet published).';
+  EDITION.creditsFacts += ' Council Chambers: NIST CSF 2.0 (CSWP 29) Govern categories and the CSF 2.0 Implementation Examples (risk register, risk responses); NIST SP 800-61 Rev. 3 (April 2025) incident response roles; NICE Framework work roles (PD-WRL-003 Incident Response, OG-WRL-014 Systems Security Management, OG-WRL-007, OG-WRL-006; components v2.2.0); CISA Tabletop Exercise Packages (CTEP); CIRCIA (2022) and the status of CISA’s rule on 1 November 2026 (proposed April 2024, final rule not yet published).';
   if (EDITION.badgeFlags && !EDITION.badgeFlags.includes('ccCharter')) EDITION.badgeFlags.push('ccCharter');
 }
 const CC_RANK = 'Security team lead';
@@ -175,7 +175,7 @@ async function ccArrive() {
   await say('Rank: Tier 3 lead investigator → Security team lead. New responsibility: you assign, coach and brief; the district leads do the hands-on work. (Field Manual: Facts, your new role in the NICE Framework.)');
   unlock('fact', 'ccnice');
   await say('Mayor Merrin. Welcome. I’ll be plain: the council has never seen an incident plan. Nobody on the council owns this risk. Our insurer sent a renewal questionnaire due Friday, and nobody can answer half of it.', 'Mayor Dalia Merrin');
-  await say('And every one of your nine district leads reports straight to you. That isn’t a team; that’s a queue with your name on it.', 'Mayor Dalia Merrin');
+  await say('And all nine of your leads report straight to you. That isn’t a team; that’s a queue with your name on it.', 'Mayor Dalia Merrin');
   G.targets.ccAssign = 10; G.targets.ccLoad = 100; G.targets.ccOwner = 100; G.targets.ccBrief = 100; G.targets.ccActions = 100;
   f.ccMet = true; track();
   touchCSF('Govern');
@@ -196,7 +196,7 @@ async function merrinTalk() {
 }
 async function bramCcTalk() {
   const f = G.f, who = 'Councillor Bram Whitlock';
-  if (!f.ccRisk) { await say('Bram Whitlock. Payments came back within the hour last time, on the processor’s page. I kept my word; you kept yours.', who); return; }
+  if (!f.ccRisk) { await say(G.mk && G.mk.directiveBoss === 'hosted' ? 'Bram Whitlock. Payments came back within the hour last time, on the processor’s page. I kept my word; you kept yours.' : 'Bram Whitlock. Payments were the hardest call of my year last time. This time I want to know who decides, before it happens.', who); return; }
   if (!f.ccBoss) { await say('A risk committee. Me. Every month, the register, the exceptions list and the open actions. I asked for it.', who); return; }
   await say('The suspicion file is in my committee’s safe. Closed session, need to know. I’ve read it twice.', who);
 }
@@ -227,8 +227,8 @@ async function ccPlanTask() {
     const i = await choose('In the plan, who decides whether residents must be told about an incident?', [
       {label: 'Noor, the town attorney: she decides what the law requires; Ada writes it, the Mayor signs', meta: {good: true}},
       {label: 'You, as incident commander: you know the facts of the incident better than anyone else in the room'},
-      {label: 'Ada, the communications officer: telling the public is what her job is for'},
-      {label: 'The Mayor, on the first morning, so the town is seen to be open with residents'}], {shuffle: true});
+      {label: 'Ada, with Noor checking the wording: telling the public is what her job is for'},
+      {label: 'The Mayor, on the first morning, before Noor has the facts, so the town is seen to be open'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('You know the facts; that’s why you give them to Noor. Whether the law requires telling anyone, and whom, is a legal judgement.');
     else if (i === 2) await say('Ada writes what is said and says it well. Whether anything must be said, and to whom, is Noor’s call.');
@@ -330,7 +330,7 @@ async function ccDelegate() {
     const i = await UI.openModal('Returned · ' + r.a.district, '<div class="card"><b>' + esc(ALERTS[r.a.threat].rule) + '</b><br>' + esc(r.lead.name) + ': ' + esc(r.a.ret) + '</div>', items, {shuffle: true, closable: false, cls: 'drill'});
     const back = items[i].meta.k === 'back';
     if (r.a.bad && back) { caught++; await say(first + ' calls the supplier back on the number in the contract. The bank change was real, made by the supplier: benign after all, and now the close says why. (game)'); }
-    else if (r.a.bad) { missed++; await say('That close named no evidence: “our usual supplier” is exactly what a hijacked supplier mailbox looks like. Rae sends it back herself; the call-back clears it. Next time, read the evidence line first.'); }
+    else if (r.a.bad) { missed++; await say('That close cited the sender’s address, and a hijacked supplier mailbox sends from exactly that address. Rae sends it back herself; the call-back clears it. Ask whether the evidence could tell the two apart.'); }
     else if (back) { wrongBack++; await say(first + ' sends it straight back with the same evidence line. It was fine: the close named its decisive source.'); }
   }
   const busiest = Math.max(...leads.map(l => Math.round(l.load / l.cap * 100)));
@@ -357,8 +357,8 @@ async function ccContacts() {
     const i = await choose('What does the contact page say?', [
       {label: 'Our reports to the FBI and CISA, the insurer’s notice; for anyone else: Noor decides', meta: {good: true}},
       {label: 'Every resident, the press and the state hear the same morning, so nobody can say the town hid anything'},
-      {label: 'Only the insurer: their panel deals with the police and any regulator on the town’s behalf'},
-      {label: 'Nobody outside hears until we know exactly what happened, so we never have to correct ourselves'}], {shuffle: true});
+      {label: 'Only the insurer and Noor: the insurer’s panel deals with the police and any regulator'},
+      {label: 'Nobody outside hears, nor does Noor, until we know exactly what happened, so we never correct ourselves'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Telling everyone at once, before anyone knows what happened or what the law asks, is how towns announce the wrong numbers.');
     else if (i === 2) await say('The insurer’s panel can help, but our own duties stay ours. Law enforcement and CISA hear from us; I decide the rest.');
@@ -422,9 +422,9 @@ async function fenTalk() {
   await say('Fen Rasmussen, roads committee. River Road is falling apart, and I’m told the security team just grew. I want two of your posts, the night analysts, to fund the resurfacing. $186,000 a year. (game)', who);
   while (true) {
     const i = await choose('How do you answer the roads committee?', [
-      {label: 'Lay out what the two posts change in money, hours and risk, with options, and let the council decide and sign for it', meta: {good: true}},
-      {label: 'Refuse outright: security staffing is not a budget line a council should be able to cut at all'},
-      {label: 'Warn them the town will be hacked within weeks without the night analysts, and stop there'},
+      {label: 'Lay out what the two posts change in money, hours and risk, with options, and let the council own it', meta: {good: true}},
+      {label: 'Refuse outright: security staffing is not a budget line any council should ever be able to cut at all'},
+      {label: 'Warn them the town will be hacked within weeks without the night analysts, and leave it at that'},
       {label: 'Accept quietly: it’s the council’s money, and arguing with a councillor isn’t your place'}], {shuffle: true});
     if (i === 0) { c.directive = 'options'; break; }
     if (i === 1) await say('Every budget line is the council’s to set. Your job is to make sure they set it knowing what it costs.');
@@ -449,7 +449,7 @@ async function ccDrill2() {
   await say('“Town Hall hacked again: 40,000 residents’ files stolen this week.” 2,700 shares, and the reporter wants a comment before noon. Is it about us, and is it true? I won’t say a word until you tell me what we know.', who);
   const r = await ccDrill('press');
   G.f.ccDrill2 = true; touchCSF('Respond');
-  await say(r.verdictOk ? 'The planning applications from the Records Hall incident, published now; nothing new this week. Noor is already deciding notices for those. I can say exactly that, and our next update is at 16:00.' : 'It’s the planning applications from the Records Hall incident: the file names are on Noor’s list, and nothing left this week. I can say that, and nothing more.', who);
+  await say(r.verdictOk ? 'The planning applications from the Records Hall incident, published now; no sign of a new loss this week. Noor is already deciding notices for those. I can say exactly that, and our next update is at 16:00.' : 'It’s the planning applications from the Records Hall incident: the file names are on Noor’s list, and no sign of a new loss this week. I can say that, and nothing more.', who);
   await say('Elsie has the insurer’s question 7 for you. It’s due Friday.', who);
 }
 async function ccDrill3() {
@@ -520,7 +520,7 @@ async function ccBossScript() {
   await surfaceMissed(true);
   c.boss = {day: G.day, first: []};
   await say('00:50, the war room. One account, one laptop, three districts. The leads are on the phone. You’re the incident commander now. Command it; don’t do it.', who);
-  await say('Rae and Magda checked first: nothing ties tonight to svc-print or the closet router. A different intruder. (game)');
+  await say('Rae and Magda checked first: nothing so far ties tonight to svc-print or the closet router. Rae keeps that question open. (game)');
   const S = ccBossStages();
   for (const k of ['s1', 's2', 's3']) {
     const st = S[k];
@@ -533,7 +533,7 @@ async function ccBossScript() {
       await say(st.resp[i].why);
     }
     c.boss.first.push(first);
-    if (k === 's1') { touchCSF('Respond'); await say('00:58: Paz stopped the export. t.ashby is disabled, its sessions revoked. DS-LT-03 is off the network, still powered; Ruth is copying its memory and disk. Bea copied the inbox rule, then removed it. Noor and Ada are up; the Mayor knows.'); }
+    if (k === 's1') { touchCSF('Respond'); await say('00:58: Paz stopped the export. t.ashby is disabled, its sessions revoked. DS-LT-03 is off the network, still powered; Ruth is copying its memory and disk. Bea copied the inbox rule, then removed it. Noor and Ada are up; the Mayor knows; the insurer has its early notice.'); }
     if (k === 's2') { c.brief.total++; if (first) c.brief.on++; track(); await say(first ? 'The council heard it at 08:00: what we know, what we don’t, and 14:00 for the next update. The Mayor approved the outside firm from the insurer’s panel. (game)' : 'The council heard it, late and after a false start. Next update promised for 14:00.'); }
     if (k === 's3') { c.brief.total++; if (first) c.brief.on++; track(); }
   }
@@ -541,7 +541,7 @@ async function ccBossScript() {
   c.boss.ok = c.boss.first.every(Boolean);
   G.f.ccBoss = true; unlock('act', 'cccommand'); touchCSF('Recover'); touchCSF('Govern');
   bumpUptime(0.01);
-  await say('14:00, on time: the owners agreed the order. The portal’s resident services come back first through a clean admin path; DS-LT-03 is rebuilt from a clean image, its copies kept. Noor has the 18,600 rows and their fields, and she decides who must be told. The FBI and CISA have the extortion email. No payment: the Mayor’s decision, with Noor. (game)');
+  await say('14:00, on time: the owners agreed the order. The portal’s admin console comes back first, through a clean path, its admin log showing nothing but the export; DS-LT-03 is rebuilt from a clean image, its copies kept. Noor has the 18,600 rows and their fields, and she decides who must be told. The FBI and CISA have the extortion email. No payment: the Mayor’s decision, with Noor. (game)');
   await say('Three new actions, each with an owner: portal admin only from admin workstations, a rule for attachments in mailboxes that take outside mail, and the night post at the next budget. (game)');
   await say('Before you sign off the week: Rae, in the team room. The suspicion file.', 'Mayor Dalia Merrin');
 }
@@ -573,6 +573,7 @@ async function ccEnding() {
     '<h3>Nine districts</h3><table class="sc"><tr><th>District</th><th>Badge</th><th>Drills (game)</th><th>Incident</th></tr>' + ccDistrictRows() + '</table>' +
     '<h3>Your scorecard, every district</h3>' + scorecardHtml() +
     (c.boss ? '<p>The night of the portal export: ' + (c.boss.ok ? 'commanded, briefed on time and recovered in the owners’ order, with notification left to counsel' : 'handled, with false starts the debriefs named') + '.</p>' : '') +
+    '<p>Post-incident actions closed at the end-of-edition review: <b>' + c.act.closed + ' of ' + c.act.total + '</b> (game).</p>' +
     '<p>Missed attacks found in review: <b>' + G.m.surfaced + '</b>.</p>' +
     ccQtSummaryHtml() +
     '<h3>Credits</h3><p class="small">UPTIME, Town Hall edition. Original game. Framework IDs from MITRE ATT&amp;CK® (© 2026 The MITRE Corporation; reproduced and distributed with its permission); function and category names from the NIST CSF 2.0; the full list of sources is under Credits.</p>' +

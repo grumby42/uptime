@@ -463,7 +463,7 @@ const sayText = async s => (await s.waitUI('say')).ui.text;
   check('boss stage 2: promising “no data was taken” before the evidence is wrong (9 MB left)', /9 MB left/.test(await sayText(s)));
   p = await settleTo(s, /Stage 3 \(14:00\)/);
   await s.pickLabel(/^Pay quietly/);
-  check('boss stage 3: paying quietly without counsel is wrong', /Noor and law enforcement/.test(await sayText(s)));
+  check('boss stage 3: paying quietly without counsel is wrong', /on Noor’s advice and with law enforcement told/.test(await sayText(s)));
   p = await settleTo(s, /Stage 3 \(14:00\)/);
   await s.pickLabel(/^Announce this evening/);
   check('boss stage 3: announcing before Noor decides is wrong', /Noor has decided/.test(await sayText(s)));

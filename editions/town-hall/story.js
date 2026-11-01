@@ -11,9 +11,9 @@ const EDITION = {
   id: 'town-hall',
   saveKey: 'uptime.slice1.save',
   badgeFlags: ['mrSeal', 'crShield', 'mkLantern', 'rhVault', 'bmBeacon', 'svCrown', 'wtTide', 'ccCharter'],  // G.f flags that mean a badge was earned (the Key Badge is G.badge)
-  title: 'Town Hall · Front Desk district',
+  title: 'Town Hall edition',
   blurb: 'You’re the new intern in a small town’s security team. Investigate alerts, fix what’s broken, and keep the district running.',
-  creditsName: 'vertical slice 1: Town Hall, Front Desk district',
+  creditsName: 'Town Hall edition',
   creditsFacts: 'Verizon 2025 Data Breach Investigations Report (initial access shares; ransomware at small and medium organisations) and 2026 executive summary (exploitation now first). Critical Start 2021 SOC professional survey (false positives). NIST SP 800-63B-4 (password length, no periodic changes, blocklists). Joint Cybersecurity Advisory AA24-038A (CISA, NSA, FBI and partners, February 2024).'
 };
 
