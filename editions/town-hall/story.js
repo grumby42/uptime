@@ -43,7 +43,7 @@ function fixesCount() { return FIX_ORDER.filter(k => G.f[k]).length; }
 function editionTile(d, ch, x, y) {
   if (d.shrink && fixesCount() >= d.shrink) { d = Object.assign({ch: '.'}, TILES['.']); }
   if (d.port && G.f.portDone) { d.spr = 'F'; d.pal = 'F'; }
-  if (ch === 'p' && (G.pcs[x] || G.f.logs)) d.pal = 'pcOn';
+  if (ch === 'p' && (G.pcs[x] || G.f.logs)) d.pal = 'pcOnOk';  // logging on: lit, with a tick (not colour alone)
   if (ch === 'k' && G.f.kiosk) d.pal = 'kioskOk';
   if (ch === 'n' && G.f.wifi) d.pal = 'closetOk';
   if (typeof mrTile === 'function') d = mrTile(d, ch, x, y);

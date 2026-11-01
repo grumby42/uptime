@@ -93,6 +93,7 @@ const PAL = {
   wall: ['#1b2233','#3a4a6b','#6d7fa6','#a9b8d6'],
   pcOff: ['#1b2233','#5b3a26','#a8703f','#2b2f3a'],
   pcOn: ['#1b2233','#5b3a26','#a8703f','#9ff0c8'],
+  pcOnOk: ['#1b2233','#5b3a26','#a8703f','#9ff0c8'],  // lit because the player did it (logging on, patched): badged with a tick
   pcMine: ['#1b2233','#5b3a26','#a8703f','#7fa2d6'],
   kioskBad: ['#1b2233','#5b4a42','#b8432f','#e58a5c'],
   kioskOk: ['#1b2233','#5b4a42','#2f6e3e','#9ff0c8'],

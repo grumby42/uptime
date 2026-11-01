@@ -411,21 +411,31 @@ async function settleTo(s, re) {
   // ---- Alert mix ----
   const mix = await s.page.evaluate(() => {
     const G = __UPTIME.state(), save = { map: G.map, f: Object.assign({}, G.f), brief: G.brief }; G.brief = {};
-    const count = n => { const c = {}; for (let i = 0; i < n; i++) { const a = genAlert('mal'); c[a.threat] = (c[a.threat] || 0) + 1; } return c; };
+    // Deterministic: each sample runs on its own fixed seed (the game's shared stream depends on everything played
+    // before), and the Vault Badge comparison reuses the same seed so it is paired. The game's stream is put back after.
+    const keepRng = rng;
+    const count = (n, seed) => { rng = makeRng(seed); const c = {}; for (let i = 0; i < n; i++) { const a = genAlert('mal'); c[a.threat] = (c[a.threat] || 0) + 1; } return c; };
     const home = RH_HOME, share = c => home.reduce((s, t) => s + (c[t] || 0), 0) / Object.values(c).reduce((a, b) => a + b, 0);
-    G.map = 'hub'; const hub = count(6000);
-    G.map = 'records'; const rh = count(6000);
-    G.f.rhVault = true; const vault = count(6000); G.f.rhVault = false;
-    G.f.rhMet = false; G.map = 'hub'; const pre = count(4000);
+    const weights = () => Object.fromEntries(alertThreatWeights('mal').map(x => [x.t, x.w]));
+    G.map = 'hub'; const hub = count(6000, 101);
+    G.map = 'records'; G.f.rhVault = false; const rh = count(6000, 102), w0 = weights();
+    G.f.rhVault = true; const vault = count(6000, 102), w1 = weights(); G.f.rhVault = false;
+    G.f.rhMet = false; G.map = 'hub'; const pre = count(4000, 103);
+    rng = keepRng;
     G.map = save.map; G.f = save.f; G.brief = save.brief;
+    // The weights themselves: exactly halved for threats using a Vault technique (T1490, T1485), unchanged for every other.
+    const vaultT = Object.keys(w0).filter(t => RH_VAULT_TECHS.includes(THREATS[t].tech));
+    const wBad = Object.keys(w0).filter(t => vaultT.includes(t) ? !(w0[t] > 0 && Math.abs(w1[t] - w0[t] / 2) < 1e-9) : w1[t] !== w0[t]);
     const qtHit = Object.keys(THREATS).filter(t => QT_TECH[THREATS[t].tech]);
     let host; G.map = 'records'; do { host = genAlert('mal'); } while (!RH_HOME.includes(host.threat)); G.map = save.map;
     return { hubShare: share(hub), rhShare: share(rh), lapse: rh.lapse || 0, lapseV: vault.lapse || 0, shred: rh.shredwick || 0, shredV: vault.shredwick || 0, gloam: rh.gloam || 0, gloamV: vault.gloam || 0,
-      pre: home.reduce((s, t) => s + (pre[t] || 0), 0), qtHit, techs: RH_HOME.map(t => THREATS[t].tech), host: host.host };
+      pre: home.reduce((s, t) => s + (pre[t] || 0), 0), qtHit, techs: RH_HOME.map(t => THREATS[t].tech), host: host.host,
+      vaultT, wBad, w0: { lapse: w0.lapse, shredwick: w0.shredwick, gloam: w0.gloam }, w1: { lapse: w1.lapse, shredwick: w1.shredwick, gloam: w1.gloam } };
   });
   check('alert mix: Records Hall threats about three times as likely inside Records Hall', mix.rhShare > mix.hubShare * 2.2 && mix.rhShare < mix.hubShare * 3.2, mix);
   check('alert mix: no Records Hall threats before arrival; Records Hall alerts name a Records Hall server', mix.pre === 0 && /Records Hall$/.test(mix.host), mix);
-  check('alert mix: the Vault Badge halves T1490 and T1485 threats, not the others', mix.lapseV < mix.lapse * 0.65 && mix.shredV < mix.shred * 0.65 && mix.gloamV > mix.gloam * 0.85, mix);
+  check('alert mix: the Vault Badge halves the weight of T1490 and T1485 threats exactly and leaves every other weight alone', mix.vaultT.includes('lapse') && mix.vaultT.includes('shredwick') && !mix.wBad.length, mix);
+  check('alert mix (seeded, paired): with the Vault Badge those threats come up much less often, the others no less', mix.lapseV < mix.lapse * 0.65 && mix.shredV < mix.shred * 0.65 && mix.gloamV > mix.gloam * 0.85, mix);
   check('alert mix: no Quiet Thread technique among threats; spec IDs present (T1486, T1485, T1567.002, T1490)', mix.qtHit.length === 0 && ['T1486', 'T1485', 'T1567.002', 'T1490'].every(t => mix.techs.includes(t)), mix);
   check('ATT&CK v20 names and tactics as verified (Impact, Impact, Exfiltration, Collection)', await s.page.evaluate(() =>
     TECH.T1485.name === 'Data Destruction' && TECH.T1485.tactic.join() === 'Impact' && TECH.T1490.name === 'Inhibit System Recovery' && TECH.T1486.name === 'Data Encrypted for Impact' &&

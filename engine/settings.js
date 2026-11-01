@@ -68,26 +68,36 @@ const PALETTES = [
       if (hueIn(h, 70, 175)) return rgbHex(hslRgb(166, s, l));
       return hex;
     },
-    ok: hex => { const [, s, l] = rgbHsl(hexRgb(hex)); return s < 0.22 || l < 0.12 ? hex : rgbHex(hslRgb(204, Math.max(s, 0.8), clamp(l, 0.3, 0.72))); },
+    // Fixed = a saturated mid blue, never lighter than L 0.5, so it stays apart from the (light) bluish greens under
+    // tritanopia too, and a lit screen stays >= 3:1 against a dark one (tests/settings.js checks every badged pair).
+    ok: hex => { const [, s, l] = rgbHsl(hexRgb(hex)); return s < 0.22 || l < 0.12 ? hex : rgbHex(hslRgb(210, 1, Math.min(0.5, 0.2 + 0.8 * l))); },
+    bars: {focus: '#1f8a70'},
     css: {bg: '#10141f', ink: '#e9edf5', paper: '#f7f6f2', 'paper-ink': '#1b2233', muted: '#4a5163', cur: '#d6e9f8', accent: '#005f96',
       warn: '#a34400', gold: '#ffd96a', 'hud-bg': '#161b29', 'hud-ink': '#ffffff', box: '#ffffff', 'box-ink': '#1b2233', 'box-muted': '#4a5163',
       'box-cur': '#d6e9f8', 'box-accent': '#005f96', line: '#1b2233', foot: '#8b93a7', toast: '#1b2233', 'toast-ink': '#ffffff'}},
-  {id: 'amber', name: 'Amber terminal', note: 'One amber phosphor, five shades. Status reads from shape and brightness.',
+  {id: 'amber', name: 'Amber terminal', note: 'One amber phosphor, five shades. Status reads from the tick and box (and mostly brightness).',
     map: rampMap(['#120a00', '#4d2c00', '#a35f00', '#e89a1c', '#ffd88a']),
+    bars: {ev: '#ffb000', dwell: '#b86500'},
     css: {bg: '#0a0600', ink: '#ffcf70', paper: '#140b00', 'paper-ink': '#ffcf70', muted: '#d9a441', cur: '#4a2e00', accent: '#ffb000',
       warn: '#ff9a52', gold: '#ffd88a', 'hud-bg': '#140b00', 'hud-ink': '#ffcf70', box: '#140b00', 'box-ink': '#ffcf70', 'box-muted': '#d9a441',
       'box-cur': '#4a2e00', 'box-accent': '#ffb000', line: '#c98a1c', foot: '#d9a441', toast: '#140b00', 'toast-ink': '#ffcf70'}},
-  {id: 'green', name: 'Green terminal', note: 'One green phosphor, five shades. Status reads from shape and brightness.',
+  {id: 'green', name: 'Green terminal', note: 'One green phosphor, five shades. Status reads from the tick and box (and mostly brightness).',
     map: rampMap(['#010d04', '#0b3d17', '#1b7a32', '#3fcf5f', '#c2ffcf']),
+    bars: {ev: '#9dffb0', dwell: '#2a9a45'},
     css: {bg: '#010a03', ink: '#9dffb0', paper: '#03120a', 'paper-ink': '#9dffb0', muted: '#5fd47a', cur: '#0d4a1f', accent: '#c2ffcf',
       warn: '#ffe28a', gold: '#c2ffcf', 'hud-bg': '#03120a', 'hud-ink': '#9dffb0', box: '#03120a', 'box-ink': '#9dffb0', 'box-muted': '#5fd47a',
       'box-cur': '#0d4a1f', 'box-accent': '#c2ffcf', line: '#2fa84a', foot: '#5fd47a', toast: '#03120a', 'toast-ink': '#9dffb0'}},
   {id: 'light', name: 'Light', note: 'A daylight map and light menus and bands.',
     map: hex => rgbHex(hexRgb(hex).map(v => v + (255 - v) * 0.22)),
+    bars: {focus: '#4a9a3d'},
     css: {bg: '#e9e6dc', ink: '#1b2233', paper: '#fdfcf8', 'paper-ink': '#1b2233', muted: '#4a5163', cur: '#dfeccb', accent: '#2f6e3e',
       warn: '#a8361f', gold: '#6b4a00', 'hud-bg': '#f4f1e8', 'hud-ink': '#1b2233', box: '#ffffff', 'box-ink': '#1b2233', 'box-muted': '#4a5163',
       'box-cur': '#dfeccb', 'box-accent': '#2f6e3e', line: '#1b2233', foot: '#4a5163', toast: '#1b2233', 'toast-ink': '#ffffff'}}
 ];
+
+// Battle bar fills: the game's colours through the palette unless the palette sets its own (`bars`), chosen so each fill
+// is >= 3:1 against the card (WCAG 1.4.11). Dwell is also hatched in every palette, so it never matches Evidence.
+const BAR_COLOURS = {ev: '#2f74b5', dwell: '#b8432f', focus: '#5aa64b'};
 
 /* ---------- State badges: meaning that never rests on colour ----------
    Equipment the player has fixed draws a tick in its top-right corner; an isolated laptop draws a small box.
@@ -95,14 +105,24 @@ const PALETTES = [
 const STATE_BADGES = {pcIso: 'iso', wafOn: 'ok'};
 function stateBadge(palKey) { return STATE_BADGES[palKey] || (/Ok$/.test(palKey || '') ? 'ok' : null); }
 const BADGE_GLYPHS = {ok: [[0, 3], [1, 4], [2, 3], [3, 2], [4, 1], [5, 0]], iso: [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [3, 1], [0, 2], [3, 2], [0, 3], [1, 3], [2, 3], [3, 3]]};
+// Each glyph (white with a 1-px dark outline all round) is drawn once per palette into a small canvas and reused.
+const BADGE_CACHE = {};
+function badgeImage(kind) {
+  const fill = BADGE_GLYPHS[kind]; if (!fill) return null;
+  const key = kind + '|' + Settings.pal().id; if (BADGE_CACHE[key]) return BADGE_CACHE[key];
+  const on = new Set(fill.map(p => p[0] + ',' + p[1])), w = Math.max(...fill.map(p => p[0])) + 1, h = Math.max(...fill.map(p => p[1])) + 1;
+  const c = document.createElement('canvas'); c.width = w + 2; c.height = h + 2;
+  const x = c.getContext('2d');
+  x.fillStyle = Settings.col('#1b2233');
+  for (const [px, py] of fill) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (!on.has((px + dx) + ',' + (py + dy))) x.fillRect(px + dx + 1, py + dy + 1, 1, 1);
+  x.fillStyle = Settings.col('#ffffff');
+  for (const [px, py] of fill) x.fillRect(px + 1, py + 1, 1, 1);
+  c.glyphW = w;
+  return (BADGE_CACHE[key] = c);
+}
 function drawBadge(ctx, kind, sx, sy) {
-  const fill = BADGE_GLYPHS[kind]; if (!fill) return;
-  const on = new Set(fill.map(p => p[0] + ',' + p[1])), w = Math.max(...fill.map(p => p[0])) + 1;
-  const ox = sx + 15 - w, oy = sy + 1;  // top-right corner, a 1-px dark outline all round
-  ctx.fillStyle = Settings.col('#1b2233');
-  for (const [x, y] of fill) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (!on.has((x + dx) + ',' + (y + dy))) ctx.fillRect(ox + x + dx, oy + y + dy, 1, 1);
-  ctx.fillStyle = Settings.col('#ffffff');
-  for (const [x, y] of fill) ctx.fillRect(ox + x, oy + y, 1, 1);
+  const img = badgeImage(kind); if (!img) return;
+  ctx.drawImage(img, sx + 15 - img.glyphW - 1, sy);  // top-right corner of the tile (glyph at x 15-w.., y 1..)
 }
 
 /* ---------- Sound sets (Web Audio, generated; every motif is original) ----------
@@ -176,18 +196,21 @@ const Sound = {
     } catch (e) { this.ctx = null; }
   },
   setVolume() { try { if (this.master) this.master.gain.value = Math.pow(Settings.v.volume / 100, 2) * 0.6; } catch (e) {} },
-  allowed(ev) {
+  // A preview (changing the sound set or the volume in Settings) ignores "alerts only" so the player hears what they
+  // picked; mute and volume 0 still silence it.
+  allowed(ev, preview) {
     const v = Settings.v;
     if (v.mute || v.volume <= 0) return 'muted';
-    if (v.alertsOnly && ALERT_EVENTS.indexOf(ev) < 0) return 'filtered';
+    if (!preview && v.alertsOnly && ALERT_EVENTS.indexOf(ev) < 0) return 'filtered';
     return 'ok';
   },
-  play(ev, setId) {
-    let out = this.allowed(ev);
+  preview(ev) { return this.play(ev, null, true); },
+  play(ev, setId, preview) {
+    let out = this.allowed(ev, preview);
     const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
     if (out === 'ok' && ev === 'move' && now - (this.last.move || 0) < 35) out = 'rate';
     if (out === 'ok') { this.last[ev] = now; out = !this.unlocked ? 'locked' : !this.ctx ? 'noaudio' : 'played'; }
-    this.trace.push({ev: ev, set: setId || Settings.v.sound, out: out});
+    this.trace.push({ev: ev, set: setId || Settings.v.sound, out: out, preview: !!preview});
     if (this.trace.length > 300) this.trace.splice(0, 100);
     if (out !== 'played') return false;
     try { this.synth(SOUND_SETS[setId || Settings.v.sound] || SOUND_SETS.soft, ev); return true; }
@@ -217,26 +240,35 @@ const Sound = {
           voices.push(o);
         }
       }
+      const last = voices[voices.length - 1], filt = out === g ? null : out;
+      last.onended = () => { try { for (const v of voices) v.disconnect(); g.disconnect(); if (filt) filt.disconnect(); } catch (e) {} };
       for (const v of voices) { v.connect(g); v.start(t); v.stop(end + 0.02); }
     }
   }
 };
 function sfx(ev) { try { Sound.play(ev); } catch (e) {} }
 
-/* ---------- Settings store ---------- */
+/* ---------- Settings store ----------
+   v2: sound starts muted (volume kept at 60) for new players and, once, for anyone whose stored settings are v1; a
+   one-time toast says so (soundTip). Reduced flashing follows the system's prefers-reduced-motion until the player
+   changes it here (reduceFlashUser); after that their choice wins. */
+const SETTINGS_VERSION = 2;
 const Settings = {
   v: null, stored: false, storageOk: true, _col: {}, hooks: [],
   defaults() {
     let calm = false;
     try { calm = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
-    return {v: 1, palette: 'classic', sound: 'soft', volume: 60, mute: false, alertsOnly: false, reduceFlash: calm, textSize: 'normal'};
+    return {v: SETTINGS_VERSION, palette: 'classic', sound: 'soft', volume: 60, mute: true, alertsOnly: false, reduceFlash: calm, reduceFlashUser: false, textSize: 'normal', soundTip: false};
   },
   load() {
     const d = this.defaults();
     let raw = null;
     try { raw = localStorage.getItem(SETTINGS_KEY); this.storageOk = true; } catch (e) { this.storageOk = false; }
     let o = {};
-    if (raw) { try { o = JSON.parse(raw) || {}; this.stored = true; } catch (e) { o = {}; } }
+    if (raw) { try { o = JSON.parse(raw); this.stored = true; } catch (e) { o = null; } }
+    if (!o || typeof o !== 'object' || Array.isArray(o)) o = {};
+    if (this.stored && !(o.v >= 2)) { o.mute = true; o.reduceFlashUser = 'reduceFlash' in o; o.v = SETTINGS_VERSION; }  // v1 -> v2, once
+    if (!o.reduceFlashUser) delete o.reduceFlash;  // not chosen here: follow the system setting
     this.v = this.clean(Object.assign(d, o));
     this.apply();
     return this.v;
@@ -244,8 +276,10 @@ const Settings = {
   clean(v) {
     if (!PALETTES.some(p => p.id === v.palette)) v.palette = 'classic';
     if (!SOUND_SETS[v.sound]) v.sound = 'soft';
-    v.volume = clamp(Math.round((+v.volume || 0) / 10) * 10, 0, 100);
-    v.mute = !!v.mute; v.alertsOnly = !!v.alertsOnly; v.reduceFlash = !!v.reduceFlash;
+    const vol = +v.volume;
+    v.volume = isNaN(vol) || v.volume === null || v.volume === '' ? 60 : clamp(Math.round(vol / 10) * 10, 0, 100);
+    v.mute = !!v.mute; v.alertsOnly = !!v.alertsOnly; v.reduceFlash = !!v.reduceFlash; v.reduceFlashUser = !!v.reduceFlashUser; v.soundTip = !!v.soundTip;
+    v.v = SETTINGS_VERSION;
     if (v.textSize !== 'large') v.textSize = 'normal';
     return v;
   },
@@ -253,14 +287,18 @@ const Settings = {
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.v)); this.storageOk = true; this.stored = true; return true; }
     catch (e) { this.storageOk = false; return false; }
   },
-  set(patch) { Object.assign(this.v, patch); this.clean(this.v); this.apply(); this.save(); return this.v; },
-  pal() { return PALETTES.find(p => p.id === (this.v ? this.v.palette : 'classic')) || PALETTES[0]; },
+  set(patch) { if ('reduceFlash' in patch) patch = Object.assign({reduceFlashUser: true}, patch); Object.assign(this.v, patch); this.clean(this.v); this.apply(); this.save(); return this.v; },
+  // One-time notice on first start that sound is off (remembered in the settings key).
+  soundNotice() { if (this.v.soundTip) return null; this.set({soundTip: true}); return 'Sound is off. Turn it on in Settings.'; },
+  pal() { const id = this.v ? this.v.palette : 'classic'; if (!this._p || this._p.id !== id) this._p = PALETTES.find(p => p.id === id) || PALETTES[0]; return this._p; },
   calm() { return !!(this.v && this.v.reduceFlash); },
   // Every colour the canvas draws goes through here.
   col(hex) {
-    const p = this.pal(); if (!p.map || !/^#[0-9a-f]{6}$/i.test(hex)) return hex;
-    const k = p.id + hex; return this._col[k] || (this._col[k] = p.map(hex.toLowerCase()));
+    const p = this.pal(); if (!p.map) return hex;
+    const k = p.id + hex, r = this._col[k]; if (r !== undefined) return r;
+    return (this._col[k] = /^#[0-9a-f]{6}$/i.test(hex) ? p.map(hex.toLowerCase()) : hex);
   },
+  barCol(which) { const p = this.pal(); return (p.bars && p.bars[which]) || this.col(BAR_COLOURS[which]); },
   palColours(key) {
     const p = this.pal(), base = PAL[key];
     if (!base || !p.map) return base;
@@ -304,8 +342,8 @@ function settingsItems() {
 function settingsChange(k, d) {
   const v = Settings.v;
   if (k === 'palette') Settings.set({palette: cyc(PALETTES.map(p => p.id), v.palette, d)});
-  else if (k === 'sound') { Settings.set({sound: cyc(Object.keys(SOUND_SETS), v.sound, d)}); Sound.play('correct'); }
-  else if (k === 'volume') { Settings.set({volume: clamp(v.volume + d * VOLUME_STEP, 0, 100)}); Sound.play('select'); }
+  else if (k === 'sound') { Settings.set({sound: cyc(Object.keys(SOUND_SETS), v.sound, d)}); Sound.preview('correct'); }
+  else if (k === 'volume') { Settings.set({volume: clamp(v.volume + d * VOLUME_STEP, 0, 100)}); Sound.preview('select'); }
   else if (k === 'mute') Settings.set({mute: !v.mute});
   else if (k === 'alertsOnly') Settings.set({alertsOnly: !v.alertsOnly});
   else if (k === 'reduceFlash') Settings.set({reduceFlash: !v.reduceFlash});

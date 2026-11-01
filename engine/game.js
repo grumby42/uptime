@@ -21,7 +21,7 @@ const DIRS = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0]};
 // A named speaker standing on this map turns to face the player while speaking (talks and walk-triggered scenes alike).
 const say = (t, who) => { faceSpeaker(who); return UI.say(t, who); };
 const choose = (p, items, o) => UI.choose(p, items, o);
-function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); toastT = 2600; }
+function toast(msg, ms) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); toastT = ms || 2600; }
 function unlock(kind, key) { if (!G.fm[kind + ':' + key]) { G.fm[kind + ':' + key] = true; return true; } return false; }
 function touchCSF(fn) { if (!G.csf[fn]) { G.csf[fn] = true; toast('CSF ' + fn + ' unlocked in the Field Manual'); } }
 function groupFixed(g) { return !!G.f[GROUPS[g].fix]; }
@@ -206,13 +206,14 @@ function markerDoor() {
   }
   return null;
 }
+const MARKER_ROWS = ['1111111', '1444441', '0144410', '0014100', '0001000'];
 function drawMarker(ctx, cam) {
   const d = markerDoor(); if (!d) return;
   const bob = Settings.calm() ? 0 : Math.round(Math.sin(performance.now() / 220) * 1.5);
   const cx = d.x * TS - cam.cx + 8, cy = d.y * TS - cam.cy + 3 + bob;
   // a gold down-pointing chevron with a dark outline, inside the door tile
-  const rows = ['1111111', '1444441', '0144410', '0014100', '0001000'];
-  rows.forEach((r, yy) => { for (let xx = 0; xx < 7; xx++) { const c = r[xx]; if (c === '0') continue; ctx.fillStyle = Settings.col(c === '1' ? '#1b2233' : '#ffd96a'); ctx.fillRect(cx - 3 + xx, cy + yy, 1, 1); } });
+  const edge = Settings.col('#1b2233'), gold = Settings.col('#ffd96a');
+  for (let yy = 0; yy < 5; yy++) for (let xx = 0; xx < 7; xx++) { const c = MARKER_ROWS[yy][xx]; if (c === '0') continue; ctx.fillStyle = c === '1' ? edge : gold; ctx.fillRect(cx - 3 + xx, cy + yy, 1, 1); }
 }
 
 /* ---------- Script runner ---------- */
@@ -356,13 +357,13 @@ function bhud() {
   if (!B) { card.classList.remove('show'); tp.classList.remove('show'); return; }
   const s = B.spec, t = tool();
   card.innerHTML = '<div class="bt">ALERT · ' + esc(s.title) + '</div><div class="bs">' + esc(s.host) + '</div>' +
-    bar('Evidence', B.ev, Settings.col('#2f74b5')) + bar('Dwell', B.dwell, Settings.col('#b8432f'));
+    bar('Evidence', B.ev, Settings.barCol('ev')) + bar('Dwell', B.dwell, Settings.barCol('dwell'), '', 'hatch');
   tp.innerHTML = '<div class="bt">' + esc(toolName(t).toUpperCase()) + ' · Lv ' + t.lvl + '</div><div class="bs">' + CLASSES[TOOLS[t.id].cls].label + ' · ' + TOOLS[t.id].sub + '</div>' +
-    bar('Focus', G.focus / G.focusMax * 100, Settings.col('#5aa64b'), G.focus + '/' + G.focusMax);
+    bar('Focus', G.focus / G.focusMax * 100, Settings.barCol('focus'), G.focus + '/' + G.focusMax);
   card.classList.add('show'); tp.classList.add('show');
 }
-function bar(label, pct, color, txt) {
-  return '<div class="bar"><span class="bl">' + label + '</span><span class="bo"><span class="bi" style="width:' + clamp(pct, 0, 100).toFixed(0) + '%;background:' + color + '"></span></span>' + (txt ? '<span class="bn">' + txt + '</span>' : '<span class="bn">' + Math.round(clamp(pct, 0, 100)) + '</span>') + '</div>';
+function bar(label, pct, color, txt, cls) {
+  return '<div class="bar"><span class="bl">' + label + '</span><span class="bo"><span class="bi' + (cls ? ' ' + cls : '') + '" style="width:' + clamp(pct, 0, 100).toFixed(0) + '%;background-color:' + color + '"></span></span>' + (txt ? '<span class="bn">' + txt + '</span>' : '<span class="bn">' + Math.round(clamp(pct, 0, 100)) + '</span>') + '</div>';
 }
 async function fightStory(spec, retryMsg) {
   while (true) {
@@ -799,9 +800,10 @@ function frame(t) {
   requestAnimationFrame(frame);
 }
 function drawTitleBg(ctx, t) {
+  const off = Settings.calm() ? 0 : Math.floor(t / 60) % 16;  // reduced flashing: the title field stands still
   for (let y = 0; y < 12; y++) for (let x = 0; x < 21; x++) {
     const k = (x + y) % 7 === 0 ? 'L' : (x * 3 + y) % 5 === 0 ? 'K' : 'G';
-    ctx.drawImage(sprite(S[k] ? k : 'G', k), x * 16 - (Math.floor(t / 60) % 16), y * 16);
+    ctx.drawImage(sprite(S[k] ? k : 'G', k), x * 16 - off, y * 16);
   }
 }
 
@@ -814,7 +816,7 @@ function watchSounds() {
   const q = G.queue, b = badgeCount();
   if (soundWatch.g !== G) { soundWatch.g = G; soundWatch.q = q; soundWatch.b = b; return; }
   if (b > soundWatch.b) sfx('badge');
-  else if (q > soundWatch.q) sfx('alert');
+  if (q > soundWatch.q) sfx('alert');  // both can land in one frame; with alerts only, the alert must still sound
   soundWatch.q = q; soundWatch.b = b;
 }
 
@@ -872,5 +874,6 @@ function boot() {
   document.querySelectorAll('.buildid').forEach(e => e.textContent = BUILD_ID + ' · ' + BUILD_TS);
   requestAnimationFrame(frame);
   titleScreen();
+  const note = Settings.soundNotice(); if (note) toast(note, 6000);  // once: sound starts off
 }
 window.addEventListener('DOMContentLoaded', boot);

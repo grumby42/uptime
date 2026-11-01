@@ -127,7 +127,7 @@ function crTile(d, ch, x, y) {
   if (ch === 'l' && G.cr) {
     const h = crHostAt(x, y);
     // No red for infected laptops: the player finds them from the fleet search and each laptop's own evidence.
-    d.pal = crIsolated(h) ? 'pcIso' : crLit(h) ? 'pcOn' : 'pcOff';
+    d.pal = crIsolated(h) ? 'pcIso' : crLit(h) ? 'pcOnOk' : 'pcOff';  // patched: lit, with a tick
   }
   return d;
 }

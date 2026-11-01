@@ -4,14 +4,20 @@
 //  - palettes: each applied to canvas pixels (the player sprite, sampled) and to the CSS tokens and real elements
 //  - contrast: WCAG 2.x contrast ratio >= 4.5:1 for every UI text / background pair in every palette (and Classic in
 //    a dark system scheme)
-//  - colour vision: the key status pairs stay apart (CIELAB dE76 >= 20) under simulated protanopia, deuteranopia and
-//    tritanopia (Machado, Oliveira & Fernandes 2009, severity 1.0) in the Colour-blind safe palette; Classic is
-//    shown to fail, so the check bites
-//  - no colour-only cue: every fixed / isolated tile state has a badge shape (drawn and sampled), lit vs dark screens
-//    differ in brightness in every palette, bars carry label and number, the door marker keeps its outline
-//  - sound: stubbed Web Audio; nothing before a user gesture; each event fires from real play; mute, volume 0 and
-//    alerts only filter; every set synthesises every event; no AudioContext at all never throws
-//  - reduced flashing: no shake, no blink, no fade; on by default with prefers-reduced-motion
+//  - colour vision: every equipment state pair (each badged palette key against its unfixed key, built from PAL and
+//    stateBadge, plus lit/isolated screens; at least 12) stays apart (CIELAB dE76 >= 20, at the pair's best-separated
+//    colour index among those that differ) under normal vision and simulated protanopia, deuteranopia and tritanopia
+//    (Machado, Oliveira & Fernandes 2009, severity 1.0) in the Colour-blind safe palette; Classic is shown to fail,
+//    so the check bites
+//  - no colour-only cue: every fixed / isolated / lit-because-fixed tile state has a badge shape (drawn and sampled;
+//    Front Desk logging and patched laptops included), lit vs dark screens also differ in brightness in every palette,
+//    the door marker keeps its outline
+//  - battle bars: label and number; Dwell hatched, Evidence solid; Amber and Green fills >= 3:1 against the card
+//    (WCAG 1.4.11) and Evidence vs Dwell apart in brightness
+//  - sound: off by default (volume 60, muted) for new players and once for v1 settings, with a one-time toast;
+//    stubbed Web Audio; nothing before a user gesture; each event fires from real play; mute, volume 0 and alerts
+//    only filter; Settings previews play in alerts only; every set synthesises every event; no AudioContext never throws
+//  - reduced flashing: no shake, no blink, no fade, title field still; on by default with prefers-reduced-motion
 //  - text size: large applies to modals; zero console errors and zero network requests throughout
 // Usage: node settings.js   (UPTIME_FILE=file:///... to test another build)
 const { chromium } = require('playwright');
@@ -38,15 +44,18 @@ const lab = l => {
 const sim = (h, t) => { const l = hexRgb(h).map(lin); return t ? CVD[t].map(r => Math.min(1, Math.max(0, r[0] * l[0] + r[1] * l[1] + r[2] * l[2]))) : l; };
 const dE = (a, b, t) => { const A = lab(sim(a, t)), B = lab(sim(b, t)); return Math.hypot(A[0] - B[0], A[1] - B[1], A[2] - B[2]); };
 
-async function open(ctxOpts, init) {
+async function open(ctxOpts, init, stored) {
   if (process.env.VERBOSE) console.error('open', JSON.stringify(ctxOpts));
   const b = await chromium.launch();
   const c = await b.newContext(ctxOpts || { viewport: { width: 1280, height: 800 } });
   if (init) await c.addInitScript(init);
+
   const p = await c.newPage(); const errs = [], reqs = [];
   p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
   p.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) reqs.push(r.url()); });
   await p.goto(FILE); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui);
+  // stored: settings already in the browser when the page loads (written once, then the page is reloaded)
+  if (stored) { await p.evaluate(v => { try { localStorage.setItem('uptime.settings', v); } catch (e) {} }, JSON.stringify(stored)); await p.reload(); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui); }
   return { b, c, p, errs, reqs };
 }
 const key = async (p, k, n) => { for (let i = 0; i < (n || 1); i++) { await p.keyboard.press(k); await sleep(40); } };
@@ -94,8 +103,14 @@ const FAKE_AUDIO = () => {
   {
     const { b, p, errs, reqs } = await open(null, FAKE_AUDIO);
     const d = await p.evaluate(() => __UPTIME.settings());
-    check('defaults: Classic, Soft, volume 60, all sounds, reduced flashing off without prefers-reduced-motion, normal text',
-      d.palette === 'classic' && d.sound === 'soft' && d.volume === 60 && !d.mute && !d.alertsOnly && !d.reduceFlash && d.textSize === 'normal', d);
+    check('defaults: Classic, Soft, volume 60 but sound muted, all sounds, reduced flashing off without prefers-reduced-motion, normal text',
+      d.palette === 'classic' && d.sound === 'soft' && d.volume === 60 && d.mute && !d.alertsOnly && !d.reduceFlash && d.textSize === 'normal', d);
+    const tip = await p.evaluate(() => { const t = document.getElementById('toast'); return { text: t.textContent, show: t.classList.contains('show'), z: +getComputedStyle(t).zIndex, mz: +getComputedStyle(document.getElementById('modal')).zIndex, tipSaved: JSON.parse(localStorage.getItem('uptime.settings') || '{}').soundTip }; });
+    check('first start: a toast says "Sound is off. Turn it on in Settings." above the title menu, and it is remembered in uptime.settings',
+      tip.text === 'Sound is off. Turn it on in Settings.' && tip.show && tip.z > tip.mz && tip.tipSaved === true, tip);
+    await key(p, 'ArrowDown'); await key(p, 'ArrowUp');
+    const mv = await p.evaluate(() => Sound.trace.filter(t => t.ev === 'move').map(t => t.out));
+    check('sound off by default: menu moves after the first gesture are muted', mv.length >= 1 && mv.every(o => o === 'muted'), mv);
     const titleHas = (await modalLabels(p)).includes('Settings');
     check('the title screen lists Settings', titleHas, await modalLabels(p));
     await gotoTitleItem(p, /^Settings$/); await key(p, 'z'); await sleep(100);
@@ -124,6 +139,8 @@ const FAKE_AUDIO = () => {
     const stored = await p.evaluate(() => ({ s: localStorage.getItem('uptime.settings'), save: localStorage.getItem('uptime.slice1.save') }));
     check('settings are stored in their own key (uptime.settings), not in the game save', stored.s && JSON.parse(stored.s).palette === 'cbsafe' && !stored.save, stored);
     await p.reload(); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui);
+    const tip2 = await p.evaluate(() => ({ text: document.getElementById('toast').textContent, show: document.getElementById('toast').classList.contains('show') }));
+    check('the sound-off toast shows once: not again after a reload', !tip2.show && tip2.text === '', tip2);
     const re = await p.evaluate(() => ({ v: __UPTIME.settings(), pal: document.documentElement.dataset.palette, tok: getComputedStyle(document.documentElement).getPropertyValue('--paper').trim(), calm: document.body.classList.contains('calm'), big: document.body.classList.contains('bigtext') }));
     check('persistence across reload: palette, volume, alerts only, reduced flashing and text size come back and are applied',
       re.v.palette === 'cbsafe' && re.v.volume === 30 && re.v.alertsOnly && re.v.reduceFlash && re.v.textSize === 'large' && re.pal === 'cbsafe' && re.tok === '#f7f6f2' && re.calm && re.big, re);
@@ -156,6 +173,21 @@ const FAKE_AUDIO = () => {
     });
     check('storage unavailable: settings still work in memory, the page says they are not kept, no errors',
       r.ok0 === false && r.ok1 === false && r.pal === 'amber' && r.ink === '#ffcf70' && r.v === 80 && /blocked storage/.test(r.note) && !errs.length && !reqs.length, { r, errs, reqs });
+    await b.close();
+  }
+
+  /* ---------- 2b. Settings saved by v1 (sound was on): muted once, everything else kept; corrupt values ---------- */
+  {
+    const { b, p, errs } = await open(null, null, { v: 1, palette: 'amber', sound: 'chip', volume: 80, mute: false, alertsOnly: false, reduceFlash: false, textSize: 'normal' });
+    const v1 = await p.evaluate(() => ({ v: __UPTIME.settings(), toast: document.getElementById('toast').textContent }));
+    await p.evaluate(() => Settings.set({ mute: false }));
+    await p.reload(); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui);
+    const v1b = await p.evaluate(() => __UPTIME.settings());
+    check('v1 settings: sound is muted once (volume, palette and set kept, toast shown); turning it back on sticks after a reload',
+      v1.v.mute === true && v1.v.v === 2 && v1.v.volume === 80 && v1.v.palette === 'amber' && v1.v.sound === 'chip' && /Sound is off/.test(v1.toast) && v1b.mute === false && v1b.volume === 80, { v1, v1b });
+    const bad = await p.evaluate(() => ['{"volume":"abc"}', '"str"', '[1,2]', '42', 'null'].map(raw => { localStorage.setItem('uptime.settings', raw); const v = Settings.load(); return { raw, vol: v.volume, keys: Object.keys(v).filter(k => /^\d+$/.test(k)).length, pal: v.palette }; }));
+    check('corrupt stored settings: a non-number volume falls back to 60; a stored string, array, number or null gives the defaults', bad.every(x => x.vol === 60 && x.keys === 0 && x.pal === 'classic'), bad);
+    check('run 2b: no console errors', !errs.length, errs);
     await b.close();
   }
 
@@ -208,30 +240,45 @@ const FAKE_AUDIO = () => {
       for (const c of contrast[id]) if (c.r < 4.5) contrastBad.push({ id, c });
       // palette colours used for status pairs and the door marker
       const st = await p.evaluate(() => ({
-        pc: [Settings.palColours('pcOff')[3], Settings.palColours('pcOn')[3]],
+        pc: [Settings.palColours('pcOff')[3], Settings.palColours('pcOn')[3], Settings.palColours('pcOnOk')[3]],
         lit: [Settings.palColours('B')[3], Settings.palColours('L')[3]],
         marker: [Settings.col('#1b2233'), Settings.col('#ffd96a')],
         badge: [Settings.col('#1b2233'), Settings.col('#ffffff')],
-        pairs: [['kioskBad', 'kioskOk', 2], ['kioskBad', 'kioskOk', 3], ['closetBad', 'closetOk', 3], ['ntpBad', 'ntpOk', 2], ['collector', 'collectorOk', 3], ['wafBox', 'wafOn', 2], ['vault', 'vaultOk', 3]]
-          .map(([a, b2, i]) => ({ name: a + '/' + b2 + '[' + i + ']', a: Settings.palColours(a)[i], b: Settings.palColours(b2)[i] }))
-          .concat([{ name: 'Evidence/Dwell bars', a: Settings.col('#2f74b5'), b: Settings.col('#b8432f') },
-            { name: 'UI accent/warn', a: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(), b: getComputedStyle(document.documentElement).getPropertyValue('--warn').trim() }])
+        // every badged state key against the key it replaces (pcIso / pcOnOk replace a dark PC, wafOn the bare WAF box),
+        // plus the two lit screens against an isolated one; each pair at every colour index where the two keys differ
+        pairs: (() => {
+          const BASE_OF = { pcIso: 'pcOff', pcOnOk: 'pcOff', wafOn: 'wafBox' };
+          const base = k => BASE_OF[k] || (PAL[k.replace(/Ok$/, '')] ? k.replace(/Ok$/, '') : k.replace(/Ok$/, '') + 'Bad');
+          const list = Object.keys(PAL).filter(k => stateBadge(k)).map(k => [base(k), k]).concat([['pcOn', 'pcIso'], ['pcOnOk', 'pcIso']]);
+          return list.map(([a, b2]) => ({ name: a + '/' + b2, missing: !PAL[a],
+            idx: PAL[a] ? [0, 1, 2, 3].filter(i => PAL[a][i].toLowerCase() !== PAL[b2][i].toLowerCase()).map(i => ({ i, a: Settings.palColours(a)[i], b: Settings.palColours(b2)[i] })) : [] }));
+        })(),
+        extra: [{ name: 'Evidence/Dwell bars', a: Settings.barCol('ev'), b: Settings.barCol('dwell') },
+          { name: 'UI accent/warn', a: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(), b: getComputedStyle(document.documentElement).getPropertyValue('--warn').trim() }]
       }));
       if (ratio(st.pc[0], st.pc[1]) < 3) lumBad.push({ id, what: 'PC screen off/on', r: ratio(st.pc[0], st.pc[1]) });
+      if (ratio(st.pc[0], st.pc[2]) < 3) lumBad.push({ id, what: 'PC screen off/on (fixed)', r: ratio(st.pc[0], st.pc[2]) });
       if (ratio(st.lit[0], st.lit[1]) < 1.5) lumBad.push({ id, what: 'building window dark/lit', r: ratio(st.lit[0], st.lit[1]) });
       if (ratio(st.marker[0], st.marker[1]) < 3) markerBad.push({ id, r: ratio(st.marker[0], st.marker[1]) });
       if (ratio(st.badge[0], st.badge[1]) < 4.5) markerBad.push({ id, badge: ratio(st.badge[0], st.badge[1]) });
-      cvd[id] = st.pairs.map(x => ({ name: x.name, a: x.a, b: x.b, normal: +dE(x.a, x.b).toFixed(1), protan: +dE(x.a, x.b, 'protan').toFixed(1), deutan: +dE(x.a, x.b, 'deutan').toFixed(1), tritan: +dE(x.a, x.b, 'tritan').toFixed(1) }));
+      const score = x => ({ a: x.a, b: x.b, normal: +dE(x.a, x.b).toFixed(1), protan: +dE(x.a, x.b, 'protan').toFixed(1), deutan: +dE(x.a, x.b, 'deutan').toFixed(1), tritan: +dE(x.a, x.b, 'tritan').toFixed(1) });
+      const worst = r => Math.min(r.normal, r.protan, r.deutan, r.tritan);
+      cvd[id] = st.pairs.map(x => {
+        if (x.missing || !x.idx.length) return { name: x.name, missing: true, normal: 0, protan: 0, deutan: 0, tritan: 0 };
+        const best = x.idx.map(c => Object.assign({ i: c.i }, score(c))).sort((m, n) => worst(n) - worst(m))[0];
+        return Object.assign({ name: x.name + '[' + best.i + ']' }, best);
+      }).concat(st.extra.map(x => Object.assign({ name: x.name }, score(x))));
+      info.pairCount = st.pairs.length;
     }
     check('every palette is applied to canvas pixels (player sprite sampled exactly; each differs from Classic)', !canvasBad.length, canvasBad);
     check('every palette is applied to the CSS tokens and to real elements (modal page, heading, cursor row, HUD, dialogue panel)', !cssBad.length, cssBad);
     check('WCAG 2.x contrast >= 4.5:1 for every UI text/background pair in every palette (' + pairsText.length + ' pairs x ' + ids.length + ')', !contrastBad.length, contrastBad);
-    const cbBad = cvd.cbsafe.filter(x => Math.min(x.normal, x.protan, x.deutan, x.tritan) < 20);
-    check('Colour-blind safe: every key status pair has dE >= 20 under normal vision, protanopia, deuteranopia and tritanopia', !cbBad.length, cbBad);
-    const classicWeak = cvd.classic.filter(x => Math.min(x.protan, x.deutan) < 20).map(x => x.name);
-    check('the colour-vision check bites: Classic has pairs that collapse under protanopia/deuteranopia (why the badges exist)', classicWeak.length > 0, cvd.classic);
+    const cbBad = cvd.cbsafe.filter(x => x.missing || Math.min(x.normal, x.protan, x.deutan, x.tritan) < 20);
+    check('Colour-blind safe: all ' + info.pairCount + ' equipment state pairs (from PAL + stateBadge) and the bar and accent pairs have dE >= 20 under normal vision, protanopia, deuteranopia and tritanopia', info.pairCount >= 12 && !cbBad.length, cbBad);
+    const classicWeak = cvd.classic.filter(x => Math.min(x.protan, x.deutan, x.tritan) < 20).map(x => x.name);
+    check('the colour-vision check bites: Classic has pairs that collapse under simulated colour blindness (why the badges exist)', classicWeak.length > 0, cvd.classic);
     info.classicWeak = classicWeak;
-    check('lit vs dark screens and windows differ in brightness in every palette (PC >= 3:1, windows >= 1.5:1 plus a different sprite)', !lumBad.length, lumBad);
+    check('lit vs dark screens and windows also differ in brightness in every palette (PC >= 3:1, windows >= 1.5:1 plus a different sprite)', !lumBad.length, lumBad);
     check('the door marker outline and the state badges keep their contrast in every palette (>= 3:1, badge >= 4.5:1)', !markerBad.length, markerBad);
 
     // No colour-only cue: every palette swap that an edition's tile hook makes for a fixed/isolated state draws a shape.
@@ -241,9 +288,24 @@ const FAKE_AUDIO = () => {
       for (const n of fns) { const re = /d\.pal\s*=\s*([^;]+);/g; let m; const src = window[n].toString(); while ((m = re.exec(src))) for (const k of m[1].match(/'(\w+)'/g) || []) out.push({ fn: n, pal: k.slice(1, -1), spr: /d\.spr\s*=/.test(src.slice(Math.max(0, m.index - 40), m.index)), badge: stateBadge(k.slice(1, -1)) }); }
       return out;
     });
-    // allowed without a badge: the dark/off state itself, a lit screen (brightness, checked above), and buildings that change sprite
-    const noCue = swaps.filter(s => !s.badge && !s.spr && !['pcOn', 'pcOff'].includes(s.pal));
-    check('no colour-only cue: every fixed / isolated tile state an edition switches to carries a badge (' + swaps.length + ' swaps checked)', swaps.length >= 10 && !noCue.length, { noCue, swaps });
+    // allowed without a badge: only the dark/off state itself, and buildings that change sprite. A screen lit because the
+    // player fixed something (Front Desk logging, a patched laptop) must use pcOnOk, which carries the tick.
+    const noCue = swaps.filter(s => !s.badge && !s.spr && s.pal !== 'pcOff');
+    const litFixed = swaps.filter(s => s.pal === 'pcOnOk').map(s => s.fn);
+    check('no colour-only cue: every fixed / isolated / lit-because-fixed tile state an edition switches to carries a badge (' + swaps.length + ' swaps checked; lit PCs in ' + litFixed.join(', ') + ')',
+      swaps.length >= 10 && !noCue.length && litFixed.includes('editionTile') && litFixed.includes('crTile'), { noCue, swaps });
+    const desk = await p.evaluate(() => {
+      const keep = { logs: G.f.logs, pcs: Object.assign({}, G.pcs) };
+      const at = []; MAPS.desk.rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === 'p') at.push([x, y]); }));
+      const read = () => at.map(([x, y]) => stateBadge(tileDef('desk', x, y).pal));
+      for (const k in G.pcs) delete G.pcs[k]; G.f.logs = false; const off = read();
+      G.pcs[at[0][0]] = true; const one = read();
+      G.f.logs = true; const on = read();
+      G.f.logs = keep.logs; for (const k in G.pcs) delete G.pcs[k]; Object.assign(G.pcs, keep.pcs);
+      return { n: at.length, off, one, on };
+    });
+    check('Front Desk: a PC with logging on carries the tick badge, one without does not',
+      desk.n >= 3 && desk.off.every(x => !x) && desk.one[0] === 'ok' && desk.one.slice(1).every(x => !x) && desk.on.every(x => x === 'ok'), desk);
     // Rendered: the kiosk before and after the fix, sampled at the badge's fill pixel
     const kiosk = await p.evaluate(async () => {
       const rows = MAPS.desk.rows; let kx = -1, ky = -1; rows.forEach((r, y) => { const x = r.indexOf('k'); if (x >= 0) { kx = x; ky = y; } });
@@ -259,11 +321,27 @@ const FAKE_AUDIO = () => {
     // Battle bars carry label and number; verdict feedback is written out
     const bars = await p.evaluate(async () => {
       Settings.set({ palette: 'amber' });
-      const pr = doBattle(genAlert('fp')); await new Promise(r => setTimeout(r, 80));
+      const pr = doBattle(Object.assign(genAlert('fp'), { ev0: 40, dwell0: 40 })); await new Promise(r => setTimeout(r, 80));
       const out = [...document.querySelectorAll('#bcard .bar, #btool .bar')].map(e => ({ l: e.querySelector('.bl').textContent, n: e.querySelector('.bn').textContent }));
-      return { out, pr: !!pr };
+      const fills = {};
+      for (const id of PALETTES.map(x => x.id)) {
+        Settings.set({ palette: id }); await new Promise(r => setTimeout(r, 30));
+        const rgbHex2 = c => '#' + c.match(/\d+/g).slice(0, 3).map(v => (+v).toString(16).padStart(2, '0')).join('');
+        const one = sel => { const e = document.querySelector(sel); const st = getComputedStyle(e); return { fill: rgbHex2(st.backgroundColor), hatch: /repeating-linear-gradient/.test(st.backgroundImage), w: e.getBoundingClientRect().width }; };
+        const bi = [...document.querySelectorAll('#bcard .bar .bi')], ti = document.querySelector('#btool .bar .bi');
+        bi[0].id = 'tEv'; bi[1].id = 'tDw'; ti.id = 'tFo';
+        fills[id] = { card: rgbHex2(getComputedStyle(document.getElementById('bcard')).backgroundColor), tool: rgbHex2(getComputedStyle(document.getElementById('btool')).backgroundColor), ev: one('#tEv'), dwell: one('#tDw'), focus: one('#tFo') };
+      }
+      Settings.set({ palette: 'classic' });
+      return { out, pr: !!pr, fills };
     });
-    check('battle bars carry their label and a number (Evidence, Dwell, Focus), not colour alone', bars.out.length === 3 && bars.out.every(x => x.l && /\d/.test(x.n)), bars);
+    check('battle bars carry their label and a number (Evidence, Dwell, Focus), not colour alone', bars.out.length === 3 && bars.out.every(x => x.l && /\d/.test(x.n)), bars.out);
+    info.bars = {};
+    for (const id in bars.fills) { const f = bars.fills[id]; info.bars[id] = { ev: f.ev.fill + ' ' + ratio(f.ev.fill, f.card).toFixed(2), dwell: f.dwell.fill + ' ' + ratio(f.dwell.fill, f.card).toFixed(2), focus: f.focus.fill + ' ' + ratio(f.focus.fill, f.tool).toFixed(2), evVsDwell: +ratio(f.ev.fill, f.dwell.fill).toFixed(2) }; }
+    const hatchBad = Object.keys(bars.fills).filter(id => { const f = bars.fills[id]; return !f.dwell.hatch || f.ev.hatch || f.focus.hatch || !(f.ev.w > 0 && f.dwell.w > 0); });
+    check('Dwell is hatched and Evidence solid in every palette, so the two fills never look alike', !hatchBad.length, { hatchBad, fills: bars.fills });
+    const termBad = ['amber', 'green'].filter(id => { const f = bars.fills[id]; return ratio(f.ev.fill, f.card) < 3 || ratio(f.dwell.fill, f.card) < 3 || ratio(f.focus.fill, f.tool) < 3 || ratio(f.ev.fill, f.dwell.fill) < 1.5; });
+    check('Amber and Green: Evidence, Dwell and Focus fills >= 3:1 against their card (WCAG 1.4.11), Evidence vs Dwell >= 1.5:1 in brightness', !termBad.length, info.bars);
     check('run 3: no console errors or network requests', !errs.length && !reqs.length, { errs, reqs });
     await b.close();
   }
@@ -281,8 +359,9 @@ const FAKE_AUDIO = () => {
 
   /* ---------- 5. Sound ---------- */
   const soundInfo = {};
+  const SOUND_ON = { v: 2, mute: false, soundTip: true };  // a player who turned sound on
   {
-    const { b, p, errs, reqs } = await open(null, FAKE_AUDIO);
+    const { b, p, errs, reqs } = await open(null, FAKE_AUDIO, SOUND_ON);
     const pre = await p.evaluate(() => { const r = Sound.play('select'); return { r, made: __audio.made, out: Sound.trace[Sound.trace.length - 1].out }; });
     check('autoplay policy: before any user gesture nothing is created or played', pre.r === false && pre.made === 0 && pre.out === 'locked', pre);
     await key(p, 'ArrowDown'); // first gesture: unlocks, and is a menu move
@@ -335,6 +414,18 @@ const FAKE_AUDIO = () => {
     check('all sounds: every event plays (' + evs.join(', ') + ')', evs.length === 8 && evs.every(e => modes.all[e] === 'played'), modes.all);
     check('alerts only: alert and battle start play; menu, verdict and badge sounds are filtered', modes.alertsOnly.alert === 'played' && modes.alertsOnly.battle === 'played' && ['move', 'select', 'back', 'correct', 'wrong', 'badge'].every(e => modes.alertsOnly[e] === 'filtered'), modes.alertsOnly);
     check('mute and volume 0 silence every event', evs.every(e => modes.mute[e] === 'muted' && modes.vol0[e] === 'muted'), { mute: modes.mute, vol0: modes.vol0 });
+    const prev = await p.evaluate(() => {
+      const last = () => { const t = Sound.trace[Sound.trace.length - 1]; return t.ev + ':' + t.out; };
+      Settings.set({ alertsOnly: true, mute: false, volume: 60 }); Sound.last = {};
+      settingsChange('sound', 1); const set = last(); settingsChange('sound', -1);
+      settingsChange('volume', 1); const vol = last();
+      Settings.set({ mute: true }); settingsChange('volume', -1); const muted = last();
+      Settings.set({ mute: false, volume: 0 }); settingsChange('sound', 1); const zero = last(); settingsChange('sound', -1);
+      Settings.set({ volume: 60, mute: false, alertsOnly: false });
+      return { set, vol, muted, zero };
+    });
+    check('alerts only: changing the sound set or the volume in Settings still plays its preview; mute and volume 0 still silence it',
+      prev.set === 'correct:played' && prev.vol === 'select:played' && prev.muted === 'select:muted' && prev.zero === 'correct:muted', prev);
     const sets = await p.evaluate(() => {
       const out = {};
       for (const s in SOUND_SETS) { out[s] = {}; for (const e of SOUND_EVENTS) { const a = __audio.osc + __audio.noise; Sound.last = {}; const ok = Sound.play(e, s); out[s][e] = ok ? __audio.osc + __audio.noise - a : -1; } }
@@ -350,7 +441,7 @@ const FAKE_AUDIO = () => {
   }
   {
     // No Web Audio at all
-    const { b, p, errs, reqs } = await open(null, () => { delete window.AudioContext; delete window.webkitAudioContext; window.AudioContext = undefined; window.webkitAudioContext = undefined; });
+    const { b, p, errs, reqs } = await open(null, () => { delete window.AudioContext; delete window.webkitAudioContext; window.AudioContext = undefined; window.webkitAudioContext = undefined; }, SOUND_ON);
     await key(p, 'ArrowDown');
     const r = await p.evaluate(() => { const out = SOUND_EVENTS.map(e => Sound.play(e)); const pr = settingsMenu(); const i = UI.modal.items.findIndex(o => o.meta.k === 'test'); UI.modal.cursor = i; UI.handle('a'); UI.handle('b'); return { out, last: Sound.trace.slice(-1)[0], ctx: Sound.ctx }; });
     await sleep(1100);
@@ -359,7 +450,7 @@ const FAKE_AUDIO = () => {
   }
   {
     // Real Web Audio in Chromium: a gesture, then every set's every event
-    const { b, p, errs, reqs } = await open();
+    const { b, p, errs, reqs } = await open(null, null, SOUND_ON);
     await key(p, 'ArrowDown');
     await p.evaluate(() => { for (const s in SOUND_SETS) for (const e of SOUND_EVENTS) { Sound.last = {}; Sound.play(e, s); } });
     await sleep(800);
@@ -372,6 +463,17 @@ const FAKE_AUDIO = () => {
     const { b, p, errs } = await open({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
     const d = await p.evaluate(() => __UPTIME.settings());
     check('prefers-reduced-motion: reduced flashing is on by default', d.reduceFlash === true, d);
+    const title = await p.evaluate(() => {
+      const shot = t => { const c = document.createElement('canvas'); c.width = 336; c.height = 192; const x = c.getContext('2d'); drawTitleBg(x, t); return c.toDataURL(); };
+      const calm = shot(0) === shot(600) && shot(0) === shot(5000);
+      Settings.set({ reduceFlash: false }); const moves = shot(0) !== shot(600); Settings.set({ reduceFlash: true });
+      return { calm, moves };
+    });
+    check('reduced flashing: the title screen field stands still (and scrolls when off)', title.calm && title.moves, title);
+    const sys = await p.evaluate(() => { const keep = localStorage.getItem('uptime.settings'); localStorage.setItem('uptime.settings', JSON.stringify({ v: 2, palette: 'green', soundTip: true, reduceFlash: false })); const a = Settings.load().reduceFlash;
+      localStorage.setItem('uptime.settings', JSON.stringify({ v: 2, palette: 'green', soundTip: true, reduceFlash: false, reduceFlashUser: true })); const b2 = Settings.load().reduceFlash;
+      localStorage.setItem('uptime.settings', keep); Settings.load(); return { a, b2 }; });
+    check('reduced flashing follows the system setting until the player changes it in Settings', sys.a === true && sys.b2 === false, sys);
     await newGame(p); await p.evaluate(() => __UPTIME.turbo(false));
     const r = await p.evaluate(async () => {
       const pmore = getComputedStyle(document.getElementById('pmore')).animationName;
@@ -394,6 +496,6 @@ const FAKE_AUDIO = () => {
   }
 
   const failed = results.filter(x => !x.ok);
-  console.log(JSON.stringify({ suite: 'settings', passed: results.length - failed.length, failed: failed.length, results: results.map(x => x.ok ? { name: x.name, ok: true } : x), contrast, cvd, sound: soundInfo, classicWeak: info.classicWeak }, null, 1));
+  console.log(JSON.stringify({ suite: 'settings', passed: results.length - failed.length, failed: failed.length, results: results.map(x => x.ok ? { name: x.name, ok: true } : x), contrast, cvd, bars: info.bars, sound: soundInfo, classicWeak: info.classicWeak }, null, 1));
   process.exit(failed.length ? 1 : 0);
 })().catch(e => { console.error('SETTINGS FAILED:', e.stack || e.message); process.exit(2); });
