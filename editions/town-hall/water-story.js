@@ -245,7 +245,7 @@ async function wtInventory() {
   while (true) {
     const i = await choose('How do you build the plant’s asset inventory?', [
       {label: 'Walk the plant with the operators, read EWS-01’s project files and the switch tables, and listen on a mirror port', meta: {good: true}},
-      {label: 'Run a fast active scan of the plant network this afternoon, so every device has to answer and none of them can be missed'},
+      {label: 'Run a fast active scan of the plant network, so every device has to answer and none of them can be missed'},
       {label: 'Ask each vendor for its own device list and merge them, because the vendors installed most of this equipment'},
       {label: 'Start from the 2019 spreadsheet and add each device the first time it shows up in an alert'}], {shuffle: true});
     if (i === 0) break;
@@ -272,18 +272,18 @@ async function wtExposure() {
   await say('An outside check of the town’s own internet addresses found PLC-PMP-02, booster station 2, answering at 203.0.113.47 through a cellular router, on its factory password. Nine devices still have passwords from the manuals. (game)', who);
   while (true) {
     const i = await choose('How do you deal with the exposure and the passwords?', [
-      {label: 'Off the internet first, then the passwords one at a time with an operator watching, since a lockout mid-shift is real', meta: {good: true}},
-      {label: 'Change all nine passwords in one batch from EWS-01 this afternoon and shut the window as fast as possible'},
+      {label: 'Off the internet first, read out its log, then each password with an operator watching, since a lockout is real', meta: {good: true}},
+      {label: 'Change all nine passwords in one batch from EWS-01, to shut the window as fast as possible'},
       {label: 'Keep PLC-PMP-02 online for the integrator, but on a non-default port and a new password, so scanners stop seeing it any more'},
       {label: 'Unplug the communications at every booster station until the review is finished and nobody can reach them'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('A batch change on running controllers, with nobody watching, is how you lock an operator out mid-shift. One device at a time, tested, with Mae’s people at the console.');
-    else if (i === 2) await say('AA23-335A asks for PLCs off the public internet. A new port is a smaller target, not a closed door; the panel still answers.');
+    else if (i === 2) await say('AA23-335A asks for PLCs off the public internet. CISA’s alert lists a non-default port only as an extra step: a smaller target, not a closed door.');
     else await say('Then the control room loses every booster station’s telemetry and has to drive round them. Remove the one exposure; leave the rest running.');
   }
   c.exposed = Math.max(0, c.exposed - 1); c.deflt = 0; track();
   G.f.wtExpose = true; unlock('act', 'otexpose'); unlock('fact', 'wtaa23'); unlock('fact', 'wthmi'); unlock('tech', 'T0883'); unlock('tech', 'T1694.001'); touchCSF('Protect');
-  await say('PLC-PMP-02 reports over the plant’s private radio link now; its public service is closed. Nine passwords changed, nine devices tested. BS-3 is “vendor-managed”: the pump vendor says theirs was changed. (game)', who);
+  await say('PLC-PMP-02 reports over the plant’s private radio link now; its public service is closed. Its event list and the router’s log show no outside sign-in in what they keep, and Joss checks its logic against his project file at the backups. Nine passwords changed, nine devices tested. BS-3 is “vendor-managed”: the pump vendor says theirs was changed. (game)', who);
   await say('One device left on the internet all day: RA-01, the vendor box. That one is Gil’s decision. Next, the firewall rack in the corridor.', who);
 }
 
@@ -336,11 +336,11 @@ async function wtZones() {
     const i = await choose('What do you do about finance’s job until Friday?', [
       {label: 'A temporary exception, RPT-01 to that one PLC only: finance owns it, and it expires on Friday', meta: {good: true}},
       {label: 'Keep the old office-to-PLC rule in place until Friday, as it has been for years'},
-      {label: 'Deny it and let finance’s morning report fail until Friday'},
+      {label: 'Allow RPT-01 to reach every PLC until Friday, in case the job needs more totals later'},
       {label: 'Give finance a sign-in on HMI-01, so they can read the totals off the operators’ console instead'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('The old rule lets every office PC reach every controller. An exception covers one host, one PLC, an owner and an end date.');
-    else if (i === 2) await say('The report is real work. Breaking it to make a point teaches finance to ask for a hole later. Narrow it and date it.');
+    else if (i === 2) await say('The job reads one controller. An exception covers what the job needs and nothing more: one host, one PLC, an owner and an end date.');
     else await say('That puts office accounts on the operators’ console, the one conduit you just denied.');
   }
   G.f.wtZones = true; unlock('act', 'zones'); unlock('fact', 'wtzones'); unlock('fact', 'wt80082'); touchCSF('Protect'); touchCSF('Identify');
@@ -354,7 +354,7 @@ async function wtBackups() {
   await say('Last backups: 2021, on a laptop we retired. Seven controllers, and if one of them died tonight I’d be rebuilding its logic from memory.', who);
   while (true) {
     const i = await choose('How do you back up the controllers?', [
-      {label: 'Two offline copies of each PLC’s logic and configuration, one off site, each matched to the controller; then Mae’s manual drill', meta: {good: true}},
+      {label: 'Two offline copies of each PLC’s logic and configuration, one off site, each matched to Joss’s project files; then Mae’s manual drill', meta: {good: true}},
       {label: 'Save the backups on EWS-01’s own disk, where Joss can reach them fastest when a controller fails in the middle of the night'},
       {label: 'Back up only the five controllers the town programmed itself, and leave the two vendor skids to their vendors’ own copies'},
       {label: 'Take the backups, but skip the manual drill: the operators ran this plant by hand for years before it was automated, so they remember'}], {shuffle: true});
@@ -365,7 +365,7 @@ async function wtBackups() {
   }
   c.backup = WT_PLCS; track();
   G.f.wtBackup = true; unlock('act', 'plcbackup'); unlock('fact', 'wtprimary'); touchCSF('Recover'); touchCSF('Protect');
-  await say('Seven controllers backed up twice, offline, one copy in the safe and one off site; BS-3’s from the pump vendor’s project file, compared over the telemetry link. PLC-HSP-01 is at revision 4.2. A compare job checks each one at 06:00. (game)', who);
+  await say('Seven controllers backed up twice, offline, one copy in the safe and one off site: logic, configuration and screens. Each running program matched my project files before it became the reference, PLC-PMP-02’s included. BS-3’s came from the pump vendor’s project file, compared over the telemetry link. PLC-HSP-01 is at revision 4.2. A compare job checks each one at 06:00. (game)', who);
   await say('Mae ran the filters by hand for half an hour with a second operator. Slow, steady, nobody panicked. Last thing: someone should be listening to this network.', who);
 }
 
@@ -412,7 +412,7 @@ async function wtDrill1() {
   await say('At 02:10 the clearwell’s low-level set point dropped from 3.2 to 2.4 metres. Tunde was on. Before I ask him, tell me what the records say. You lead this one.', who);
   const r = await wtDrill('setpoint');
   G.f.wtDrill1 = true; touchCSF('Detect');
-  await say(r.verdictOk ? 'Tunde, at HMI-02, for the tank inspection. He logged it two minutes later. Good: nothing to undo, and I didn’t have to ask him whether he’d been hacked.' : 'It was Tunde, at HMI-02, for the 08:00 tank inspection: his account, his console, his shift-log entry. Nothing to undo.', who);
+  await say(r.verdictOk ? 'Tunde, at HMI-02, for the tank inspection. He logged it two minutes later. Good: nothing to undo. I’ll still have a word with him at handover: records first, then the person.' : 'It was Tunde, at HMI-02, for the 08:00 tank inspection: his account, his console, his shift-log entry. Nothing to undo.', who);
   await say('Joss has the other one: a controller whose logic changed.', who);
 }
 async function wtDrill2() {
@@ -430,7 +430,7 @@ async function wtDrill3() {
   G.f.wtDrill3 = true; unlock('tech', 'T0888'); touchCSF('Respond');
   const c = WT(); c.vSince = {total: 1, ok: 1}; track();
   await say(r.verdictOk ? 'OF-WS-22, an unsigned program from an email, through R-114, which was put in for the whole office subnet instead of RPT-01. Narrowed now; the PC is off the network on the IT side; the filters never noticed.' : 'It was OF-WS-22, l.marsh’s planning PC: an unsigned program from an email, through R-114, which had been put in for the whole office. Narrowed now, the PC off the network.', who);
-  await say('Reads only, stopped at the boundary, and nobody turned the plant off. And the filter vendor’s 10:00 session ran under CHG-8240: approved, MFA, recorded, box off at noon. Calla’s dojo is open; the Plant Board after.', who);
+  await say('Reads only, stopped at the boundary, and nobody turned the plant off. And the filter vendor’s 10:00 session is running under CHG-8240: approved, MFA, recorded; the box goes off at noon. Calla’s dojo is open; the Plant Board after.', who);
 }
 
 /* ---------- The directive (game): the vendor box left on "so they can fix things fast" ---------- */
@@ -531,26 +531,26 @@ function wtBossStages(picks) {
       title: 'Stage 1: a booster station goes dark', host: 'BS-3 · booster station 3', enemy: {spr: 'hinge', pal: 'wtPreset'},
       clues: ['01:47: the control room lost BS-3’s telemetry. At 02:20 Ike, the on-call operator, found its touchscreen showing a message calling the town’s equipment a target, the controller stopped and the pumps off. He photographed it and touched nothing.', 'Zone 3’s tank is at 78%: hours of supply. On Tunde’s instruction Ike ran the pumps in hand at 02:31; zone 3’s pressure was normal by 02:40.', 'BS-3 came with the pump vendor’s cellular modem in 2022. The inventory, copied from the vendor’s datasheet, said “remote access: none”. FW-OT and the sensor saw nothing: that path never crosses the town’s network.'],
       truth: 'A plant device reached from the internet through a vendor modem nobody had listed (Internet Accessible Device). The water is safe in hand control; now take the door away without wiping what the controller holds.',
-      resp: [{label: 'Keep BS-3 in hand on the operators’ call, keep the controller as it is, and unplug the vendor’s modem: it isn’t needed', good: true},
+      resp: [{label: 'Keep BS-3 in hand on the operators’ call, the controller untouched, and unplug the modem’s cable: the modem stays on', good: true},
              {label: 'Shut the high-service pumps and every booster station until the investigation is done and nothing runs at all', good: false, disrupt: 1, shutdown: true, why: 'BS-3 is safe in hand and zone 3 is on its tank. Shutting the pumps drops pressure across town: an outage you caused.'},
-             {label: 'Power-cycle the controller and put BS-3 back in automatic, so the station runs normally again before the morning shift starts', good: false, why: 'The restart wipes what the controller holds about the intrusion, and nobody knows what logic it would return to. Hand control is working.'}],
+             {label: 'Power-cycle the controller and put BS-3 back in automatic, so the station runs normally again before the morning shift starts', good: false, why: 'The restart can lose what the controller holds only while running, and nobody knows what logic it would return to. Hand control is working.'}],
       chain: [{at: 40, text: 'A second sign-in attempt reaches the modem.'}, {at: 75, text: 'The screen flickers: someone is still connected.'}]},
     s2: {kind: 'mal', threat: 'blindside', tech: 'T0829', tags: ['ot'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('asis') ? 9 : 13, dwell0: picks.includes('asis') ? 15 : 40,
       title: 'Stage 2: what did they touch?', host: 'PLC-BS3 · read-out with the vendor', enemy: {spr: 'shade', pal: 'wtBlind'},
-      clues: ['09:00, with the pump vendor’s engineer and Joss: the controller’s program and the screen project read out and compared with the offline backup from the fieldwork. Logic and set points unchanged; the screen project replaced; the controller left stopped.', 'The controller’s event list: a sign-in at 01:38 from 203.0.113.88 with the factory password. The modem’s own log: 203.0.113.88 connected 01:37–01:47. The vendor had said the password was changed; it never was.', 'FW-OT and the sensor show nothing from that path into the plant. No other device came from the pump vendor; the chemical skid was checked by hand: no modem.'],
+      clues: ['09:00, with the pump vendor’s engineer and Joss: the controller’s program and the screen project read out and compared with the offline backup from the fieldwork; the read-outs, the photographs and the modem’s log hashed and kept. Logic and set points unchanged; the screen project replaced; the controller left stopped.', 'The controller’s event list: a sign-in at 01:38 from 203.0.113.88 with the factory password. The modem’s own log: 203.0.113.88 connected 01:37–01:47. The vendor had said the password was changed; it never was.', 'FW-OT and the sensor show nothing from that path into the plant. No other device came from the pump vendor; the chemical skid was checked by hand: no modem.'],
       truth: 'Loss of View: the control room lost BS-3, and only an operator at the station could run it. The read-out shows what changed (the screen, a stopped controller) and what didn’t (logic, set points, the rest of the plant).',
       resp: [{label: 'Compare the read-out with the offline backup and look for every vendor-connected device before reloading anything', good: true},
-             {label: 'Factory-reset the panel and load the backup now, so BS-3 is back in automatic before the read-out is even finished', good: false, why: 'Reloading first erases what the read-out is for: what they changed, and how they got in.'},
-             {label: 'Run an active scan of every PLC in the plant to see whether the intruder reached any of them overnight', good: false, disrupt: 1, why: 'Active scans can knock fragile controllers over in a running plant, and the sensor and FW-OT logs already answer the question.'}],
+             {label: 'Factory-reset the panel, load the backup and compare the checksums, so BS-3 is back in automatic before the read-out is finished', good: false, why: 'Reloading first erases what the read-out is for: what they changed, and how they got in.'},
+             {label: 'Run an active scan of every PLC in the plant to see whether the intruder reached any of them overnight', good: false, disrupt: 1, why: 'Active scans can knock fragile controllers over in a running plant, and no scan sees a modem path either: the walkdown and the hand check of every vendor skid answer it.'}],
       chain: [{at: 60, text: 'Another address tries the old modem number.'}]},
     s3: {kind: 'mal', threat: 'preset', tech: 'T1694.001', tags: ['exposed', 'ot'], story: true, group: 'c', ev0: ev0,
       rate: restored ? 8 : 14, dwell0: restored ? 8 : 40,
       title: 'Stage 3: back to automatic, safely', host: 'BS-3 · with the operators', enemy: {spr: 'hinge', pal: 'wtPreset'},
       clues: ['14:00: the vendor changes the factory password with Joss and removes the modem for good; pump-vendor support comes through RA-01, on demand, from now on.', 'The screen project is restored and the logic confirmed from the offline backup (the checksums match); Mae’s operators test BS-3 in hand, then switch it to automatic at 16:10 with her sign-off.', 'Leadership, CISA and the FBI have the report; WaterISAC has what other utilities need. The outside exposure check now covers vendor-supplied devices, a clause in every contract.'],
       truth: 'Recovery: new credentials, the exposure gone, known-good logic from the offline backup, and automatic only after the operators test it. A factory password on a device that answered from the internet was the way in (Default Credentials).',
-      resp: [{label: 'Restore from the offline backup and match the checksums; automatic only after the operators test it, since they run it', good: true},
-             {label: 'Restore from the backup and switch BS-3 to automatic this evening, so the operators can stop running it by hand', good: false, why: 'Automatic before the operators have tested it is the one step that can hurt the water. Their sign-off comes first.'},
+      resp: [{label: 'Restore from the offline backup and match the checksums; automatic only once the operators have tested it', good: true},
+             {label: 'Restore from the backup, compare the checksums, and let the vendor switch BS-3 to automatic once they match', good: false, why: 'Matching checksums prove the logic, not the station: the operators test it in hand and sign off before automatic, not the vendor.'},
              {label: 'Keep the modem for the vendor, with a new password and a non-default port', good: false, why: 'AA23-335A asks for PLCs off the public internet. A new port still answers from it.'}],
       chain: [{at: 60, text: 'A scanner finds the old modem address empty.'}]}
   };
@@ -559,7 +559,7 @@ async function wtBossScript() {
   const who = 'Mae Arroyo', c = WT();
   await surfaceMissed(true);
   c.boss = {day: G.day}; c.exposed = 1; c.deflt = 1; track();
-  await say('BS-3 went dark at 01:47. Ike is running it by hand and zone 3 has hours of water in the tank. Nobody is in danger. Now: what happened, and how do we get it back safely?', who);
+  await say('Tunde called me in too. BS-3 went dark at 01:47. Ike is running it by hand and zone 3 has hours of water in the tank. Nobody is in danger. Now: what happened, and how do we get it back safely?', who);
   await say('This is our incident, not a retelling. But there is a real case like it: in late 2023 CISA reported internet-exposed controllers with default passwords at US water facilities, defaced; one water authority switched to manual. It’s in your Field Manual.', who);
   unlock('fact', 'wtcase'); unlock('fact', 'wtaa23');
   await say('Leadership is told now. CISA and the FBI get the report this morning, and WaterISAC what other utilities need. Telling people is never optional, so it isn’t one of your cards.', who);
@@ -598,13 +598,13 @@ async function raeWaterTalk() {
   await say('Joss told me. svc-print has an account on RA-01, the box that reaches the engineering workstation, created in March 2019 by a.kerr-adm. No sign-ins in ninety days.', who);
   while (true) {
     const i = await UI.openModal('svc-print on the vendor box', '<p>RA-01’s local account list: fc-support, pv-ksato, j.kettering, and svc-print, created 14 March 2019 by a.kerr-adm (deleted in 2021), comment “temp - printer vendor”. The same admin account and month as the Server Room nesting. RA-01 keeps 90 days of sign-ins: none for svc-print. The box is off between approved windows now. (game)</p>', [
-      {label: 'Leave svc-print’s account on RA-01 as it is, on the file: Rae’s rule holds and the box is off between windows', meta: {good: true, k: 'file'}},
+      {label: 'Leave svc-print’s account on RA-01 for the file: a new password Rae agrees to, and an alert on any sign-in', meta: {good: true, k: 'file'}},
       {label: 'Delete svc-print from RA-01 now: a printer account has no business on a box that reaches the engineering workstation', meta: {k: 'delete'}},
       {label: 'File it as leftover from the 2019 printer rollout: no sign-ins in ninety days, and the account that made it is long gone', meta: {k: 'cruft'}},
       {label: 'Wipe RA-01’s account list and rebuild it from the vendor contracts, so nothing unexplained survives on the box', meta: {k: 'wipe'}}], {shuffle: true, closable: false, cls: 'drill'});
     const k = [0, 1, 2, 3][i];
     if (k === 0) break;
-    if (k === 1) await say('Deleting it tells whoever made it that we’ve seen it, and it destroys the account’s own record. The box is off between windows; that’s enough for now. It’s my call, with a plan.', who);
+    if (k === 1) await say('Deleting it tells whoever made it that we’ve seen it, and it destroys the account’s own record. A new password, an alert on any sign-in, and the box off between windows: that’s enough for now. It’s my call, with a plan.', who);
     else if (k === 2) await say('Maybe it is leftover. But it’s the same account and the same admin as the whole suspicion file. You don’t close that as leftover. You add it.', who);
     else await say('Rebuilding the box at night, with no plan, wipes the evidence with the clutter. Write it up; don’t improvise it.', who);
   }

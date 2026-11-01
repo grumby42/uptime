@@ -17,7 +17,7 @@
 
 Object.assign(QT_CLUES, {
   'wt-vendorbox': {tech: 'T0859', where: 'the vendor remote-access box at the Water Plant (RA-01’s account list)',
-                   seen: 'Reviewing RA-01 for the on-demand change, you list its local accounts: the filter vendor’s, the pump vendor’s, Joss’s, and svc-print. Created 14 March 2019 by a.kerr-adm, the admin account deleted in 2021, with the comment “temp - printer vendor”, the same month a.kerr-adm nested svc-print in the Server Room’s groups. RA-01 keeps 90 days of sign-ins and shows none for it. A printer account on the box that reaches the plant’s engineering workstation. Left in place on Rae’s rule; the box is off between approved windows now. Added to the suspicion file. Not resolved.'}
+                   seen: 'Reviewing RA-01 for the on-demand change, you list its local accounts: the filter vendor’s, the pump vendor’s, Joss’s, and svc-print. Created 14 March 2019 by a.kerr-adm, the admin account deleted in 2021, with the comment “temp - printer vendor”, the same month a.kerr-adm nested svc-print in the Server Room’s groups. RA-01 keeps 90 days of sign-ins and shows none for it. A printer account on the box that reaches the plant’s engineering workstation. Left in place on Rae’s rule, with a new password she agreed to and an alert on any sign-in by it; the box is off between approved windows now. Added to the suspicion file. Not resolved.'}
 });
 
 // Found during the directive, reviewing RA-01's accounts. Returns true when the clue is new.
@@ -26,7 +26,7 @@ async function wtQtVendorBox() {
   await say('A printer account, on the box that reaches my engineering workstation. RA-01 keeps ninety days of sign-ins; it shows nothing for svc-print. Before that, nobody can say.', 'Joss Kettering');
   const fresh = qtNote('wt-vendorbox');
   await qtAfterNote(fresh);
-  if (fresh) await say('That’s the account from Rae’s file, and the same admin account and month as the Server Room nesting. Her rule holds: nothing changes on svc-print without her. It stays as it is; the box is off between approved windows from today, and I’ll tell her tonight.', 'Joss Kettering');
+  if (fresh) await say('That’s the account from Rae’s file, and the same admin account and month as the Server Room nesting. Her rule holds: nothing changes on svc-print without her. Its record stays as it is. The box comes on for every vendor window, so I’ll ask her tonight about a new password, as the Server Room did.', 'Joss Kettering');
   return fresh;
 }
 

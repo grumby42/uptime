@@ -65,6 +65,13 @@ const WORDS = [
 ];
 // Extra words measured in --report only (not enforced): candidates for future tracking.
 const EXTRA = [
+  // OT words (Water Plant review, 1 Nov 2026): reported, not enforced game-wide yet, because G:urgent already leans
+  // 72-73% to wrong in Records Hall and the Server Room (backlog: rebalance there, then enforce). The Water Plant itself
+  // is held to the warning band on these four groups (WATER_BAND below).
+  ['G:shutdown', /\b(shut|shuts|shutting|power(ed|s|ing)? (it |them |the [^ ]+ )?(off|down)|power-cycl\w*|unplug\w*|disconnect\w*|turn(ed)? off)\b/i],
+  ['operator', /\boperators?\b/i],
+  ['compare', /\bcompar(e|ed|es|ing)\b/i],
+  ['G:urgent', /\b(now|at once|straight away|immediately|this (afternoon|evening))\b/i],
   ['delete', /\bdelet(e|ed|es|ing)\b/i], ['block', /\bblock(ed|s|ing)?\b/i], ['restart/rerun', /\b(restart|rerun|re-run)/i],
   ['only', /\bonly\b/i], ['every', /\bevery(thing|one)?\b/i], ['now', /\bnow\b/i],
   // The broad investigate family (every enforced investigative word above, plus their synonyms). Reported, not
@@ -199,9 +206,14 @@ if (report) {
   if (warns.length) console.log('Warnings:\n  ' + warns.join('\n  '));
   process.exit(0);
 }
+// The OT groups above are report-only game-wide, but the Water Plant (where they were found) must stay inside the
+// 35–65% band on each of them at n >= MIN_N.
+const WATER_BAND = ['G:shutdown', 'operator', 'compare', 'G:urgent'];
+const waterBand = WATER_BAND.map(n => { const st = stat(inScope('water'), EXTRA.find(w => w[0] === n)[1]); return {n, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
 const checks = [
   ['source scan found graded lists in every district', DISTRICTS.every(d => graded.some(L => district(L.file) === d))],
   ['source scan found graded lists of every list type', TYPES.every(t => graded.some(L => L.type === t))],
+  ['Water Plant stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on the OT groups (' + waterBand.map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', waterBand.every(x => x.ok)],
   ['no tracked word or group leans ' + THRESH * 100 + '% or more to right or wrong (n>=' + MIN_N + ') in any district, any list type, or overall', !fails.length],
 ];
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
