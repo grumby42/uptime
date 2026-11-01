@@ -23,7 +23,7 @@ async function rhQtVault() {
   if (G.party.some(t => TOOLS[t.id].cls === 'endpoint')) opts.push({label: 'Endpoint tool: BKP-01’s process history', meta: {k: 'proc'}});
   if (!opts.length) { await say('The backup console’s old audit log. Reading it would take a log tool or an endpoint tool.'); return; }
   opts.push({label: 'Leave it', meta: {k: 'leave'}});
-  const i = await choose('The backup console. Its audit log goes back a year.', opts);
+  const i = await choose('The backup console. Its audit log goes back a year.', opts, {cursor: opts.length - 1});
   const k = opts[i].meta.k;
   if (k === 'leave') return;
   const day = RH().day0;

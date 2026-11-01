@@ -194,7 +194,7 @@ async function rhDesk() {
   const ready = (f.rhCreds && !f.rhNight1) || (f.rhDrill2 && !f.rhNight2) || (f.rhBoard && !f.rhNight3) || f.rhBoss;
   if (!ready) { await say('Your desk in the corner of the restore lab. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Records Hall desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your Records Hall desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.rhCreds && !f.rhNight1) {
@@ -589,7 +589,8 @@ async function rhRestoreGame(d) {
       break;
     }
     const next = rhNextGood(st.done);
-    const prog = '<table class="sc"><tr><th>System</th><th>Needs</th><th>RTO</th><th>Status</th></tr>' + RH_SYS_ORDER.map(s => '<tr><td>' + esc(RH_SYS_NAME[s]) + '</td><td>' + esc(RH_RESTORE[s].deps.map(x => x.toUpperCase()).join(', ') || '—') + '</td><td>' + RH_OBJ[s].rto + ' h</td><td>' + (st.done[s] ? 'back at ' + st.done[s].end + ' h' : '—') + '</td></tr>').join('') + '</table>';
+    // Rows in name order, not restore order: the table shows the dependencies without giving the answer away.
+    const prog = '<table class="sc"><tr><th>System</th><th>Needs</th><th>RTO</th><th>Status</th></tr>' + RH_SYS_ORDER.slice().sort((a, b) => RH_SYS_NAME[a].localeCompare(RH_SYS_NAME[b])).map(s => '<tr><td>' + esc(RH_SYS_NAME[s]) + '</td><td>' + esc(RH_RESTORE[s].deps.map(x => x.toUpperCase()).join(', ') || '—') + '</td><td>' + RH_OBJ[s].rto + ' h</td><td>' + (st.done[s] ? 'back at ' + st.done[s].end + ' h' : '—') + '</td></tr>').join('') + '</table>';
     const body = (last ? '<p><b>' + esc(last) + '</b></p>' : '<p>One restore crew, ' + RH_RESTORE_BUDGET + ' hours of crew time (game). Pick what to restore next, then which copy to restore it from. The clock starts when recovery starts.</p>') +
       '<p>Hour <b>' + st.clock + '</b> of ' + RH_RESTORE_BUDGET + ' · reinfections ' + st.reinfect + ' · out-of-order starts ' + st.depFail + '</p>' + prog + rhEvidenceHtml(d);
     const items = left.slice().sort((a, b) => RH_SYS_NAME[a].localeCompare(RH_SYS_NAME[b])).map(s => ({label: RH_SYS_NAME[s], note: 'RTO ' + RH_OBJ[s].rto + ' h', meta: {good: s === next, sys: s}}));
@@ -698,7 +699,7 @@ async function rhSummary() {
     rhQtSummaryHtml() +
     '<p class="big">Next: IT Basement.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true, recordsHall: true});
-  const i = await UI.openModal('End of Records Hall', body, [{label: 'Keep exploring Records Hall', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of Records Hall', body, [{label: 'Keep exploring Records Hall', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

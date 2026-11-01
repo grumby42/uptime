@@ -4,7 +4,8 @@
 //    even for the longest objective in the edition
 //  - with a modal open (menu, drill) the touch controls stay visible and tappable, the modal sits clear of them,
 //    and the pad's D-pad / A / B drive the modal
-//  - battle: alert card, tool card and both sprites never overlap each other and stay on the screen
+//  - battle: alert card, tool card and both sprites never overlap each other and stay on the screen; the choice panel
+//    never covers any of them, and every option and note in it is fully visible or reachable by scrolling it
 //  - scorecard / summary table: numbers and targets never wrap, the table never overflows its page
 //  - the current objective's door carries a marker
 // Usage: node layout.js   (UPTIME_FILE=file:///... to test another build)
@@ -14,8 +15,16 @@ const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../
 const OUT = process.env.UPTIME_OUT || __dirname + '/out';
 require('fs').mkdirSync(OUT, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-// The longest objective text in the edition (Records Hall directions).
-const LONG = 'Next: Records Hall. Its door is south of the plaza, among the cabling between the Identity Board and the Dojo; your Lantern Badge opens it.';
+// The longest objective text in the edition is read from the page itself: every string literal returned as an
+// objective by objective() and the districts' xxObjective() functions (computed, not hand-copied).
+let LONG = null;
+const longestObjective = p => p.evaluate(() => {
+  const fns = Object.getOwnPropertyNames(window).filter(n => /^(objective|[a-z]{2}Objective)$/.test(n) && typeof window[n] === 'function');
+  const re = /(?:\bat\(|\btext:\s*)(['"])((?:(?!\1)[^\\]|\\.)*)\1/g, all = [];
+  for (const n of fns) { const src = window[n].toString(); let m; while ((m = re.exec(src))) all.push(m[2].replace(/\\(.)/g, '$1')); }
+  all.sort((a, b) => b.length - a.length);
+  return { fns, n: all.length, longest: all[0] };
+});
 const results = []; const check = (name, ok, info) => results.push({ name, ok: !!ok, info: ok ? undefined : info });
 
 async function freeOnMap(p) {
@@ -47,6 +56,10 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     await p.evaluate(() => { [...document.querySelectorAll('#mopts .opt')].find(e => /New game/.test(e.textContent)).click(); });
     await freeOnMap(p);
     await p.evaluate(() => __UPTIME.turbo(false)); await sleep(300);
+    if (!LONG) {
+      const lo = await longestObjective(p); LONG = lo.longest;
+      check('longest objective found from the edition’s objective functions (' + lo.fns.length + ' functions, ' + lo.n + ' texts): ' + LONG.length + ' chars', lo.fns.length >= 7 && lo.n >= 60 && LONG.length > 60, lo);
+    }
     const touch = !!opt.hasTouch, portrait = opt.viewport.height > opt.viewport.width;
     const r = {};
     const fits = () => p.evaluate(() => {
@@ -73,7 +86,7 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     await p.evaluate(t => { window.__realObjective = objective; objective = () => ({ text: t, map: 'desk', x: 1, y: 1 }); }, LONG);
     await sleep(150);
     r.hudLong = await hudCheck();
-    check(name + ': longest objective wraps in full, no overlap', !r.hudLong.truncated && !r.hudLong.overlap && r.hudLong.text.includes('opens it.') && r.hudLong.objLines <= 3, r.hudLong);
+    check(name + ': longest objective wraps in full, no overlap', !r.hudLong.truncated && !r.hudLong.overlap && r.hudLong.text.includes(LONG.slice(-12)) && r.hudLong.objLines <= 3, r.hudLong);
     await p.evaluate(() => { objective = window.__realObjective; });
     await p.evaluate(() => { G.map = 'hub'; G.x = 14; G.y = 7; }); await sleep(150);
     r.marker = await p.evaluate(() => __UPTIME.peek().marker);
@@ -140,6 +153,28 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     const names = Object.keys(r.battle.items), clash = [];
     for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) if (overlap(r.battle.items[names[i]], r.battle.items[names[j]])) clash.push(names[i] + '/' + names[j]);
     check(name + ': battle: alert card, tool card and sprites never overlap, all on screen', !clash.length && !r.battle.inside.length && r.battle.vh === 180, { clash, offscreen: r.battle.inside, battle: r.battle });
+    // The choice panel: never over the sprites or the cards; every option and its note fully visible, or reachable by
+    // scrolling the panel; nothing hidden under the on-screen controls; the panel itself on screen.
+    r.bpanel = await q.evaluate(() => {
+      const panel = document.getElementById('panel'), pr = panel.getBoundingClientRect();
+      const opts = [...panel.querySelectorAll('#popts .opt')], bad = [];
+      const scrolls = panel.scrollHeight > panel.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(panel).overflowY);
+      for (const o of opts) {
+        o.scrollIntoView({ block: 'nearest' });
+        const pc = panel.getBoundingClientRect(), r = o.getBoundingClientRect();
+        const note = o.querySelector('.note'), nr = note ? note.getBoundingClientRect() : r;
+        const inside = x => x.top >= pc.top - 0.5 && x.bottom <= pc.top + panel.clientHeight + 3.5 && x.left >= pc.left - 0.5 && x.right <= pc.right + 0.5 && x.bottom <= innerHeight + 0.5 && x.top >= -0.5;
+        const pts = [[r.left + 12, (r.top + r.bottom) / 2], [r.right - 6, (r.top + r.bottom) / 2], [nr.left + 4, (nr.top + nr.bottom) / 2]];
+        const covered = pts.some(([x, y]) => { const t = document.elementFromPoint(x, y); return !t || !(t === o || o.contains(t) || t === panel || t.id === 'popts'); });
+        if (!inside(r) || !inside(nr) || covered) bad.push({ label: o.textContent, r: [r.top, r.bottom].map(Math.round), note: [nr.top, nr.bottom].map(Math.round), panel: [pc.top, pc.top + panel.clientHeight].map(Math.round), covered });
+      }
+      panel.scrollTop = 0;
+      return { n: opts.length, labels: opts.map(o => o.textContent), bad, scrolls, rect: { left: pr.left, top: pr.top, right: pr.right, bottom: pr.bottom }, onScreen: pr.top >= -0.5 && pr.bottom <= innerHeight + 0.5 && pr.left >= -0.5 && pr.right <= innerWidth + 0.5 };
+    });
+    const pclash = Object.entries(r.battle.items).filter(([, v]) => overlap(v, r.bpanel.rect)).map(([k]) => k);
+    check(name + ': battle: the choice panel never covers the sprites or the cards, and sits on screen', !pclash.length && r.bpanel.onScreen && r.bpanel.n >= 6, { pclash, panel: r.bpanel.rect, n: r.bpanel.n });
+    check(name + ': battle: every option and note in the choice panel is fully visible (or reachable by scrolling it), none under the controls', !r.bpanel.bad.length, { bad: r.bpanel.bad, scrolls: r.bpanel.scrolls });
+    check(name + ': battle: the action menu fits its panel without scrolling (nothing clipped at the bottom)', !r.bpanel.scrolls, r.bpanel);
     await q.screenshot({ path: OUT + '/layout-' + name + '-battle.png' });
     const fitsB = await q.evaluate(() => { const H = innerHeight, W = innerWidth; return [...document.querySelectorAll('[data-btn], #screen')].filter(e => { const r = e.getBoundingClientRect(); return r.width && (r.top < -0.5 || r.bottom > H + 0.5 || r.left < -0.5 || r.right > W + 0.5); }).map(e => e.dataset.btn || e.id); });
     check(name + ': battle: nothing off-screen', !fitsB.length, fitsB);

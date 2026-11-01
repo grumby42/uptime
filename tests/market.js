@@ -322,11 +322,34 @@ function clerksDone(s, extra, party) {
   check('false-positive cost on the scorecard: FP rate 58.9%, reputation and uptime down', p.f.mkWafBlock && p.metrics.mkWafFp === 58.9 && rep1.rep < rep0.rep && rep1.up < rep0.up, { m: p.metrics.mkWafFp, rep0, rep1 });
   await s.goTo('market', 14, 1);
   await s.untilChoice();
-  await s.pickLabel(/Review the rules again/);
+  p = await s.peek();
+  { const g = l => (p.ui.options.find(o => l.test(o.label)) || {}).meta || {};
+    check('WAF box while residents are blocked: “Leave it” is not the right call, reviewing the blocked requests is; the list is shuffled and lists the rules catching residents',
+      p.ui.type === 'modal' && !g(/^Leave it/).good && g(/^Review the residents/).good && !g(/^Allow every address/).good && /Allow only GET on \/pay\//.test(await s.modalText()),
+      p.ui.options.map(o => o.label + (o.meta && o.meta.good ? '*' : ''))); }
+  await s.pickLabel(/^Allow every address/);
+  p = await s.waitUI('say');
+  check('WAF box: allowing every blocked address is explained (attackers too; scoped exclusion with owner and expiry)', /attackers’/.test(p.ui.text) && /owner and an expiry/.test(p.ui.text), p.ui.text);
+  await s.settle();
+  await s.goTo('market', 14, 1);
+  await s.untilChoice();
+  await s.pickLabel(/^Review the residents/);
+  p = await s.waitUI('say');
+  check('WAF box: reviewing explains scoped exclusions with a named owner and an expiry date', /named owner and an expiry date/.test(p.ui.text), p.ui.text);
   await s.untilChoice();
   const rv2 = await review(false);
   check('re-tuned review: 100%, residents blocked 2 a day, FP 0.1%', /Rule review 100%/.test(rv2) && /residents’ requests blocked <b>2<\/b>|residents’ requests blocked 2/.test(rv2.replace(/\s+/g, ' ')), rv2.slice(0, 400));
   await s.pickLabel(/Switch the WAF to blocking/); await s.settle();
+  p = await s.peek();
+  await s.goTo('market', 14, 1);
+  await s.untilChoice();
+  p = await s.peek();
+  check('WAF box after tuning: 2 residents a day still blocked, so reviewing them is still the right call, not “Leave it”',
+    !p.ui.options.find(o => /^Leave it/.test(o.label)).meta.good && p.ui.options.find(o => /^Review the residents/.test(o.label)).meta.good, p.ui.options.map(o => o.label + (o.meta && o.meta.good ? '*' : '')));
+  await s.pickLabel(/^Leave it/);
+  p = await s.waitUI('say');
+  check('WAF box: leaving residents blocked is explained', /still blocked/.test(p.ui.text), p.ui.text);
+  await s.settle();
   p = await s.peek();
   check('WAF FP metric: now 0.1%, worst 58.9% kept on the scorecard; two reviews', p.metrics.mkWafFp === 0.1 && p.extra.mk.wafReviews === 2 && await s.page.evaluate(() => G.track.mkWafFp.worst === 58.9 && G.track.mkWafFp.best === 0.1), p.metrics.mkWafFp);
 

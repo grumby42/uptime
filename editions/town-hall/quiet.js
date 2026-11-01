@@ -38,11 +38,13 @@ async function qtDeskConsole() {
   await qtAfterNote(qtNote('th-signin'));
 }
 
+// Every Quiet Thread prompt opens with the highlight on the neutral “Leave it” item ({cursor}), so the default never
+// nudges the player toward the curious choice: noticing is the mechanic.
 /* (b) Network closet, after the firewall fix: Lanternkeep can read the router's connection table. */
 async function qtCloset() {
   if (!G.f.portDone || G.day < 2) return;
   if (!hasTool('lantern')) { await say('The old small-office router’s lights blink. Reading its connection table would take a network tool.'); return; }
-  const i = await choose('The old small-office router hums on the shelf.', [{label: 'Lanternkeep: inspect its connections'}, {label: 'Leave it'}]);
+  const i = await choose('The old small-office router hums on the shelf.', [{label: 'Lanternkeep: inspect its connections'}, {label: 'Leave it'}], {cursor: 1});
   if (i !== 0) return;
   await say('Lanternkeep: once a night, around 03:10, the router relays a short encrypted connection between FD-STAFF-11 and an address that isn’t any vendor or service you use. Small, regular, and under every threshold.');
   await qtAfterNote(qtNote('th-router'));
@@ -57,7 +59,7 @@ async function qtPc(x) {
   if (hasTool('sentry')) opts.push({label: 'Sentry: look at the process tree', meta: {k: 'tree'}});
   if (!opts.length) return;
   opts.push({label: 'Leave it', meta: {k: 'leave'}});
-  const i = await choose(host + '.', opts);
+  const i = await choose(host + '.', opts, {cursor: opts.length - 1});
   const k = opts[i].meta.k;
   if (k === 'log') {
     if (x !== 14) { await say('Ledger: ' + host + '’s security log runs back to Day 1, when you switched logging on. Steady and ordinary.'); return; }
@@ -77,7 +79,7 @@ async function qtHal(who) {
   if (G.day < 2 || !G.f.portDone) return;
   if (qtFound('th-reboot')) { await say('That closet router? Still rebooting itself now and then.', who); return; }
   await say('Funny thing: the little router in the Front Desk closet rebooted itself again last night. Third time this month.', who);
-  const i = await choose('Hal shrugs.', [{label: 'Ask about the router'}, {label: '“Probably the heat.”'}]);
+  const i = await choose('Hal shrugs.', [{label: 'Ask about the router'}, {label: '“Probably the heat.”'}], {cursor: 1});
   if (i !== 0) return;
   await say('Lights went dark around three and came back on their own. It’s an old model; the maker stopped putting out updates for it years ago. Tomas keeps meaning to replace it.', who);
   await qtAfterNote(qtNote('th-reboot'));

@@ -79,8 +79,9 @@ Object.assign(ABIL, {
 
 /* ---------- Map: the IT Basement, the Basement Board, and the stairs on the plaza ---------- */
 // North-west: the server racks with the log collector, among cable trays nobody logs. North: the SIEM room, with
-// the clock on the wall. North-east: the firewall room and its rule binder. Middle: the corridor and the Board door.
-// South: the Log Analysis Dojo (west), your desk, the Scanning Dojo (east), and the stairs up.
+// the clock on the wall and the stairs up to the plaza (top wall). North-east: the firewall room and its rule binder.
+// Middle: the corridor and the Board door (east wall). South: the Log Analysis Dojo (west), your desk, the Scanning
+// Dojo (east).
 Object.assign(MAPS, {
   basement: {
     name: 'IT Basement',

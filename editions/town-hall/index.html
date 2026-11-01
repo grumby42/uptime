@@ -59,8 +59,16 @@ body.portrait #hud{width:100%;font-size:11.5px;min-height:calc(3 * 1.3em + 7px)}
 #panel.show{display:block}
 body.landscape #panel{position:absolute;left:0;right:0;bottom:0;max-height:58%;overflow:auto;border-top:3px solid #1b2233;padding:.5em .9em;z-index:5}
 /* Desktop with room to spare: the dialogue sits below the map instead of over it (the battle scene stays whole) */
-body.landscape.below #panel{position:static;display:block;visibility:hidden;width:var(--hudW);height:var(--panelH,180px);max-height:none}
+body.landscape.below #panel{position:static;display:block;visibility:hidden;width:var(--hudW);height:var(--panelH,180px);max-height:none;overflow:auto}
 body.landscape.below #panel.show{visibility:visible}
+/* Touch landscape battle: no HUD or footer; the scene sits at the top and the panel has its own band below it,
+   as wide as the gap between the D-pad and the A/B buttons, with a readable font. It scrolls inside if it must. */
+body.landscape.touch.inbattle #hud,body.landscape.touch.inbattle #foot{display:none}
+body.landscape.touch.below #panel{width:min(500px,calc(100vw - 316px));margin:0 auto;font-size:12.5px;line-height:1.3;padding:.35em .7em;border-top:3px solid #1b2233}
+/* Two-column choice grids (the battle menu): the note sits beside its label, so every row stays short */
+body.landscape #panel.choosing #popts.cols2 .opt .note{display:inline;padding-left:.6em}
+#panel.choosing #pmore{display:none}
+#panel:not(.show) #pmore{visibility:hidden!important}
 body.portrait #stage{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;width:100%}
 body.portrait #panel{display:block;visibility:hidden;width:100%;flex:1 1 auto;min-height:150px;overflow:auto;font-size:14px;padding:8px 12px;border-top:3px solid #1b2233}
 body.portrait #panel.show{visibility:visible}
@@ -100,7 +108,7 @@ body.landscape.touch .ab{position:fixed;right:18px;bottom:30px;pointer-events:au
 body.landscape.touch .sys{position:fixed;right:18px;top:14px;flex-direction:row;pointer-events:auto}
 #foot{font-size:11px;color:#8b93a7;padding:6px 10px;text-align:center;max-width:100vw}
 body.portrait #foot{flex:none;padding:2px 10px calc(4px + env(safe-area-inset-bottom))}
-body.portrait #foot .keys{display:none}
+body.portrait #foot .keys,body.touch #foot .keys{display:none}
 
 /* Modal pages */
 #modal{position:fixed;inset:0;background:rgba(8,10,16,.8);display:none;align-items:center;justify-content:center;z-index:50;padding:8px}
@@ -136,7 +144,7 @@ textarea{width:100%;font-family:var(--mono);font-size:12px;background:#fff;color
 .title{text-align:center;padding:10px 0}
 .logo{font-size:44px;font-weight:800;letter-spacing:8px;color:var(--accent)}
 .big{font-size:17px;font-weight:700}
-@media (max-width:420px){ table.sc{font-size:11.5px} table.sc th,table.sc td{padding:3px 2px} .mbody{font-size:14px;padding:6px 10px} }
+@media (max-width:420px){ table.sc{font-size:11.5px} table.sc th,table.sc td{padding:3px 2px} table.sc.score td+td,table.sc.score th+th{padding-left:7px} .mbody{font-size:14px;padding:6px 10px} }
 
 /* Investigation drills, inbox room and text stream (Mail Room) */
 pre.art{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-family:var(--mono);font-size:12px;line-height:1.35;
@@ -180,7 +188,7 @@ pre.art.ai{border-left-color:var(--gold)}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261101-0245Z', BUILD_TS = '2026-11-01 02:45 UTC';
+const BUILD_ID = 'ARCD-20261101-0339Z', BUILD_TS = '2026-11-01 03:39 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -421,7 +429,8 @@ function weighted(list) { // [{w,...}]
    The highlight starts on display position 0 (the first enabled item), never on the caller's item 0, so it
    lands on a random answer; pass {cursor: i} (a caller index) to start somewhere on purpose.
    Pure navigation/confirmation menus stay in order; when one marks a preferred item with meta.good (a hint
-   for the test bot), it says so with {nav: true} so the tests can tell it from a graded list. */
+   for the test bot), it says so with {nav: '<id>'}, an id on the reviewed allowlist in tests/highlight.js, so the
+   tests can tell it from a graded list. */
 function shuffleOrder(items, o) {
   const perm = items.map((_, i) => i);
   if (!o || !o.shuffle) return perm;
@@ -499,7 +508,11 @@ const Screen = {
     // Room for the map: below the HUD band; in portrait also above the dialogue panel and the controls at the bottom.
     const hh = id => { const e = document.getElementById(id); return e ? e.getBoundingClientRect().height : 0; };
     let availW, availH;
+    // Touch landscape in a battle: the HUD and footer are hidden (CSS), and the choice panel gets its own band below the
+    // scene, between the on-screen controls, so it never covers the sprites or the cards.
+    const landBattle = !portrait && touch && document.body.classList.contains('inbattle');
     if (portrait) { availW = W; availH = Math.max(90, H - hh('hud') - 150 - hh('pad') - hh('foot')); }
+    else if (landBattle) { availW = W - 300; availH = H - 6; }
     else { availW = W - (touch ? 300 : 24); availH = H - 34 - hh('hud'); }
     // largest whole number of device pixels per logical pixel that fits
     const scaleFor = h => {
@@ -511,9 +524,12 @@ const Screen = {
     };
     let k = scaleFor(availH);
     // Desktop / keyboard landscape: if the map keeps its scale with a dialogue band below it, put the dialogue there.
-    const PANEL_H = 170, below = !portrait && !touch && scaleFor(availH - PANEL_H) === k;
+    const PANEL_H = 170, LAND_PANEL_H = 150;
+    let below = !portrait && !touch && scaleFor(availH - PANEL_H) === k;
+    if (landBattle) { k = scaleFor(availH - LAND_PANEL_H); below = true; }
     document.body.classList.toggle('below', below);
-    if (below) document.documentElement.style.setProperty('--panelH', Math.floor(Math.min(260, availH - VH0 * k / dpr)) + 'px');
+    // The band below the map takes the room that is really left (the footer stays on screen), so nothing in it is cut off.
+    if (below) document.documentElement.style.setProperty('--panelH', Math.floor(Math.max(120, Math.min(320, (landBattle ? H - 4 : H - hh('hud') - hh('foot') - 10) - VH0 * k / dpr))) + 'px');
     this.k = k; this.s = k / dpr;
     this.tall = portrait && this.tallOK;
     VH = this.tall ? clamp(Math.floor(availH / this.s / TS) * TS, VH0, 20 * TS) : VH0;
@@ -619,6 +635,7 @@ const UI = {
       this.who.textContent = o.who || ''; this.who.style.display = o.who ? '' : 'none';
       this.text.textContent = prompt || '';
       this.more.style.visibility = 'hidden';
+      this.panel.classList.add('choosing');
       this.showPanel(true);
       this.renderChoice();
     });
@@ -626,6 +643,7 @@ const UI = {
   renderChoice() {
     const c = this.choice;
     this.opts.style.gridTemplateColumns = 'repeat(' + c.cols + ', minmax(0,1fr))';
+    this.opts.classList.toggle('cols2', c.cols > 1);
     this.opts.innerHTML = c.items.map((it, i) =>
       '<button class="opt' + (i === c.cursor ? ' cur' : '') + (it.disabled ? ' dis' : '') + '" data-i="' + i + '">' +
       '<span class="car">▸</span>' + esc(it.label) + (it.note ? '<span class="note">' + esc(it.note) + '</span>' : '') + '</button>').join('');
@@ -640,7 +658,7 @@ const UI = {
   finishChoice(i) {
     const c = this.choice;
     this.choice = null; this.mode = null;
-    this.opts.innerHTML = '';
+    this.opts.innerHTML = ''; this.panel.classList.remove('choosing');
     c.resolve(i < 0 ? i : c.perm[i]);
   },
   hidePanel() { if (!this.mode) this.showPanel(false); },
@@ -1115,7 +1133,7 @@ const GAME_NOTES = [
   'Only malicious alerts use entry-route weights: password spraying 32 / exploited app 29 / phishing 24 (15 link, 9 call) / scanning 15. The first three keep the 2025 DBIR initial-access proportions (22 : 20 : 16), scaled up; scanning is reconnaissance, not a way in, so a scan alert is only malicious when login attempts follow it. False-positive and benign alerts pick a rule evenly. (game)',
   'Class strengths: Endpoint vs Execution/Persistence/Privilege Escalation; Network vs C2/Lateral Movement/Exfiltration/remote services/scanning; Logging vs Discovery/Credential Access once logs are on; Identity vs Credential Access and account abuse. Strong ×2, weak ×0.5. (game)',
   'District uptime, reputation, building health, MFA coverage (12 accounts) and all character names are invented. (game)',
-  'Automation risk “about 1 in 50 auto-closed alerts may be real” is an invented number. (game)',
+  'Automation risk “about 1 in 50 auto-closed alerts may be real” is an invented number, and so is the weekly sample catching about half of those. (game)',
   'Acting on a morning briefing halves that threat’s odds for a week, and the Key Badge halves Sprayer alerts: both are invented effects. (game)',
   'Time to acknowledge counts seconds of menu time in the game. Real SOCs measure time to acknowledge and time to resolve in minutes to hours, against agreed service-level targets. (game)',
   'Escalation precision counts an escalation as good only when the alert was real and you had Evidence 40 or more. “Verdicts with evidence” uses the same 40 line. (game)'
@@ -1169,11 +1187,13 @@ async function qtDeskConsole() {
   await qtAfterNote(qtNote('th-signin'));
 }
 
+// Every Quiet Thread prompt opens with the highlight on the neutral “Leave it” item ({cursor}), so the default never
+// nudges the player toward the curious choice: noticing is the mechanic.
 /* (b) Network closet, after the firewall fix: Lanternkeep can read the router's connection table. */
 async function qtCloset() {
   if (!G.f.portDone || G.day < 2) return;
   if (!hasTool('lantern')) { await say('The old small-office router’s lights blink. Reading its connection table would take a network tool.'); return; }
-  const i = await choose('The old small-office router hums on the shelf.', [{label: 'Lanternkeep: inspect its connections'}, {label: 'Leave it'}]);
+  const i = await choose('The old small-office router hums on the shelf.', [{label: 'Lanternkeep: inspect its connections'}, {label: 'Leave it'}], {cursor: 1});
   if (i !== 0) return;
   await say('Lanternkeep: once a night, around 03:10, the router relays a short encrypted connection between FD-STAFF-11 and an address that isn’t any vendor or service you use. Small, regular, and under every threshold.');
   await qtAfterNote(qtNote('th-router'));
@@ -1188,7 +1208,7 @@ async function qtPc(x) {
   if (hasTool('sentry')) opts.push({label: 'Sentry: look at the process tree', meta: {k: 'tree'}});
   if (!opts.length) return;
   opts.push({label: 'Leave it', meta: {k: 'leave'}});
-  const i = await choose(host + '.', opts);
+  const i = await choose(host + '.', opts, {cursor: opts.length - 1});
   const k = opts[i].meta.k;
   if (k === 'log') {
     if (x !== 14) { await say('Ledger: ' + host + '’s security log runs back to Day 1, when you switched logging on. Steady and ordinary.'); return; }
@@ -1208,7 +1228,7 @@ async function qtHal(who) {
   if (G.day < 2 || !G.f.portDone) return;
   if (qtFound('th-reboot')) { await say('That closet router? Still rebooting itself now and then.', who); return; }
   await say('Funny thing: the little router in the Front Desk closet rebooted itself again last night. Third time this month.', who);
-  const i = await choose('Hal shrugs.', [{label: 'Ask about the router'}, {label: '“Probably the heat.”'}]);
+  const i = await choose('Hal shrugs.', [{label: 'Ask about the router'}, {label: '“Probably the heat.”'}], {cursor: 1});
   if (i !== 0) return;
   await say('Lights went dark around three and came back on their own. It’s an old model; the maker stopped putting out updates for it years ago. Tomas keeps meaning to replace it.', who);
   await qtAfterNote(qtNote('th-reboot'));
@@ -1255,7 +1275,7 @@ function newState(seed) {
     targets: {closed: 12, acc: 90, evid: 80, tta: 20, esc: 75, uptime: 99.9, mfa: 100, patch: 100},
     mfaSet: ['rae', 'tomas', 'you'],
     fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
-    fpWeight: 50, queue: 3, steps: 0, auto: false, playMs: 0
+    fpWeight: 50, queue: 3, steps: 0, auto: false, autoReview: false, playMs: 0
   };
 }
 
@@ -1407,7 +1427,7 @@ async function raeTalk() {
     await say('Our job: keep the district running and notice when someone is trying to break in. Every alert is a question. Some are attacks; most aren’t.', who);
     await say('First you need a tool. I have budget for one starter. Pick the one that fits how you think.', who);
     const ids = ['sentry', 'lantern', 'ledger'];
-    const i = await choose('Choose your starter tool:', ids.map(id => ({label: TOOLS[id].name + ' (' + CLASSES[TOOLS[id].cls].label + ' · ' + TOOLS[id].sub + ')', note: TOOLS[id].blurb, meta: {good: id === 'sentry'}})), {who: who, nav: true});
+    const i = await choose('Choose your starter tool:', ids.map(id => ({label: TOOLS[id].name + ' (' + CLASSES[TOOLS[id].cls].label + ' · ' + TOOLS[id].sub + ')', note: TOOLS[id].blurb, meta: {good: id === 'sentry'}})), {who: who, nav: 'starter-pick'});
     const id = ids[i];
     addTool(id, 3); f.starter = id;
     await say(TOOLS[id].name + ' is installed on your console. Tools aren’t thrown at problems: you run them, and their abilities cost Focus.', who);
@@ -1498,7 +1518,7 @@ async function deskEnd() {
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}];
   if (qtDeskReady()) opts.push({label: 'Ledger console: overnight sign-ins', meta: {k: 'console'}});
   opts.push({label: 'Not yet', meta: {k: 'no'}});
-  const i = await choose('Your desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k === 'end') await endShift('desk');
   else if (opts[i].meta.k === 'console') await qtDeskConsole();
 }
@@ -1639,7 +1659,7 @@ async function evolveCheck() {
   if (!G.items.guide) return;
   const t = G.party.find(p => p.lvl >= 5 && !p.tuned);
   if (!t) return;
-  const i = await choose(TOOLS[t.id].name + ' (Lv ' + t.lvl + ') is ready to be Tuned. Use the Tuning Guide?', [{label: 'Tune it', meta: {good: true}}, {label: 'Later'}], {nav: true});
+  const i = await choose(TOOLS[t.id].name + ' (Lv ' + t.lvl + ') is ready to be Tuned. Use the Tuning Guide?', [{label: 'Tune it', meta: {good: true}}, {label: 'Later'}], {nav: 'tune-tool'});
   if (i !== 0) return;
   G.items.guide = 0; t.tuned = true;
   await say(TOOLS[t.id].name + ' was Tuned! Fewer noisy detections, sharper abilities (power ×1.25).');
@@ -1684,8 +1704,13 @@ async function boardScript() {
   touchCSF('Protect');
   if (hasTool('ledger')) {
     const i = await choose('Rae: With Tier 1 comes automation. Ledger can auto-close alerts matching known false-positive patterns while you walk. Risk: about 1 in 50 auto-closed alerts might be real (game), and nobody looks at those. Turn it on?',
-      [{label: 'Turn automation on', meta: {good: true}}, {label: 'Not now (toggle later in the Start menu)'}], {nav: true});
-    G.f.autoUnlocked = true; G.auto = i === 0;
+      [{label: 'Turn it on, with a person reviewing a sample of what it closes each week', meta: {good: true, k: 'sample'}},
+       {label: 'Turn it on as it is: 49 in 50 are noise, so nobody needs to look at what it closes', meta: {k: 'blind'}},
+       {label: 'Not now (toggle later in the Start menu)', meta: {k: 'off'}}], {shuffle: true});
+    G.f.autoUnlocked = true; G.auto = i !== 2; G.autoReview = i === 0;
+    if (i === 0) await say('Good. Automation closes the obvious ones; a person checks a sample of what it closed, so a real alert in there has a chance of coming back. (The catch rate is game.)', 'Rae Okafor');
+    else if (i === 1) await say('1 in 50 sounds small until it’s the one that matters. With nobody looking at what it closes, a miss stays missed. You can still add a review later from the Start menu.', 'Rae Okafor');
+    else await say('Fair. It’s in the Start menu when you want it. If you turn it on, have someone check a sample of what it closes.', 'Rae Okafor');
   }
   await evolveCheck();
 }
@@ -1778,7 +1803,7 @@ async function summary() {
     qtSummaryHtml() +
     '<p class="big">Next: the Mail Room.</p>';
   Series.markEdition(EDITION.id, {done: true});
-  const i = await UI.openModal('End of slice 1', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of slice 1', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -2366,7 +2391,7 @@ async function mrOldBox() {
   if (hasTool('sieve') || hasTool('sifter')) opts.push({label: (hasTool('sifter') ? 'Sifter' : 'Sieve') + ': rules on the old shared mailboxes', meta: {k: 'rules'}});
   if (!opts.length) { await say('The console for the old shared mailboxes: facilities-bms@, permits-old@, scans@. Reading their settings would take a log tool or a mail tool.'); return; }
   opts.push({label: 'Leave it', meta: {k: 'leave'}});
-  const i = await choose('Old shared mailboxes: facilities-bms@, permits-old@, scans@.', opts);
+  const i = await choose('Old shared mailboxes: facilities-bms@, permits-old@, scans@.', opts, {cursor: opts.length - 1});
   const k = opts[i].meta.k;
   if (k === 'log') {
     await say('Ledger: permits-old@ and scans@ have had no sign-ins for over a year. facilities-bms@ signed in at 03:16 two nights ago. Right password, first try.');
@@ -2542,7 +2567,7 @@ async function mrTalk(npc) {
 async function mrDesk() {
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
   if (!G.f.mrDrill2) { await say('Your desk in the Mail Room. Too early to go home.'); return; }
-  const i = await choose('Your Mail Room desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your Mail Room desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (!G.f.mrNight) {
@@ -2777,7 +2802,7 @@ async function mrEvolveCheck() {
   if (!G.mr || !G.mr.rulebook) return;
   const t = G.party.find(p => p.id === 'sieve' && p.lvl >= 5);
   if (!t) return;
-  const i = await choose('Sieve (Lv ' + t.lvl + ') can use the Filter Rulebook. Evolve it?', [{label: 'Evolve Sieve', meta: {good: true}}, {label: 'Later'}], {nav: true});
+  const i = await choose('Sieve (Lv ' + t.lvl + ') can use the Filter Rulebook. Evolve it?', [{label: 'Evolve Sieve', meta: {good: true}}, {label: 'Later'}], {nav: 'evolve-tool'});
   if (i !== 0) return;
   G.mr.rulebook = false; t.id = 'sifter';
   await say('Sieve is evolving! Sieve → Sifter. New ability: Search and purge, every copy from every inbox.');
@@ -2900,7 +2925,7 @@ async function mrSummary() {
     mrQtSummaryHtml() +
     '<p class="big">Next: Clerks’ Row.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true});
-  const i = await UI.openModal('End of the Mail Room', body, [{label: 'Keep exploring the Mail Room', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of the Mail Room', body, [{label: 'Keep exploring the Mail Room', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -3492,7 +3517,7 @@ async function crQtLaptop() {
   if (hasTool('ledger') && G.f.crPslog) opts.push({label: 'Ledger: script block log (4104) overnight', meta: {k: 'log'}});
   if (!opts.length) return;
   opts.push({label: 'Leave it', meta: {k: 'leave'}});
-  const i = await choose(CR_QT_HOST + ', the spare laptop at the end of the row.', opts);
+  const i = await choose(CR_QT_HOST + ', the spare laptop at the end of the row.', opts, {cursor: opts.length - 1});
   const k = opts[i].meta.k;
   if (k === 'proc') {
     await say(TOOLS[ep].name + ': at 03:07, svc-print ran netsh.exe on ' + CR_QT_HOST + '. It added a port proxy: a local port now forwards to FD-STAFF-11.');
@@ -3722,7 +3747,7 @@ async function crTalk(npc) {
 async function crDesk() {
   if (!G.f.crDrill2) { await say('Your desk in Clerks’ Row. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Clerks’ Row desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your Clerks’ Row desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   const c = CR();
@@ -3820,9 +3845,15 @@ async function crTriage() {
   const plan = {};
   for (let n = 0; n < CR_ADVISORIES.length; n++) {
     const a = CR_ADVISORIES[n];
-    const items = ['week', 'next', 'later'].map(b => ({label: CR_BUCKETS[b], meta: {b: b, good: a.good === b}}));
+    // A time scale stays in its natural order (this week, next week, later); the highlight starts on Back, never on a batch.
+    const items = ['week', 'next', 'later'].map(b => ({label: CR_BUCKETS[b], meta: {b: b, good: a.good === b}}))
+      .concat([{label: n ? 'Back: previous advisory' : 'Back: hear the briefing again', meta: {back: true}}]);
     const i = await UI.openModal('Patch Tuesday triage · ' + (n + 1) + ' of ' + CR_ADVISORIES.length,
-      '<p>Put each advisory in a batch. This week’s batch goes out today.</p>' + crAdvCard(a), items, {shuffle: true, closable: false, cls: 'drill'});
+      '<p>Put each advisory in a batch. This week’s batch goes out today.</p>' + crAdvCard(a), items, {cursor: 3, closable: false, cls: 'drill'});
+    if (items[i].meta.back) {
+      if (n) n -= 2; else { await say('Microsoft’s cumulative update and the other vendors’ fixes are out: eight advisories, and one batch can go out today. (Advisories and IDs are invented: game.)'); n -= 1; }
+      continue;
+    }
     plan[a.id] = items[i].meta.b;
   }
   // Score (game): known-exploited advisories count double.
@@ -3837,7 +3868,7 @@ async function crTriage() {
   const body = '<p class="big">Triage score ' + score + '% <span class="small">(game: known-exploited items count double)</span></p>' +
     '<table class="sc"><tr><th>Advisory</th><th>CVSS</th><th>Your batch</th><th>Better</th></tr>' + rows + '</table>' +
     '<p>Known exploited first: CISA keeps the KEV list for exactly this. A CVSS base score rates how bad a flaw could be; as CISA puts it, it “does not account for if the vulnerability is actually being used to attack systems.” Exposure and public exploit code matter too.</p>';
-  const j = await UI.openModal('Patch plan review', body, [{label: 'Deploy this week’s batch', meta: {good: true}}, {label: 'Redo the triage'}], {nav: true, closable: false, cls: 'drill'});
+  const j = await UI.openModal('Patch plan review', body, [{label: 'Deploy this week’s batch', meta: {good: true}}, {label: 'Redo the triage'}], {nav: 'patch-plan-confirm', closable: false, cls: 'drill'});
   if (j === 1) return crTriage();
   c.triage = plan; c.triageScore = score; G.f.crTriage = true;
   const n = crDeploy('week');
@@ -4030,7 +4061,7 @@ async function crEvolveCheck() {
   if (!t || G.f.crOverwatchAsked === G.day) return;
   if (!hasTool('ledger') || !G.f.crPslog) return;
   G.f.crOverwatchAsked = G.day;
-  const i = await choose('Sentry (Lv ' + t.lvl + ') can send its telemetry into Ledger. Integrate them?', [{label: 'Integrate Sentry with Ledger', meta: {good: true}}, {label: 'Later'}], {nav: true});
+  const i = await choose('Sentry (Lv ' + t.lvl + ') can send its telemetry into Ledger. Integrate them?', [{label: 'Integrate Sentry with Ledger', meta: {good: true}}, {label: 'Later'}], {nav: 'integrate-tools'});
   if (i !== 0) return;
   t.id = 'overwatch'; touchCSF('Detect');
   await say('Sentry is evolving! Sentry + Ledger → Overwatch. Every laptop’s telemetry in one place. New abilities: Fleet search and Collect triage.');
@@ -4150,7 +4181,7 @@ async function crSummary() {
     crQtSummaryHtml() +
     '<p class="big">Next: Market Square.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true});
-  const i = await UI.openModal('End of Clerks’ Row', body, [{label: 'Keep exploring Clerks’ Row', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of Clerks’ Row', body, [{label: 'Keep exploring Clerks’ Row', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -4785,7 +4816,7 @@ async function mkQtRack() {
   if (hasTool('ledger') && f.logs) opts.push({label: 'Ledger: DMZ sign-ins overnight', meta: {k: 'log'}});
   if (!opts.length) { await say('The DMZ log store. Reading it would take a network tool or a log tool.'); return; }
   opts.push({label: 'Leave it', meta: {k: 'leave'}});
-  const i = await choose('The DMZ firewall log. Last night, 00:00 to 06:00.', opts);
+  const i = await choose('The DMZ firewall log. Last night, 00:00 to 06:00.', opts, {cursor: opts.length - 1});
   const k = opts[i].meta.k;
   if (k === 'leave') return;
   if (k === 'net') await say('Lanternkeep: at 03:09 the old small-office router in the Front Desk closet opened a short connection into the DMZ, to WEB-01’s admin service. An “any to any” rule from the router’s install years ago lets it through. (game) Nothing else on that network talks to the web tier.');
@@ -5010,7 +5041,7 @@ async function mkDesk() {
   const ready = (f.mkCsp && !f.mkNight1) || (f.mkDrill2 && !f.mkNight2) || f.mkDrill3;
   if (!ready) { await say('Your desk in the web team’s office. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Market Square desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your Market Square desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.mkCsp && !f.mkNight1) {
@@ -5096,12 +5127,31 @@ async function mkWafBox() {
   if (!f.mkInv) { await say('The WAF box. Inventory first: you can’t protect what you don’t know you have.'); return; }
   if (!f.mkWafDetect) { await mkWafDetect(); return; }
   if (f.mkDrill1 && !f.mkWafBlock) { await mkWafReview(); return; }
-  if (f.mkWafBlock) {
-    const i = await choose('The WAF is blocking. Residents’ requests blocked today: ' + MK().wafStats.res + '.', [{label: 'Leave it', meta: {good: true}}, {label: 'Review the rules again'}], {nav: true});
-    if (i === 1) await mkWafReview();
-    return;
-  }
+  if (f.mkWafBlock) { await mkWafBlocking(); return; }
   await say('The WAF is in detection mode: logging what it would block, blocking nothing. Read its log after a night of real traffic.');
+}
+// Back at the WAF box once it is blocking: what to do depends on what it is blocking. The right call is graded from
+// the evidence on screen: any resident blocked means review those requests; none means leave it.
+async function mkWafBlocking() {
+  const c = MK(), st = c.wafStats, plan = c.wafPlan || {};
+  const hits = MK_WAF.filter(r => plan[r.id] === 'block' && r.res);
+  const body = '<p>The WAF is blocking. A day now: attack requests blocked <b>' + st.atk.toLocaleString('en-US') + '</b> · residents’ requests blocked <b>' + st.res.toLocaleString('en-US') + '</b> · bill payments failing <b>' + st.payFail + '</b> (game).</p>' +
+    (hits.length ? '<p class="small">Blocking rules that caught residents’ requests:</p><ul>' + hits.map(r => '<li>' + esc(r.rule) + ': <b>' + r.res + '</b> a day</li>').join('') + '</ul>'
+      : '<p class="small">No blocking rule caught a resident’s request.</p>');
+  const items = [
+    {label: 'Leave it blocking as it is: the attacks are stopped, and tomorrow’s counts will show if anything changes', meta: {good: st.res === 0, k: 'leave'}},
+    {label: 'Review the residents’ requests it blocked, keep blocking the attack patterns, and fix the rules that caught them', meta: {good: st.res > 0, k: 'review'}},
+    {label: 'Allow every address that hit a rule today, with no end date, so nobody who was blocked today is ever blocked again', meta: {k: 'allow'}}];
+  const i = await UI.openModal('WAF · blocking', body, items, {shuffle: true, closable: false, cls: 'drill'});
+  const k = items[i].meta.k;
+  if (k === 'review') {
+    if (st.res) await say('Right. A rule that only ever catches residents gets switched off. Where a rule also stops real attacks, the exclusion is scoped to that rule and that field, with a named owner and an expiry date, so someone looks at it again instead of it staying open for good.', 'Paz Delgado');
+    await mkWafReview();
+  } else if (k === 'allow') {
+    await say('The addresses that hit a rule today include the attackers’ as well as residents’. An exclusion is scoped to one rule and one field, with an owner and an expiry date. A permanent pass for every address is a hole, not a fix.', 'Paz Delgado');
+  } else if (st.res) {
+    await say(st.res + ' residents’ requests a day are still blocked' + (st.payFail ? ', and ' + st.payFail + ' bill payments fail' : '') + '. A false positive is a resident who can’t do what they came to do. Leaving it means they stay blocked: review what it blocked.', 'Paz Delgado');
+  }
 }
 async function mkWafDetect() {
   await say('The WAF box. It has a managed rule set (a standard collection of attack patterns), and nobody has ever switched it on. Everything passes.');
@@ -5255,9 +5305,15 @@ async function mkWafReview() {
   const plan = {};
   for (let n = 0; n < MK_WAF.length; n++) {
     const r = MK_WAF[n];
-    const items = ['block', 'log', 'off'].map(k => ({label: MK_WAF_ACTS[k], meta: {k: k, good: k === r.good}}));
+    // A strength scale stays in its natural order (block, log only, switch off); the highlight starts on Back.
+    const items = ['block', 'log', 'off'].map(k => ({label: MK_WAF_ACTS[k], meta: {k: k, good: k === r.good}}))
+      .concat([{label: n ? 'Back: previous rule' : 'Back: hear the instructions again', meta: {back: true}}]);
     const i = await UI.openModal('WAF rule review · ' + (n + 1) + ' of ' + MK_WAF.length,
-      '<div class="card"><b>' + esc(r.rule) + '</b></div><p class="small">What it matched in detection mode (a sample):</p>' + drillPre(r.seen), items, {shuffle: true, closable: false, cls: 'drill'});
+      '<div class="card"><b>' + esc(r.rule) + '</b></div><p class="small">What it matched in detection mode (a sample):</p>' + drillPre(r.seen), items, {cursor: 3, closable: false, cls: 'drill'});
+    if (items[i].meta.back) {
+      if (n) n -= 2; else { await say('Nine candidate rules, each with what it matched in a day of detection mode. Block, log only, or switch it off. (Counts are game data.)'); n -= 1; }
+      continue;
+    }
     plan[r.id] = items[i].meta.k;
   }
   // Score (game): rules that would block residents count double.
@@ -5273,7 +5329,7 @@ async function mkWafReview() {
     '<p>With these rules blocking, a day looks like: attack requests blocked <b>' + st.atk.toLocaleString('en-US') + '</b> · residents’ requests blocked <b>' + st.res.toLocaleString('en-US') + '</b> · false-positive rate <b>' + st.fp + '%</b> · bill payments failing <b>' + st.payFail + '</b> (game).</p>' +
     '<table class="sc"><tr><th>Rule</th><th>You</th><th>Better</th></tr>' + rows + '</table>' +
     '<p>A false positive is a real resident blocked: a bill not paid, a call to Oona, a fine for being late. Tune with exclusions for real users, keep rules that only ever match attacks, and let parameterised queries and MFA do the work a WAF can’t.</p>';
-  const j = await UI.openModal('WAF review', body, [{label: 'Switch the WAF to blocking with these rules', meta: {good: true}}, {label: 'Redo the review'}], {nav: true, closable: false, cls: 'drill'});
+  const j = await UI.openModal('WAF review', body, [{label: 'Switch the WAF to blocking with these rules', meta: {good: true}}, {label: 'Redo the review'}], {nav: 'waf-review-confirm', closable: false, cls: 'drill'});
   if (j === 1) return mkWafReview();
   c.wafPlan = plan; c.wafScore = score; c.wafStats = st; c.wafReviews++;
   const first = !G.f.mkWafBlock;
@@ -5528,7 +5584,7 @@ async function mkSummary() {
     mkQtSummaryHtml() +
     '<p class="big">Next: Records Hall.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true});
-  const i = await UI.openModal('End of Market Square', body, [{label: 'Keep exploring Market Square', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of Market Square', body, [{label: 'Keep exploring Market Square', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -6120,7 +6176,7 @@ async function rhQtVault() {
   if (G.party.some(t => TOOLS[t.id].cls === 'endpoint')) opts.push({label: 'Endpoint tool: BKP-01’s process history', meta: {k: 'proc'}});
   if (!opts.length) { await say('The backup console’s old audit log. Reading it would take a log tool or an endpoint tool.'); return; }
   opts.push({label: 'Leave it', meta: {k: 'leave'}});
-  const i = await choose('The backup console. Its audit log goes back a year.', opts);
+  const i = await choose('The backup console. Its audit log goes back a year.', opts, {cursor: opts.length - 1});
   const k = opts[i].meta.k;
   if (k === 'leave') return;
   const day = RH().day0;
@@ -6334,7 +6390,7 @@ async function rhDesk() {
   const ready = (f.rhCreds && !f.rhNight1) || (f.rhDrill2 && !f.rhNight2) || (f.rhBoard && !f.rhNight3) || f.rhBoss;
   if (!ready) { await say('Your desk in the corner of the restore lab. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Records Hall desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your Records Hall desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.rhCreds && !f.rhNight1) {
@@ -6729,7 +6785,8 @@ async function rhRestoreGame(d) {
       break;
     }
     const next = rhNextGood(st.done);
-    const prog = '<table class="sc"><tr><th>System</th><th>Needs</th><th>RTO</th><th>Status</th></tr>' + RH_SYS_ORDER.map(s => '<tr><td>' + esc(RH_SYS_NAME[s]) + '</td><td>' + esc(RH_RESTORE[s].deps.map(x => x.toUpperCase()).join(', ') || '—') + '</td><td>' + RH_OBJ[s].rto + ' h</td><td>' + (st.done[s] ? 'back at ' + st.done[s].end + ' h' : '—') + '</td></tr>').join('') + '</table>';
+    // Rows in name order, not restore order: the table shows the dependencies without giving the answer away.
+    const prog = '<table class="sc"><tr><th>System</th><th>Needs</th><th>RTO</th><th>Status</th></tr>' + RH_SYS_ORDER.slice().sort((a, b) => RH_SYS_NAME[a].localeCompare(RH_SYS_NAME[b])).map(s => '<tr><td>' + esc(RH_SYS_NAME[s]) + '</td><td>' + esc(RH_RESTORE[s].deps.map(x => x.toUpperCase()).join(', ') || '—') + '</td><td>' + RH_OBJ[s].rto + ' h</td><td>' + (st.done[s] ? 'back at ' + st.done[s].end + ' h' : '—') + '</td></tr>').join('') + '</table>';
     const body = (last ? '<p><b>' + esc(last) + '</b></p>' : '<p>One restore crew, ' + RH_RESTORE_BUDGET + ' hours of crew time (game). Pick what to restore next, then which copy to restore it from. The clock starts when recovery starts.</p>') +
       '<p>Hour <b>' + st.clock + '</b> of ' + RH_RESTORE_BUDGET + ' · reinfections ' + st.reinfect + ' · out-of-order starts ' + st.depFail + '</p>' + prog + rhEvidenceHtml(d);
     const items = left.slice().sort((a, b) => RH_SYS_NAME[a].localeCompare(RH_SYS_NAME[b])).map(s => ({label: RH_SYS_NAME[s], note: 'RTO ' + RH_OBJ[s].rto + ' h', meta: {good: s === next, sys: s}}));
@@ -6838,7 +6895,7 @@ async function rhSummary() {
     rhQtSummaryHtml() +
     '<p class="big">Next: IT Basement.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true, recordsHall: true});
-  const i = await UI.openModal('End of Records Hall', body, [{label: 'Keep exploring Records Hall', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of Records Hall', body, [{label: 'Keep exploring Records Hall', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -6925,8 +6982,9 @@ Object.assign(ABIL, {
 
 /* ---------- Map: the IT Basement, the Basement Board, and the stairs on the plaza ---------- */
 // North-west: the server racks with the log collector, among cable trays nobody logs. North: the SIEM room, with
-// the clock on the wall. North-east: the firewall room and its rule binder. Middle: the corridor and the Board door.
-// South: the Log Analysis Dojo (west), your desk, the Scanning Dojo (east), and the stairs up.
+// the clock on the wall and the stairs up to the plaza (top wall). North-east: the firewall room and its rule binder.
+// Middle: the corridor and the Board door (east wall). South: the Log Analysis Dojo (west), your desk, the Scanning
+// Dojo (east).
 Object.assign(MAPS, {
   basement: {
     name: 'IT Basement',
@@ -7669,7 +7727,7 @@ async function bmDesk() {
   const ready = (f.bmTune && !f.bmNight1) || (f.bmDrill2 && !f.bmNight2) || (f.bmBoard && !f.bmNight3) || f.bmBoss;
   if (!ready) { await say('Your desk in the basement, under a pipe that ticks. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your basement desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your basement desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.bmTune && !f.bmNight1) {
@@ -7936,7 +7994,7 @@ async function bmTuning() {
     '<p>False positives removed: <b>' + ev.fpRemoved + ' of ' + ev.fpTotal + '</b>. Precision of what still fires, as last week’s triage labelled it: <b>' + (ev.precAsTriaged === null ? '—' : ev.precAsTriaged + '%') + '</b>.</p>' +
     '<p>What you can’t see from here is recall: whether a real attack is hiding under an exclusion. A missed attack raises no alert to count. Lena replays the rule against attacks the town already knows about; anything else, incident review finds later.</p>' +
     '<p class="small">Tuning score ' + (ev.hidesReal ? '(not shown until incident review)' : score + ' / 100') + ' (game). Suppress narrowly (one host, one port, one window), with a reason, an owner and an expiry; never by switching the rule off.</p>', [{label: 'Done', meta: {good: true}}], {closable: false, cls: 'drill'});
-  await say('That’s the fieldwork. Your desk is by the stairs. Tonight, logs arrive from twice as many systems, and the clocks agree.', 'Magda Petrov');
+  await say('That’s the fieldwork. Your desk is in the south room, between the two Dojos. Tonight, logs arrive from twice as many systems, and the clocks agree.', 'Magda Petrov');
 }
 
 /* ---------- The directive (game): cut the SIEM licence by dropping "noisy" sources ---------- */
@@ -8209,7 +8267,7 @@ async function bmSummary() {
     bmQtSummaryHtml() +
     '<p class="big">Next: the Server Room.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true, recordsHall: true, itBasement: true});
-  const i = await UI.openModal('End of the IT Basement', body, [{label: 'Keep exploring the IT Basement', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of the IT Basement', body, [{label: 'Keep exploring the IT Basement', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -8290,7 +8348,7 @@ Object.assign(ABIL, {
 });
 
 /* ---------- Map: the Server Room and the Server Board ---------- */
-// West: the door back to the IT Basement. North-west: the domain controllers' cage, among unowned cabling. North:
+// East wall: the Board door (middle) and, in the south room, the door back to the IT Basement. North-west: the domain controllers' cage, among unowned cabling. North:
 // the admin-workstations (PAW) room. North-east: the service-account registry. Middle: the identity office and the
 // Board door. South: the Assessment Findings terminals and your desk.
 Object.assign(MAPS, {
@@ -8952,7 +9010,7 @@ async function svDesk() {
   const ready = (f.svTier && !f.svNight1) || (f.svDrill2 && !f.svNight2) || (f.svBoard && !f.svNight3);
   if (!ready) { await say('Your desk in the Server Room, under the cage’s cold air. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Server Room desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your Server Room desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.svTier && !f.svNight1) {
@@ -9396,7 +9454,7 @@ async function svSummary() {
     svQtSummaryHtml() +
     '<p class="big">Next: the Water Plant.</p>';
   Series.markEdition(EDITION.id, {done: true, serverRoom: true});
-  const i = await UI.openModal('End of the Server Room', body, [{label: 'Keep exploring the Server Room', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of the Server Room', body, [{label: 'Keep exploring the Server Room', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }
@@ -9782,8 +9840,12 @@ function stepDone() {
   if (G.auto && G.steps % 15 === 0 && G.queue > 0 && hasTool('ledger')) {
     if (rnd() < G.fpWeight / (G.fpWeight + 50) * 0.8) {
       G.queue--; G.m.autoClosed++;
-      if (rnd() < 0.02) G.m.missed++;
       toast('Ledger auto-closed a known false positive');
+      if (rnd() < 0.02) {
+        // A real alert was auto-closed. A weekly sample review catches about half of those (game).
+        if (G.autoReview && rnd() < 0.5) { G.queue = Math.min(9, G.queue + 1); toast('Weekly sample: a person caught a real alert Ledger had auto-closed. It is back in the queue.'); }
+        else G.m.missed++;
+      }
     }
   }
   if (encCooldown > 0) encCooldown--;
@@ -9816,11 +9878,12 @@ async function endShift(reason) {
 async function briefing() {
   const L = typeof briefList === 'function' ? briefList() : BRIEFS;
   const a = L[(G.day * 2) % L.length], b = L[(G.day * 2 + 1) % L.length];
+  const items = [{label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither', pin: true}];
+  // The two items are listed (unnumbered) in the same order as their buttons.
   const body = '<p>Morning briefing, Day ' + G.day + '. Two items from the threat-intel feed:</p>' +
-    '<ol><li>' + esc(a.text) + '</li><li>' + esc(b.text) + '</li></ol>' +
+    '<ul>' + shownOrder([a, b], items).map(x => '<li>' + esc(x.text) + '</li>').join('') + '</ul>' +
     '<p>Act on one and that threat’s odds drop by half for a week (game).</p>';
-  const i = await UI.openModal('Morning briefing', body, [
-    {label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither', pin: true}], {shuffle: true, closable: false});
+  const i = await UI.openModal('Morning briefing', body, items, {shuffle: true, closable: false});
   touchCSF('Identify');
   if (i === 0 || i === 1) { const it = i === 0 ? a : b; G.brief[it.t] = G.day + 6; toast(THREATS[it.t].name + ' odds halved this week'); }
 }
@@ -9883,6 +9946,7 @@ function effLabel(m) { return m >= 2 ? 'strong ×2' : m <= 0.5 ? 'weak ×0.5' : 
 function bhud() {
   const card = document.getElementById('bcard'), tp = document.getElementById('btool');
   document.getElementById('screen').classList.toggle('battle', !!B);
+  if (document.body.classList.contains('inbattle') !== !!B) { document.body.classList.toggle('inbattle', !!B); Screen.fit(); }
   if (!B) { card.classList.remove('show'); tp.classList.remove('show'); return; }
   const s = B.spec, t = tool();
   card.innerHTML = '<div class="bt">ALERT · ' + esc(s.title) + '</div><div class="bs">' + esc(s.host) + '</div>' +
@@ -10173,7 +10237,7 @@ async function startMenu() {
       {label: 'Scorecard', meta: {k: 'score'}}, {label: 'Field Manual (' + fmPct() + '%)', meta: {k: 'fm'}},
       {label: 'Tools', meta: {k: 'tools'}}, {label: 'Save', meta: {k: 'save'}},
       {label: 'Export save code', meta: {k: 'export'}}, {label: 'Import save code', meta: {k: 'import'}}];
-    if (G.f.autoUnlocked) items.push({label: 'Automation: ' + (G.auto ? 'ON' : 'off'), meta: {k: 'auto'}});
+    if (G.f.autoUnlocked) items.push({label: 'Automation: ' + (G.auto ? (G.autoReview ? 'ON, sampled weekly' : 'ON, no review') : 'off'), meta: {k: 'auto'}});
     items.push({label: 'Credits', meta: {k: 'credits'}}, {label: 'Close', meta: {k: 'close'}});
     const body = '<p><b>' + esc(objective().text) + '</b></p><p class="small">Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · played ' + fmtTime(G.playMs) + '</p>' +
       '<p class="small">Controls: arrows / D-pad move · Z = A (talk, confirm) · X = B (back) · Enter = Start (this menu) · Shift = Select (alert queue)</p><p class="small">Build ' + BUILD_ID + ' · ' + BUILD_TS + '</p>';
@@ -10187,7 +10251,8 @@ async function startMenu() {
     if (k === 'save') { const ok = storeSet(encodeSave(G)); await UI.openModal('Save', ok ? '<p>Saved in this browser.</p>' : '<p>This browser blocked storage. Use Export save code instead.</p>', [{label: 'OK'}]); }
     if (k === 'export') await exportSave();
     if (k === 'import') { if (await importFlow()) return; }
-    if (k === 'auto') G.auto = !G.auto;
+    // Cycles off -> on with a weekly sample review -> on with no review -> off.
+    if (k === 'auto') { if (!G.auto) { G.auto = true; G.autoReview = true; } else if (G.autoReview) G.autoReview = false; else G.auto = false; }
     if (k === 'credits') await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]);
   }
 }
@@ -10238,6 +10303,26 @@ function fixupState() {
   for (const k in base.targets) if (G.targets[k] === undefined) G.targets[k] = base.targets[k];
   if (G.targets.esc === 1) G.targets.esc = base.targets.esc; // older saves: the escalation target was a count
   if (!G.qt) G.qt = Series.blankQT();
+  fixPosition();
+}
+// Older saves can stand on a tile that a later build turned into a wall (map edits, e.g. the hub at 1,10): move the
+// player to the nearest walkable floor tile (not a door, nobody standing on it), searching outward ring by ring.
+function fixPosition() {
+  if (!G || !MAPS[G.map]) return false;
+  const d0 = tileDef(G.map, G.x, G.y);
+  if (d0 && !d0.solid && !npcHere(G.map, G.x, G.y)) return false;
+  const rows = mapRows(G.map), H = rows.length, W = rows[0].length;
+  for (let r = 1; r < Math.max(W, H); r++) {
+    const ring = [];
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (Math.max(Math.abs(dx), Math.abs(dy)) === r) ring.push([G.x + dx, G.y + dy, Math.abs(dx) + Math.abs(dy)]);
+    ring.sort((a, b) => a[2] - b[2]);
+    for (const [x, y] of ring) {
+      if (x < 0 || y < 0 || x >= W || y >= H) continue;
+      const d = tileDef(G.map, x, y);
+      if (d && !d.solid && !doorAt(G.map, x, y) && !npcHere(G.map, x, y)) { G.x = x; G.y = y; return true; }
+    }
+  }
+  return false;
 }
 let seedOverride = null;
 function newGame() {

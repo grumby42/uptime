@@ -225,8 +225,12 @@ function stepDone() {
   if (G.auto && G.steps % 15 === 0 && G.queue > 0 && hasTool('ledger')) {
     if (rnd() < G.fpWeight / (G.fpWeight + 50) * 0.8) {
       G.queue--; G.m.autoClosed++;
-      if (rnd() < 0.02) G.m.missed++;
       toast('Ledger auto-closed a known false positive');
+      if (rnd() < 0.02) {
+        // A real alert was auto-closed. A weekly sample review catches about half of those (game).
+        if (G.autoReview && rnd() < 0.5) { G.queue = Math.min(9, G.queue + 1); toast('Weekly sample: a person caught a real alert Ledger had auto-closed. It is back in the queue.'); }
+        else G.m.missed++;
+      }
     }
   }
   if (encCooldown > 0) encCooldown--;
@@ -259,11 +263,12 @@ async function endShift(reason) {
 async function briefing() {
   const L = typeof briefList === 'function' ? briefList() : BRIEFS;
   const a = L[(G.day * 2) % L.length], b = L[(G.day * 2 + 1) % L.length];
+  const items = [{label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither', pin: true}];
+  // The two items are listed (unnumbered) in the same order as their buttons.
   const body = '<p>Morning briefing, Day ' + G.day + '. Two items from the threat-intel feed:</p>' +
-    '<ol><li>' + esc(a.text) + '</li><li>' + esc(b.text) + '</li></ol>' +
+    '<ul>' + shownOrder([a, b], items).map(x => '<li>' + esc(x.text) + '</li>').join('') + '</ul>' +
     '<p>Act on one and that threat’s odds drop by half for a week (game).</p>';
-  const i = await UI.openModal('Morning briefing', body, [
-    {label: a.act, meta: {good: true}}, {label: b.act}, {label: 'Note both, act on neither', pin: true}], {shuffle: true, closable: false});
+  const i = await UI.openModal('Morning briefing', body, items, {shuffle: true, closable: false});
   touchCSF('Identify');
   if (i === 0 || i === 1) { const it = i === 0 ? a : b; G.brief[it.t] = G.day + 6; toast(THREATS[it.t].name + ' odds halved this week'); }
 }
@@ -326,6 +331,7 @@ function effLabel(m) { return m >= 2 ? 'strong ×2' : m <= 0.5 ? 'weak ×0.5' : 
 function bhud() {
   const card = document.getElementById('bcard'), tp = document.getElementById('btool');
   document.getElementById('screen').classList.toggle('battle', !!B);
+  if (document.body.classList.contains('inbattle') !== !!B) { document.body.classList.toggle('inbattle', !!B); Screen.fit(); }
   if (!B) { card.classList.remove('show'); tp.classList.remove('show'); return; }
   const s = B.spec, t = tool();
   card.innerHTML = '<div class="bt">ALERT · ' + esc(s.title) + '</div><div class="bs">' + esc(s.host) + '</div>' +
@@ -616,7 +622,7 @@ async function startMenu() {
       {label: 'Scorecard', meta: {k: 'score'}}, {label: 'Field Manual (' + fmPct() + '%)', meta: {k: 'fm'}},
       {label: 'Tools', meta: {k: 'tools'}}, {label: 'Save', meta: {k: 'save'}},
       {label: 'Export save code', meta: {k: 'export'}}, {label: 'Import save code', meta: {k: 'import'}}];
-    if (G.f.autoUnlocked) items.push({label: 'Automation: ' + (G.auto ? 'ON' : 'off'), meta: {k: 'auto'}});
+    if (G.f.autoUnlocked) items.push({label: 'Automation: ' + (G.auto ? (G.autoReview ? 'ON, sampled weekly' : 'ON, no review') : 'off'), meta: {k: 'auto'}});
     items.push({label: 'Credits', meta: {k: 'credits'}}, {label: 'Close', meta: {k: 'close'}});
     const body = '<p><b>' + esc(objective().text) + '</b></p><p class="small">Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · played ' + fmtTime(G.playMs) + '</p>' +
       '<p class="small">Controls: arrows / D-pad move · Z = A (talk, confirm) · X = B (back) · Enter = Start (this menu) · Shift = Select (alert queue)</p><p class="small">Build ' + BUILD_ID + ' · ' + BUILD_TS + '</p>';
@@ -630,7 +636,8 @@ async function startMenu() {
     if (k === 'save') { const ok = storeSet(encodeSave(G)); await UI.openModal('Save', ok ? '<p>Saved in this browser.</p>' : '<p>This browser blocked storage. Use Export save code instead.</p>', [{label: 'OK'}]); }
     if (k === 'export') await exportSave();
     if (k === 'import') { if (await importFlow()) return; }
-    if (k === 'auto') G.auto = !G.auto;
+    // Cycles off -> on with a weekly sample review -> on with no review -> off.
+    if (k === 'auto') { if (!G.auto) { G.auto = true; G.autoReview = true; } else if (G.autoReview) G.autoReview = false; else G.auto = false; }
     if (k === 'credits') await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]);
   }
 }
@@ -681,6 +688,26 @@ function fixupState() {
   for (const k in base.targets) if (G.targets[k] === undefined) G.targets[k] = base.targets[k];
   if (G.targets.esc === 1) G.targets.esc = base.targets.esc; // older saves: the escalation target was a count
   if (!G.qt) G.qt = Series.blankQT();
+  fixPosition();
+}
+// Older saves can stand on a tile that a later build turned into a wall (map edits, e.g. the hub at 1,10): move the
+// player to the nearest walkable floor tile (not a door, nobody standing on it), searching outward ring by ring.
+function fixPosition() {
+  if (!G || !MAPS[G.map]) return false;
+  const d0 = tileDef(G.map, G.x, G.y);
+  if (d0 && !d0.solid && !npcHere(G.map, G.x, G.y)) return false;
+  const rows = mapRows(G.map), H = rows.length, W = rows[0].length;
+  for (let r = 1; r < Math.max(W, H); r++) {
+    const ring = [];
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (Math.max(Math.abs(dx), Math.abs(dy)) === r) ring.push([G.x + dx, G.y + dy, Math.abs(dx) + Math.abs(dy)]);
+    ring.sort((a, b) => a[2] - b[2]);
+    for (const [x, y] of ring) {
+      if (x < 0 || y < 0 || x >= W || y >= H) continue;
+      const d = tileDef(G.map, x, y);
+      if (d && !d.solid && !doorAt(G.map, x, y) && !npcHere(G.map, x, y)) { G.x = x; G.y = y; return true; }
+    }
+  }
+  return false;
 }
 let seedOverride = null;
 function newGame() {

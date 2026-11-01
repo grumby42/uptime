@@ -35,7 +35,7 @@ async function crQtLaptop() {
   if (hasTool('ledger') && G.f.crPslog) opts.push({label: 'Ledger: script block log (4104) overnight', meta: {k: 'log'}});
   if (!opts.length) return;
   opts.push({label: 'Leave it', meta: {k: 'leave'}});
-  const i = await choose(CR_QT_HOST + ', the spare laptop at the end of the row.', opts);
+  const i = await choose(CR_QT_HOST + ', the spare laptop at the end of the row.', opts, {cursor: opts.length - 1});
   const k = opts[i].meta.k;
   if (k === 'proc') {
     await say(TOOLS[ep].name + ': at 03:07, svc-print ran netsh.exe on ' + CR_QT_HOST + '. It added a port proxy: a local port now forwards to FD-STAFF-11.');

@@ -32,7 +32,7 @@ function newState(seed) {
     targets: {closed: 12, acc: 90, evid: 80, tta: 20, esc: 75, uptime: 99.9, mfa: 100, patch: 100},
     mfaSet: ['rae', 'tomas', 'you'],
     fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
-    fpWeight: 50, queue: 3, steps: 0, auto: false, playMs: 0
+    fpWeight: 50, queue: 3, steps: 0, auto: false, autoReview: false, playMs: 0
   };
 }
 
@@ -184,7 +184,7 @@ async function raeTalk() {
     await say('Our job: keep the district running and notice when someone is trying to break in. Every alert is a question. Some are attacks; most aren’t.', who);
     await say('First you need a tool. I have budget for one starter. Pick the one that fits how you think.', who);
     const ids = ['sentry', 'lantern', 'ledger'];
-    const i = await choose('Choose your starter tool:', ids.map(id => ({label: TOOLS[id].name + ' (' + CLASSES[TOOLS[id].cls].label + ' · ' + TOOLS[id].sub + ')', note: TOOLS[id].blurb, meta: {good: id === 'sentry'}})), {who: who, nav: true});
+    const i = await choose('Choose your starter tool:', ids.map(id => ({label: TOOLS[id].name + ' (' + CLASSES[TOOLS[id].cls].label + ' · ' + TOOLS[id].sub + ')', note: TOOLS[id].blurb, meta: {good: id === 'sentry'}})), {who: who, nav: 'starter-pick'});
     const id = ids[i];
     addTool(id, 3); f.starter = id;
     await say(TOOLS[id].name + ' is installed on your console. Tools aren’t thrown at problems: you run them, and their abilities cost Focus.', who);
@@ -275,7 +275,7 @@ async function deskEnd() {
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}];
   if (qtDeskReady()) opts.push({label: 'Ledger console: overnight sign-ins', meta: {k: 'console'}});
   opts.push({label: 'Not yet', meta: {k: 'no'}});
-  const i = await choose('Your desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k === 'end') await endShift('desk');
   else if (opts[i].meta.k === 'console') await qtDeskConsole();
 }
@@ -416,7 +416,7 @@ async function evolveCheck() {
   if (!G.items.guide) return;
   const t = G.party.find(p => p.lvl >= 5 && !p.tuned);
   if (!t) return;
-  const i = await choose(TOOLS[t.id].name + ' (Lv ' + t.lvl + ') is ready to be Tuned. Use the Tuning Guide?', [{label: 'Tune it', meta: {good: true}}, {label: 'Later'}], {nav: true});
+  const i = await choose(TOOLS[t.id].name + ' (Lv ' + t.lvl + ') is ready to be Tuned. Use the Tuning Guide?', [{label: 'Tune it', meta: {good: true}}, {label: 'Later'}], {nav: 'tune-tool'});
   if (i !== 0) return;
   G.items.guide = 0; t.tuned = true;
   await say(TOOLS[t.id].name + ' was Tuned! Fewer noisy detections, sharper abilities (power ×1.25).');
@@ -461,8 +461,13 @@ async function boardScript() {
   touchCSF('Protect');
   if (hasTool('ledger')) {
     const i = await choose('Rae: With Tier 1 comes automation. Ledger can auto-close alerts matching known false-positive patterns while you walk. Risk: about 1 in 50 auto-closed alerts might be real (game), and nobody looks at those. Turn it on?',
-      [{label: 'Turn automation on', meta: {good: true}}, {label: 'Not now (toggle later in the Start menu)'}], {nav: true});
-    G.f.autoUnlocked = true; G.auto = i === 0;
+      [{label: 'Turn it on, with a person reviewing a sample of what it closes each week', meta: {good: true, k: 'sample'}},
+       {label: 'Turn it on as it is: 49 in 50 are noise, so nobody needs to look at what it closes', meta: {k: 'blind'}},
+       {label: 'Not now (toggle later in the Start menu)', meta: {k: 'off'}}], {shuffle: true});
+    G.f.autoUnlocked = true; G.auto = i !== 2; G.autoReview = i === 0;
+    if (i === 0) await say('Good. Automation closes the obvious ones; a person checks a sample of what it closed, so a real alert in there has a chance of coming back. (The catch rate is game.)', 'Rae Okafor');
+    else if (i === 1) await say('1 in 50 sounds small until it’s the one that matters. With nobody looking at what it closes, a miss stays missed. You can still add a review later from the Start menu.', 'Rae Okafor');
+    else await say('Fair. It’s in the Start menu when you want it. If you turn it on, have someone check a sample of what it closes.', 'Rae Okafor');
   }
   await evolveCheck();
 }
@@ -555,7 +560,7 @@ async function summary() {
     qtSummaryHtml() +
     '<p class="big">Next: the Mail Room.</p>';
   Series.markEdition(EDITION.id, {done: true});
-  const i = await UI.openModal('End of slice 1', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of slice 1', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

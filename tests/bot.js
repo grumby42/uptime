@@ -41,7 +41,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
             const pr = orig(...args);
             const st = kind === 'openModal' ? UI.modal : UI.choice;
             const cur = st.items[st.cursor] || {};
-            window.__hlLog({kind, title: String(args[0] || '').slice(0, 80), shuffle: !!o.shuffle, nav: !!o.nav, cursorOpt: o.cursor !== undefined,
+            window.__hlLog({kind, title: String(args[0] || '').slice(0, 80), shuffle: !!o.shuffle, nav: o.nav === undefined ? null : o.nav, cursorOpt: o.cursor !== undefined,
               items: items.map(it => ({label: it.label, good: !!(it.meta && it.meta.good), pin: pinned(it), dis: !!it.disabled, verdict: !!(it.meta && it.meta.verdict), back: !!(it.meta && it.meta.back)})),
               cursorLabel: cur.label, cursorGood: !!(cur.meta && cur.meta.good), cursorPinned: pinned(cur)});
             return pr;

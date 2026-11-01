@@ -262,7 +262,7 @@ const GAME_NOTES = [
   'Only malicious alerts use entry-route weights: password spraying 32 / exploited app 29 / phishing 24 (15 link, 9 call) / scanning 15. The first three keep the 2025 DBIR initial-access proportions (22 : 20 : 16), scaled up; scanning is reconnaissance, not a way in, so a scan alert is only malicious when login attempts follow it. False-positive and benign alerts pick a rule evenly. (game)',
   'Class strengths: Endpoint vs Execution/Persistence/Privilege Escalation; Network vs C2/Lateral Movement/Exfiltration/remote services/scanning; Logging vs Discovery/Credential Access once logs are on; Identity vs Credential Access and account abuse. Strong ×2, weak ×0.5. (game)',
   'District uptime, reputation, building health, MFA coverage (12 accounts) and all character names are invented. (game)',
-  'Automation risk “about 1 in 50 auto-closed alerts may be real” is an invented number. (game)',
+  'Automation risk “about 1 in 50 auto-closed alerts may be real” is an invented number, and so is the weekly sample catching about half of those. (game)',
   'Acting on a morning briefing halves that threat’s odds for a week, and the Key Badge halves Sprayer alerts: both are invented effects. (game)',
   'Time to acknowledge counts seconds of menu time in the game. Real SOCs measure time to acknowledge and time to resolve in minutes to hours, against agreed service-level targets. (game)',
   'Escalation precision counts an escalation as good only when the alert was real and you had Evidence 40 or more. “Verdicts with evidence” uses the same 40 line. (game)'

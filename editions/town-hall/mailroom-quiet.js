@@ -27,7 +27,7 @@ async function mrOldBox() {
   if (hasTool('sieve') || hasTool('sifter')) opts.push({label: (hasTool('sifter') ? 'Sifter' : 'Sieve') + ': rules on the old shared mailboxes', meta: {k: 'rules'}});
   if (!opts.length) { await say('The console for the old shared mailboxes: facilities-bms@, permits-old@, scans@. Reading their settings would take a log tool or a mail tool.'); return; }
   opts.push({label: 'Leave it', meta: {k: 'leave'}});
-  const i = await choose('Old shared mailboxes: facilities-bms@, permits-old@, scans@.', opts);
+  const i = await choose('Old shared mailboxes: facilities-bms@, permits-old@, scans@.', opts, {cursor: opts.length - 1});
   const k = opts[i].meta.k;
   if (k === 'log') {
     await say('Ledger: permits-old@ and scans@ have had no sign-ins for over a year. facilities-bms@ signed in at 03:16 two nights ago. Right password, first try.');

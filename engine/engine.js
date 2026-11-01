@@ -36,7 +36,8 @@ function weighted(list) { // [{w,...}]
    The highlight starts on display position 0 (the first enabled item), never on the caller's item 0, so it
    lands on a random answer; pass {cursor: i} (a caller index) to start somewhere on purpose.
    Pure navigation/confirmation menus stay in order; when one marks a preferred item with meta.good (a hint
-   for the test bot), it says so with {nav: true} so the tests can tell it from a graded list. */
+   for the test bot), it says so with {nav: '<id>'}, an id on the reviewed allowlist in tests/highlight.js, so the
+   tests can tell it from a graded list. */
 function shuffleOrder(items, o) {
   const perm = items.map((_, i) => i);
   if (!o || !o.shuffle) return perm;
@@ -114,7 +115,11 @@ const Screen = {
     // Room for the map: below the HUD band; in portrait also above the dialogue panel and the controls at the bottom.
     const hh = id => { const e = document.getElementById(id); return e ? e.getBoundingClientRect().height : 0; };
     let availW, availH;
+    // Touch landscape in a battle: the HUD and footer are hidden (CSS), and the choice panel gets its own band below the
+    // scene, between the on-screen controls, so it never covers the sprites or the cards.
+    const landBattle = !portrait && touch && document.body.classList.contains('inbattle');
     if (portrait) { availW = W; availH = Math.max(90, H - hh('hud') - 150 - hh('pad') - hh('foot')); }
+    else if (landBattle) { availW = W - 300; availH = H - 6; }
     else { availW = W - (touch ? 300 : 24); availH = H - 34 - hh('hud'); }
     // largest whole number of device pixels per logical pixel that fits
     const scaleFor = h => {
@@ -126,9 +131,12 @@ const Screen = {
     };
     let k = scaleFor(availH);
     // Desktop / keyboard landscape: if the map keeps its scale with a dialogue band below it, put the dialogue there.
-    const PANEL_H = 170, below = !portrait && !touch && scaleFor(availH - PANEL_H) === k;
+    const PANEL_H = 170, LAND_PANEL_H = 150;
+    let below = !portrait && !touch && scaleFor(availH - PANEL_H) === k;
+    if (landBattle) { k = scaleFor(availH - LAND_PANEL_H); below = true; }
     document.body.classList.toggle('below', below);
-    if (below) document.documentElement.style.setProperty('--panelH', Math.floor(Math.min(260, availH - VH0 * k / dpr)) + 'px');
+    // The band below the map takes the room that is really left (the footer stays on screen), so nothing in it is cut off.
+    if (below) document.documentElement.style.setProperty('--panelH', Math.floor(Math.max(120, Math.min(320, (landBattle ? H - 4 : H - hh('hud') - hh('foot') - 10) - VH0 * k / dpr))) + 'px');
     this.k = k; this.s = k / dpr;
     this.tall = portrait && this.tallOK;
     VH = this.tall ? clamp(Math.floor(availH / this.s / TS) * TS, VH0, 20 * TS) : VH0;
@@ -234,6 +242,7 @@ const UI = {
       this.who.textContent = o.who || ''; this.who.style.display = o.who ? '' : 'none';
       this.text.textContent = prompt || '';
       this.more.style.visibility = 'hidden';
+      this.panel.classList.add('choosing');
       this.showPanel(true);
       this.renderChoice();
     });
@@ -241,6 +250,7 @@ const UI = {
   renderChoice() {
     const c = this.choice;
     this.opts.style.gridTemplateColumns = 'repeat(' + c.cols + ', minmax(0,1fr))';
+    this.opts.classList.toggle('cols2', c.cols > 1);
     this.opts.innerHTML = c.items.map((it, i) =>
       '<button class="opt' + (i === c.cursor ? ' cur' : '') + (it.disabled ? ' dis' : '') + '" data-i="' + i + '">' +
       '<span class="car">▸</span>' + esc(it.label) + (it.note ? '<span class="note">' + esc(it.note) + '</span>' : '') + '</button>').join('');
@@ -255,7 +265,7 @@ const UI = {
   finishChoice(i) {
     const c = this.choice;
     this.choice = null; this.mode = null;
-    this.opts.innerHTML = '';
+    this.opts.innerHTML = ''; this.panel.classList.remove('choosing');
     c.resolve(i < 0 ? i : c.perm[i]);
   },
   hidePanel() { if (!this.mode) this.showPanel(false); },

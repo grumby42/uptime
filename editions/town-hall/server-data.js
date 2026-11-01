@@ -73,7 +73,7 @@ Object.assign(ABIL, {
 });
 
 /* ---------- Map: the Server Room and the Server Board ---------- */
-// West: the door back to the IT Basement. North-west: the domain controllers' cage, among unowned cabling. North:
+// East wall: the Board door (middle) and, in the south room, the door back to the IT Basement. North-west: the domain controllers' cage, among unowned cabling. North:
 // the admin-workstations (PAW) room. North-east: the service-account registry. Middle: the identity office and the
 // Board door. South: the Assessment Findings terminals and your desk.
 Object.assign(MAPS, {

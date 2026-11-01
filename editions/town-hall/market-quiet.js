@@ -23,7 +23,7 @@ async function mkQtRack() {
   if (hasTool('ledger') && f.logs) opts.push({label: 'Ledger: DMZ sign-ins overnight', meta: {k: 'log'}});
   if (!opts.length) { await say('The DMZ log store. Reading it would take a network tool or a log tool.'); return; }
   opts.push({label: 'Leave it', meta: {k: 'leave'}});
-  const i = await choose('The DMZ firewall log. Last night, 00:00 to 06:00.', opts);
+  const i = await choose('The DMZ firewall log. Last night, 00:00 to 06:00.', opts, {cursor: opts.length - 1});
   const k = opts[i].meta.k;
   if (k === 'leave') return;
   if (k === 'net') await say('Lanternkeep: at 03:09 the old small-office router in the Front Desk closet opened a short connection into the DMZ, to WEB-01’s admin service. An “any to any” rule from the router’s install years ago lets it through. (game) Nothing else on that network talks to the web tier.');

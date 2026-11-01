@@ -153,7 +153,7 @@ async function mrTalk(npc) {
 async function mrDesk() {
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
   if (!G.f.mrDrill2) { await say('Your desk in the Mail Room. Too early to go home.'); return; }
-  const i = await choose('Your Mail Room desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your Mail Room desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (!G.f.mrNight) {
@@ -388,7 +388,7 @@ async function mrEvolveCheck() {
   if (!G.mr || !G.mr.rulebook) return;
   const t = G.party.find(p => p.id === 'sieve' && p.lvl >= 5);
   if (!t) return;
-  const i = await choose('Sieve (Lv ' + t.lvl + ') can use the Filter Rulebook. Evolve it?', [{label: 'Evolve Sieve', meta: {good: true}}, {label: 'Later'}], {nav: true});
+  const i = await choose('Sieve (Lv ' + t.lvl + ') can use the Filter Rulebook. Evolve it?', [{label: 'Evolve Sieve', meta: {good: true}}, {label: 'Later'}], {nav: 'evolve-tool'});
   if (i !== 0) return;
   G.mr.rulebook = false; t.id = 'sifter';
   await say('Sieve is evolving! Sieve → Sifter. New ability: Search and purge, every copy from every inbox.');
@@ -511,7 +511,7 @@ async function mrSummary() {
     mrQtSummaryHtml() +
     '<p class="big">Next: Clerks’ Row.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true});
-  const i = await UI.openModal('End of the Mail Room', body, [{label: 'Keep exploring the Mail Room', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of the Mail Room', body, [{label: 'Keep exploring the Mail Room', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

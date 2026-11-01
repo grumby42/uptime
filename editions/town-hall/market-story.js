@@ -206,7 +206,7 @@ async function mkDesk() {
   const ready = (f.mkCsp && !f.mkNight1) || (f.mkDrill2 && !f.mkNight2) || f.mkDrill3;
   if (!ready) { await say('Your desk in the web team’s office. Too early to go home.'); return; }
   const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
-  const i = await choose('Your Market Square desk. End your shift?', opts, {nav: true});
+  const i = await choose('Your Market Square desk. End your shift?', opts, {nav: 'end-shift'});
   if (opts[i].meta.k !== 'end') return;
   await endShift('desk');
   if (f.mkCsp && !f.mkNight1) {
@@ -292,12 +292,31 @@ async function mkWafBox() {
   if (!f.mkInv) { await say('The WAF box. Inventory first: you can’t protect what you don’t know you have.'); return; }
   if (!f.mkWafDetect) { await mkWafDetect(); return; }
   if (f.mkDrill1 && !f.mkWafBlock) { await mkWafReview(); return; }
-  if (f.mkWafBlock) {
-    const i = await choose('The WAF is blocking. Residents’ requests blocked today: ' + MK().wafStats.res + '.', [{label: 'Leave it', meta: {good: true}}, {label: 'Review the rules again'}], {nav: true});
-    if (i === 1) await mkWafReview();
-    return;
-  }
+  if (f.mkWafBlock) { await mkWafBlocking(); return; }
   await say('The WAF is in detection mode: logging what it would block, blocking nothing. Read its log after a night of real traffic.');
+}
+// Back at the WAF box once it is blocking: what to do depends on what it is blocking. The right call is graded from
+// the evidence on screen: any resident blocked means review those requests; none means leave it.
+async function mkWafBlocking() {
+  const c = MK(), st = c.wafStats, plan = c.wafPlan || {};
+  const hits = MK_WAF.filter(r => plan[r.id] === 'block' && r.res);
+  const body = '<p>The WAF is blocking. A day now: attack requests blocked <b>' + st.atk.toLocaleString('en-US') + '</b> · residents’ requests blocked <b>' + st.res.toLocaleString('en-US') + '</b> · bill payments failing <b>' + st.payFail + '</b> (game).</p>' +
+    (hits.length ? '<p class="small">Blocking rules that caught residents’ requests:</p><ul>' + hits.map(r => '<li>' + esc(r.rule) + ': <b>' + r.res + '</b> a day</li>').join('') + '</ul>'
+      : '<p class="small">No blocking rule caught a resident’s request.</p>');
+  const items = [
+    {label: 'Leave it blocking as it is: the attacks are stopped, and tomorrow’s counts will show if anything changes', meta: {good: st.res === 0, k: 'leave'}},
+    {label: 'Review the residents’ requests it blocked, keep blocking the attack patterns, and fix the rules that caught them', meta: {good: st.res > 0, k: 'review'}},
+    {label: 'Allow every address that hit a rule today, with no end date, so nobody who was blocked today is ever blocked again', meta: {k: 'allow'}}];
+  const i = await UI.openModal('WAF · blocking', body, items, {shuffle: true, closable: false, cls: 'drill'});
+  const k = items[i].meta.k;
+  if (k === 'review') {
+    if (st.res) await say('Right. A rule that only ever catches residents gets switched off. Where a rule also stops real attacks, the exclusion is scoped to that rule and that field, with a named owner and an expiry date, so someone looks at it again instead of it staying open for good.', 'Paz Delgado');
+    await mkWafReview();
+  } else if (k === 'allow') {
+    await say('The addresses that hit a rule today include the attackers’ as well as residents’. An exclusion is scoped to one rule and one field, with an owner and an expiry date. A permanent pass for every address is a hole, not a fix.', 'Paz Delgado');
+  } else if (st.res) {
+    await say(st.res + ' residents’ requests a day are still blocked' + (st.payFail ? ', and ' + st.payFail + ' bill payments fail' : '') + '. A false positive is a resident who can’t do what they came to do. Leaving it means they stay blocked: review what it blocked.', 'Paz Delgado');
+  }
 }
 async function mkWafDetect() {
   await say('The WAF box. It has a managed rule set (a standard collection of attack patterns), and nobody has ever switched it on. Everything passes.');
@@ -451,9 +470,15 @@ async function mkWafReview() {
   const plan = {};
   for (let n = 0; n < MK_WAF.length; n++) {
     const r = MK_WAF[n];
-    const items = ['block', 'log', 'off'].map(k => ({label: MK_WAF_ACTS[k], meta: {k: k, good: k === r.good}}));
+    // A strength scale stays in its natural order (block, log only, switch off); the highlight starts on Back.
+    const items = ['block', 'log', 'off'].map(k => ({label: MK_WAF_ACTS[k], meta: {k: k, good: k === r.good}}))
+      .concat([{label: n ? 'Back: previous rule' : 'Back: hear the instructions again', meta: {back: true}}]);
     const i = await UI.openModal('WAF rule review · ' + (n + 1) + ' of ' + MK_WAF.length,
-      '<div class="card"><b>' + esc(r.rule) + '</b></div><p class="small">What it matched in detection mode (a sample):</p>' + drillPre(r.seen), items, {shuffle: true, closable: false, cls: 'drill'});
+      '<div class="card"><b>' + esc(r.rule) + '</b></div><p class="small">What it matched in detection mode (a sample):</p>' + drillPre(r.seen), items, {cursor: 3, closable: false, cls: 'drill'});
+    if (items[i].meta.back) {
+      if (n) n -= 2; else { await say('Nine candidate rules, each with what it matched in a day of detection mode. Block, log only, or switch it off. (Counts are game data.)'); n -= 1; }
+      continue;
+    }
     plan[r.id] = items[i].meta.k;
   }
   // Score (game): rules that would block residents count double.
@@ -469,7 +494,7 @@ async function mkWafReview() {
     '<p>With these rules blocking, a day looks like: attack requests blocked <b>' + st.atk.toLocaleString('en-US') + '</b> · residents’ requests blocked <b>' + st.res.toLocaleString('en-US') + '</b> · false-positive rate <b>' + st.fp + '%</b> · bill payments failing <b>' + st.payFail + '</b> (game).</p>' +
     '<table class="sc"><tr><th>Rule</th><th>You</th><th>Better</th></tr>' + rows + '</table>' +
     '<p>A false positive is a real resident blocked: a bill not paid, a call to Oona, a fine for being late. Tune with exclusions for real users, keep rules that only ever match attacks, and let parameterised queries and MFA do the work a WAF can’t.</p>';
-  const j = await UI.openModal('WAF review', body, [{label: 'Switch the WAF to blocking with these rules', meta: {good: true}}, {label: 'Redo the review'}], {nav: true, closable: false, cls: 'drill'});
+  const j = await UI.openModal('WAF review', body, [{label: 'Switch the WAF to blocking with these rules', meta: {good: true}}, {label: 'Redo the review'}], {nav: 'waf-review-confirm', closable: false, cls: 'drill'});
   if (j === 1) return mkWafReview();
   c.wafPlan = plan; c.wafScore = score; c.wafStats = st; c.wafReviews++;
   const first = !G.f.mkWafBlock;
@@ -724,7 +749,7 @@ async function mkSummary() {
     mkQtSummaryHtml() +
     '<p class="big">Next: Records Hall.</p>';
   Series.markEdition(EDITION.id, {done: true, mailRoom: true, clerksRow: true, marketSquare: true});
-  const i = await UI.openModal('End of Market Square', body, [{label: 'Keep exploring Market Square', meta: {good: true}}, {label: 'Title screen'}], {nav: true, closable: false, cls: 'summary'});
+  const i = await UI.openModal('End of Market Square', body, [{label: 'Keep exploring Market Square', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

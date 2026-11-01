@@ -46,8 +46,18 @@ const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../
     for (const m in MAPS) MAPS[m].rows.forEach((row, y) => [...row].forEach((c, x) => { if (c === 'E' && !(MAPS[m].doors || {})[x + ',' + y]) orphans.push(m + ' ' + x + ',' + y); }));
     return {pairs, bad, orphans};
   });
+  // An old save standing on hub 1,10 (a wall since the door-orientation fix) loads onto the nearest floor tile.
+  const mig = await page.evaluate(() => {
+    const keep = G;
+    G = Object.assign(newState(7), {map: 'hub', x: 1, y: 10, f: {starter: 'ledger', portDone: true}});
+    const was = tileDef('hub', 1, 10).solid;
+    G = decodeSave(encodeSave(G)); fixupState();
+    const out = {was, x: G.x, y: G.y, solid: !!tileDef('hub', G.x, G.y).solid, door: !!doorAt('hub', G.x, G.y), blocked: blocked('hub', G.x, G.y)};
+    G = keep; return out;
+  });
   await b.close();
   const results = [
+    { name: 'old save on a now-wall tile (hub 1,10) loads onto the nearest walkable floor tile', ok: mig.was && !mig.solid && !mig.door && !mig.blocked && Math.abs(mig.x - 1) + Math.abs(mig.y - 10) <= 2, info: mig },
     { name: 'every door pair: exit wall matches the arrival side, facing away from the door', ok: r.bad.length === 0, info: r.bad },
     { name: 'every exit tile is a working door', ok: r.orphans.length === 0, info: r.orphans },
     { name: 'checked all doors (at least 30 one-way links)', ok: r.pairs.length >= 30, info: r.pairs.length },
