@@ -452,7 +452,7 @@ async function basementDone(s, extra, party) {
     /Server Room district: secured/.test(sum) && /Crown/.test(sum) && /Tier 3 lead investigator/.test(sum) && /still on file|Quiet Thread/.test(sum) && /Next: the Water Plant/.test(sum), sum.slice(0, 400));
   await s.pickLabel(/Keep exploring/); await s.settle();
   p = await s.peek();
-  check('after the district: objective done (Next: the Water Plant); series save marks the Server Room done', p.objective.done && /Water Plant/.test(p.objective.text) && await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).editions['town-hall'].serverRoom === true), p.objective);
+  check('after the district: objective points to the Water Plant (done, or the Water Plant district); series save marks the Server Room done', (p.objective.done || p.objective.district === 'water') && /Water Plant/.test(p.objective.text) && await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).editions['town-hall'].serverRoom === true), p.objective);
   check('Credits list the Server Room sources and keep the MITRE notice', await s.page.evaluate(() => { const c = creditsHtml(); return /Group Managed Service Accounts/.test(c) && /Protected Users/.test(c) && /Entra Connect/.test(c) && /CM0050/.test(c) && /reproduced and distributed with the permission of The MITRE Corporation/.test(c); }));
   results.errors = s.errors; results.requests = s.requests;
   if (s.errors.length || s.requests.length) failed = true;

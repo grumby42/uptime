@@ -204,7 +204,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261101-1446Z', BUILD_TS = '2026-11-01 14:46 UTC';
+const BUILD_ID = 'ARCD-20261101-1556Z', BUILD_TS = '2026-11-01 15:56 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -1269,7 +1269,10 @@ const QT_TECH = {
   'T1584.008': {name: 'Compromise Infrastructure: Network Devices', tactic: ['Resource Development'],
                 plain: 'Taking over routers and similar network gear, often old small-office models, to use as infrastructure such as relays.'},
   'T1555':     {name: 'Credentials from Password Stores', tactic: ['Credential Access'],
-                plain: 'Reading passwords from the places software keeps them (credential vaults, password managers, saved logins) instead of guessing them.'}
+                plain: 'Reading passwords from the places software keeps them (credential vaults, password managers, saved logins) instead of guessing them.'},
+  // ATT&CK for ICS (verified on attack.mitre.org, 1 Nov 2026, ATT&CK v20.0).
+  'T0859':     {name: 'Valid Accounts', tactic: ['Persistence', 'Lateral Movement'],
+                plain: '(ATT&CK for ICS) Using a real account on a plant system, such as a remote-access box or an engineering workstation, to get in and come back. A legitimate account raises no alarm when it is used.'}
 };
 const QT_FIELD_NOTES = 'Field notes: the Quiet Thread is a composite (game). Its real-world basis is joint Cybersecurity Advisory AA24-038A ' +
   '(CISA, NSA and FBI with partner agencies, February 2024) on Volt Typhoon, a PRC state-sponsored group. The advisory reports access to some US ' +
@@ -1693,7 +1696,7 @@ function qtSummaryHtml() {
 const EDITION = {
   id: 'town-hall',
   saveKey: 'uptime.slice1.save',
-  badgeFlags: ['mrSeal', 'crShield', 'mkLantern', 'rhVault', 'bmBeacon', 'svCrown'],  // G.f flags that mean a badge was earned (the Key Badge is G.badge)
+  badgeFlags: ['mrSeal', 'crShield', 'mkLantern', 'rhVault', 'bmBeacon', 'svCrown', 'wtTide'],  // G.f flags that mean a badge was earned (the Key Badge is G.badge)
   title: 'Town Hall · Front Desk district',
   blurb: 'You’re the new intern in a small town’s security team. Investigate alerts, fix what’s broken, and keep the district running.',
   creditsName: 'vertical slice 1: Town Hall, Front Desk district',
@@ -1735,6 +1738,7 @@ function editionTile(d, ch, x, y) {
   if (typeof rhTile === 'function') d = rhTile(d, ch, x, y);
   if (typeof bmTile === 'function') d = bmTile(d, ch, x, y);
   if (typeof svTile === 'function') d = svTile(d, ch, x, y);
+  if (typeof wtTile === 'function') d = wtTile(d, ch, x, y);
   return d;
 }
 async function introScript() {
@@ -1773,6 +1777,7 @@ function triggers() {
   if (typeof rhTriggers === 'function' && rhTriggers()) return true;
   if (typeof bmTriggers === 'function' && bmTriggers()) return true;
   if (typeof svTriggers === 'function' && svTriggers()) return true;
+  if (typeof wtTriggers === 'function' && wtTriggers()) return true;
   if (G.map === 'hub' && G.y >= 11) {
     if (!G.f.portDone || G.day < 2) {
       run(async () => {
@@ -1801,6 +1806,7 @@ function interact() {
   if (typeof rhInteract === 'function' && rhInteract(ch, tx, ty)) return;
   if (typeof bmInteract === 'function' && bmInteract(ch, tx, ty)) return;
   if (typeof svInteract === 'function' && svInteract(ch, tx, ty)) return;
+  if (typeof wtInteract === 'function' && wtInteract(ch, tx, ty)) return;
   if (ch === 'k') run(kioskTask);
   else if (ch === 'n') run(wifiTask);
   else if (ch === 'p') run(() => pcTask(tx));
@@ -1856,7 +1862,7 @@ async function talk(npc) {
     case 'vex': await vexScript(); break;
     case 'marisol': await boardScript(); break;
     case 'imani': await dojoIntro(); break;
-    default: if (typeof mrTalk === 'function') await mrTalk(npc); if (typeof crTalk === 'function') await crTalk(npc); if (typeof mkTalk === 'function') await mkTalk(npc); if (typeof rhTalk === 'function') await rhTalk(npc); if (typeof bmTalk === 'function') await bmTalk(npc); if (typeof svTalk === 'function') await svTalk(npc);
+    default: if (typeof mrTalk === 'function') await mrTalk(npc); if (typeof crTalk === 'function') await crTalk(npc); if (typeof mkTalk === 'function') await mkTalk(npc); if (typeof rhTalk === 'function') await rhTalk(npc); if (typeof bmTalk === 'function') await bmTalk(npc); if (typeof svTalk === 'function') await svTalk(npc); if (typeof wtTalk === 'function') await wtTalk(npc);
   }
   await mfaMeet(npc);
 }
@@ -2097,6 +2103,7 @@ async function evolveCheck() {
   if (typeof rhEvolveCheck === 'function') await rhEvolveCheck();
   if (typeof bmEvolveCheck === 'function') await bmEvolveCheck();
   if (typeof svEvolveCheck === 'function') await svEvolveCheck();
+  if (typeof wtEvolveCheck === 'function') await wtEvolveCheck();
   if (!G.items.guide) return;
   const t = G.party.find(p => p.lvl >= 5 && !p.tuned);
   if (!t) return;
@@ -9405,6 +9412,7 @@ function svObjective() {
   if (!f.svNight3) return at('End your shift at your desk.', 12, 13);
   if (!f.svBoss) return at('Beatriz needs you: a replication request that only a domain controller should make.', 14, 7);
   if (!f.svFile) return at('Rae wants a word about svc-print. By the identity office.', 16, 7);
+  if (typeof wtObjective === 'function') return wtObjective();
   return {text: 'Server Room secured. Next: the Water Plant.', done: true, district: 'server'};
 }
 
@@ -9896,6 +9904,1215 @@ async function svSummary() {
     '<p class="big">Next: the Water Plant.</p>';
   Series.markEdition(EDITION.id, {done: true, serverRoom: true});
   const i = await UI.openModal('End of the Server Room', body, [{label: 'Keep exploring the Server Room', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
+  storeSet(encodeSave(G));
+  if (i === 1) { started = false; titleScreen(); }
+}
+
+/* ---- editions/town-hall/water-data.js ---- */
+/* ============================================================
+   UPTIME · editions/town-hall/water-data.js
+   Town Hall district 8, the Water Plant (operational technology / industrial
+   control): art, map, people, ATT&CK for ICS techniques met here, threats,
+   alert templates, briefings, the fieldwork (OT asset inventory, internet
+   exposure and default passwords, offline PLC logic backups and manual
+   operation, passive monitoring), the zones and conduits mini-game, three
+   investigation drills, the Network Traffic Analysis dojo, the Plant Board and
+   the boss incident's cards, Field Manual text. It extends the earlier
+   districts' tables; the only change to their data is the Server Room's west
+   wall in the lower room, which becomes the Water Plant door (marked), opened
+   by the Crown Badge.
+   Safety first: in a plant, the operators own the process and have the final
+   say on anything that touches it. Over-reaction (power off a controller
+   mid-process, shut the pumps, unplug everything) is graded as wrong as often
+   as under-reaction. The player never operates the process or the chemical
+   dosing skid. Everything is written from the defender's side: records,
+   alerts, ownership and remediation; no protocol commands, no tool syntax.
+   People, hosts, domains (.example), addresses (RFC 5737 only), tickets,
+   counts and timings are invented (game). Real facts are cited in CREDITS.md,
+   section "Water Plant". ATT&CK for ICS IDs verified on attack.mitre.org on
+   1 November 2026 (ATT&CK v20.0; in v20 the old T0812 Default Credentials page
+   redirects to T1694.001). Timeline: scratchpad water-timeline.md.
+   ============================================================ */
+'use strict';
+
+/* ---------- Art (original) ---------- */
+// Threat sprites reuse earlier original grids under new palettes (an engine convenience); the Tidewatch tool and the dosing skid are new.
+Object.assign(S, {
+  tidewatch: ["0000000110000000","0000001441000000","0000012332100000","0000013443100000","0000012332100000","0000001221000000","0000001331000000","0000001231000000","0000001331000000","0000012332100000","0000123333210000","0001233333321000","0012222222222100","0122112211221110","1221221122112211","0111111111111110"],
+  skid: ["0000000000000000","0001111111110000","0012333333321000","0123444444432100","0123333333332100","0123444444432100","0123333333332100","0123444444432111","0123333333332121","0012222222221121","0001111111110121","0001200000210121","0001200000211121","0001200000210000","0011110001111000","0000000000000000"]
+});
+Object.assign(PAL, {
+  wtHmi: ['#1b2233', '#24402f', '#2f6e3e', '#a6d96a'],
+  wtHmiOk: ['#1b2233', '#24402f', '#2f6e3e', '#9ff0c8'],
+  wtPlc: ['#1b2233', '#2a3550', '#5a6fa0', '#9ff0c8'],
+  wtPlcOk: ['#1b2233', '#24402f', '#2f6e3e', '#9ff0c8'],
+  wtFw: ['#1b2233', '#2a3550', '#5a6fa0', '#9ff0c8'],
+  wtFwOk: ['#1b2233', '#24402f', '#2f6e3e', '#9ff0c8'],
+  wtVend: ['#1b2233', '#2a3550', '#5a6fa0', '#9ff0c8'],
+  wtVendOk: ['#1b2233', '#24402f', '#2f6e3e', '#9ff0c8'],
+  wtNet: ['#1b2233', '#24402f', '#2f6e3e', '#a6d96a'],
+  wtNetOk: ['#1b2233', '#24402f', '#2f6e3e', '#9ff0c8'],
+  wtHist: ['#2a2523', '#5b4a42', '#8c7b70', '#7cc6c4'],
+  wtSkid: ['#1b2233', '#3a4a6b', '#7fa2d6', '#dbeaf7'],
+  wtDojo: ['#1b2233', '#1f5a8a', '#7fa2d6', '#ffd96a'],
+  wtBoard2: ['#1b2233', '#1f5a8a', '#7cc6c4', '#ffd96a'],
+  wtTray: ['#1b2233', '#2b2f3a', '#4a5163', '#7cc6c4'],
+  // threat palettes
+  wtPreset: ['#141414', '#1f5a8a', '#7cc6c4', '#ffd96a'],
+  wtRewrite: ['#141414', '#4a1414', '#b8432f', '#7cc6c4'],
+  wtNudge: ['#141414', '#5b3a26', '#c98a54', '#7cc6c4'],
+  wtBlind: ['#141414', '#2b2f3a', '#4a5163', '#ff9f43'],
+  wtCross: ['#141414', '#3a1d10', '#a8703f', '#9ff0c8'],
+  // tool
+  tidewatch: ['#1b2233', '#1f5a8a', '#7cc6c4', '#ffd96a'],
+  // people
+  mae: ['#1a1a2e', '#2b1d16', '#8a5a3c', '#1f5a8a'],
+  joss: ['#1a1a2e', '#5b4a42', '#e0b090', '#2f6e3e'],
+  gil: ['#1a1a2e', '#3a4a6b', '#c98a54', '#5b3a26'],
+  calla: ['#1a1a2e', '#141414', '#a8703f', '#7cc6c4'],
+  hanne: ['#1a1a2e', '#5b4a42', '#e0b090', '#1f5a8a']
+});
+Object.assign(TILES, {
+  '[': {spr: 'pc', pal: 'wtHmi', solid: true, under: ','},        // HMI consoles in the control room
+  ']': {spr: 'K', pal: 'wtPlc', solid: true},                      // PLC cabinets (and the engineering workstation beside them)
+  '{': {spr: 'K', pal: 'wtHist', solid: true},                     // the control historian, HIST-01
+  '}': {spr: 'K', pal: 'wtFw', solid: true},                       // FW-OT, the IT/OT boundary firewall
+  '<': {spr: 'pc', pal: 'wtVend', solid: true, under: ','},       // RA-01, the vendor remote-access box
+  '-': {spr: 'K', pal: 'wtNet', solid: true},                      // the control network rack (mirror ports, the sensor)
+  '>': {spr: 'skid', pal: 'wtSkid', solid: true, under: ','},     // the chemical dosing skid (shown, never touched)
+  '`': {spr: 'pc', pal: 'wtDojo', solid: true, under: ','},       // Network Traffic Analysis dojo terminals
+  '?': {spr: 'K', pal: 'wtBoard2', solid: true},                   // Plant Board racks
+  '|': {spr: 'trays', pal: 'wtTray', grass: true}                  // field cabling nobody watches: trips alerts
+});
+
+/* ---------- Tools: Lanternkeep's next form (network, passive monitoring) ---------- */
+Object.assign(TOOLS, {
+  tidewatch: {name: 'Tidewatch', cls: 'network', sub: 'OT traffic monitor', spr: 'tidewatch', blurb: 'Lanternkeep, gone quiet. Listens to a copy of the plant’s traffic and never sends a packet of its own.',
+              abil: ['flow', 'listen', 'egress', 'closeport']}
+});
+EVOLVED_FROM.tidewatch = 'lantern';
+Object.assign(ABIL, {
+  listen: {name: 'Passive listen', type: 'inv', cost: 2, ev: 26, desc: 'Read a copy of the plant network’s traffic from a mirror port and compare it with its baseline: who talks to which controller, how often, and with what kind of request. It never sends anything to the devices themselves.'}
+});
+
+/* ---------- Map: the Water Plant and the Plant Board ---------- */
+// North-west: the control room (HMI consoles). North: the PLC cabinets and the engineering workstation. North-east: the
+// historian and the chemical dosing skid. Middle: the IT/OT boundary (FW-OT, the vendor box, the network rack); the west
+// wall door leads to the Plant Board. South: the Network Traffic Analysis dojo, your desk, and the door back to the Server Room (east wall).
+Object.assign(MAPS, {
+  water: {
+    name: 'Water Plant',
+    rows: [
+      "wwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+      "w,[,[,[,,w,],],],],,w,{,,>>,w",
+      "w,,,,,,,,w,,,,,,,,,,w,,,,>>,w",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,w,,,,,,,,,,w,,,,,,,w",
+      "wwwwwwww,,wwwwwwwwwwww,,wwwww",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "D,,,,,,,,,,,,},,<,,-,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "wwwwww,wwwwwwwwwwwwwww,wwwwww",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "w,,`,`,`,,,,,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,D",
+      "w|||,,,,,,,,Y,,,,,,,,,,,|||,w",
+      "w|||,,,,,,,,,,,,,,,,,,,,|||,w",
+      "wwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+    ],
+    doors: {'28,12': {to: 'server', x: 1, y: 12, dir: 'right'},
+      '0,7': {to: 'ptboard', x: 16, y: 5, dir: 'left'}}
+  },
+  ptboard: {
+    name: 'Plant Board',
+    rows: [
+      "wwwwwwwwwwwwwwwwww",
+      "w??,,,,,,,,,,,,??w",
+      "w??,,,,,,,,,,,,??w",
+      "w,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,E",
+      "w,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,w",
+      "wwwwwwwwwwwwwwwwww"
+    ],
+    doors: {'17,5': {to: 'water', x: 1, y: 7, dir: 'right'}}
+  }
+});
+// The one change to earlier data: the Server Room's west wall (lower room) becomes the door to the Water Plant (Crown Badge opens it).
+MAPS.server.rows[12] = 'D' + MAPS.server.rows[12].slice(1);
+MAPS.server.doors['0,12'] = {to: 'water', x: 27, y: 12, dir: 'left',
+  get locked() { return (typeof G !== 'undefined' && G && G.f.svCrown) ? undefined : 'A door in the west wall. A card reader: “Water Plant. Crown Badge required.”'; }};
+
+const WT_MAPS = ['water', 'ptboard'];
+const WT_HOSTS = ['HMI-01 · control room', 'EWS-01 · engineering', 'PLC-FLT-01 · filters', 'PLC-HSP-01 · high-service pumps', 'HIST-01 · historian', 'FW-OT · IT/OT boundary'];
+
+/* ---------- People ---------- */
+NPCS.push(
+  {id: 'mae', name: 'Mae Arroyo', role: 'control-room shift lead', map: 'water', x: 4, y: 3, dir: 'down', pal: 'mae'},
+  {id: 'joss', name: 'Joss Kettering', role: 'controls engineer', map: 'water', x: 14, y: 3, dir: 'down', pal: 'joss'},
+  {id: 'gil', name: 'Gil Hartley', role: 'plant manager', map: 'water', x: 7, y: 7, dir: 'right', pal: 'gil', cond: G => !!G.f.wtDrill2 && !G.f.wtDirective},
+  {id: 'calla', name: 'Calla Brandt', role: 'traffic analysis coach', map: 'water', x: 10, y: 11, dir: 'left', pal: 'calla'},
+  {id: 'hanne', name: 'Hanne Sorvik', role: 'plant board lead', map: 'ptboard', x: 8, y: 2, dir: 'down', pal: 'hanne'},
+  {id: 'raewt', name: 'Rae Okafor', role: 'SOC lead', map: 'water', x: 16, y: 8, dir: 'left', pal: 'rae', cond: G => !!G.f.wtBoss}
+);
+const WT_NPC_IDS = ['mae', 'joss', 'gil', 'calla', 'hanne', 'raewt'];
+
+/* ---------- ATT&CK for ICS techniques met in the Water Plant (verified on attack.mitre.org, 1 Nov 2026, ATT&CK v20.0) ---------- */
+Object.assign(TECH, {
+  'T1694.001': {name: 'Insecure Credentials: Default Credentials', tactic: ['Persistence', 'Lateral Movement'], desc: '(ATT&CK for ICS) Signing in to a control device with the user name and password its maker shipped it with. Those defaults are printed in manuals and online, often carry full rights, and some devices can’t change them at all. Before ATT&CK v20 this was T0812.'},
+  'T0883': {name: 'Internet Accessible Device', tactic: ['Initial Access'], desc: '(ATT&CK for ICS) Getting into a plant through a device that answers from the internet, on purpose or by accident, with weak protection or none. No exploit is needed: online scanners find such devices for anyone.'},
+  'T0843': {name: 'Program Download', tactic: ['Lateral Movement'], desc: '(ATT&CK for ICS) Sending a new program to a controller. A full download may need the controller stopped first; online edits keep it running. Defenders watch for downloads outside change windows and compare the running logic with a known-good copy.'},
+  'T0836': {name: 'Modify Parameter', tactic: ['Impair Process Control'], desc: '(ATT&CK for ICS) Changing the values that tell a controller how and when to act (set points, limits, run times), to high, low or impossible values that can damage equipment or upset the process.'},
+  'T0829': {name: 'Loss of View', tactic: ['Impact'], desc: '(ATT&CK for ICS) Taking away the operators’ view of the process for a long time or for good, so recovery needs someone at the device to restart it or run it by hand. The process may keep running while nobody can see it.'},
+  'T0886': {name: 'Remote Services', tactic: ['Initial Access', 'Lateral Movement'], desc: '(ATT&CK for ICS) Using ordinary remote services (remote desktop, file sharing, secure shell) to move between networks, for example from an office network onto an engineering workstation or an HMI.'},
+  'T0888': {name: 'Remote System Information Discovery', tactic: ['Discovery'], desc: '(ATT&CK for ICS) Asking remote devices about themselves (their role, model and configuration), usually over the plant’s own automation protocols, to choose targets and plan next steps.'}
+});
+
+/* ---------- Threats (wild alerts) ---------- */
+Object.assign(THREATS, {
+  preset: {name: 'Preset', tech: 'T1694.001', spr: 'hinge', pal: 'wtPreset', tags: ['exposed', 'ot'], bucket: 'cred', district: 'water'},
+  rewrite: {name: 'Rewrite', tech: 'T0843', spr: 'quill', pal: 'wtRewrite', tags: ['ot'], bucket: 'other', district: 'water'},
+  nudge: {name: 'Nudge', tech: 'T0836', spr: 'climber', pal: 'wtNudge', tags: ['ot'], bucket: 'other', district: 'water'},
+  blindside: {name: 'Blindside', tech: 'T0829', spr: 'shade', pal: 'wtBlind', tags: ['ot'], bucket: 'other', district: 'water'},
+  crossing: {name: 'Crossing', tech: 'T0886', spr: 'sweep', pal: 'wtCross', tags: ['lateral', 'ot'], bucket: 'other', district: 'water'}
+});
+// (game) base weights for the Water Plant threats; they only enter the mix once you reach the Water Plant.
+MAL_WEIGHTS.push({t: 'preset', w: 3}, {t: 'rewrite', w: 2}, {t: 'nudge', w: 2}, {t: 'blindside', w: 2}, {t: 'crossing', w: 2});
+const WT_HOME = ['preset', 'rewrite', 'nudge', 'blindside', 'crossing'];
+// Network tools gain the 'ot' tag: plant traffic is read from the network, never by putting software on the controllers.
+CLASSES.network.strongTags = (CLASSES.network.strongTags || []).concat(['ot']);
+
+// A response marked shutdown: true is the over-reaction (power off, shut the pumps, unplug the plant). The Tide Badge
+// puts the operators' sign-off in front of it: it is still the wrong answer, but nothing gets shut down.
+Object.assign(ALERTS, {
+  preset: {
+    rule: 'Sign-in to a plant device with its factory password',
+    mal: {clues: ['A booster-station panel accepted a sign-in with its factory user name and password from 203.0.113.19, an address abroad.', 'The panel answers from the internet through a cellular router that isn’t on the inventory.', 'The session opened the set-point screen and stayed there for four minutes; the operator on shift sees nothing odd yet.'],
+          truth: 'Default credentials on a device reachable from the internet. The factory password and the exposure decide it.',
+          resp: [{label: 'Take the panel off the internet and change its password with the engineer: the operators decide on manual', good: true},
+                 {label: 'Shut down the booster station and run its zone from the gravity tank until the vendor has rebuilt the panel', good: false, disrupt: 2, shutdown: true, why: 'The pumps are running safely; shutting them costs the whole zone its pressure. Take the exposure away instead.'},
+                 {label: 'Change the panel’s password from the control room: with the factory one gone, the same sign-in can’t happen again', good: false, why: 'The panel is still on the internet, and nobody has read out what that four-minute session looked at or changed.'}]},
+    benign: {clues: ['The filter-controls vendor’s named account signed in through RA-01 at 10:00.', 'Ticket CHG-8240 (game) covers it: approved by the engineer, a two-hour window, MFA, the session recorded.', 'The sign-in landed on EWS-01, as the conduit allows, and the operators were told beforehand.'],
+             truth: 'Benign: a scheduled vendor maintenance session under an approved ticket, through the on-demand box.'},
+    fp: {clues: ['The account name is a factory default, “operator”, on HMI-01.', 'Its password was changed in the fieldwork; the sign-in came from the control-room console during Mae’s shift.', 'The rule matches the account name, not whether the password is still the default.'],
+         truth: 'False positive: a default account name with a new password. Tune the rule to the device’s default-password status, or rename the account.'}
+  },
+  rewrite: {
+    rule: 'Program download outside a change window',
+    mal: {clues: ['A full program download to PLC-FLT-02 at 23:47; no change window was open.', 'It came from an office address, not from the engineering workstation.', 'The controller went to program mode first, then back to run.'],
+          truth: 'A program download nobody planned, from somewhere that should never send one. The source and the missing change decide it.',
+          resp: [{label: 'Block the source at FW-OT and compare the logic with the backup, so the operators can decide on running the filters by hand', good: true},
+                 {label: 'Power the filter PLC off now and keep it off until the engineer rebuilds it in the morning, so the new program can’t run', good: false, disrupt: 2, shutdown: true, why: 'Powering a controller off mid-process stops the filters and destroys what it holds in memory. Contain at the boundary.'},
+                 {label: 'Load the offline backup straight away and get the known-good logic back before the new program can touch the filters', good: false, why: 'A blind restore mid-process can upset the filters, and the source that downloaded can do it again. Compare first, with the operators.'}]},
+    benign: {clues: ['Joss Kettering downloaded rev 4.3 to PLC-FLT-02 from EWS-01 at 15:20.', 'Ticket CHG-8213 (game) is approved, and the window opened at 15:00.', 'Mae was told, and the filters were on manual for the ten minutes it took.'],
+             truth: 'Benign: an approved engineering change, from the engineering workstation, in its window, with the operators told.'},
+    fp: {clues: ['The “download” is the nightly compare job reading each controller’s logic out.', 'It runs from EWS-01 at 06:00 and writes nothing to the controller.', 'The sensor’s rule reads an upload as a download.'],
+         truth: 'False positive: the compare job uploading logic to check it. Tune the rule to the direction of the transfer.'}
+  },
+  nudge: {
+    rule: 'Set point changed by a source other than an HMI',
+    mal: {clues: ['The high-service pumps’ discharge-pressure set point jumped to its maximum at 03:20.', 'HMI-01’s audit log shows no operator made it; the change came from a session on RA-01 with no ticket.', 'The operator on shift put the value back by hand at 03:24.'],
+          truth: 'A set point changed from outside the control room. The source of the change and the missing ticket decide it.',
+          resp: [{label: 'Cut the RA-01 session and disable that account, so it can’t happen again; the operators keep watch on the pumps', good: true},
+                 {label: 'Shut the high-service pumps and the plant, since every controller must be checked by hand first', good: false, disrupt: 2, shutdown: true, why: 'The operator has the pumps back in range. Shutting the plant drops pressure across town; cut the session instead.'},
+                 {label: 'Note that the operator put the value back at 03:24 and pick up the rest with Joss in the morning, when the engineers are in', good: false, why: 'The session and the account are still open; whoever changed it can do it again before the morning.'}]},
+    benign: {clues: ['During the storm, at 18:40, Mae raised the clearwell draw set point at HMI-01.', 'Her own account, at her own console; she wrote the reason in the shift log at 18:42.', 'Storm inflow was high; the change follows the plant’s storm procedure (game).'],
+             truth: 'Benign: an operator’s legitimate change during a storm, made and logged by the shift lead.'},
+    fp: {clues: ['The “change” is the evening pressure profile the PLC applies itself at 22:00.', 'It is in the logic and runs every night; nobody sent anything.', 'The rule compares against one fixed value all day.'],
+         truth: 'False positive: a scheduled profile built into the logic. Tune the rule to the profile’s times.'}
+  },
+  blindside: {
+    rule: 'Operators lost view of the process',
+    mal: {clues: ['HMI-01 and HMI-02 both stopped updating at 04:05; the PLCs still run the process.', 'The HMI service on both was stopped by an account that is not an operator’s.', 'Mae can see the filters and pumps only from the local panels.'],
+          truth: 'Loss of view: the operators can’t see the process. Who stopped the HMIs, and how, decides what comes next.',
+          resp: [{label: 'Operators run the plant from the local panels, so nothing is lost; learn what stopped the HMIs before anyone restarts them', good: true},
+                 {label: 'Power down the PLCs as well until the operators can see the process again', good: false, disrupt: 2, shutdown: true, why: 'The PLCs are running the process safely. Stopping them turns a view problem into a water problem.'},
+                 {label: 'Restart the HMI service on both consoles now, so the operators can see again; look into the cause with the day shift later on', good: false, why: 'The account that stopped them can do it again, and the restart overwrites what happened.'}]},
+    benign: {clues: ['HMI-02 restarts for the HMI vendor’s patch at 14:00, under CHG-8231 (game).', 'HMI-01 stays up the whole time; the operators were told.', 'The window and the account match the ticket.'],
+             truth: 'Benign: a planned restart of one console while the other keeps the view.'},
+    fp: {clues: ['The sensor stopped seeing HMI polling for six minutes.', 'The sensor itself was restarting after its own update (game).', 'The operators never lost the view.'],
+         truth: 'False positive: the sensor went blind, not the operators. Tune the rule to check the sensor’s own health first.'}
+  },
+  crossing: {
+    rule: 'Remote session from the office side into the control zone',
+    mal: {clues: ['An office PC opened a remote-desktop session to EWS-01 through FW-OT.', 'The account is an office user’s, not on the plant’s access list; the rule that allowed it has no owner.', 'The session opened the engineering software’s project list.'],
+          truth: 'Remote services from IT into OT: an office account on the engineering workstation. The account, the source and the rule decide it.',
+          resp: [{label: 'End the session at FW-OT and remove the rule; take the office PC off the network on the IT side; Joss compares the project files with the backup', good: true},
+                 {label: 'Disconnect the plant from every network and run it all by hand until the engineers have checked each controller', good: false, disrupt: 2, shutdown: true, why: 'One office PC reached one workstation. Stop it at the boundary; the plant can keep running.'},
+                 {label: 'Disable the office user’s account: without a valid sign-in, nothing can get from the office to EWS-01', good: false, why: 'The office PC is still compromised, the rule is still open, and EWS-01 may already be touched.'}]},
+    benign: {clues: ['HIST-DMZ is catching up with HIST-01 after its patch reboot (CHG-8235, game).', 'It is the historian’s own copy job, on the one conduit allowed from control to the DMZ.', 'The burst stops when the copy is current, twelve minutes later.'],
+             truth: 'Benign: the historian copy catching up after a reboot, on its documented conduit.'},
+    fp: {clues: ['The “session” is the vendor box’s approved connection to EWS-01 under CHG-8240.', 'RA-01 sits in the DMZ; the rule counts the DMZ as the office side.', 'Window, account and ticket all match.'],
+         truth: 'False positive: an approved vendor session counted as office traffic. Tune the rule to the zone map.'}
+  }
+});
+Object.assign(ALERT_CHAINS, {
+  preset: ['The session opens a second screen.', 'A set point on the panel changes.'],
+  rewrite: ['The controller drops to program mode again.', 'A second controller is contacted.'],
+  nudge: ['Another set point moves.', 'An alarm limit is widened.'],
+  blindside: ['The local panel at the filters freezes too.', 'Alarms stop reaching the console.'],
+  crossing: ['The session opens a project file.', 'A second office PC tries the same path.']
+});
+
+/* ---------- Morning briefing items (Water Plant) ---------- */
+const WT_BRIEFS = [
+  {t: 'preset', text: 'Plant controllers and HMIs that answer from the internet with their factory passwords are being found and defaced.', act: 'Check the town’s addresses for exposed plant devices'},
+  {t: 'rewrite', text: 'Intruders send new programs to controllers outside change windows.', act: 'Compare each controller’s running logic with its offline backup daily'},
+  {t: 'nudge', text: 'Exposed HMIs have had set points maxed out and alarms switched off.', act: 'Alert on set-point changes from anything but an operator’s console'},
+  {t: 'blindside', text: 'Attacks on HMIs can leave operators without a view of the process.', act: 'Practise running the plant by hand from the local panels'},
+  {t: 'crossing', text: 'Office compromises are reaching engineering workstations over remote desktop.', act: 'Deny remote desktop from the office into the control zone'}
+];
+
+/* ---------- Fieldwork figures (game) ---------- */
+const WT_ASSETS = 41, WT_ASSETS_BEFORE = 12;          // OT assets; the 2019 spreadsheet listed 12 (29%)
+const WT_EXPOSED0 = 2, WT_DEFAULT0 = 9;               // PLC-PMP-02 and RA-01; nine devices on factory passwords
+const WT_PLCS = 7;                                    // controllers whose logic is backed up
+const WT_VEND_HIST = {total: 14, ok: 3};              // RA-01 sessions in the last 30 days, and how many had a ticket
+
+/* ---------- Zones and conduits (game; concept from ISA-62443-3-2's zones and conduits and SP 800-82's DMZ) ---------- */
+const WT_ZONES = [
+  {k: 'enterprise', label: 'Enterprise: the office network'},
+  {k: 'dmz', label: 'DMZ: between the office and the plant'},
+  {k: 'control', label: 'Control: operators, engineers, historian'},
+  {k: 'field', label: 'Field: the controllers and their I/O'}
+];
+const WT_ZONE_ASSETS = [
+  {id: 'RPT-01', what: 'finance’s reporting server, which reads plant totals', zone: 'enterprise'},
+  {id: 'HIST-DMZ', what: 'a read-only copy of the historian, for the office to read', zone: 'dmz'},
+  {id: 'RA-01', what: 'the vendor remote-access box', zone: 'dmz'},
+  {id: 'HMI-01', what: 'the operators’ console', zone: 'control'},
+  {id: 'EWS-01', what: 'the engineering workstation, which can change every PLC', zone: 'control'},
+  {id: 'HIST-01', what: 'the control historian, which collects from the PLCs', zone: 'control'},
+  {id: 'PLC-FLT-01', what: 'a filter controller', zone: 'field'}
+];
+// need: the plant needs it (denying it breaks operations); otherwise it is exposure (allowing it leaves a way in).
+const WT_CONDUITS = [
+  {id: 'hmiplc', text: 'HMI-01 ↔ the PLCs', why: 'how the operators see and run the process', need: true, broke: 'Operators lose view and control of the plant from the console.'},
+  {id: 'histplc', text: 'HIST-01 → the PLCs', why: 'the historian polling values', need: true, broke: 'The historian stops recording: no trends, no compliance records.'},
+  {id: 'histdmz', text: 'HIST-01 → HIST-DMZ', why: 'copying data out to the DMZ', need: true, broke: 'The office copy goes stale and finance’s reports stop.'},
+  {id: 'rptdmz', text: 'RPT-01 → HIST-DMZ', why: 'the office reading the copy', need: true, broke: 'Finance can’t read plant totals at all.'},
+  {id: 'raews', text: 'RA-01 → EWS-01', why: 'vendor sessions, when one is approved', need: true, broke: 'Vendors can’t support the plant even when you ask them to.'},
+  {id: 'officeplc', text: 'Any office PC → the PLCs, directly', why: 'how the network was built', need: false, exp: 'Every office PC can talk straight to a controller.'},
+  {id: 'officehmi', text: 'Office PCs → HMI-01, remote desktop', why: 'convenient for managers', need: false, exp: 'A compromised office PC lands on the operators’ console.'},
+  {id: 'ewsnet', text: 'EWS-01 → the internet', why: 'software updates', need: false, exp: 'The machine that can change every PLC browses the internet.'},
+  {id: 'rapl', text: 'RA-01 → the PLCs, directly', why: 'faster for the vendor', need: false, exp: 'A vendor session reaches the controllers without the engineering workstation and its records.'}
+];
+
+/* ---------- Investigation drills (all cases original; artefacts are invented, fields are real kinds of evidence) ---------- */
+const WT_DRILLS = {
+  setpoint: {
+    id: 'setpoint', title: 'A set point at ten past two', budget: 2,
+    intro: '<p>The night set-point rule fired (game): at 02:10 the clearwell’s low-level set point dropped from 3.2 m to 2.4 m. An intruder at a console looks like that. So does a night operator doing planned work.</p>',
+    artefact: '<pre class="art">Sensor · set-point change · Day {D} 02:10 (game data)\n' +
+      'Tag            CLW-LL-SP (clearwell low level)\n' +
+      'Old → new      3.2 m → 2.4 m\n' +
+      'Sent by        HMI-02 (control room)\n' +
+      'Rule           set-point change at night</pre>' +
+      '<p class="small">The sensor sees which device sent the change, not which person. The HMI’s own audit log names the account and console; the shift log says who was on duty and why.</p>',
+    question: 'An operator’s planned change, or an intruder at the console?',
+    sources: [
+      {id: 'trend', name: 'Historian trend for the clearwell', qs: [
+        {q: 'What does the clearwell trend look like overnight?', kind: 'trap',
+         res: ['A sharp step in the set point at 02:10, then the level falls steadily to 2.4 m by 04:30.', '(Any set-point change is a step. The shape fits a planned change and an intruder alike.)']}]},
+      {id: 'alarms', name: 'Alarm summary', qs: [
+        {q: 'How many alarms fired overnight?', kind: 'trap',
+         res: ['14 alarms overnight; a typical night has about 11.', '(Three level-deviation alarms as the tank drew down. The count fits both stories.)']}]},
+      {id: 'audit', name: 'HMI-02 audit log', qs: [
+        {q: 'Which account and console made the change?', kind: 'focus', key: true,
+         res: ['02:10:14 HMI-02, account t.boateng (Tunde Boateng, night operator), CLW-LL-SP 3.2 → 2.4 m', 't.boateng was signed in at HMI-02 from 19:02; no other sign-in on either console overnight', 'RA-01 shows no session that night; the sensor saw the change come from HMI-02 alone']}]},
+      {id: 'shift', name: 'Shift log and roster', qs: [
+        {q: 'Who was on duty, and did they log a reason?', kind: 'focus', key: true,
+         res: ['Roster: Tunde Boateng, night operator, 19:00–07:00', 'Shift log 02:12: “Lowered clearwell to 2.4 m for the 08:00 tank inspection, per plan WQ-14” (game)', 'Plan WQ-14 asks for the clearwell at 2.4 m by 06:00 on inspection days']},
+        {q: 'Every HMI event overnight', kind: 'broad', rows: 8600,
+         wall: ['{t}  HMI-01  alarm ack   FLT-02 dP high', '{t}  HMI-02  screen      pumps overview', '{t}  HMI-02  t.boateng   CLW-LL-SP 2.4', '{t}  HMI-01  trend       raw water turbidity']}]}
+    ],
+    ai: {everything: {text: 'A set point changed at 02:10, outside business hours, followed by more alarms than usual, consistent with Modify Parameter (T0836). Recommend restoring 3.2 m and taking HMI-02 off the network.', wrong: true,
+                      reveal: 'Tally matched the hour and the alarm count and recommended undoing a planned change halfway through an inspection drawdown, then cutting off a console the operators need. It never read the HMI’s audit log or the shift log, which name Tunde and his reason.'},
+         specific: {q: 'Which account and console changed CLW-LL-SP?', text: 't.boateng at HMI-02, at 02:10:14.'}},
+    verdicts: [
+      {label: 'The night operator’s planned change: Tunde, at HMI-02 under his own account, lowered it for the tank inspection', good: true, needs: 'audit',
+       needsWhy: 'the shift log says what Tunde meant to do; only HMI-02’s audit log shows that his account, at his console, made the change.',
+       why: 'The audit log names the account and console, and the shift log, roster and plan give the reason.'},
+      {label: 'An intruder at the console: the set point dropped in one step at two in the morning and the alarms ran above a normal night', why: 'The step and the alarms fit a planned drawdown too. The audit log names Tunde at HMI-02, and he logged the reason.'},
+      {label: 'A remote change through the vendor box: nobody works at HMI-02 overnight, so a session from outside must have pushed the new value', why: 'Tunde was signed in at HMI-02 all night, and RA-01 shows no session at all.'}],
+    reasons: [
+      {label: 'HMI-02’s audit log names t.boateng at that console, and his shift-log entry gives the reason: the tank inspection plan', good: true, why: 'Who made it, where, and why, each from its own record.'},
+      {label: 'The level fell smoothly afterwards with no swings, which is not what someone trying to damage the plant would do at night', why: 'The trend’s shape decides nothing; an intruder can move a value smoothly too.'},
+      {label: 'Only three alarms above a normal night is too few for an attack; an attacker’s change would trip far more', why: 'The alarm count fits both stories.'}],
+    alts: [
+      {label: 'Someone else using Tunde’s account at HMI-02', good: true, why: 'Ruled out: Tunde was at the console all night and wrote the reason himself at 02:12.'},
+      {label: 'A change pushed from outside, through the vendor box or the office', good: true, why: 'Ruled out: no RA-01 session, and the sensor saw the change come from HMI-02 alone.'},
+      {label: 'The PLC changing its own set point on a schedule', why: 'This tag has no schedule in the logic; the audit log records a person’s change.'},
+      {label: 'The historian showing an old value by mistake', why: 'The controller’s own value and the HMI log both show 2.4 m.'}],
+    path: '<p>A set-point change is decided by <b>the HMI’s audit log</b> (which account, at which console) and by <b>the shift log and roster</b> (who was on duty, and why). The trend’s shape and the alarm count fit a planned change and an intruder alike, so they decide nothing.</p>',
+    response: ['Benign: the night operator’s planned change; keep the night set-point rule', 'Ask the operators to type the plan number in the HMI’s change-reason field, so the next alert carries its own reason', 'Nothing to undo: WQ-14’s inspection runs at 08:00 as planned'],
+    techs: ['T0836'], acts: ['spaudit']
+  },
+  checksum: {
+    id: 'checksum', title: 'A checksum that moved overnight', budget: 2,
+    intro: '<p>The 06:00 compare job flagged it (game): PLC-HSP-01, the high-service pumps’ controller, is running logic whose checksum differs from the offline backup taken yesterday at 14:00. At 21:24 last night the sensor’s rule also fired: a program download outside any change window. Tampering looks like that. So does an engineering change.</p>',
+    artefact: '<pre class="art">Compare job · Day {D} 06:00 (game data)\n' +
+      'PLC          Backup (Day {D-1} 14:00)   Running now\n' +
+      'PLC-HSP-01   rev 4.2, checksum 7C1A…    checksum 92E4…\n' +
+      'others (6)   match                      match\n' +
+      'Sensor · Day {D-1} 21:24 · program download to PLC-HSP-01 from EWS-01 · no change window open</pre>' +
+      '<p class="small">A checksum says the logic changed, not who changed it or whether anyone approved it. The engineering record and the change tickets say that.</p>',
+    question: 'Tampering, or an approved engineering change?',
+    sources: [
+      {id: 'uptime', name: 'Controller status', qs: [
+        {q: 'How long has PLC-HSP-01 been running?', kind: 'trap',
+         res: ['Uptime 9 h 30 min: it went to program mode at 21:22 and back to run at 21:31.', '(Any full download restarts the logic. The restart fits tampering and an approved change alike.)']}]},
+      {id: 'vendor', name: 'Vendor record', qs: [
+        {q: 'Who supplied the pump logic, and can they be trusted?', kind: 'trap',
+         res: ['A large, long-established pump vendor with a good security record, under contract since 2018 (game).', '(A vendor’s reputation says nothing about who changed this logic last night, or whether anyone approved it.)']}]},
+      {id: 'ews', name: 'EWS-01 project history and change tickets', qs: [
+        {q: 'Is there a revision in the engineering record, and a ticket?', kind: 'focus', key: true,
+         res: ['The managed project archive’s last revision for PLC-HSP-01 is 4.2, saved yesterday at 14:00 with the backup; no 4.3', 'The engineering software’s own log on EWS-01: a download to PLC-HSP-01 at 21:24, from a project file in a temp folder, not from the archive', 'Change tickets: none for PLC-HSP-01 this month; the only open plant ticket is CHG-8240, a scheduled filter-vendor session']}]},
+      {id: 'ra', name: 'RA-01 session log, and a call to the vendor', qs: [
+        {q: 'Whose session was on EWS-01 at 21:24?', kind: 'focus', key: true,
+         res: ['RA-01: account pv-ksato (Kenji Sato, the pump vendor’s technician) from 198.51.100.24, the vendor’s known address, 21:05–21:40; no ticket, and RA-01 has no MFA', 'Called back on the number in the contract: the vendor confirms work order WO-5521, “fix the pump alternation timer”, requested by Gil Hartley by email on Day {D-3}', 'Nobody told the control room']},
+        {q: 'Every RA-01 and EWS-01 event this week', kind: 'broad', rows: 5200,
+         wall: ['{t}  RA-01   session   fc-support   CHG-8240 pending', '{t}  EWS-01  app       project archive opened', '{t}  RA-01   session   pv-ksato     21:05', '{t}  EWS-01  app       compare job   06:00']}]}
+    ],
+    ai: {everything: {text: 'A program download outside a change window changed PLC-HSP-01’s logic, consistent with Program Download (T0843). Recommend loading the backup now and shutting down the high-service pumps until the logic is verified.', wrong: true,
+                      reveal: 'Tally matched the download and jumped to restore-and-shut-down: a blind rollback in the middle of the day and a pressure drop across town. It never asked whose session it was or whether anything in the engineering record matched.'},
+         specific: {q: 'Whose session was on EWS-01 at 21:24?', text: 'pv-ksato, the pump vendor’s technician, through RA-01, 21:05–21:40.'}},
+    verdicts: [
+      {label: 'An unapproved change: the pump vendor, through the always-on box at Gil’s request, with no ticket and no archived revision', good: true, needs: 'ews',
+       needsWhy: 'the vendor’s session shows whose hands were on it; only the engineering record and the tickets show that no approved change matches.',
+       why: 'No archived revision, no ticket, and the vendor’s own session at Gil’s request.'},
+      {label: 'Tampering by an intruder: a download at night, outside any change window, from a temp-folder copy, then a controller restart at 21:31', why: 'The session was the vendor’s named account from its known address, and the vendor confirmed the work order on a call-back. Unapproved, not an intruder.'},
+      {label: 'An approved engineering change: the vendor maintains this logic under contract, and it worked through the plant’s own engineering workstation', why: 'A contract is not an approval: no ticket, no revision in the archive, and the control room was never told.'}],
+    reasons: [
+      {label: 'The archive stops at 4.2 with no ticket, and the 21:24 download came from a temp-folder copy in pv-ksato’s session', good: true, why: 'The engineering record, the tickets and the session, each from its own source.'},
+      {label: 'The controller restarted at 21:31, which a daytime change in a window would not need, so the change was hidden at night on purpose', why: 'Every full download restarts the logic, and the hour fits an unapproved vendor fix too.'},
+      {label: 'The pump vendor is a large, reputable firm with a long contract, which rules out anyone outside the vendor', why: 'Reputation decides nothing; the session log and the call-back do.'}],
+    alts: [
+      {label: 'An intruder using the vendor’s account', good: true, why: 'Ruled out: the vendor’s known address, and the vendor confirmed WO-5521 on a call-back to the contract number.'},
+      {label: 'An approved change made in a hurry', good: true, why: 'Ruled out: no ticket, no archived revision, and the operators weren’t told.'},
+      {label: 'A memory fault that altered the checksum', why: 'The engineering software logged a download at 21:24.'},
+      {label: 'A faulty backup taken yesterday', why: 'Six other PLCs match their backups; this one has a download behind its change.'}],
+    path: '<p>A changed logic checksum is decided by <b>the engineering record and the change tickets</b> (does an approved revision match?) and by <b>whose session made the download</b> (the remote-access log, and a call-back on a known number). The controller’s uptime and the vendor’s reputation fit every story, so they decide nothing.</p>',
+    response: ['Joss diffs the running logic against the backup: only the alternation timer changed; Mae says the pumps run normally', 'Keep it running and put it through an emergency-change review today: if accepted, archive it as rev 4.3 and back it up; if not, roll back in a window the operators choose', 'Never power-cycle or roll back blind in the middle of the day', 'Tell the vendor: changes only under a ticket. Raise the always-on box with Gil'],
+    techs: ['T0843'], acts: ['logicaudit']
+  },
+  officeplc: {
+    id: 'officeplc', title: 'An office address at the filters', budget: 2,
+    intro: '<p>The sensor’s new-talker rule fired at 09:12 (game): an office address is talking to PLC-FLT-01 on its industrial protocol port, through FW-OT. An intruder exploring the plant from an office PC looks like that. So does finance’s reporting job, which reads that controller every morning.</p>',
+    artefact: '<pre class="art">Sensor · new talker into the field zone · Day {D} (game data)\n' +
+      'Time         Source        Destination   Port                Packets\n' +
+      '07:00–07:01  192.0.2.40    PLC-FLT-01    industrial protocol 230\n' +
+      '09:12–09:31  192.0.2.57    PLC-FLT-01    industrial protocol 214</pre>' +
+      '<p class="small">The sensor shows addresses, ports and the kind of request, not which program sent it. The office side’s endpoint telemetry shows the host and process; the firewall shows the rule that let it through.</p>',
+    question: 'An intruder reaching into the plant, or the reporting job misbehaving?',
+    sources: [
+      {id: 'packets', name: 'Packet counts', qs: [
+        {q: 'How much traffic was there?', kind: 'trap',
+         res: ['214 packets in 19 minutes at 09:12; the 07:00 run was 230.', '(The two look alike in size. Count decides nothing.)']}]},
+      {id: 'port', name: 'Port and protocol', qs: [
+        {q: 'Which port and protocol?', kind: 'trap',
+         res: ['Both use PLC-FLT-01’s industrial protocol port, the one finance’s job uses.', '(The port says what kind of traffic it is, not who sent it or why.)']}]},
+      {id: 'host', name: 'Endpoint telemetry on the office side', qs: [
+        {q: 'Which hosts and processes sent it?', kind: 'focus', key: true,
+         res: ['07:00: 192.0.2.40 is RPT-01, its reporting service, as every morning', '09:12: 192.0.2.57 is OF-WS-22, l.marsh’s planning PC; the process is an unsigned program in her Downloads folder, started 09:11', 'It came from an email attachment l.marsh opened at 09:08; the sensor shows identification and read requests only, nothing written']}]},
+      {id: 'rule', name: 'The FW-OT rule that allowed it', qs: [
+        {q: 'Which firewall rule allowed it, and who owns it?', kind: 'focus', key: true,
+         res: ['R-114, the temporary exception from the zones work: owner finance reporting, expires Friday', 'Approved source: RPT-01 only. As implemented: the whole office subnet, copied from the old router rule', 'No other rule lets an office address reach the field zone']},
+        {q: 'Every connection across FW-OT today', kind: 'broad', rows: 31000,
+         wall: ['{t}  HIST-01   → HIST-DMZ   copy      ok', '{t}  RPT-01    → HIST-DMZ   read      ok', '{t}  OF-WS-22  → PLC-FLT-01 R-114     ok', '{t}  OF-WS-31  → HMI-01     denied    default']}]}
+    ],
+    ai: {everything: {text: 'Traffic from the office to PLC-FLT-01 matches the reporting job: the same port and a similar packet count. Likely the job running twice; no action needed.', wrong: true,
+                      reveal: 'Tally matched the port and the packet count to the 07:00 job and waved it through. It never asked which host or program sent the 09:12 traffic, or why a rule meant for RPT-01 let a planning PC through.'},
+         specific: {q: 'Which host and process sent the 09:12 traffic?', text: 'OF-WS-22, an unsigned program in l.marsh’s Downloads folder.'}},
+    verdicts: [
+      {label: 'An infected office PC: OF-WS-22’s unsigned program read PLC-FLT-01 through an exception meant for RPT-01 alone', good: true, needs: 'host',
+       needsWhy: 'the rule shows the door was open; only the endpoint telemetry shows which host and program walked through it.',
+       why: 'The host and process from the office side, the open door from the rule as implemented.'},
+      {label: 'Finance’s reporting job misbehaving: the same port, the same controller and nearly the same packet count as the 07:00 run', why: 'RPT-01 ran at 07:00. The 09:12 traffic came from OF-WS-22 and an unsigned program, not the reporting service.'},
+      {label: 'An attack on the filters’ logic: an office host reaching a filter PLC on its industrial port is how a new program would be sent', why: 'The sensor shows identification and read requests only, nothing written and no download.'}],
+    reasons: [
+      {label: 'OF-WS-22 ran an unsigned program from an email attachment, and R-114 let it through because its source is the whole office subnet, not RPT-01', good: true, why: 'The host and process from the endpoint, and the open door from the rule as implemented.'},
+      {label: 'The 09:12 traffic was 214 packets, fewer than the 230 the reporting job sends, so it cannot be the same job', why: 'The job’s size varies day to day; packet counts decide nothing.'},
+      {label: 'Nothing in the office should ever use the PLC’s industrial port, which makes any office traffic on it an attacker’s', why: 'Finance’s job uses that port legitimately under R-114; the port alone decides nothing.'}],
+    alts: [
+      {label: 'The reporting job running a second time', good: true, why: 'Ruled out: RPT-01 is 192.0.2.40; the 09:12 source is OF-WS-22, running an unsigned program.'},
+      {label: 'An engineer testing from the office', good: true, why: 'Ruled out: OF-WS-22 is a planning PC, and the program came from an email attachment.'},
+      {label: 'The sensor counting the 07:00 run twice', why: 'Different source address, different time, different host.'},
+      {label: 'The PLC reaching out to the office', why: 'The requests came from OF-WS-22 to the controller.'}],
+    path: '<p>New traffic from the office into the plant is decided by <b>which host and process sent it</b> (endpoint telemetry on the IT side) and by <b>the firewall rule that allowed it, and its owner</b>. The packet count and the port number fit the reporting job and an intruder alike, so they decide nothing.</p>',
+    response: ['Narrow R-114 to RPT-01 now; remove it on Friday, when finance reads from HIST-DMZ', 'Take OF-WS-22 off the network on the IT side and keep its disk and memory for the investigation', 'Mae confirms the filters run normally; Joss compares PLC-FLT-01’s logic and set points with the backup: unchanged', 'Search the other office PCs for the email and the program; compare every FW-OT rule as implemented with what was approved', 'No plant shutdown: the reads stopped at the boundary'],
+    techs: ['T0888'], acts: ['crossaudit']
+  }
+};
+
+/* ---------- Network Traffic Analysis dojo (NCL area; concepts only, no tool syntax) ---------- */
+const WT_DOJO = [
+  {q: 'A flow record: HIST-01 → PLC-FLT-01, started 09:00:00, lasted 59 min 58 s, 4,212 packets, 0.3 MB. What does it tell you?',
+   opts: ['HIST-01 held one long, light connection to the PLC for an hour: steady polling',
+          'The PLC sent 0.3 MB to the historian in a single burst at nine o’clock, then went quiet',
+          'Which values the historian read: a flow record lists each reading and whether it was out of range'], good: 0,
+   explain: 'A flow record is metadata: who started the conversation, with whom, when, for how long, and how much. It never holds the content. Long and light, from the historian, is what polling looks like.'},
+  {q: 'HMI-01 polls PLC-FLT-01 once a second, all day, every day. At 02:13 a second source polls it every fifth of a second for 40 seconds. Which is the anomaly?',
+   opts: ['The new source and its new rhythm at 02:13: nothing else has ever polled that PLC like that',
+          'HMI-01’s polling: once a second all day is far more traffic than anything else on the plant network',
+          'Neither of them: a PLC answering requests is normal, so any polling it receives is part of the baseline'], good: 0,
+   explain: 'OT traffic is regular: the same talkers, the same rhythm, every day. That is what makes a baseline useful. Busy is normal here; new is not: a new talker, a new rate, a new kind of request.'},
+  {q: 'HMI-02, in the control zone, asks DNS for telemetry.panelmaker.example every hour. FW-OT denies it each time. What does it mean, and what do you do?',
+   opts: ['Something on the panel calls out: keep the deny, switch the feature off with the vendor, and look for any other way out',
+          'It is the panel maker’s own domain, so it is safe: allow it through FW-OT, so the panel gets its updates on time',
+          'Nothing to do: the firewall denies every request, so the panel can’t reach anything, whatever it asks for or how often'], good: 0,
+   explain: 'A device in the control zone should never talk to the internet. A denied request is still a finding: something on the device is configured to call out. Turn it off at the source, and check that nothing found another way out.'}
+];
+
+/* ---------- Plant Board (original) ---------- */
+const WT_BOARD_SPECS = () => [
+  {kind: 'mal', threat: 'preset', tech: 'T1694.001', tags: ['exposed', 'ot'], story: true, rate: 12, group: 'c',
+   title: 'Round 1: a factory password from the internet', host: 'booster panel · practice rig', enemy: {spr: 'hinge', pal: 'wtPreset'},
+   clues: ['A booster-station panel accepted a sign-in with its factory user name and password, from an address abroad.', 'It answers on a public address through a cellular router nobody listed.', 'The set points haven’t moved; the operator on shift sees nothing odd yet.'],
+   truth: 'Default credentials on a device reachable from the internet.',
+   resp: [{label: 'Take the panel off the internet, change its password with the engineer, and read out what changed; the operators decide', good: true},
+          {label: 'Shut the booster station down and run its zone from the gravity tank until the panel is rebuilt', good: false, disrupt: 1, shutdown: true, why: 'The pumps are safe; shutting them costs the zone its pressure. Remove the exposure.'},
+          {label: 'Change the panel’s password from the control room, so the same factory sign-in can’t work again from anywhere', good: false, why: 'It is still on the internet, and nobody knows what the session did.'}],
+   chain: [{at: 40, text: 'The session opens the set-point screen.'}, {at: 75, text: 'A second address tries the same password.'}]},
+  {kind: 'mal', threat: 'rewrite', tech: 'T0843', tags: ['ot'], story: true, rate: 12, group: 'c',
+   title: 'Round 2: a download nobody planned', host: 'PLC-FLT-02 · practice rig', enemy: {spr: 'quill', pal: 'wtRewrite'},
+   clues: ['A full program download to a filter PLC at 23:47, outside any change window.', 'It came from an office address, not the engineering workstation.', 'The controller went to program mode first, then back to run.'],
+   truth: 'A program download nobody approved, from a source that should never send one.',
+   resp: [{label: 'Block the source at the boundary and compare the logic with the backup, so the operators can choose to run by hand', good: true},
+          {label: 'Power the filter PLC off and keep it off until the engineer rebuilds it in the morning and nothing more can be sent to it', good: false, disrupt: 1, shutdown: true, why: 'Powering off mid-process stops the filters and wipes what the controller holds. Contain at the boundary.'},
+          {label: 'Load the offline backup at once: the known-good logic runs again before the new program can do any harm', good: false, why: 'A blind restore mid-process can upset the filters, and the source can send again.'}],
+   chain: [{at: 40, text: 'The controller drops to program mode again.'}, {at: 75, text: 'A second controller is contacted.'}]},
+  {kind: 'mal', threat: 'nudge', tech: 'T0836', tags: ['ot'], story: true, rate: 11, group: 'c',
+   title: 'Round 3: a set point from nowhere', host: 'PLC-HSP-01 · practice rig', enemy: {spr: 'climber', pal: 'wtNudge'},
+   clues: ['The pumps’ discharge-pressure set point jumped to its maximum at 03:20.', 'No operator made it: the change came from a vendor-box session with no ticket.', 'The operator on shift put the value back by hand at 03:24.'],
+   truth: 'A set point pushed from outside the control room.',
+   resp: [{label: 'Cut the vendor-box session and disable that account; the operators watch the pumps while every set point is compared', good: true},
+          {label: 'Shut the high-service pumps and the plant until every controller has been looked at by hand', good: false, disrupt: 1, shutdown: true, why: 'The operator has it in range; a shutdown drops pressure across town.'},
+          {label: 'Log that the operator put the value back at 03:24, and pick it up with the engineer after the weekend', good: false, why: 'The session and the account are still open.'}],
+   chain: [{at: 40, text: 'Another set point moves.'}, {at: 75, text: 'An alarm limit is widened.'}]}
+];
+
+/* ---------- Boss tabletop cards (our own) ---------- */
+const WT_CARDS = [
+  {id: 'safe', name: 'Safety first: the operators decide', csf: 'Respond', good: true, text: 'Before anything else, the operators make sure the process is safe and choose whether to run by hand; nothing touches the process without them.', fx: 'Every stage starts with the water safe and the operators in charge of the process.'},
+  {id: 'asis', name: 'Leave the controller as it is', csf: 'Respond', good: true, text: 'Photograph the screen tonight and leave the controller and its panel untouched until the vendor and the engineer can read out its program and event list.', fx: 'Stage 2 is easier: the controller still holds what happened.'},
+  {id: 'offnet', name: 'Off the internet, new credentials', csf: 'Protect', good: true, text: 'Take the device off the internet tonight (unplug the vendor’s cellular modem; the process doesn’t need it) and change its factory password with the vendor.', fx: 'The door they came in by is shut.'},
+  {id: 'restore', name: 'Restore from the offline backup, then test', csf: 'Recover', good: true, text: 'Put back the known-good logic and screens from the offline backup, match the checksums, and go back to automatic only after the operators test it.', fx: 'Stage 3 becomes much easier: a known-good controller, tested by the people who run it.'},
+  {id: 'poweroff', name: 'Power everything off', csf: 'Respond', text: 'Shut down the high-service pumps and every booster station until the investigation is done, so nothing runs while an intruder might still be inside.', fx: 'Zone 3 was safe on the tank and in hand control; shutting the pumps drops pressure across town. Over-reaction is a failure too.'},
+  {id: 'reboot', name: 'Reboot and clear the screen', csf: 'Recover', text: 'Power-cycle the controller and factory-reset its panel straight away, so the message is gone and the station is back in automatic before the morning shift.', fx: 'The reboot wipes what the controller held about the intrusion, and nobody has checked the logic it returns to.'},
+  {id: 'newport', name: 'Move it to a new port', csf: 'Protect', text: 'Keep the modem so the vendor can still support the station, but move the panel to a non-default port with a new password, so scanners stop seeing it.', fx: 'A new port is a smaller target, not a closed door: the device still answers from the internet.'},
+  {id: 'later', name: 'Put it off for the vendor', csf: 'Detect', text: 'Run the station by hand through the weekend and let the pump vendor look at the panel when its engineer is next in town, as the contract allows.', fx: 'Nobody reads out the controller, the exposure stays open, and the operators run by hand for days.'}
+];
+
+/* ---------- Field Manual additions ---------- */
+Object.assign(EXTRA_ACTIONS, {
+  otinv: {name: 'OT asset inventory', desc: 'Keep an organised, regularly updated list of every plant device (controllers, HMIs, workstations, network gear, radios, drives) with what it does, where it is, who supports it and how it connects. Build it from a walkdown with the operators, the engineering project files, switch tables and passive listening, never from an active scan of a running plant.'},
+  otexpose: {name: 'Remove internet exposure and default passwords', desc: 'Find every plant device that answers from the internet (check the organisation’s own addresses from outside, and ask every vendor about devices they connect), take it off the internet, and change every factory password, one device at a time with the operators watching. Vendor-supplied equipment counts too.'},
+  zones: {name: 'Zones and conduits', desc: 'Group plant assets into zones (enterprise, DMZ, control, field) and allow only the conduits the plant needs between them. Office users read plant data from a copy in the DMZ, never from the controllers; vendors come in through the DMZ to the engineering workstation, never straight to a PLC.'},
+  plcbackup: {name: 'Offline PLC logic backups and manual operation', desc: 'Back up every controller’s logic and configuration offline, at least two copies, one off site, each checked against the running controller; compare the running logic with the backup regularly. Practise running the plant by hand, so a lost controller or HMI is a nuisance, not an outage.'},
+  passivemon: {name: 'Passive OT monitoring', desc: 'Read a copy of the plant network’s traffic from mirror ports and learn its regular rhythm; alert on downloads outside change windows, set-point changes from anything but an operator’s console, new talkers into the field zone, and any device calling out to the internet. Never scan a running plant actively without the operators and the engineer.'},
+  vendorod: {name: 'Vendor remote access on demand', desc: 'A vendor’s remote access is off until someone asks: an approved ticket and a time window, MFA, the session recorded, the box switched off when the window ends, and an emergency path through the on-call engineer. The business owns the risk of that path in writing.'},
+  spaudit: {name: 'Read a set-point change by account and shift', desc: 'For a set-point change: the HMI’s audit log (which account, at which console) and the shift log and roster (who was on duty, and why). A trend’s step and the alarm count fit planned work and an intruder alike.'},
+  logicaudit: {name: 'Read a logic change by record and session', desc: 'For a controller whose logic no longer matches its backup: the engineering record and change tickets (does an approved revision match?), and whose session made the download (the remote-access log, confirmed by a call-back on a known number). Uptime and reputation decide nothing.'},
+  crossaudit: {name: 'Read IT-to-OT traffic by host and rule', desc: 'For new traffic from the office into the plant: which host and process sent it (endpoint telemetry on the IT side), and which firewall rule let it through, as implemented, with its owner. Packet counts and port numbers fit legitimate jobs too.'},
+  otrespond: {name: 'Safety-first OT incident response', desc: 'The operators confirm the process is safe and decide on manual operation; the device is left as it is for the vendor and engineer to read out; it comes off the internet and gets new credentials; known-good logic is restored from the offline backup and tested before automatic; the incident is reported, and the device watched. Powering things off is a decision for the operators, not a reflex.'}
+});
+Object.assign(FACTS, {
+  wtcase: {name: 'A real case like this: internet-exposed PLCs at US water facilities (2023)', desc: 'On 28 November 2023 CISA reported active exploitation of a Unitronics PLC at a US water facility; the affected municipal water authority took the system offline and switched to manual operations, with no known risk to drinking water or supply. Joint advisory AA23-335A (1 December 2023, updated 14 December; FBI, CISA, NSA, EPA and Israel’s National Cyber Directorate) attributes the activity to IRGC-affiliated cyber actors using the persona “CyberAv3ngers”: from at least 22 November 2023 they reached Unitronics Vision Series PLCs with built-in HMIs that were publicly exposed to the internet with default passwords, in several US states, and defaced the display. The advisory says it is not known whether more was intended or achieved.', src: 'CISA alert, 28 November 2023; joint advisory AA23-335A'},
+  wtaa23: {name: 'What AA23-335A asks plant owners to do', desc: 'Change default passwords and use strong ones; disconnect PLCs from the public internet; use MFA for access to the OT network; if remote access is needed, put a firewall or VPN in front of the controller; keep strong backups of PLC logic and configuration and know how to restore them; keep controllers updated; and confirm that third-party vendors apply the same measures. It lists CISA, the FBI and WaterISAC among the places to report.', src: 'Joint advisory AA23-335A (FBI, CISA, NSA, EPA, INCD), December 2023'},
+  wtprimary: {name: 'Primary mitigations for OT (May 2025)', desc: 'CISA, the FBI, the EPA and the DOE list five: remove OT connections to the public internet; change default passwords; secure remote access (a private connection or VPN, strong passwords, phishing-resistant MFA, least privilege, dormant accounts disabled); segment IT and OT, with a demilitarized zone for passing control data to the enterprise; and practise and maintain the ability to operate OT systems manually.', src: 'CISA, FBI, EPA and DOE, Primary Mitigations to Reduce Cyber Threats to Operational Technology (6 May 2025)'},
+  wtinvguide: {name: 'OT asset inventory guidance (August 2025)', desc: 'A joint guide by CISA, the EPA, the NSA, the FBI and partners in Australia, Canada, Germany, the Netherlands and New Zealand defines an asset inventory as an organised, regularly updated list of an organisation’s systems, hardware and software, and sets out five stages: define scope and objectives, identify assets and collect their attributes, build a taxonomy, manage and collect the data, and manage the life cycle. It includes a conceptual taxonomy for water and wastewater.', src: 'Foundations for OT Cybersecurity: Asset Inventory Guidance for Owners and Operators (13 August 2025)'},
+  wt80082: {name: 'NIST SP 800-82 Rev. 3', desc: 'NIST’s Guide to Operational Technology (OT) Security (September 2023) says OT security objectives typically put integrity and availability before confidentiality, with safety above all; recommends a DMZ architecture that prevents direct traffic between the corporate and OT networks, and MFA for remote access to the OT system; and says an OT system should degrade gracefully, from full automation down to manual operation.', src: 'NIST SP 800-82 Rev. 3, Guide to Operational Technology (OT) Security (September 2023)'},
+  wtpassive: {name: 'Active scanning in a running plant', desc: 'Joint guidance from CISA, the DOE, the FBI and partners (April 2026) warns that typical active scanning should not be attempted without a deep awareness of the system, because it can disrupt fragile devices, and notes that OT discovery tools generally rely on passive monitoring, which avoids that risk. It also says to restrict vendor remote connections to narrowly specified maintenance windows, to grant third-party access only with authorisation and oversight, and to log every privileged session.', src: 'CISA, DOE, FBI and partners, Adapting Zero Trust Principles to Operational Technology (29 April 2026)'},
+  wthmi: {name: 'Internet-exposed HMIs at water systems (2024)', desc: 'The EPA and CISA warned that anyone can view an internet-exposed HMI, and an attacker can change settings that disrupt treatment. In 2024, hacktivists at water systems maxed out set points, altered settings and turned off alarms, and changed administrative passwords to lock operators out, which forced them back to manual operation. The fact sheet asks for an inventory of internet-exposed devices, disconnection from the internet, strong passwords and MFA, a DMZ or bastion host at the OT boundary, an address allowlist, and logging of remote sign-ins.', src: 'EPA and CISA, Internet-Exposed HMIs Pose Cybersecurity Risks to Water and Wastewater Systems (13 December 2024)'},
+  wtzones: {name: 'Zones and conduits (ISA/IEC 62443)', desc: 'ANSI/ISA-62443-3-2 (2020) asks for the system under consideration to be partitioned into zones and conduits, with risk assessed and a target security level set for each. A conduit is a logical grouping of communication channels, sharing security requirements, that connects two or more zones. (This game uses the idea only; the standard itself is paid.)', src: 'ISA, ANSI/ISA-62443-3-2-2020 public preview'}
+});
+GAME_NOTES.push(
+  'Water Plant threats (Preset, Rewrite, Nudge, Blindside, Crossing) join the alert mix with weights 3/2/2/2/2 once you reach the Water Plant; inside it they are three times as likely. Network tools are strong against plant (OT) threats. The Tide Badge halves internet-exposed-device encounters (Preset) and puts the operators’ sign-off in front of any “shut it all down” response: picking one is still wrong, but nothing is shut down. (game)',
+  'Water Plant scorecard: internet-exposed OT devices, default credentials remaining (known), OT assets inventoried, PLC logic backups current, and vendor sessions approved. The vendor figure counts the last 30 days (3 of 14) until on-demand access starts, and the sessions since then afterwards. (game)',
+  'Hostnames, accounts, tickets, plans, counts, timings, addresses and every person at the Water Plant are invented. The incident is the town’s own, modelled on a real case (see Facts: a real case like this); it is not a retelling of any one utility’s story. (game)'
+);
+
+/* ---- editions/town-hall/water-quiet.js ---- */
+/* ============================================================
+   UPTIME · editions/town-hall/water-quiet.js
+   The Quiet Thread at the Water Plant. One more faint clue, found while the
+   player reviews the vendor remote-access box (RA-01) for the plant manager's
+   directive: its local account list holds svc-print, created on 14 March 2019
+   by a.kerr-adm, the admin account deleted in 2021 that nested svc-print in the
+   Server Room's groups the same month (CHG-1907, the printer rollout and the
+   closet router). RA-01's 90 days of sign-in logs show no use of it. It ties to
+   the Server Room clue and the Basement suspicion file. It is not resolved: the
+   thread continues.
+   The situation is invented (game); the technique ID is real (QT_TECH: T0859
+   Valid Accounts, ATT&CK for ICS, verified on attack.mitre.org, 1 Nov 2026,
+   ATT&CK v20). Never in the alert mix. Not part of the Basement suspicion
+   file's 12-note timeline (found after it was handed over).
+   ============================================================ */
+'use strict';
+
+Object.assign(QT_CLUES, {
+  'wt-vendorbox': {tech: 'T0859', where: 'the vendor remote-access box at the Water Plant (RA-01’s account list)',
+                   seen: 'Reviewing RA-01 for the on-demand change, you list its local accounts: the filter vendor’s, the pump vendor’s, Joss’s, and svc-print. Created 14 March 2019 by a.kerr-adm, the admin account deleted in 2021, with the comment “temp - printer vendor”, the same month a.kerr-adm nested svc-print in the Server Room’s groups. RA-01 keeps 90 days of sign-ins and shows none for it. A printer account on the box that reaches the plant’s engineering workstation. Left in place on Rae’s rule; the box is off between approved windows now. Added to the suspicion file. Not resolved.'}
+});
+
+// Found during the directive, reviewing RA-01's accounts. Returns true when the clue is new.
+async function wtQtVendorBox() {
+  await say('RA-01’s local accounts: fc-support (the filter vendor), pv-ksato (the pump vendor), j.kettering (me), and… svc-print. Created 14 March 2019 by a.kerr-adm. Comment: “temp - printer vendor”. (game)', 'Joss Kettering');
+  await say('A printer account, on the box that reaches my engineering workstation. RA-01 keeps ninety days of sign-ins; it shows nothing for svc-print. Before that, nobody can say.', 'Joss Kettering');
+  const fresh = qtNote('wt-vendorbox');
+  await qtAfterNote(fresh);
+  if (fresh) await say('That’s the account from Rae’s file, and the same admin account and month as the Server Room nesting. Her rule holds: nothing changes on svc-print without her. It stays as it is; the box is off between approved windows from today, and I’ll tell her tonight.', 'Joss Kettering');
+  return fresh;
+}
+
+function wtQtSummaryHtml() {
+  const found = qtFound('wt-vendorbox');
+  if (Series.qt().evicted) return '';
+  if (found) return '<p class="big">The Quiet Thread is still on file.</p><p class="small">svc-print has an account on the box that reaches the plant’s engineering workstation, made in 2019 by the same long-gone admin account. Added to the suspicion file. Still not resolved. It continues.</p>';
+  if (qtCount() >= QT_SUSPECT) return '<p class="small">Something quiet is still moving: the same service account, the same patient pattern, carried over from the suspicion file.</p>';
+  return '';
+}
+
+/* ---- editions/town-hall/water-story.js ---- */
+/* ============================================================
+   UPTIME · editions/town-hall/water-story.js
+   Town Hall district 8, the Water Plant (operational technology): state,
+   objectives, interactions, talk, the fieldwork (OT asset inventory, internet
+   exposure and default passwords, the zones and conduits mini-game, offline
+   PLC logic backups and a manual-operation drill, passive monitoring), the
+   vendor remote-access directive, three investigation drills, the Network
+   Traffic Analysis dojo, the Plant Board (Tide Badge, Lanternkeep -> Tidewatch),
+   the boss incident (an internet-exposed controller, modelled on a real case),
+   the Quiet Thread clue, scorecard metrics and the end-of-district summary.
+   Safety first: the operators own the process and have the final say on
+   anything that touches it. The Server Room story chains here (wtObjective via
+   svObjective). The engine hooks the earlier districts wrap are wrapped again:
+   each wrapper calls the previous version, then adds the Water Plant.
+   Timeline: scratchpad water-timeline.md; every line here is checked against it.
+   ============================================================ */
+'use strict';
+
+if (typeof EDITION !== 'undefined') {
+  EDITION.creditsFacts += ' Water Plant: MITRE ATT&CK for ICS v20 (T1694.001, formerly T0812; T0883, T0843, T0836, T0829, T0886, T0888; Quiet Thread T0859). CISA alert of 28 November 2023 on Unitronics PLCs at a US water facility; joint advisory AA23-335A (FBI, CISA, NSA, EPA, INCD; December 2023); CISA, FBI, EPA and DOE Primary Mitigations to Reduce Cyber Threats to Operational Technology (May 2025); Foundations for OT Cybersecurity: Asset Inventory Guidance (CISA, EPA, NSA, FBI and partners, August 2025); EPA and CISA fact sheet on internet-exposed HMIs (December 2024); NIST SP 800-82 Rev. 3; Adapting Zero Trust Principles to Operational Technology (CISA, DOE, FBI and partners, April 2026); ANSI/ISA-62443-3-2-2020 (public preview: zones and conduits).';
+  if (EDITION.badgeFlags && !EDITION.badgeFlags.includes('wtTide')) EDITION.badgeFlags.push('wtTide');
+}
+
+/* ---------- State ---------- */
+function WT() {
+  if (!G.wt) G.wt = {day0: G.day, exposed: WT_EXPOSED0, deflt: WT_DEFAULT0, inv: WT_ASSETS_BEFORE, backup: 0, vSince: null,
+    zones: null, drills: {}, dojo: [false, false, false], directive: null, boss: null, led: 0};
+  return G.wt;
+}
+function wtOn() { return !!(G && G.f && G.f.wtMet && G.wt); }
+function inWater() { return WT_MAPS.includes(G.map); }
+function wtInvPct() { return Math.round(WT().inv / WT_ASSETS * 100); }
+function wtBackupPct() { return Math.round(WT().backup / WT_PLCS * 100); }
+// Vendor sessions with an approved ticket: the last 30 days until on-demand access starts, then the sessions since.
+function wtVendPct() {
+  const c = WT();
+  if (!c.vSince) return Math.round(WT_VEND_HIST.ok / WT_VEND_HIST.total * 100);
+  return c.vSince.total ? Math.round(c.vSince.ok / c.vSince.total * 100) : null;
+}
+
+/* ---------- Engine hooks (wrapping the Server Room versions) ---------- */
+const _wtPrevAlertWeight = alertWeight, _wtPrevAlertHost = alertHost, _wtPrevBriefList = briefList, _wtPrevDecorate = alertDecorate,
+  _wtPrevMetricVals = editionMetricVals, _wtPrevScoreHtml = editionScoreHtml, _wtPrevPeekExtra = peekExtra;
+alertWeight = function (t, w) {
+  w = _wtPrevAlertWeight(t, w);
+  if (THREATS[t].district === 'water' && !(G.f && G.f.wtMet)) return 0;
+  if (G.f && G.f.wtMet && inWater() && WT_HOME.includes(t)) w *= 3;
+  // Tide Badge: internet-exposed-device encounters halved map-wide.
+  if (G.f && G.f.wtTide && (THREATS[t].tags || []).includes('exposed')) w *= 0.5;
+  return w;
+};
+alertHost = function () { return (G.f && G.f.wtMet && inWater()) ? pick(WT_HOSTS) + ' · Water Plant' : _wtPrevAlertHost(); };
+briefList = function () { const L = _wtPrevBriefList(); return (G.f && G.f.wtMet) ? L.concat(WT_BRIEFS) : L; };
+// Tide Badge: a "shut it all down" response needs the operators' sign-off. It is still the wrong answer, but the
+// operators refuse it, so nothing is shut down (no disruption cost).
+alertDecorate = function (spec) {
+  _wtPrevDecorate(spec);
+  if (G.f && G.f.wtTide && WT_HOME.includes(spec.threat) && spec.resp)
+    spec.resp = spec.resp.map(r => r.shutdown ? Object.assign({}, r, {disrupt: 0, signoff: true, why: 'The operators refused to sign off, so nothing was shut down (Tide Badge). ' + (r.why || '')}) : r);
+};
+editionMetricVals = function () {
+  const v = _wtPrevMetricVals();
+  if (!wtOn()) return v;
+  const c = WT();
+  return Object.assign(v, {wtExposed: c.exposed, wtDefault: c.deflt, wtInv: wtInvPct(), wtBackup: wtBackupPct(), wtVend: wtVendPct()});
+};
+EDITION_METRICS.push(
+  {k: 'wtExposed', label: 'Internet-exposed OT devices', unit: '', higher: false, lower: true, when: wtOn},
+  {k: 'wtDefault', label: 'Default credentials remaining (known)', unit: '', higher: false, lower: true, when: wtOn},
+  {k: 'wtInv', label: 'OT assets inventoried', unit: '%', higher: true, when: wtOn},
+  {k: 'wtBackup', label: 'PLC logic backups current', unit: '%', higher: true, when: wtOn},
+  {k: 'wtVend', label: 'Vendor remote sessions approved', unit: '%', higher: true, when: wtOn}
+);
+editionScoreHtml = function () {
+  let h = _wtPrevScoreHtml();
+  if (!wtOn()) return h;
+  const c = WT();
+  if (G.f.wtDirective) h += '<p class="dir">Directive: the vendor box stays, on demand only: a ticket and a window, MFA, recorded, off afterwards, with an on-call emergency path; Gil signed the risk acceptance. (game)</p>';
+  h += '<p>Water Plant: Tide Badge <b>' + (G.f.wtTide ? 'yes' : 'not yet') + '</b> · OT assets <b>' + c.inv + ' of ' + WT_ASSETS + '</b>' +
+    (c.zones ? ' · zones and conduits <b>first pass: exposure ' + c.zones.exposure + ', operations broken ' + c.zones.broken + '</b>' : '') +
+    (G.f.wtMon ? ' · passive monitoring <b>on</b>' : '') + ' (game)</p>';
+  return h;
+};
+peekExtra = function () {
+  const e = _wtPrevPeekExtra();
+  e.wtSummary = !!(G.f && G.f.wtSummary);
+  e.wt = G.wt ? {exposed: G.wt.exposed, deflt: G.wt.deflt, inv: G.wt.inv, invPct: wtInvPct(), backup: G.wt.backup, vend: wtVendPct(), vSince: G.wt.vSince,
+    zones: G.wt.zones, drills: G.wt.drills, dojo: G.wt.dojo, directive: G.wt.directive, boss: G.wt.boss, led: G.wt.led} : null;
+  return e;
+};
+function wtTile(d, ch, x, y) {
+  if (ch === '[' && G.f.wtExpose) d.pal = 'wtHmiOk';
+  if (ch === ']' && G.f.wtBackup) d.pal = 'wtPlcOk';
+  if (ch === '}' && G.f.wtZones) d.pal = 'wtFwOk';
+  if (ch === '<' && G.f.wtDirective) d.pal = 'wtVendOk';
+  if (ch === '-' && G.f.wtMon) d.pal = 'wtNetOk';
+  if (ch === '|' && G.f.wtTide && (x + y) % 2 === 0) d = Object.assign({ch: ','}, TILES[',']);
+  return d;
+}
+
+/* ---------- Objective ---------- */
+function wtObjective() {
+  const f = G.f, at = (text, x, y, map) => ({text: text, map: map || 'water', x: x, y: y, district: 'water'});
+  if (!f.wtMet) return at('Next: the Water Plant. The west-wall door in the Server Room’s lower room; your Crown Badge opens it.', 4, 3, 'water');
+  if (!f.wtInv) return at('Fieldwork: nobody knows what is on the plant network. Joss, by the PLC cabinets.', 14, 3);
+  if (!f.wtExpose) return at('Fieldwork: a booster panel on the internet, factory passwords. Mae, at the consoles.', 4, 1);
+  if (!f.wtZones) return at('Fieldwork: office PCs can reach the PLCs. The IT/OT firewall rack.', 13, 7);
+  if (!f.wtBackup) return at('Fieldwork: PLC logic backups from 2021. The PLC cabinets.', 11, 1);
+  if (!f.wtMon) return at('Fieldwork: nobody watches plant traffic. The control network rack.', 19, 7);
+  if (!f.wtNight1) return at('End your shift at your Water Plant desk.', 12, 13);
+  if (!f.wtDrill1) return at('Mae has a set point that moved in the night.', 4, 3);
+  if (!f.wtDrill2) return at('Joss has a controller whose logic changed overnight.', 14, 3);
+  if (!f.wtDirective) return at('Gil Hartley, the plant manager, wants a word about the vendor box.', 7, 7);
+  if (!f.wtNight2) return at('End your shift at your desk.', 12, 13);
+  if (!f.wtDrill3) return at('An office address is talking to a filter PLC. Joss.', 14, 3);
+  if (!f.wtDojoDone) {
+    if (!f.wtDojoMet) return at('(Optional) Train at the Network Traffic Analysis dojo with Calla.', 10, 11);
+    const i = WT().dojo.findIndex(x => !x);
+    return at('(Optional) Traffic puzzle ' + (i + 1) + ' of 3.', [3, 5, 7][i], 11);
+  }
+  if (!f.wtBoard) return at('Take the Plant Board challenge (Hanne Sorvik, through the west door).', 8, 2, 'ptboard');
+  if (!f.wtNight3) return at('End your shift at your desk.', 12, 13);
+  if (!f.wtBoss) return at('Mae needs you: a booster station has gone dark.', 4, 3);
+  if (!f.wtFile) return at('Rae wants a word about svc-print. By the vendor box.', 16, 8);
+  return {text: 'Water Plant secured. Next: Council Chambers.', done: true, district: 'water'};
+}
+
+/* ---------- Triggers and interactions ---------- */
+let wtEarlyWarned = false;
+function wtTriggers() {
+  if (G.map !== 'water') return false;
+  if (!G.f.svFile) {
+    if (wtEarlyWarned) return false;
+    wtEarlyWarned = true;
+    run(async () => { await say('Crown Badge, so the door opens. But the Server Room isn’t finished: Rae is waiting for you there. The plant runs itself until then.', 'Mae Arroyo'); });
+    return true;
+  }
+  if (!G.f.wtMet) { run(wtArrive); return true; }
+  return false;
+}
+function wtInteract(ch, tx, ty) {
+  if (!inWater()) return false;
+  if (ch === '[') { run(wtHmiTile); return true; }
+  if (ch === ']') { run(wtCabinet); return true; }
+  if (ch === '{') { run(async () => { await say('HIST-01, the control historian: every value the PLCs report, kept for trends and compliance records. ' + (G.f.wtZones ? 'A read-only copy, HIST-DMZ, now serves the office from the DMZ.' : 'The office reads it straight across the flat network.')); }); return true; }
+  if (ch === '}') { run(wtFirewall); return true; }
+  if (ch === '<') { run(async () => { await say(G.f.wtDirective ? 'RA-01, the vendor box: off. It switches on only for an approved window, with MFA, and records every session.' : 'RA-01, the vendor remote-access box: on, all day, every day, reachable from the internet since 2019.'); }); return true; }
+  if (ch === '-') { run(wtNetRack); return true; }
+  if (ch === '>') { run(async () => { await say('The chemical dosing skid, behind a yellow line. It belongs to the operators and the chemical vendor. You look; you never touch.'); }); return true; }
+  if (ch === '`') { run(() => wtDojoPuzzle([3, 5, 7].indexOf(tx))); return true; }
+  if (ch === '?') { run(async () => { await say('Plant Board racks: a practice rig of controllers and panels, wired to nothing that carries water.'); }); return true; }
+  if (ch === 'Y') { run(wtDesk); return true; }
+  return false;
+}
+async function wtTalk(npc) {
+  if (!WT_NPC_IDS.includes(npc.id)) return;
+  const who = npc.name, f = G.f;
+  if (!f.wtMet && npc.map === 'water') { await say('Mae is the one to talk to first. The operators run this place.', who); return; }
+  switch (npc.id) {
+    case 'mae': await maeTalk(); break;
+    case 'joss': await jossTalk(); break;
+    case 'gil': await gilTalk(); break;
+    case 'calla': await callaTalk(); break;
+    case 'hanne': await wtBoardScript(); break;
+    case 'raewt': await raeWaterTalk(); break;
+  }
+}
+async function wtDesk() {
+  const f = G.f;
+  const ready = (f.wtMon && !f.wtNight1) || (f.wtDirective && !f.wtNight2) || (f.wtBoard && !f.wtNight3);
+  if (!ready) { await say('Your desk at the Water Plant, by the window onto the filter beds. Too early to go home.'); return; }
+  const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
+  const i = await choose('Your Water Plant desk. End your shift?', opts, {nav: 'end-shift'});
+  if (opts[i].meta.k !== 'end') return;
+  await endShift('desk');
+  if (f.wtMon && !f.wtNight1) {
+    f.wtNight1 = true;
+    await say('Day ' + G.day + ', 07:00. Overnight: a program download at 21:24, a set-point change at 02:10, and at 06:00 the compare job flagged a controller. Mae has the set point.');
+  } else if (f.wtDirective && !f.wtNight2) {
+    f.wtNight2 = true;
+    await say('Day ' + G.day + ', 09:40. The sensor’s new-talker rule fired at 09:12: an office address is talking to a filter PLC. Joss has it.');
+  } else if (f.wtBoard && !f.wtNight3) {
+    f.wtNight3 = true;
+    await say('Day ' + G.day + ', 02:35. Your phone: Tunde, the night operator. “BS-3 went dark at 01:47. Ike is running it by hand and the water is fine. There’s a message on its screen. Come in.”');
+  }
+}
+
+/* ---------- Arrival ---------- */
+async function wtArrive() {
+  const who = 'Mae Arroyo', f = G.f;
+  WT(); G.wt.day0 = G.day;
+  await say('Day ' + G.day + '. The Water Plant: the control room, the PLC cabinets, the historian, the chemical dosing skid behind its yellow line, and a vendor box that has been switched on since 2019.');
+  await say('You’re the security lead from the Server Room? Mae Arroyo, shift lead. Before anything else: we make drinking water. My operators own the process. Nothing that touches it happens without us.', who);
+  await say('Here’s what I lose sleep over. A booster panel that answers from the internet. Passwords from the manuals. A flat network where any office PC can reach my controllers. No list of what’s out there. Nobody watching the traffic. And logic backups from 2021.', who);
+  await say('You stay Tier 3 lead investigator. What changes here is who decides: you work across the IT/OT line, and the people who run the process have the final say on it.', who);
+  G.targets.wtExposed = 0; G.targets.wtDefault = 0; G.targets.wtInv = 100; G.targets.wtBackup = 100; G.targets.wtVend = 100;
+  f.wtMet = true; track();
+  touchCSF('Identify');
+  await say('New on your scorecard: exposed devices, default passwords, assets inventoried, backups current, and vendor sessions approved. Start (Enter) shows them.', who);
+  await say('Start with Joss, our controls engineer, by the cabinets: what is actually on this network.', who);
+}
+async function maeTalk() {
+  const f = G.f, who = 'Mae Arroyo';
+  if (!f.wtInv) { await say('Joss first, by the PLC cabinets. Then come back to me about the booster panel.', who); return; }
+  if (!f.wtExpose) { await wtExposure(); return; }
+  if (!f.wtZones) { await say('The firewall rack in the corridor. Joss says the office can reach my PLCs. I’d like that to stop.', who); return; }
+  if (!f.wtBackup) { await say('The cabinets: backups. And when you do them, I want a manual drill on the filters. My people should practise.', who); return; }
+  if (!f.wtMon) { await say('The network rack in the corridor. Listening is fine. Poking my controllers is not.', who); return; }
+  if (!f.wtNight1) { await say('Go home. Tunde has the night. He knows what he’s doing.', who); return; }
+  if (!f.wtDrill1) { await wtDrill1(); return; }
+  if (!f.wtDrill2) { await say('Joss has the other alert, the download. Talk to him.', who); return; }
+  if (!f.wtDirective) { await say('Gil’s in the corridor, about the vendor box. Good luck.', who); return; }
+  if (!f.wtDrill3) { await say('Joss has something from the office side this morning.', who); return; }
+  if (!f.wtBoard) { await say('Hanne runs the Plant Board, through the west door. Calla’s dojo first, if you want it.', who); return; }
+  if (!f.wtNight3) { await say('Go home. The plant’s in better shape than it’s ever been.', who); return; }
+  if (!f.wtBoss) { await wtBossScript(); return; }
+  if (!f.wtFile) { await say('Rae came in. She’s by the vendor box, asking about svc-print.', who); return; }
+  await say('Safe water, operators in charge, and a vendor box that sleeps. Council Chambers is next for you.', who);
+  await wtSummary();
+}
+
+/* ---------- Fieldwork 1: the OT asset inventory ---------- */
+async function jossTalk() {
+  const f = G.f, who = 'Joss Kettering';
+  if (!f.wtInv) { await wtInventory(); return; }
+  if (!f.wtExpose) { await say('Mae’s at the consoles. The booster panel is hers to worry about and mine to fix.', who); return; }
+  if (!f.wtZones) { await say('The firewall rack in the corridor. Let’s draw the zones and decide what crosses them.', who); return; }
+  if (!f.wtBackup) { await wtBackups(); return; }
+  if (f.wtNight1 && f.wtDrill1 && !f.wtDrill2) { await wtDrill2(); return; }
+  if (f.wtNight2 && !f.wtDrill3) { await wtDrill3(); return; }
+  if (f.wtBoss) { await say('Every vendor device on the list now says how it connects, and we checked, not copied. BS-3 taught me that.', who); return; }
+  await say('Seven controllers, two offline copies each, and a compare job every morning. I sleep a little better.', who);
+}
+async function wtCabinet() {
+  const f = G.f;
+  if (!f.wtMet) { await say('PLC cabinets, humming. Mae should show you around first.'); return; }
+  if (!f.wtInv) { await say('The PLC cabinets and EWS-01, the engineering workstation. Joss is right here; he knows what’s in them.'); return; }
+  if (!f.wtZones) { await say('The PLC cabinets. The backups come after the zones: no point copying logic anyone in the office can rewrite.'); return; }
+  if (!f.wtBackup) { await wtBackups(); return; }
+  await say('The PLC cabinets: seven controllers, each backed up offline twice and compared with its backup every morning at 06:00.');
+}
+async function wtInventory() {
+  const who = 'Joss Kettering', c = WT();
+  await say('Joss Kettering, controls engineer. Our asset list is a spreadsheet from 2019 with twelve rows. I can name more than that from memory, but not all of them.', who);
+  while (true) {
+    const i = await choose('How do you build the plant’s asset inventory?', [
+      {label: 'Walk the plant with the operators, read EWS-01’s project files and the switch tables, and listen on a mirror port', meta: {good: true}},
+      {label: 'Run a fast active scan of the plant network this afternoon, so every device has to answer and none of them can be missed'},
+      {label: 'Ask each vendor for its own device list and merge them, because the vendors installed most of this equipment'},
+      {label: 'Start from the 2019 spreadsheet and add each device the first time it shows up in an alert'}], {shuffle: true});
+    if (i === 0) break;
+    if (i === 1) await say('Active scanning in a running plant can knock fragile controllers over. Joint guidance from April 2026 says not to try it without deep knowledge of the system; passive listening avoids the risk.');
+    else if (i === 2) await say('Vendor lists are a start, not a check: they miss what was added later and describe equipment as it shipped. Walk it and listen to it.');
+    else await say('Twelve rows of forty-one. Waiting for alerts means you meet devices when they are already in trouble.');
+  }
+  c.inv = WT_ASSETS; track();
+  G.f.wtInv = true; unlock('act', 'otinv'); unlock('fact', 'wtinvguide'); touchCSF('Identify');
+  await say('Forty-one OT assets: seven PLCs, two HMIs, EWS-01, the historian, the vendor box, switches, radios, drives and panels, each with an owner and how it connects. BS-3, the pump vendor’s skid, from its datasheet: “remote access: none”. (game)', who);
+  await say('Now Mae, at the consoles. She has a booster panel she wants off the internet.', who);
+}
+
+/* ---------- Fieldwork 2: internet exposure and default passwords ---------- */
+async function wtHmiTile() {
+  const f = G.f;
+  if (!f.wtMet) { await say('An operator console. Mae should show you around first.'); return; }
+  if (!f.wtInv) { await say('HMI-01, the operators’ console. The inventory first.'); return; }
+  if (!f.wtExpose) { await wtExposure(); return; }
+  await say('HMI-01: every factory password on the plant’s own devices changed, one at a time, with an operator watching each.');
+}
+async function wtExposure() {
+  const who = 'Mae Arroyo', c = WT();
+  await say('An outside check of the town’s own internet addresses found PLC-PMP-02, booster station 2, answering at 203.0.113.47 through a cellular router, on its factory password. Nine devices still have passwords from the manuals. (game)', who);
+  while (true) {
+    const i = await choose('How do you deal with the exposure and the passwords?', [
+      {label: 'Off the internet first, then the passwords one at a time with an operator watching, since a lockout mid-shift is real', meta: {good: true}},
+      {label: 'Change all nine passwords in one batch from EWS-01 this afternoon and shut the window as fast as possible'},
+      {label: 'Keep PLC-PMP-02 online for the integrator, but on a non-default port and a new password, so scanners stop seeing it any more'},
+      {label: 'Unplug the communications at every booster station until the review is finished and nobody can reach them'}], {shuffle: true});
+    if (i === 0) break;
+    if (i === 1) await say('A batch change on running controllers, with nobody watching, is how you lock an operator out mid-shift. One device at a time, tested, with Mae’s people at the console.');
+    else if (i === 2) await say('AA23-335A asks for PLCs off the public internet. A new port is a smaller target, not a closed door; the panel still answers.');
+    else await say('Then the control room loses every booster station’s telemetry and has to drive round them. Remove the one exposure; leave the rest running.');
+  }
+  c.exposed = Math.max(0, c.exposed - 1); c.deflt = 0; track();
+  G.f.wtExpose = true; unlock('act', 'otexpose'); unlock('fact', 'wtaa23'); unlock('fact', 'wthmi'); unlock('tech', 'T0883'); unlock('tech', 'T1694.001'); touchCSF('Protect');
+  await say('PLC-PMP-02 reports over the plant’s private radio link now; its public service is closed. Nine passwords changed, nine devices tested. BS-3 is “vendor-managed”: the pump vendor says theirs was changed. (game)', who);
+  await say('One device left on the internet all day: RA-01, the vendor box. That one is Gil’s decision. Next, the firewall rack in the corridor.', who);
+}
+
+/* ---------- Fieldwork 3: zones and conduits (mini-game) ---------- */
+async function wtFirewall() {
+  const f = G.f;
+  if (!f.wtMet) { await say('A firewall rack. Mae should show you around first.'); return; }
+  if (!f.wtExpose) { await say('FW-OT, the new IT/OT firewall, waiting for rules. The booster panel first.'); return; }
+  if (!f.wtZones) { await wtZones(); return; }
+  const z = WT().zones;
+  await say('FW-OT: four zones, five conduits allowed, everything else denied. First pass: exposure ' + (z ? z.exposure : 0) + ', operations broken ' + (z ? z.broken : 0) + '. Plus R-114, finance’s exception until Friday.');
+}
+async function wtZones() {
+  const who = 'Joss Kettering', c = WT();
+  await say('FW-OT, new and empty. Today the office and the plant are one flat network. Put each asset in its zone, then decide which conduits cross the lines. Allow what the plant needs; deny the rest.', who);
+  for (const a of WT_ZONE_ASSETS) {
+    const items = WT_ZONES.map(z => ({label: z.label, meta: {good: z.k === a.zone, k: z.k}}));
+    while (true) {
+      const i = await UI.openModal('Zones · ' + a.id, '<div class="card"><b>' + esc(a.id) + '</b><br>' + esc(a.what) + '</div><p>Which zone does it belong in?</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+      if (items[i].meta.good) break;
+      await say(a.zone === 'dmz' ? 'It sits between the office and the plant: the office reaches it, it reaches the plant, and nobody passes straight through.' : a.zone === 'field' ? 'Controllers and their I/O are the field zone: the deepest one, reached only from the control zone.' : a.zone === 'control' ? 'It is how the plant is run or recorded: the control zone, next to the controllers but not among them.' : 'It serves the office: enterprise zone.');
+    }
+  }
+  const pass = async (list, first) => {
+    const res = [];
+    for (const cd of list) {
+      const items = [{label: 'Allow this conduit', meta: {good: cd.need, k: 'allow'}}, {label: 'Deny this conduit', meta: {good: !cd.need, k: 'deny'}}];
+      const i = await UI.openModal('Conduits · ' + cd.text, '<div class="card"><b>' + esc(cd.text) + '</b><br>Used for: ' + esc(cd.why) + '</div>', items, {shuffle: true, closable: false, cls: 'drill'});
+      res.push({cd: cd, allow: items[i].meta.k === 'allow'});
+    }
+    return res;
+  };
+  let res = await pass(WT_CONDUITS, true);
+  const tally = r => ({exposure: r.filter(x => x.allow && !x.cd.need).length, broken: r.filter(x => !x.allow && x.cd.need).length});
+  c.zones = tally(res);
+  while (true) {
+    const wrong = res.filter(x => x.allow !== x.cd.need);
+    const rows = res.map(x => '<tr><td>' + esc(x.cd.text) + '</td><td>' + (x.allow ? 'allowed' : 'denied') + '</td><td>' + esc(x.allow && !x.cd.need ? 'Exposure: ' + x.cd.exp : !x.allow && x.cd.need ? 'Broken: ' + x.cd.broke : 'fine') + '</td></tr>').join('');
+    const t = tally(res);
+    await UI.openModal('Zones and conduits · result', '<p>Exposure left: <b>' + t.exposure + '</b> · operations broken: <b>' + t.broken + '</b> (game)</p><table class="sc"><tr><th>Conduit</th><th>You</th><th>Effect</th></tr>' + rows + '</table>',
+      [{label: wrong.length ? 'Fix the ones that are wrong' : 'Done', meta: {good: true}}], {closable: false, cls: 'drill'});
+    if (!wrong.length) break;
+    for (const w of wrong) await say(w.cd.need ? 'Deny that and ' + w.cd.broke.charAt(0).toLowerCase() + w.cd.broke.slice(1) + ' The plant needs it: allow it, narrowly.' : 'Allow that and ' + w.cd.exp.charAt(0).toLowerCase() + w.cd.exp.slice(1) + ' Nothing the plant does needs it: deny it.');
+    const again = await pass(wrong.map(x => x.cd), false);
+    res = res.map(x => again.find(y => y.cd === x.cd) || x);
+  }
+  // The exception: finance's reporting job can't move to the DMZ copy until Friday.
+  await say('One catch. Finance’s reporting job on RPT-01 reads PLC-FLT-01 directly every morning, and they can’t point it at HIST-DMZ until Friday.', who);
+  while (true) {
+    const i = await choose('What do you do about finance’s job until Friday?', [
+      {label: 'A temporary exception, RPT-01 to that one PLC only: finance owns it, and it expires on Friday', meta: {good: true}},
+      {label: 'Keep the old office-to-PLC rule in place until Friday, as it has been for years'},
+      {label: 'Deny it and let finance’s morning report fail until Friday'},
+      {label: 'Give finance a sign-in on HMI-01, so they can read the totals off the operators’ console instead'}], {shuffle: true});
+    if (i === 0) break;
+    if (i === 1) await say('The old rule lets every office PC reach every controller. An exception covers one host, one PLC, an owner and an end date.');
+    else if (i === 2) await say('The report is real work. Breaking it to make a point teaches finance to ask for a hole later. Narrow it and date it.');
+    else await say('That puts office accounts on the operators’ console, the one conduit you just denied.');
+  }
+  G.f.wtZones = true; unlock('act', 'zones'); unlock('fact', 'wtzones'); unlock('fact', 'wt80082'); touchCSF('Protect'); touchCSF('Identify');
+  await say('R-114 approved: RPT-01 to PLC-FLT-01 only, owner finance reporting, expires Friday. The firewall team puts the rules in this afternoon. Four zones; the office reads from HIST-DMZ, vendors land on EWS-01. (game)', who);
+  await say('Now the backups, at the cabinets. Mae wants a manual drill on the filters while we do them.', who);
+}
+
+/* ---------- Fieldwork 4: offline PLC logic backups and a manual drill ---------- */
+async function wtBackups() {
+  const who = 'Joss Kettering', c = WT();
+  await say('Last backups: 2021, on a laptop we retired. Seven controllers, and if one of them died tonight I’d be rebuilding its logic from memory.', who);
+  while (true) {
+    const i = await choose('How do you back up the controllers?', [
+      {label: 'Two offline copies of each PLC’s logic and configuration, one off site, each matched to the controller; then Mae’s manual drill', meta: {good: true}},
+      {label: 'Save the backups on EWS-01’s own disk, where Joss can reach them fastest when a controller fails in the middle of the night'},
+      {label: 'Back up only the five controllers the town programmed itself, and leave the two vendor skids to their vendors’ own copies'},
+      {label: 'Take the backups, but skip the manual drill: the operators ran this plant by hand for years before it was automated, so they remember'}], {shuffle: true});
+    if (i === 0) break;
+    if (i === 1) await say('EWS-01 is the machine an intruder wants most. A backup that lives on it goes down with it. Offline, and one copy off site.');
+    else if (i === 2) await say('A vendor’s copy is the vendor’s, on their schedule. If a skid’s controller fails, you need its logic tonight, from your own safe.');
+    else await say('CISA, the FBI, the EPA and the DOE all say it: practise and maintain the ability to run OT by hand. Skills fade; drills keep them.');
+  }
+  c.backup = WT_PLCS; track();
+  G.f.wtBackup = true; unlock('act', 'plcbackup'); unlock('fact', 'wtprimary'); touchCSF('Recover'); touchCSF('Protect');
+  await say('Seven controllers backed up twice, offline, one copy in the safe and one off site; BS-3’s from the pump vendor’s project file, compared over the telemetry link. PLC-HSP-01 is at revision 4.2. A compare job checks each one at 06:00. (game)', who);
+  await say('Mae ran the filters by hand for half an hour with a second operator. Slow, steady, nobody panicked. Last thing: someone should be listening to this network.', who);
+}
+
+/* ---------- Fieldwork 5: passive monitoring ---------- */
+async function wtNetRack() {
+  const f = G.f;
+  if (!f.wtMet) { await say('A network rack. Mae should show you around first.'); return; }
+  if (!f.wtBackup) { await say('The control network rack: switches with spare mirror ports. The backups first.'); return; }
+  if (!f.wtMon) { await wtMonitor(); return; }
+  await say('A listen-only sensor on the control and field switches’ mirror ports. It has never sent a packet to a controller.');
+}
+async function wtMonitor() {
+  const who = 'Joss Kettering';
+  await say('Nobody has ever watched this network. The controllers talk the same way every second of every day, so anything new should stand out, if someone is listening.', who);
+  while (true) {
+    const i = await choose('How do you watch the plant’s traffic?', [
+      {label: 'A listen-only sensor on mirror ports, since scanning risks the controllers, alerting on off-window downloads and new talkers', meta: {good: true}},
+      {label: 'Put a monitoring agent on every PLC and HMI to report everything each device does to the SIEM'},
+      {label: 'Scan every PLC actively once an hour, so a change to any controller is caught within the hour'},
+      {label: 'Alert on every packet to or from a PLC across the whole plant'}], {shuffle: true});
+    if (i === 0) break;
+    if (i === 1) await say('You can’t install software on a PLC, and putting it on an HMI without the vendor can void its support. Listen from the network instead.');
+    else if (i === 2) await say('An hourly active scan of running controllers is the risk the passive sensor exists to avoid.');
+    else await say('The PLCs exchange thousands of packets a minute. Learn the rhythm and alert on what breaks it.');
+  }
+  G.f.wtMon = true; unlock('act', 'passivemon'); unlock('fact', 'wtpassive'); touchCSF('Detect');
+  const t = G.party.find(x => x.id === 'lantern' || EVOLVED_FROM[x.id] === 'lantern');
+  if (t) { t.lvl++; await say('Lanternkeep has the plant’s traffic to read. ' + TOOLS[t.id].name + ' reached Lv ' + t.lvl + '.'); }
+  await say('Sensor on. From now these four rules can fire; before today, nothing watched. That’s the fieldwork. Your desk is in the south room. (game)', who);
+}
+
+/* ---------- Drills ---------- */
+async function wtDrill(key) {
+  const c = WT();
+  const raw = JSON.stringify(WT_DRILLS[key]).replace(/\{D-3\}/g, String(G.day - 3)).replace(/\{D-1\}/g, String(G.day - 1)).replace(/\{D\}/g, String(G.day));
+  const D = JSON.parse(raw);
+  const r = await doDrill(D);
+  c.drills[key] = {score: r.score, verdictOk: r.verdictOk, supported: r.supported, keys: r.keys, ai: r.ai, aiWrong: r.aiWrong};
+  c.led++; track();
+  return r;
+}
+async function wtDrill1() {
+  const who = 'Mae Arroyo';
+  await say('At 02:10 the clearwell’s low-level set point dropped from 3.2 to 2.4 metres. Tunde was on. Before I ask him, tell me what the records say. You lead this one.', who);
+  const r = await wtDrill('setpoint');
+  G.f.wtDrill1 = true; touchCSF('Detect');
+  await say(r.verdictOk ? 'Tunde, at HMI-02, for the tank inspection. He logged it two minutes later. Good: nothing to undo, and I didn’t have to ask him whether he’d been hacked.' : 'It was Tunde, at HMI-02, for the 08:00 tank inspection: his account, his console, his shift-log entry. Nothing to undo.', who);
+  await say('Joss has the other one: a controller whose logic changed.', who);
+}
+async function wtDrill2() {
+  const who = 'Joss Kettering';
+  await say('PLC-HSP-01, the high-service pumps. The 06:00 compare says its logic isn’t what we backed up yesterday, and the sensor saw a download at 21:24. The pumps are running fine. Tampering, or a change I don’t know about?', who);
+  const r = await wtDrill('checksum');
+  G.f.wtDrill2 = true; touchCSF('Respond');
+  await say(r.verdictOk ? 'The pump vendor, through the box, because Gil emailed them. No ticket, nothing in my archive, nobody told Mae. It runs; it goes through an emergency-change review this afternoon.' : 'It was the pump vendor, through RA-01, at Gil’s request: no ticket, no archived revision. Not an intruder, not an approved change either.', who);
+  await say('And Gil wants to talk to you about that box. Now, apparently.', who);
+}
+async function wtDrill3() {
+  const who = 'Joss Kettering';
+  await say('The sensor’s new-talker rule, 09:12: an office address talking to PLC-FLT-01 on its industrial port, through FW-OT. Finance’s job reads that PLC at 07:00. Is this them, or someone else?', who);
+  const r = await wtDrill('officeplc');
+  G.f.wtDrill3 = true; unlock('tech', 'T0888'); touchCSF('Respond');
+  const c = WT(); c.vSince = {total: 1, ok: 1}; track();
+  await say(r.verdictOk ? 'OF-WS-22, an unsigned program from an email, through R-114, which was put in for the whole office subnet instead of RPT-01. Narrowed now; the PC is off the network on the IT side; the filters never noticed.' : 'It was OF-WS-22, l.marsh’s planning PC: an unsigned program from an email, through R-114, which had been put in for the whole office. Narrowed now, the PC off the network.', who);
+  await say('Reads only, stopped at the boundary, and nobody turned the plant off. And the filter vendor’s 10:00 session ran under CHG-8240: approved, MFA, recorded, box off at noon. Calla’s dojo is open; the Plant Board after.', who);
+}
+
+/* ---------- The directive (game): the vendor box left on "so they can fix things fast" ---------- */
+async function gilTalk() {
+  const who = 'Gil Hartley', c = WT(), f = G.f;
+  if (f.wtDirective) { await say('On demand, with my name on the emergency path. If a pump fails at 3 a.m., Joss turns the box on. Fine.', who); return; }
+  await say('Gil Hartley, plant manager. I hear you’re unhappy about the vendor box. Leave it on. Permanently. When a pump misbehaves at night they fix it from home in ten minutes.', who);
+  await say('Last night they fixed the alternation timer I asked them about. That’s service. I don’t want a form between my pumps and the people who built them.', who);
+  while (true) {
+    const i = await choose('How do you answer Gil?', [
+      {label: 'On demand: the vendor asks, Joss approves a ticket and window, MFA on, sessions recorded, off afterwards; Gil signs the 24/7 path', meta: {good: true, k: 'od'}},
+      {label: 'Agree: keep RA-01 on permanently, since it has never caused an outage and the vendors need fast access at night'},
+      {label: 'Unplug RA-01 for good, and make the vendors drive in for every fix, however long the drive takes in the middle of the night'},
+      {label: 'Keep it on permanently but add MFA and record every session, so a stolen vendor password alone can’t get anyone in at night'}], {shuffle: true});
+    if (i === 0) { c.directive = 'ondemand'; break; }
+    if (i === 1) await say('Last night that box let a vendor change your pumps’ logic with no ticket and no operator told. The next session might not be the vendor.');
+    else if (i === 2) await say('Then a failed pump at 3 a.m. waits for a two-hour drive. The plant needs the support; it doesn’t need the box listening all day.');
+    else await say('MFA is part of it. But a box that is always on is always a target, and nobody approves what happens in the session.');
+  }
+  await say('Fine. On demand. And if it’s 3 a.m.?', who);
+  await say('The on-call engineer can switch it on in fifteen minutes, any hour. You sign for that path: it’s your risk, in writing, not mine.');
+  c.exposed = Math.max(0, c.exposed - 1); c.vSince = {total: 0, ok: 0}; track();
+  G.f.wtDirective = true; unlock('act', 'vendorod'); touchCSF('Govern');
+  await say('Signed. The box is off between approved windows from today. MFA added, sessions recorded. (game)', who);
+  await say('While we change the box, let me list its accounts.', 'Joss Kettering');
+  await wtQtVendorBox();
+  await say('(Vendor access isn’t yes or no. It’s on demand, approved, recorded, and the business owning the emergency path.)');
+}
+
+/* ---------- Network Traffic Analysis dojo (NCL area; concepts only) ---------- */
+async function callaTalk() {
+  const who = 'Calla Brandt', f = G.f;
+  if (!f.wtDrill3) { await say('The dojo opens once the plant’s own cases are done. Come back after Joss’s drills.', who); return; }
+  if (!f.wtDojoMet) {
+    f.wtDojoMet = true;
+    await say('Calla Brandt. I coach the Network Traffic Analysis games for the National Cyber League team. (game)', who);
+    await say('Three terminals: a flow record, a baseline, and a device that should never speak to the internet. No tools, no commands: reading traffic, which is the whole skill.', who);
+    return;
+  }
+  if (f.wtDojoDone) { await say('Flows are metadata, OT is regular, and a denied request is still a finding.', who); return; }
+  await say('Puzzles solved: ' + WT().dojo.filter(Boolean).length + ' of 3. Terminals to my left.', who);
+}
+async function wtDojoPuzzle(i) {
+  const f = G.f, c = WT();
+  if (i < 0) return;
+  if (!f.wtDojoMet) { await say('A practice terminal. Talk to Calla first.'); return; }
+  const p = WT_DOJO[i];
+  if (c.dojo[i]) { await say('Solved. ' + p.explain); return; }
+  while (true) {
+    const k = await choose(p.q, p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {shuffle: true});
+    if (k === p.good) break;
+    await say('Not quite. Read the traffic again.');
+  }
+  await say('Correct. ' + p.explain);
+  c.dojo[i] = true; touchCSF('Detect');
+  if (!c.dojo.every(Boolean) || f.wtDojoDone) return;
+  f.wtDojoDone = true;
+  const t = G.party.find(x => TOOLS[x.id].cls === 'network');
+  if (t) { t.lvl++; await say('All three. ' + TOOLS[t.id].name + ' reached Lv ' + t.lvl + '.', 'Calla Brandt'); }
+  else await say('All three. You read traffic for what changed now, not for how much.', 'Calla Brandt');
+  await evolveCheck();
+}
+
+/* ---------- Evolution: Lanternkeep -> Tidewatch (at the Plant Board) ---------- */
+async function wtEvolveCheck() {
+  if (!G.f || !G.f.wtBoard) return;
+  const t = G.party.find(p => p.id === 'lantern');
+  if (!t) return;
+  t.id = 'tidewatch'; t.lvl = Math.max(t.lvl, 8); touchCSF('Detect');
+  await say('Lanternkeep is evolving! Lanternkeep learns to listen without speaking → Tidewatch. New ability: Passive listen.');
+}
+
+/* ---------- Plant Board ---------- */
+async function wtBoardScript() {
+  const who = 'Hanne Sorvik', f = G.f;
+  if (f.wtBoard) { await say('The Tide Badge means nobody shuts the plant down on a hunch. The operators sign, or it doesn’t happen.', who); return; }
+  if (!f.wtDrill3) { await say('The Plant Board is for people who have worked the plant’s own cases. Finish with Mae and Joss first.', who); return; }
+  await say('Hanne Sorvik, plant security lead. In a plant, the worst mistake isn’t always missing the intruder. Sometimes it’s turning off the water to catch one.', who);
+  await say('Three rounds on the practice rig: a factory password from the internet, a download nobody planned, and a set point from nowhere. Ready?', who);
+  for (const s of WT_BOARD_SPECS()) await fightStory(s, 'Hanne: Again. Safety first, then the intruder.');
+  f.wtBoard = true; f.wtTide = true;
+  G.focusMax = Math.max(G.focusMax, 50); G.focus = G.focusMax;
+  unlock('tech', 'T1694.001'); unlock('tech', 'T0843'); unlock('tech', 'T0836');
+  await say('You cleared the Plant Board. This is the Tide Badge.', who);
+  await say('Its power: on any plant alert, a “shut it all down” response needs the operators’ sign-off, so a wrong call can’t take the water off. And attacks through internet-exposed devices come half as often. The field cabling gets catalogued too. (game)', who);
+  await say('Rank: Tier 3 lead investigator, now across the IT/OT boundary. New responsibility: you lead the investigation; the operators and engineers who own the process have the final say on anything that touches it.');
+  touchCSF('Govern');
+  await evolveCheck();
+}
+
+/* ---------- Boss: a booster station goes dark (the town's incident, modelled on a real case) ---------- */
+function wtBossStages(picks) {
+  const ev0 = picks.includes('asis') ? 20 : 0;
+  const restored = picks.includes('restore') && picks.includes('offnet') && picks.includes('safe');
+  return {
+    s1: {kind: 'mal', threat: 'preset', tech: 'T0883', tags: ['exposed', 'ot'], story: true, group: 'c', ev0: ev0,
+      rate: picks.includes('safe') ? 9 : 14, dwell0: 20,
+      title: 'Stage 1: a booster station goes dark', host: 'BS-3 · booster station 3', enemy: {spr: 'hinge', pal: 'wtPreset'},
+      clues: ['01:47: the control room lost BS-3’s telemetry. At 02:20 Ike, the on-call operator, found its touchscreen showing a message calling the town’s equipment a target, the controller stopped and the pumps off. He photographed it and touched nothing.', 'Zone 3’s tank is at 78%: hours of supply. On Tunde’s instruction Ike ran the pumps in hand at 02:31; zone 3’s pressure was normal by 02:40.', 'BS-3 came with the pump vendor’s cellular modem in 2022. The inventory, copied from the vendor’s datasheet, said “remote access: none”. FW-OT and the sensor saw nothing: that path never crosses the town’s network.'],
+      truth: 'A plant device reached from the internet through a vendor modem nobody had listed (Internet Accessible Device). The water is safe in hand control; now take the door away without wiping what the controller holds.',
+      resp: [{label: 'Keep BS-3 in hand on the operators’ call, keep the controller as it is, and unplug the vendor’s modem: it isn’t needed', good: true},
+             {label: 'Shut the high-service pumps and every booster station until the investigation is done and nothing runs at all', good: false, disrupt: 1, shutdown: true, why: 'BS-3 is safe in hand and zone 3 is on its tank. Shutting the pumps drops pressure across town: an outage you caused.'},
+             {label: 'Power-cycle the controller and put BS-3 back in automatic, so the station runs normally again before the morning shift starts', good: false, why: 'The restart wipes what the controller holds about the intrusion, and nobody knows what logic it would return to. Hand control is working.'}],
+      chain: [{at: 40, text: 'A second sign-in attempt reaches the modem.'}, {at: 75, text: 'The screen flickers: someone is still connected.'}]},
+    s2: {kind: 'mal', threat: 'blindside', tech: 'T0829', tags: ['ot'], story: true, group: 'c', ev0: ev0,
+      rate: picks.includes('asis') ? 9 : 13, dwell0: picks.includes('asis') ? 15 : 40,
+      title: 'Stage 2: what did they touch?', host: 'PLC-BS3 · read-out with the vendor', enemy: {spr: 'shade', pal: 'wtBlind'},
+      clues: ['09:00, with the pump vendor’s engineer and Joss: the controller’s program and the screen project read out and compared with the offline backup from the fieldwork. Logic and set points unchanged; the screen project replaced; the controller left stopped.', 'The controller’s event list: a sign-in at 01:38 from 203.0.113.88 with the factory password. The modem’s own log: 203.0.113.88 connected 01:37–01:47. The vendor had said the password was changed; it never was.', 'FW-OT and the sensor show nothing from that path into the plant. No other device came from the pump vendor; the chemical skid was checked by hand: no modem.'],
+      truth: 'Loss of View: the control room lost BS-3, and only an operator at the station could run it. The read-out shows what changed (the screen, a stopped controller) and what didn’t (logic, set points, the rest of the plant).',
+      resp: [{label: 'Compare the read-out with the offline backup and look for every vendor-connected device before reloading anything', good: true},
+             {label: 'Factory-reset the panel and load the backup now, so BS-3 is back in automatic before the read-out is even finished', good: false, why: 'Reloading first erases what the read-out is for: what they changed, and how they got in.'},
+             {label: 'Run an active scan of every PLC in the plant to see whether the intruder reached any of them overnight', good: false, disrupt: 1, why: 'Active scans can knock fragile controllers over in a running plant, and the sensor and FW-OT logs already answer the question.'}],
+      chain: [{at: 60, text: 'Another address tries the old modem number.'}]},
+    s3: {kind: 'mal', threat: 'preset', tech: 'T1694.001', tags: ['exposed', 'ot'], story: true, group: 'c', ev0: ev0,
+      rate: restored ? 8 : 14, dwell0: restored ? 8 : 40,
+      title: 'Stage 3: back to automatic, safely', host: 'BS-3 · with the operators', enemy: {spr: 'hinge', pal: 'wtPreset'},
+      clues: ['14:00: the vendor changes the factory password with Joss and removes the modem for good; pump-vendor support comes through RA-01, on demand, from now on.', 'The screen project is restored and the logic confirmed from the offline backup (the checksums match); Mae’s operators test BS-3 in hand, then switch it to automatic at 16:10 with her sign-off.', 'Leadership, CISA and the FBI have the report; WaterISAC has what other utilities need. The outside exposure check now covers vendor-supplied devices, a clause in every contract.'],
+      truth: 'Recovery: new credentials, the exposure gone, known-good logic from the offline backup, and automatic only after the operators test it. A factory password on a device that answered from the internet was the way in (Default Credentials).',
+      resp: [{label: 'Restore from the offline backup and match the checksums; automatic only after the operators test it, since they run it', good: true},
+             {label: 'Restore from the backup and switch BS-3 to automatic this evening, so the operators can stop running it by hand', good: false, why: 'Automatic before the operators have tested it is the one step that can hurt the water. Their sign-off comes first.'},
+             {label: 'Keep the modem for the vendor, with a new password and a non-default port', good: false, why: 'AA23-335A asks for PLCs off the public internet. A new port still answers from it.'}],
+      chain: [{at: 60, text: 'A scanner finds the old modem address empty.'}]}
+  };
+}
+async function wtBossScript() {
+  const who = 'Mae Arroyo', c = WT();
+  await surfaceMissed(true);
+  c.boss = {day: G.day}; c.exposed = 1; c.deflt = 1; track();
+  await say('BS-3 went dark at 01:47. Ike is running it by hand and zone 3 has hours of water in the tank. Nobody is in danger. Now: what happened, and how do we get it back safely?', who);
+  await say('This is our incident, not a retelling. But there is a real case like it: in late 2023 CISA reported internet-exposed controllers with default passwords at US water facilities, defaced; one water authority switched to manual. It’s in your Field Manual.', who);
+  unlock('fact', 'wtcase'); unlock('fact', 'wtaa23');
+  await say('Leadership is told now. CISA and the FBI get the report this morning, and WaterISAC what other utilities need. Telling people is never optional, so it isn’t one of your cards.', who);
+  touchCSF('Respond'); G.rep += 5; toast('Leadership, CISA and the FBI told. Reputation up.');
+  await say('Tabletop. Pick four response cards. Then three stages: safe, scoped, restored.', who);
+  const items = WT_CARDS.map(x => ({label: x.name, meta: {good: !!x.good}})).concat([{label: 'Play these four cards', done: true, meta: {done: true}}]);
+  const body = '<p>Pick <b>four</b> cards. Each is our own, written from CISA, FBI, EPA and partner guidance for plant owners. (Leadership, CISA, the FBI and WaterISAC are told automatically.)</p>' +
+    shownOrder(WT_CARDS, items).map(x => '<div class="card"><b>' + esc(x.name) + '</b> <span class="tag">' + x.csf + '</span><br>' + esc(x.text) + '</div>').join('');
+  const sel = await UI.openModal('Tabletop: a booster station goes dark', body, items, {shuffle: true, multi: 4, closable: false, cls: 'tabletop'});
+  const picks = sel.map(i => WT_CARDS[i].id);
+  G.f.wtCards = picks;
+  for (const id of picks) { const x = WT_CARDS.find(y => y.id === id); touchCSF(x.csf); await say(x.name + ': ' + x.fx); }
+  if (picks.includes('poweroff')) { G.rep -= 2; bumpUptime(-0.02); }
+  if (picks.includes('reboot')) G.rep -= 2;
+  if (picks.includes('newport')) G.rep -= 1;
+  if (picks.includes('later')) G.rep -= 2;
+  await say('Debrief: in a plant, safety comes first and the operators decide. Then leave the device as it is for the people who can read it out, shut the door it was reached through, and restore known-good logic from the offline copy, tested before automatic. Turning everything off is a failure too.', who);
+  const S = wtBossStages(picks);
+  await fightStory(S.s1, 'Mae: Again. The water is safe; take your time.');
+  await fightStory(S.s2, 'Mae: Again. Read it out before you reload anything.');
+  await fightStory(S.s3, 'Mae: Again. My operators sign off, or it stays in hand.');
+  c.led++;
+  c.boss = {day: c.boss.day, picks: picks, restored: picks.includes('restore') && picks.includes('offnet') && picks.includes('safe')};
+  c.exposed = 0; c.deflt = 0; track();
+  G.f.wtBoss = true;
+  touchCSF('Recover'); unlock('tech', 'T0829'); unlock('act', 'otrespond');
+  bumpUptime(0.01);
+  await say('BS-3 is back in automatic since 16:10, on my sign-off. New password, no modem, the logic matching our offline copy. Zone 3 never went short.', who);
+  await say('Rae came in this morning. She’s by the vendor box, and she wants to talk about something Joss found that isn’t tonight’s intruder: svc-print.', who);
+}
+
+/* ---------- The Quiet Thread: svc-print on the vendor box, added to the file ---------- */
+async function raeWaterTalk() {
+  const who = 'Rae Okafor', c = WT();
+  if (G.f.wtFile) { await say('On the file, with the rest. The same account, the same 2019 admin, a new place. We watch. It continues.', who); return; }
+  await say('Joss told me. svc-print has an account on RA-01, the box that reaches the engineering workstation, created in March 2019 by a.kerr-adm. No sign-ins in ninety days.', who);
+  while (true) {
+    const i = await UI.openModal('svc-print on the vendor box', '<p>RA-01’s local account list: fc-support, pv-ksato, j.kettering, and svc-print, created 14 March 2019 by a.kerr-adm (deleted in 2021), comment “temp - printer vendor”. The same admin account and month as the Server Room nesting. RA-01 keeps 90 days of sign-ins: none for svc-print. The box is off between approved windows now. (game)</p>', [
+      {label: 'Leave svc-print’s account on RA-01 as it is, on the file: Rae’s rule holds and the box is off between windows', meta: {good: true, k: 'file'}},
+      {label: 'Delete svc-print from RA-01 now: a printer account has no business on a box that reaches the engineering workstation', meta: {k: 'delete'}},
+      {label: 'File it as leftover from the 2019 printer rollout: no sign-ins in ninety days, and the account that made it is long gone', meta: {k: 'cruft'}},
+      {label: 'Wipe RA-01’s account list and rebuild it from the vendor contracts, so nothing unexplained survives on the box', meta: {k: 'wipe'}}], {shuffle: true, closable: false, cls: 'drill'});
+    const k = [0, 1, 2, 3][i];
+    if (k === 0) break;
+    if (k === 1) await say('Deleting it tells whoever made it that we’ve seen it, and it destroys the account’s own record. The box is off between windows; that’s enough for now. It’s my call, with a plan.', who);
+    else if (k === 2) await say('Maybe it is leftover. But it’s the same account and the same admin as the whole suspicion file. You don’t close that as leftover. You add it.', who);
+    else await say('Rebuilding the box at night, with no plan, wipes the evidence with the clutter. Write it up; don’t improvise it.', who);
+  }
+  c.file = {clue: 'wt-vendorbox', day: G.day};
+  G.f.wtFile = true; touchCSF('Govern');
+  Series.markEdition(EDITION.id, {svcPrintVendorBox: true});
+  await say('Added. Now we know svc-print had a key to the plant’s door too, cut in the same month as the nesting. We still don’t know who, or why, or whether it’s moving. The file goes with you to Council Chambers.', who);
+  await say('(The Quiet Thread is still on file. It continues.)');
+  await say('That’s the Water Plant. Next stop: Council Chambers.', 'Mae Arroyo');
+  await wtSummary();
+}
+
+/* ---------- End of district ---------- */
+async function wtSummary() {
+  await surfaceMissed(true);
+  G.f.wtSummary = true;
+  const c = WT(), d = c.drills;
+  const dl = ['setpoint', 'checksum', 'officeplc'].map(k => esc(WT_DRILLS[k].title) + ' <b>' + (d[k] ? d[k].score : '—') + '</b>').join(' · ');
+  const body = '<p class="big">Water Plant district: secured.</p>' +
+    '<p>Rank <b>' + G.rank + '</b> · Badges <b>Key, Seal, Shield, Lantern, Vault, Beacon' + (G.f.svCrown ? ', Crown' : '') + (G.f.wtTide ? ', Tide' : '') + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b></p>' +
+    scorecardHtml() +
+    '<p>Investigation drills (game scores): ' + dl + '.</p>' +
+    '<p>OT assets inventoried: <b>' + wtInvPct() + '%</b> · exposed devices: <b>' + c.exposed + '</b> · default passwords: <b>' + c.deflt + '</b> · backups current: <b>' + wtBackupPct() + '%</b>' + (c.zones ? ' · zones first pass: exposure <b>' + c.zones.exposure + '</b>, broken <b>' + c.zones.broken + '</b>' : '') + '.</p>' +
+    (c.boss && c.boss.picks ? '<p>The booster station: ' + (c.boss.restored ? 'kept safe in hand, read out, closed off and restored from the offline copy, automatic only after the operators’ test' : 'recovered, with gaps the debrief named') + '. Cards: ' + esc(c.boss.picks.map(id => WT_CARDS.find(x => x.id === id).name).join(', ')) + '.</p>' : '') +
+    '<p>Missed attacks found in review: <b>' + G.m.surfaced + '</b>.</p>' +
+    wtQtSummaryHtml() +
+    '<p class="big">Next: Council Chambers.</p>';
+  Series.markEdition(EDITION.id, {done: true, waterPlant: true});
+  const i = await UI.openModal('End of the Water Plant', body, [{label: 'Keep exploring the Water Plant', meta: {good: true}}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
   storeSet(encodeSave(G));
   if (i === 1) { started = false; titleScreen(); }
 }

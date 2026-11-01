@@ -65,7 +65,10 @@ const QT_TECH = {
   'T1584.008': {name: 'Compromise Infrastructure: Network Devices', tactic: ['Resource Development'],
                 plain: 'Taking over routers and similar network gear, often old small-office models, to use as infrastructure such as relays.'},
   'T1555':     {name: 'Credentials from Password Stores', tactic: ['Credential Access'],
-                plain: 'Reading passwords from the places software keeps them (credential vaults, password managers, saved logins) instead of guessing them.'}
+                plain: 'Reading passwords from the places software keeps them (credential vaults, password managers, saved logins) instead of guessing them.'},
+  // ATT&CK for ICS (verified on attack.mitre.org, 1 Nov 2026, ATT&CK v20.0).
+  'T0859':     {name: 'Valid Accounts', tactic: ['Persistence', 'Lateral Movement'],
+                plain: '(ATT&CK for ICS) Using a real account on a plant system, such as a remote-access box or an engineering workstation, to get in and come back. A legitimate account raises no alarm when it is used.'}
 };
 const QT_FIELD_NOTES = 'Field notes: the Quiet Thread is a composite (game). Its real-world basis is joint Cybersecurity Advisory AA24-038A ' +
   '(CISA, NSA and FBI with partner agencies, February 2024) on Volt Typhoon, a PRC state-sponsored group. The advisory reports access to some US ' +

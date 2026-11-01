@@ -110,6 +110,7 @@ function svObjective() {
   if (!f.svNight3) return at('End your shift at your desk.', 12, 13);
   if (!f.svBoss) return at('Beatriz needs you: a replication request that only a domain controller should make.', 14, 7);
   if (!f.svFile) return at('Rae wants a word about svc-print. By the identity office.', 16, 7);
+  if (typeof wtObjective === 'function') return wtObjective();
   return {text: 'Server Room secured. Next: the Water Plant.', done: true, district: 'server'};
 }
 
