@@ -359,7 +359,7 @@ async function bmFwReview() {
     const i = await choose('The last rule, at the bottom of the list, is “allow everything else”. What replaces it?', [
       {label: 'Deny everything not expressly permitted, inbound and outbound, and log the denials: what isn’t needed stays shut', meta: {good: true}},
       {label: 'Block everything inbound, allow everything outbound: staff need the internet, and the proxy already inspects their web traffic on the way out'},
-      {label: 'No change: the rules above already allow only what each owner asked for, so the last line never matches anything that matters'}], {shuffle: true});
+      {label: 'No change: the rules above allow only what each owner asked for, so the last line never matches anything that matters'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Outbound is how stolen data and command channels leave. NIST SP 800-41 says firewalls should block all inbound and outbound traffic that hasn’t been expressly permitted. R2 already permits staff browsing.');
     else await say('Then anything the rules above don’t mention is allowed. That’s how R3 lived for seven years.');
@@ -418,7 +418,7 @@ async function bmTuning() {
     const i = await choose('How do you record the exclusions?', [
       {label: 'Each one in the rule’s change history, with the reason, an owner and an expiry date, so it gets reviewed, not forgotten', meta: {good: true}},
       {label: 'No need: each exclusion names its host and window in the rule itself, which is documentation enough for anyone who reads the rule'},
-      {label: 'In my own case notes, with the reason for each, so I can answer for every exclusion when anyone asks about it later'}], {shuffle: true});
+      {label: 'In my own case notes, with the reason for each, so I can review every exclusion myself when anyone asks about it later'}], {shuffle: true});
     if (i === 0) break;
     await say('In a year nobody will remember why VS-01 is excluded, or whether it still should be. An exclusion without a reason and an expiry becomes a blind spot nobody owns.');
   }
@@ -606,7 +606,7 @@ function bmBossStages(picks, t) {
       truth: 'Clear Windows Event Logs (T1685.005), to hide the session. The forwarded copies and the synchronised clocks put it back in order. Signing in with the appliance’s service account is Valid Accounts (T1078).',
       resp: [{label: 'Preserve the collector’s copies and MGMT-01’s disk and memory; isolate it powered, so memory survives; disable svc-vpnldap, end its sessions; tell leadership the VPN is down', good: true},
              {label: 'Restore MGMT-01’s Security log from last night’s backup so the record is whole again: the forwarded copies already show the 02:20 session', good: false, why: 'Last night’s backup predates tonight’s session, so it can’t show it, and the intruder still has the account. (A copy read in the lab is still useful: MGMT-01 has been theirs since last Saturday.)'},
-             {label: 'Preserve the collector’s copies, then reimage MGMT-01 from the golden image and put it back in service: they hold every event it forwarded, so nothing on its disk is still needed as evidence', good: false, disrupt: 1, why: 'Preserve first: the disk and memory are the evidence of what they did.'}],
+             {label: 'Preserve the collector’s copies, then reimage MGMT-01 from the golden image and put it back in service: they hold every event it forwarded, so nothing on its disk is still needed as evidence', good: false, disrupt: 1, why: 'The forwarded events are only what MGMT-01 sent. Its disk and memory hold what the intruder ran, and the reimage destroys them. Image first; rebuild in the eviction.'}],
       chain: [{at: 40, text: 'svc-vpnldap opens a second remote-desktop session.'}, {at: 75, text: 'Another server’s Security log is cleared.'}]},
     s2: {kind: 'mal', threat: 'hinge', tech: 'T1686.002', tags: ['edge'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('rule') ? 8 : 13, dwell0: picks.includes('rule') ? 10 : 40,
@@ -614,7 +614,7 @@ function bmBossStages(picks, t) {
       clues: ['VPN-01’s own log, which the appliance keeps for 14 days before it rolls over; the fieldwork copied what it held when forwarding began: at 01:52 on the Saturday before you came down, a crash in its web interface, then an admin session nobody started. (game)', 'Last night at 02:55 a rule appeared at the top of the edge firewall: VPN-01 → any outside address, TCP 443. Made with fw-svc-vpn, the firewall account the VPN integration uses, from VPN-01’s own address. No ticket.', 'Through it, 600 MB left between 03:01 and 03:20, relayed by VPN-01: the inside flows show a session from the VPN pool to MGMT-01, allowed by R4, carrying 600 MB out of MGMT-01, and the edge log shows VPN-01 sending the same 600 MB to 203.0.113.50. R4, “VPN pool → internal network, ANY”, whose narrowing was booked for Friday, was the way in.'],
       truth: 'Modifying a network device firewall (T1686.002): the intruder opened its own way out. The way in was a rule far broader than anyone needed.',
       resp: [{label: 'Delete the new rule, narrow R4 today by emergency change, isolate and image VPN-01, then rebuild it per the vendor’s advisory; rotate what it stored, reset its users since Saturday, block 203.0.113.50', good: true},
-             {label: 'Delete the new rule, block 203.0.113.50 at the edge and close: default deny already stops anything else going out, and R4’s narrowing is booked for Friday', good: false, why: 'VPN-01 is still the intruder’s, and R4 still lets the VPN pool reach everything.'},
+             {label: 'Delete the new rule, block 203.0.113.50 and isolate VPN-01 until Friday: default deny stops anything else going out, and R4’s narrowing is booked for then', good: false, why: 'Isolating VPN-01 isn’t rebuilding it: it stays the intruder’s box, what it stored and its users’ passwords still work, and R4 still lets the VPN pool reach everything until Friday.'},
              {label: 'Set every firewall rule to deny until morning, VPN included, so nothing moves in or out while we hunt for what VPN-01 did, then restore the rules one at a time from the reviewed binder, with owners signing each one back on', good: false, disrupt: 2, why: 'That stops the town, not the intruder, who is already inside.'}],
       chain: [{at: 60, text: 'A second outbound rule appears.'}]},
     s3: {kind: 'mal', threat: 'sweep', tech: 'T1046', tags: ['recon'], story: true, group: 'c', ev0: ev0,
@@ -624,8 +624,8 @@ function bmBossStages(picks, t) {
         'Last week’s alert from MGMT-01 at Sat 02:10, closed as “IT admin activity” with no ticket, was this intruder’s first look around.' + (reopened ? ' Your reopened ticket had MGMT-01 on tomorrow’s review list.' : ' Nobody had reopened it.'),
         'The hunt (event 1102 and svc-vpnldap sign-ins, on every server) finds one more: svc-vpnldap signed in to APP-02 at 03:29, and APP-02’s Security log was cleared at 03:31.'],
       truth: 'Network Service Discovery (T1046): mapping what the stolen account could reach. Hunting for the same behaviour found the second server.',
-      resp: [{label: 'Isolate APP-02 too, image its disk, scope what svc-vpnldap touched on both, and keep hunting: there may be a third', good: true},
-             {label: 'Preserve MGMT-01’s disk: svc-vpnldap is disabled and MGMT-01 isolated, so whatever the scan of 52 hosts found, the intruder can no longer use it', good: false, why: 'It found APP-02.'},
+      resp: [{label: 'Isolate APP-02 too, image its disk and memory, scope what svc-vpnldap touched on both, and keep hunting: there may be a third', good: true},
+             {label: 'Preserve MGMT-01’s disk and treat APP-02 as covered: svc-vpnldap is disabled and MGMT-01 isolated, so whatever the scan of 52 hosts found, the intruder can no longer use it', good: false, why: 'It found APP-02, and APP-02’s log was cleared two minutes after svc-vpnldap signed in: that is a second host to isolate and image, not one already covered.'},
              {label: 'Exclude MGMT-01 from the scan rule: it’s a management server', good: false, why: 'That is how its first scan went unseen.'}],
       chain: [{at: 60, text: 'svc-vpnldap tries a third server.'}]}
   };
@@ -681,10 +681,10 @@ async function raeBasementTalk() {
     '<p class="small">Caveat: before this week’s NTP fix the clocks behind these notes were not synchronised, so the order inside one night is uncertain by minutes, and each note needs its date before anyone reads a sequence into them. The time-of-night pattern holds either way. (game)</p>';
   while (true) {
     const i = await UI.openModal('Suspicion file', body, [
-      {label: 'Hand it to Rae as a suspicion file: what was seen, where and when (with the clock caveat), what it might mean, and what would confirm or rule it out. No conclusions; nothing done to svc-print or the router without her', meta: {good: true, k: 'file'}},
+      {label: 'Leave svc-print and the router to Rae: hand her a suspicion file with what was seen, where and when (with the clock caveat), what it might mean, and what would confirm or rule it out. No conclusions; nothing done without her', meta: {good: true, k: 'file'}},
       {label: 'Disable svc-print and pull the router tonight, and close it: this many notes are enough to act on, every night it stays is another night of access, and the printers can use a local account until a new router arrives', meta: {k: 'act'}},
-      {label: 'File it as noise: each note has an innocent explanation (print jobs, router reboots, an old mailbox), and no alert has fired for any of them', meta: {k: 'noise'}},
-      {label: 'Post the timeline in the all-staff chat, so every team that owns one of these systems watches for it tonight and reports anything after 03:00', meta: {k: 'post'}}], {shuffle: true, closable: false, cls: 'drill'});
+      {label: 'File it as noise and close it: each note has an innocent explanation (print jobs, router reboots, an old mailbox), and no alert has fired for any of them', meta: {k: 'noise'}},
+      {label: 'Post the timeline in the all-staff chat, so every team that owns one of these systems watches for it and reports anything after 03:00', meta: {k: 'post'}}], {shuffle: true, closable: false, cls: 'drill'});
     const k = [0, 1, 2, 3][i];
     if (k === 0) break;
     if (k === 1) await say('Acting alone on something you can’t yet scope can warn whoever is behind it before anyone knows how far it reaches, and it breaks the printers on the way. That decision is Rae’s, with a plan.', who);

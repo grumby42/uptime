@@ -369,10 +369,10 @@ async function mkTestConsole() {
   await say('The old test site’s console. test.townhall.example: a copy of the website from three years ago, at an outside hosting company, still answering. The DNS name points at the host with a CNAME. (game)');
   while (true) {
     const i = await choose('How do you retire it?', [
-      {label: 'Copy and read its logs, show a holding page, drop the DNS record, wait out the cache, then close the account, so nobody can take the name', meta: {good: true}},
+      {label: 'Copy and search its logs, show a holding page, drop the DNS record, wait out the cache, then close the account, so nobody can take the name', meta: {good: true}},
       {label: 'Cancel the hosting account now: it’s only a test site, nobody uses it, and every day it stays up is another day it can be attacked'},
       {label: 'Let it be: nobody links to it, it holds no resident data, and the team may want it again for the next redesign of the town website'},
-      {label: 'Remove the DNS record so nobody can find it, and keep the site running at the host, just in case the team needs it again later'}], {shuffle: true});
+      {label: 'Remove the DNS record so nobody can find it, and keep the site running at the host, in case the team needs it again later'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Two problems. You lose its logs before anyone has read them, and the town’s name still points at a hosting account nobody owns. Someone else could claim it and serve anything from test.townhall.example: a subdomain takeover.');
     else if (i === 2) await say('The inventory found it, and so will every scanner on the internet. It runs a three-year-old CMS.');

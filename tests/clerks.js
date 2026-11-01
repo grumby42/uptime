@@ -376,7 +376,7 @@ function mailDone(s, extra, party) {
   check('Tier 2 escalates to Rae as incident lead', p.ui.options.some(o => o.label === 'Escalate to Rae (incident lead)'), p.ui.options.map(o => o.label));
   const m0 = (await s.peek()).extra.cr;
   await s.pickLabel(/^Isolate host/); await s.untilChoice();
-  await s.pickLabel(/^Close alert/); await s.pickLabel(/^Malicious/); await s.pickLabel(/Isolate the laptop, kill the process/);
+  await s.pickLabel(/^Close alert/); await s.pickLabel(/^Malicious/); await s.pickLabel(/Contain the laptop, kill the process/);
   await s.settle();
   p = await s.peek();
   check('mean time to contain recorded from Isolate on a real attack; that isolation counted as needed', p.metrics.crTtc !== null && p.extra.cr.ttc === m0.ttc + 1 && p.extra.cr.needed === m0.needed + 1, { m: p.metrics, cr: p.extra.cr });

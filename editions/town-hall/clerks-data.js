@@ -180,8 +180,8 @@ Object.assign(ALERTS, {
     mal: {clues: ['Word opened “Remittance_0412.docm” from an email attachment, then started a script host.', 'The script contacted an address registered last week and saved a file to the user’s temp folder.', 'The document was saved into a Trusted Location folder a vendor set up years ago: Office skips its internet-macro block there.'],
           truth: 'Malicious document: macros in the file ran code (User Execution: Malicious File).',
           resp: [{label: 'Isolate the laptop, kill the process tree, collect triage, block the address, purge the email, reset the user’s password', good: true},
-                 {label: 'Delete the document, purge the email from every inbox, and block the address', good: false, why: 'The code already ran; whatever it saved is still on the laptop. Purging and blocking stop the next copy, not this one.'},
-                 {label: 'Reimage every laptop in the row tonight, in case the document was opened on more than one, and restore their files from backup', good: false, disrupt: 2, why: 'Nothing shows it opened anywhere else. Reimaging the row stops the whole office and destroys the evidence on the one laptop that matters.'}]},
+                 {label: 'Reset the user’s password, revoke their sessions, purge the email and block the address', good: false, why: 'The code already ran; whatever it saved is still on the laptop. A reset, a purge and a block stop the next copy, not this one.'},
+                 {label: 'Isolate every laptop in the row and reimage them, in case the document was opened on more than one, and restore their files from backup', good: false, disrupt: 2, why: 'Nothing shows it opened anywhere else. Isolating and reimaging the row stops the whole office and destroys the evidence on the one laptop that matters.'}]},
     benign: {clues: ['The document is the finance team’s budget workbook, with a macro signed by IT.', 'The program it started is the town’s reporting add-in, launched the same way every month.', 'Same file, same add-in, same day last month.'],
              truth: 'Benign: a known business workbook starting an approved add-in.'},
     fp: {clues: ['The “Office document” was WordCount.exe, the records team’s own tool.', 'Word itself was never running.', 'The rule matches process names by keyword.'],
@@ -203,7 +203,7 @@ Object.assign(ALERTS, {
     rule: 'PowerShell started with an encoded command',
     mal: {clues: ['powershell.exe -NoProfile -WindowStyle Hidden -EncodedCommand … started under the clerk’s account.', 'Script block logging (event 4104) shows the decoded script: it downloads code and runs it in memory.', 'It ran while the laptop sat locked at lunch.'],
           truth: 'PowerShell abuse: an encoded command hiding a download-and-run script.',
-          resp: [{label: 'Isolate the laptop, kill the process: it pulls in code. Keep the 4104 logs, collect triage, remove its launcher', good: true},
+          resp: [{label: 'Contain the laptop, kill the process: it pulls in code. Keep the 4104 logs, collect triage, remove its launcher', good: true},
                  {label: 'Uninstall PowerShell on every laptop, so encoded commands can’t run anywhere again', good: false, disrupt: 2, why: 'Admins and management tools depend on it. Log it, restrict it, and catch abuse instead.'},
                  {label: 'Expected activity: IT’s management tools run encoded PowerShell on every laptop, and the clerk’s account is allowed to run it', good: false, why: 'IT’s scripts are known and logged; this one hides what it does, ran while the laptop sat locked, and downloads code to run in memory.'}]},
     benign: {clues: ['The encoded command comes from the town’s device-management agent.', 'Event 4104 shows the decoded script: it reads the battery health report.', 'Same script, every laptop, every Monday.'],
@@ -216,7 +216,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['rundll32.exe ran comsvcs.dll’s MiniDump against the LSASS process.', 'A 60 MB .dmp file appeared in C:\\Windows\\Temp a second later.', 'It ran with admin rights, from an admin account that signed in from another laptop an hour ago.'],
           truth: 'Credential dumping from LSASS memory: whoever has that dump may have every credential cached on this laptop.',
           resp: [{label: 'Isolate the laptop, preserve then remove the dump, reset and revoke every account that signed in there, trace the admin account', good: true},
-                 {label: 'Delete the .dmp file, run a full antivirus scan, and treat it as handled if the scan comes back clean', good: false, why: 'The dump may already be copied out; the credentials in it are what matter, and a clean scan doesn’t change that.'},
+                 {label: 'Isolate the laptop, delete the .dmp file, and treat it as handled if a check of the laptop comes back clean', good: false, why: 'The dump may already be copied out; the credentials in it are what matter, and a clean check of the laptop doesn’t change that.'},
                  {label: 'Reset the clerk’s password and revoke her sessions: her account is the one that signs in to this laptop every day, so it’s the exposed one', good: false, why: 'Every account cached on that laptop is exposed, including the admin account that ran the dump.'}]},
     benign: {clues: ['The read came from the antivirus engine’s own memory scan.', 'It is signed, it touches LSASS on every laptop, and it wrote no file.', 'The same pattern follows every definition update.'],
              truth: 'Benign: the security product’s own memory scan.'},
@@ -228,8 +228,8 @@ Object.assign(ALERTS, {
     mal: {clues: ['Defender event 5001, real-time protection disabled, at 02:10. No change ticket.', 'The change came from a PowerShell session under a local account created yesterday.', 'Tamper protection was off on this laptop, so nothing blocked it.'],
           truth: 'Defense impairment: an intruder turned off the antivirus to work unseen (Disable or Modify Tools).',
           resp: [{label: 'Isolate the laptop, turn protection and tamper protection on, remove the new account, hunt for what ran while it was off', good: true},
-                 {label: 'Turn real-time protection back on, run a full scan, and close if the scan is clean', good: false, why: 'Someone switched it off on purpose, from an account made yesterday. A scan after the fact can miss what ran in the gap: find it, and remove the account.'},
-                 {label: 'Reinstall antivirus on every laptop in the row, in case the same account reached them', good: false, disrupt: 1, why: 'Nothing shows the account on other laptops, and reinstalling neither removes the account nor finds what ran.'}]},
+                 {label: 'Isolate the laptop, turn real-time protection back on, and check it with a full scan', good: false, why: 'Someone switched it off on purpose, from an account made yesterday. A scan after the fact can miss what ran in the gap: find it, and remove the account.'},
+                 {label: 'Search every laptop in the row for the same account and reinstall antivirus on each, in case it reached them', good: false, disrupt: 1, why: 'Nothing shows the account on other laptops, and reinstalling neither removes the account here nor finds what ran.'}]},
     benign: {clues: ['A change ticket says the deployment office paused protection for a vendor install.', 'Event 5007 shows the setting going back on twelve minutes later.', 'The technician confirms it on his known number.'],
              truth: 'Benign: a ticketed maintenance change (still worth asking why protection had to be off).'},
     fp: {clues: ['Event 5001 came from a laptop on the re-imaging bench.', 'The image build turns protection off and back on by design.', 'The rule doesn’t exclude the bench.'],
@@ -239,9 +239,9 @@ Object.assign(ALERTS, {
     rule: 'Volume shadow copies deleted',
     mal: {clues: ['vssadmin.exe deleted every volume shadow copy on the laptop at 03:02.', 'Minutes earlier the same account copied a tool to five laptops over file sharing.', 'Deleting shadow copies removes Windows’ easy restore points: a classic step just before ransomware encrypts.'],
           truth: 'Inhibit System Recovery: a ransomware precursor. Encryption may be minutes away.',
-          resp: [{label: 'Isolate all six laptops now: encryption is next. Disable the account, revoke its sessions, check offline backups, find the tool', good: true},
-                 {label: 'Recreate the shadow copies on every laptop: Windows can restore files from them again, so nothing is lost', good: false, why: 'They can be deleted again in a second, and the attacker is still here, with a tool on five laptops.'},
-                 {label: 'Isolate this one laptop, hunt on the other five, and act only if files start getting encrypted, so nobody loses a day for nothing', good: false, why: 'This is the warning. The same account copied the tool to five laptops: act on all of them now.'}]},
+          resp: [{label: 'Isolate all six laptops now: encryption is next. Disable the account, end its sessions, protect offline backups, pull the tool', good: true},
+                 {label: 'Revoke the account’s sessions and recreate the shadow copies: Windows can restore files from them again, so nothing is lost', good: false, why: 'Revoked sessions don’t stop a password that still works. The copies can be deleted again in a second, and the attacker is still here, with a tool on five laptops.'},
+                 {label: 'Isolate this one laptop, triage the other five, and act only if files start getting encrypted, so nobody loses a day for nothing', good: false, why: 'This is the warning. The same account copied the tool to five laptops: act on all of them now.'}]},
     benign: {clues: ['The backup software rotated its own shadow copies on schedule.', 'Its service account, its usual time, its usual command.', 'New copies were created right after.'],
              truth: 'Benign: the backup tool managing its own snapshots.'},
     fp: {clues: ['The match was “vssadmin list shadows”, a read-only check by the help desk.', 'Nothing was deleted.', 'The rule matches the program name, not the delete command.'],
@@ -434,7 +434,7 @@ const CR_DRILLS = {
     verdicts: [
       {label: 'An admin change: Arlo turned it off for a ticketed install and never turned it back on', good: true, why: 'The command ran under his admin account, signed in at the bench with his security key, inside the ticket window, as the ticket told him to.'},
       {label: 'Tampering: an attacker turned it off with PowerShell, the way intruders usually do', why: 'Everything points to a ticketed, on-site admin change. Still a problem, but not an intruder.'},
-      {label: 'A Defender glitch: nobody turned it off, and it will switch back on at the next update', why: 'Event 5007 shows a deliberate setting change, and 4104 shows the command.'}],
+      {label: 'Not an attack: a Defender glitch that will switch it back on at the next update', why: 'Event 5007 shows a deliberate setting change, and 4104 shows the command.'}],
     reasons: [
       {label: 'The command ran in arlo.adm’s session, signed in at the bench with his security key, inside an open ticket for exactly this, so it’s him', good: true, why: 'What ran, who was really behind the account, when and why all line up.'},
       {label: 'The Defender engine service is still running and nothing else on CR-LT-09 was changed, so it can’t be an attacker trying to blind the laptop', why: 'Attackers often switch a setting off and leave the service running.'},
@@ -476,7 +476,7 @@ const CR_BOARD_SPECS = () => [
    clues: ['WINWORD.EXE started mshta.exe, which ran a script from an outside address.', 'The document arrived as an email attachment an hour ago. The user saved it to a shared drive someone had added as a Trusted Location, which the clean-up missed, so the internet-macro block never applied.', 'mshta.exe saved a new program to the user’s temp folder and started it.'],
    truth: 'A macro document used mshta.exe, a signed Windows program, to run attacker script (System Binary Proxy Execution: Mshta).',
    resp: [{label: 'Isolate CR-LT-06, kill the tree, collect triage, purge the email, and move the “Office child processes” rule from audit to block', good: true},
-          {label: 'Delete the document from the shared drive, purge the email, and close', good: false, why: 'The script already ran and dropped a program; deleting the document and the email leaves that program running.'},
+          {label: 'Isolate CR-LT-06, delete the document from the shared drive and purge the email', good: false, why: 'The script already ran and dropped a program: isolating the laptop contains it, but nobody has killed it or collected triage, and the Trusted Location that let the macro run is still there.'},
           {label: 'Block mshta.exe on every server in town', good: false, disrupt: 1, why: 'Wrong place and too broad: the problem is Office starting it on a laptop.'}],
    chain: [{at: 40, text: 'The new program connects out every 60 seconds.'}, {at: 75, text: 'It starts listing the laptop’s users.'}]},
   {kind: 'mal', threat: 'siphon', tech: 'T1003.001', tags: ['host'], story: true, rate: 12, group: 'a',
@@ -484,7 +484,7 @@ const CR_BOARD_SPECS = () => [
    clues: ['rundll32.exe ran comsvcs.dll’s MiniDump against LSASS on CR-LT-15.', 'The account is a help-desk admin account. A technician signed in with it on CR-LT-06 to look at Round 1, and it was taken from that laptop’s memory; ten minutes later it signed in here from CR-LT-06.', 'The dump file was copied to a share before anyone noticed.'],
    truth: 'Credential dumping from LSASS memory, with an admin account the attacker took on CR-LT-06.',
    resp: [{label: 'Isolate CR-LT-15; reset and revoke every account cached there, help-desk admin first: the dump holds them all. Turn on the LSASS protection rule; no admin sign-ins to suspect laptops', good: true},
-          {label: 'Delete the dump from the share and isolate CR-LT-15: the copy on the share was the only one', good: false, why: 'It has been copied; the credentials inside are what matter.'},
+          {label: 'Find and delete the dump on the share and isolate CR-LT-15: the copy on the share was the only one', good: false, why: 'It has been copied; the credentials inside are what matter.'},
           {label: 'Reset the password of the clerk who uses CR-LT-15 and revoke her sessions: her credentials were in the dump', good: false, why: 'The admin account is the prize. Every cached credential is exposed.'}],
    chain: [{at: 40, text: 'The help-desk admin account signs in to a third laptop.'}, {at: 75, text: 'It tries the domain controller.'}]},
   {kind: 'mal', threat: 'blinder', tech: 'T1685', tags: ['host'], story: true, rate: 11, group: 'a',
@@ -492,14 +492,14 @@ const CR_BOARD_SPECS = () => [
    clues: ['Event 5001 on CR-LT-16 at 19:12: real-time protection disabled. No change ticket.', 'The command ran under the stolen help-desk admin account.', 'Tamper protection was off for that laptop group, so nothing blocked it.'],
    truth: 'Defense impairment: switching off protection before the next step (Disable or Modify Tools).',
    resp: [{label: 'Isolate CR-LT-16, disable the stolen admin account (it can do this anywhere), turn both protections on, find what ran in the gap', good: true},
-          {label: 'Turn protection and tamper protection back on for that laptop group, then close: with tamper protection on, nobody can switch it off again', good: false, why: 'Tamper protection makes it harder, not impossible: it can still be changed centrally, and attackers look for ways around it. The account that did it is still active, and something ran in the gap.'},
+          {label: 'Isolate CR-LT-16, turn both protections back on for that laptop group, then close: with tamper protection on, nobody can switch it off again', good: false, why: 'Tamper protection makes it harder, not impossible: it can still be changed centrally, and attackers look for ways around it. The account that did it is still active, and something ran in the gap.'},
           {label: 'Uninstall the antivirus and reinstall it on every laptop with tamper protection on, since the stolen account may have changed its settings anywhere', good: false, disrupt: 1, why: 'Reinstalling doesn’t disable the stolen account or find what ran in the gap, and every laptop is unprotected while it runs.'}],
    chain: [{at: 40, text: 'A new service is created on CR-LT-16.'}, {at: 75, text: 'The same account turns off protection on CR-LT-14.'}]}
 ];
 
 /* ---------- Boss tabletop cards (our own) ---------- */
 const CR_CARDS = [
-  {id: 'segment', name: 'Isolate the laptop segment', csf: 'Respond', good: true, text: 'Cut the laptop network off from servers and other floors; keep the security tools connected.', fx: 'Stage 1: the worm spreads more slowly.'},
+  {id: 'segment', name: 'Wall off the laptop segment', csf: 'Respond', good: true, text: 'Cut the laptop network off from servers and other floors; keep the security tools connected.', fx: 'Stage 1: the worm spreads more slowly.'},
   {id: 'smb', name: 'Block SMB at the boundaries', csf: 'Respond', good: true, text: 'Block TCP 445, with TCP 139 and UDP 137–138, at every boundary device, as CISA advised during WannaCry, and between laptop segments.', fx: 'Stage 2: the worm moves more slowly.'},
   {id: 'pz', name: 'Find patient zero', csf: 'Respond', good: true, text: 'Work back from the first laptop that scanned port 445 to how the worm got in.', fx: 'Stage 1 starts with more evidence.'},
   {id: 'patch', name: 'Patch the flaw everywhere', csf: 'Protect', good: true, text: 'Push ADV-26-101 (game) to every laptop that missed it. Laptops coming back from travel join a quarantine network first and rejoin the office network only once patched.', fx: 'Stage 3 becomes much easier.'},
@@ -507,7 +507,7 @@ const CR_CARDS = [
   {id: 'notify', name: 'Notify leadership', csf: 'Respond', good: true, auto: true, text: 'Tell leadership what is happening, what you are doing and when you will update them.', fx: 'Reputation up.'},
   {id: 'ransom', name: 'Pay the ransom', csf: 'Respond', text: 'Pay for the decryption key.', fx: 'No guarantee of anything, and the worm is still spreading.'},
   {id: 'unplug', name: 'Shut down the whole town network', csf: 'Respond', text: 'Turn everything off until it’s over.', fx: 'Stops the worm and every service in town: uptime falls.'},
-  {id: 'blockall', name: 'Block every domain the worm contacts', csf: 'Protect', text: 'Add everything in the worm’s code to the DNS block list.', fx: 'Includes its kill-switch domain: Stage 3 gets harder.'}
+  {id: 'blockall', name: 'Block every domain the worm contacts', csf: 'Protect', text: 'Find each domain in the worm’s code and block it at DNS.', fx: 'Includes its kill-switch domain: Stage 3 gets harder.'}
 ];
 
 /* ---------- Field Manual additions ---------- */

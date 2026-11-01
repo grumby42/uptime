@@ -176,7 +176,7 @@ Object.assign(ALERTS, {
     mal: {clues: ['4,800 files on \\\\FS-03\\Finance renamed in six minutes, each with a new extension.', 'The writer is a domain admin account, from a server that never touches that share.', 'Opened in the lab, a renamed file is unreadable noise, and every volume shadow copy on FS-03 was deleted two minutes before.'],
           truth: 'Data Encrypted for Impact: ransomware, and it started by removing the ways back.',
           resp: [{label: 'Isolate FS-03 and the writing server at the switch, disable the account, protect the backup copies, image memory and disks, search for the same tool elsewhere', good: true},
-                 {label: 'Restore the folder from last night’s backup, verify the files open, and preserve the logs', good: false, why: 'The attacker is still in, with an admin account. Contain first, then restore from a copy you know is clean.'},
+                 {label: 'Isolate FS-03, restore the folder from last night’s backup, verify the files open, and preserve the logs', good: false, why: 'Isolating FS-03 leaves the writing server and the admin account in the attacker’s hands. Contain those too, then restore from a copy you know is clean.'},
                  {label: 'Shut down every server in town while you hunt for the tool', good: false, disrupt: 2, why: 'Isolating at the switch contains it. Shutting everything down stops the town and throws away the memory evidence.'}]},
     benign: {clues: ['The writer is svc-dmsimport, from DMS-01, the new document system’s server.', 'A change ticket covers tonight’s import of the Finance archive.', 'Renamed files open normally; the shadow copies are untouched.'],
              truth: 'Benign: the records migration renaming files it has imported. The volume looks like ransomware; the writer and the files say otherwise.'},
@@ -200,8 +200,8 @@ Object.assign(ALERTS, {
     mal: {clues: ['9 GB left FS-03 for a cloud storage service the town has never used, between 03:41 and 03:55.', 'A compression utility packed the files into password-protected parts first.', 'The account is a help-desk admin signed in from another server at 03:30.'],
           truth: 'Exfiltration to Cloud Storage: data taken before encryption, so the attacker can threaten to publish it.',
           resp: [{label: 'Block the destination, isolate the host, disable the account, keep the logs, find out which files left: that decides who is told', good: true},
-                 {label: 'Block the destination at the firewall and preserve the logs: nothing more can leave, and the files that already left can’t be called back anyway', good: false, why: 'The account and the host are still the attacker’s, and you don’t yet know what left.'},
-                 {label: 'Scope it quietly and wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'Data theft usually comes before encryption: this is the warning. Password-protected parts to a service the town never uses are no backup, and every minute you wait, more files leave.'}]},
+                 {label: 'Block the destination, isolate the host and preserve the logs: nothing more can leave, and the files that already left can’t be called back anyway', good: false, why: 'The account is still the attacker’s, and you don’t yet know what left.'},
+                 {label: 'Say nothing and wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'Data theft usually comes before encryption: this is the warning. Password-protected parts to a service the town never uses are no backup, and every minute you wait, more files leave. Quiet scoping before an eviction is for an intruder who isn’t taking anything yet; while files are leaving, contain first.'}]},
     benign: {clues: ['Hester is copying the 1960s council minutes to the regional archive’s storage.', 'The transfer is ticketed and the destination is on the approved list.', 'It runs under her own account, in working hours, file by file.'],
              truth: 'Benign: the archivist’s approved migration to the regional archive.'},
     fp: {clues: ['The “upload” is the backup appliance replicating to its own second site.', 'The destination is ours, on the firewall’s list.', 'The rule doesn’t know the backup network.'],
@@ -212,8 +212,8 @@ Object.assign(ALERTS, {
     mal: {clues: ['Every backup job for FS-03 has failed since 04:30: the backup agent’s service on FS-03 was stopped at 04:29.', 'At 04:28 wbadmin deleted the Windows backup catalog on FS-03, run by a domain admin account.', 'A minute later the same account tried to sign in to the backup console.'],
           truth: 'Inhibit System Recovery: removing the backups and catalogs that let you restore. Ransomware often comes next.',
           resp: [{label: 'Isolate FS-03, disable the account, lock retention on its copies, check the offline copy: ransomware often comes next. Hunt for it', good: true},
-                 {label: 'Rerun the failed backup jobs now so tonight’s copies exist, check they finish with Success, and hunt for the cause first thing in the morning', good: false, why: 'The jobs failed because someone removed the way back on purpose. They’re still in.'},
-                 {label: 'Watch FS-03 closely tonight and act only if files start changing, so nobody is disturbed over what may only be a scheduling fault', good: false, why: 'This is the warning. Act now.'}]},
+                 {label: 'Rerun the failed backup jobs now so fresh copies exist, check they finish with Success, and hunt for the cause first thing in the morning', good: false, why: 'The jobs failed because someone removed the way back on purpose. They’re still in.'},
+                 {label: 'Reset the admin’s password and isolate FS-03 only if files start changing, so nobody is disturbed over a scheduling fault', good: false, why: 'This is the warning, and a reset leaves FS-03 and its backups exposed. Act now.'}]},
     benign: {clues: ['The appliance’s disk is 100% full.', 'Every job that wrote after 01:40 failed with “no space”.', 'Nico’s dashboard warned about space last week.'],
              truth: 'Benign: a full disk. Real, needs fixing today, and not an attack. (An expired service-account password gives the same symptom.)'},
     fp: {clues: ['The “failures” are jobs cancelled by the maintenance window.', 'They restarted and finished an hour later.', 'The rule counts a cancellation as a failure.'],
@@ -345,8 +345,8 @@ const RH_DRILLS = {
                       reveal: 'Tally matched the volume and speed to ransomware and stopped there. It never asked who wrote the files or whether the shadow copies were touched, and isolating FS-02 would have stopped the whole Planning department for a migration. Ask specific questions, and check the answer against the evidence.'},
          specific: {q: 'Which account and host renamed the files on FS-02 last night?', text: 'svc-dmsimport, from DMS-01: every one of the 12,406.'}},
     verdicts: [
-      {label: 'The approved migration, so close it: its own service account, from its own server, in its change window, shadow copies untouched', good: true, why: 'The audit log names svc-dmsimport on DMS-01 for every rename, CHG-5120 covers it, and nothing touched the ways back.'},
-      {label: 'Ransomware: twelve thousand files renamed in under an hour, all with the same new extension, which is what mass encryption looks like', why: 'Volume and speed fit both. The writer and the shadow copies decide.'},
+      {label: 'The approved migration, so mark it resolved: its own account, from its own server, in its change window, shadow copies untouched', good: true, why: 'The audit log names svc-dmsimport on DMS-01 for every rename, CHG-5120 covers it, and nothing touched the ways back.'},
+      {label: 'Ransomware: twelve thousand files renamed in under an hour, all with the same new extension, which is what mass encryption looks like; isolate FS-02 now', why: 'Volume and speed fit both. The writer and the shadow copies decide, and isolating FS-02 would cut the department off in the middle of an approved migration.'},
       {label: 'Ransomware: an extension nobody here has ever seen before, appended to every single file in the department’s shared folder at once', why: 'Extensions are chosen by whoever renames the files. They decide nothing.'}],
     reasons: [
       {label: 'Every rename came from the migration’s service account on DMS-01 in its change window; nothing touched the ways back on FS-02 or DMS-01 (ransomware often clears them where it runs)', good: true, why: 'Who did it, from where, under what approval, and whether the ways back were touched, from two independent records.'},
@@ -395,7 +395,7 @@ const RH_DRILLS = {
     verdicts: [
       {label: 'A coverage gap: the shares moved to a new volume the job never selects, so it backed up the leftovers', good: true, why: 'The job read everything on E:, skipped nothing, and nobody changed it; the data is on F:.'},
       {label: 'Tampering: someone with console access shrank the job’s selection so the shares are left out', why: 'The console audit log shows no change, and only the backup admins signed in.'},
-      {label: 'Deduplication: the appliance stores each repeated block only once, so 41 GB is normal and the data is still protected', why: 'The job read 41 GB. Deduplication can’t make it read less than it was given.'},
+      {label: 'Deduplication: the appliance stores each repeated block only once, so 41 GB is normal and the data is protected; close it', why: 'The job read 41 GB. Deduplication can’t make it read less than it was given.'},
       {label: 'Data loss: FS-01’s files are gone', why: 'F: holds 2.27 TB, and the departments are working normally.'}],
     reasons: [
       {label: 'The job log shows it read only E:, now nearly empty, skipping nothing; the audit shows no change; the data is on F:, which it never selects, so it’s missed', good: true, why: 'What the job did, and who changed it, from the two records that say so.'},
@@ -486,16 +486,16 @@ const RH_BOARD_SPECS = () => [
    clues: ['vssadmin deleted every volume shadow copy on FS-03 at 04:12.', 'The account is a domain admin signed in from a server nobody uses at night.', 'A minute later wbadmin deleted FS-03’s Windows backup catalog.'],
    truth: 'Inhibit System Recovery: removing the ways back before encrypting.',
    resp: [{label: 'Isolate FS-03, disable the account, confirm the separate backup copies are locked and intact, and hunt for the encryptor before it runs', good: true},
-          {label: 'Recreate the shadow copies on FS-03, check they hold, and preserve the logs', good: false, why: 'The attacker is still there, with an admin account, and will delete them again.'},
+          {label: 'Recreate the shadow copies on FS-03, verify they hold, preserve the logs, and hunt for the cause in the morning', good: false, why: 'The attacker is still there, with an admin account, and will delete them again.'},
           {label: 'Shut down every server in town while you hunt for the encryptor', good: false, disrupt: 2, why: 'Isolate FS-03 and disable the account: that contains it. Shutting every server down stops the town and loses the memory evidence.'}],
    chain: [{at: 40, text: 'The same account reaches a second file server.'}, {at: 75, text: 'Files on FS-03 start being renamed.'}]},
   {kind: 'mal', threat: 'sluice', tech: 'T1567.002', tags: ['files'], story: true, rate: 12, group: 'c',
    title: 'Round 2: gigabytes to the cloud at 2 a.m.', host: 'HR-01 · HR file share', enemy: {spr: 'sluice', pal: 'sluice'},
    clues: ['A compression utility packs the HR share into password-protected parts.', 'A sync tool uploads 9 GB to a storage service the town has never used.', 'The account is a domain admin, signed in from a workstation at 00:50.'],
    truth: 'Exfiltration to Cloud Storage: data taken first, so the attacker can threaten to publish it.',
-   resp: [{label: 'Block the destination, isolate the host, disable the account, keep the logs, find out which files left: that decides who is told', good: true},
-          {label: 'Block the destination at the firewall and preserve the logs: nothing more can leave, and the files that already left can’t be called back anyway', good: false, why: 'The account and the host are still the attacker’s.'},
-          {label: 'Scope it quietly and wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'This is the warning. Act now.'}],
+   resp: [{label: 'Block the destination, cut the host off, disable the account, keep the logs, find out which files left: that decides who is told', good: true},
+          {label: 'Block the destination, isolate the host and preserve the logs: nothing more can leave, and the files that already left can’t be called back anyway', good: false, why: 'The account is still the attacker’s, and you don’t yet know what left.'},
+          {label: 'Say nothing and wait for the ransom note before acting: until then it could be a backup tool or a sync client, and acting early tips the attacker off', good: false, why: 'This is the warning: data is leaving now. Contain first.'}],
    chain: [{at: 40, text: 'A second batch starts uploading.'}, {at: 75, text: 'The upload moves on to the payroll folder.'}]},
   {kind: 'mal', threat: 'shredwick', tech: 'T1485', tags: ['files', 'backup'], story: true, rate: 11, group: 'c',
    title: 'Round 3: the backup share is being wiped', host: 'NAS-02 · old backup share', enemy: {spr: 'shredwick', pal: 'shredwick'},
@@ -509,14 +509,14 @@ const RH_BOARD_SPECS = () => [
 
 /* ---------- Boss tabletop cards (our own) ---------- */
 const RH_CARDS = [
-  {id: 'isolate', name: 'Isolate at the switch, keep them powered', csf: 'Respond', good: true, text: 'Cut the affected servers off at the switch. Keep them powered on, so memory can still be captured.', fx: 'Stage 1: the encryption stops spreading faster.'},
+  {id: 'isolate', name: 'Cut off at the switch, keep them powered', csf: 'Respond', good: true, text: 'Cut the affected servers off at the switch. Keep them powered on, so memory can still be captured.', fx: 'Stage 1: the encryption stops spreading faster.'},
   {id: 'preserve', name: 'Preserve the evidence', csf: 'Respond', good: true, text: 'Disk images and memory from a sample of affected servers, the encryptor, the ransom note, the logs, before anything is cleaned.', fx: 'Every stage starts with more evidence, and the earliest compromise can be proved.'},
   {id: 'verify', name: 'Verify the copies before restoring', csf: 'Recover', good: true, text: 'Check the retention-locked and offline copies are intact and unchanged before anything is restored from them.', fx: 'Stage 2: the backups are confirmed clean faster.'},
   {id: 'identity', name: 'Take identity back', csf: 'Respond', good: true, text: 'Disable unknown and recently created admin accounts, reset every privileged and service password, and reset the krbtgt password twice so forged Kerberos tickets stop working, all from a clean admin workstation.', fx: 'Stage 3 becomes much easier.'},
   {id: 'latest', name: 'Restore last night’s backup now', csf: 'Recover', text: 'Everything from the newest copy, straight away.', fx: 'Fast, and last night’s copies were taken after the attacker’s group policy went out.'},
   {id: 'reconnect', name: 'Bring the tapes online to speed things up', csf: 'Recover', text: 'Load the offline tapes into the library on the backup network now.', fx: 'The offline copy is online again while the attacker still holds a domain admin account.'},
   {id: 'poweroff', name: 'Pull the power on every server', csf: 'Respond', text: 'Everything off, now.', fx: 'Memory evidence is gone, and nothing can be examined running.'},
-  {id: 'wipe', name: 'Wipe and reinstall everything tonight', csf: 'Recover', text: 'Clean slate, before anyone has looked.', fx: 'The evidence goes with it, and nobody yet knows when the attacker arrived.'}
+  {id: 'wipe', name: 'Wipe and reinstall everything tonight', csf: 'Recover', text: 'Clean slate, before anyone has looked at the evidence.', fx: 'The evidence goes with it, and nobody yet knows when the attacker arrived.'}
 ];
 const RH_ENCRYPT = '02:40';    // when the encryptor's scheduled task ran on every server (game)
 const RH_GPO = '23:52';        // when the attacker's group policy was created, the night before (game)

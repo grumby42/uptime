@@ -97,8 +97,8 @@ function check(name, ok, info) { results[name] = ok ? 'ok' : 'FAIL ' + (info !==
   // ---- Close it as malicious with the right response: the scoping question follows ----
   await pickLabel(/^Close alert/); await pickLabel(/^Malicious/);
   p = await waitUI();
-  check('Lure response revokes sessions', p.ui.options.some(o => /revoke their sessions/.test(o.label)), p.ui.options.map(o => o.label));
-  await pickLabel(/revoke their sessions/);
+  check('Lure response ends sessions', p.ui.options.some(o => /end their sessions/.test(o.label)), p.ui.options.map(o => o.label));
+  await pickLabel(/end their sessions/);
   p = await untilChoice();
   check('scoping question after a malicious close', p.ui && /What do you check next/.test(p.ui.text || ''), p.ui);
   await pickLabel(/^Access it added/); await settle();

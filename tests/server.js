@@ -441,7 +441,7 @@ async function basementDone(s, extra, party) {
   p = await s.waitUI('say');
   check('Quiet Thread: stripping svc-print tonight is refused (could warn whoever is behind it; Rae’s call)', /warn whoever is behind it|planned change|Rae’s call/.test(p.ui.text), p.ui.text);
   p = await settleTo(s, /svc-print on the suspicion file/);
-  await s.pickLabel(/^Add it to the suspicion file/);
+  await s.pickLabel(/^Leave svc-print as is for now/);
 
   // ---- Summary ----
   p = await settleTo(s, /Server Room district: secured/);

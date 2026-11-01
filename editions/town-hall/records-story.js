@@ -254,9 +254,9 @@ async function rhRestoreTest() {
   await say('Every backup here has said Success for three years. Not one has ever been restored. I’d like to know before I need to.', who);
   while (true) {
     const i = await choose('How do you test the backups?', [
-      {label: 'Restore real systems into the isolated lab, time each one end to end, and have its owner check the data', meta: {good: true}},
+      {label: 'Restore real systems into the separate lab, time each one end to end, and have its owner check the data', meta: {good: true}},
       {label: 'Check the job reports for every system: a job that finishes green every night has proved it can be restored'},
-      {label: 'Restore over the live permits server tonight, after hours, and check it with the real data and the real users'},
+      {label: 'Restore over the live permits server after hours, and check it there with the real data and the real users'},
       {label: 'Restore one small file from each job into a temporary folder and open it, so every job is proved restorable'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Green means the job finished. It doesn’t say you can restore from it, or how long it takes.');
@@ -377,7 +377,7 @@ async function rhCredsStep() {
       {label: 'Separate backup admin accounts that exist only on the backup system, MFA on any change or deletion, alerts on mass deletes and retention changes, and no domain accounts at all', meta: {good: true}},
       {label: 'Change the domain admin password to a long passphrase, and change it again every month'},
       {label: 'Move the console to an unusual port that scanners don’t usually check'},
-      {label: 'Give backup rights to fewer domain admins: two named people instead of every domain admin in IT'}], {shuffle: true});
+      {label: 'Give backup rights to fewer domain admins: two named people, reviewed each year, instead of every domain admin in IT'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('A new password is stolen the same way as the old one. The point is that a domain password shouldn’t open the backups at all.');
     else if (i === 2) await say('Attackers scan every port. Hiding the door isn’t a lock.');
@@ -542,8 +542,8 @@ function rhBossStages(picks, d) {
       clues: ['At 07:20 adm-bk2, an admin account nobody on the team knows, signs in to the directory from FS-03, an old file server outside the policy’s group, so never encrypted or isolated, and one the hunt hadn’t reached: it had checked 9 of 31 servers when the encryption began.', 'adm-bk2 and svc-scanbak were both created on DIR-01 on Day ' + d.E + ', at 02:33 and 02:31, by hd-admin, from SCAN-01. The directory review from the PLAN-LT-04 case was booked behind the server hunt: one query (every account created, or added to an admin group, since hd-admin was first misused) would have found both on Day ' + d3 + '.', 'SCAN-01’s endpoint history: a remote-management tool installed under hd-admin on Day ' + d.E + ' at 02:12. The earliest sign of the attacker anywhere.'],
       truth: 'Valid Accounts: a second admin account the attacker made days before anyone noticed them. Disabling the one you saw wasn’t enough: the directory itself is compromised, so identity is rebuilt before anything that trusts it. Making those accounts is Create Account: Domain Account, ATT&CK T1136.002.',
       resp: [{label: 'Disable adm-bk2 and every account created since Day ' + d.E + ', reset every privileged and service password from a clean admin workstation, isolate FS-03, and plan the directory’s restore from before Day ' + d.E + ' 02:12', good: true},
-             {label: 'Disable adm-bk2, reset its password, and close: it is the account the attacker was using tonight', good: false, why: 'That is the second account you have found, not the last one you can prove. Find everything created since Day ' + d.E + ', and plan to restore the directory from before it.'},
-             {label: 'Reset hd-admin’s password again and require a security key, since the attacker came in through it', good: false, why: 'hd-admin was disabled and reset on Day ' + d3 + '. The attacker made their own accounts: find and remove what they created.'},
+             {label: 'Disable adm-bk2, reset its password and isolate FS-03: that is the account and the server the attacker is using', good: false, why: 'That is the second account you have found, not the last one you can prove. Find everything created since Day ' + d.E + ', and plan to restore the directory from before it.'},
+             {label: 'Trace hd-admin’s use, reset its password again and require a security key, since the attacker came in through it', good: false, why: 'hd-admin was disabled and reset on Day ' + d3 + '. The attacker made their own accounts: find and remove what they created.'},
              {label: 'Restore the directory from last night’s copy, the newest one, so the fewest account changes are lost', good: false, why: 'Last night’s directory holds svc-scanbak and the policy. Go back to before the earliest compromise.'}],
       chain: [{at: 60, text: 'adm-bk2 lists every admin group.'}]}
   };

@@ -349,6 +349,8 @@ async function recordsDone(s, extra, party) {
   await s.settle();
   const d1 = await s.page.evaluate(() => { const D = BM_DRILLS.gap; return { traps: D.sources.reduce((a, x) => a.concat(x.qs.filter(q => q.kind === 'trap').map(q => x.id)), []), keys: D.sources.reduce((a, x) => a.concat(x.qs.filter(q => q.key).map(q => x.id)), []) }; });
   check('drill 1: traps are the SIEM count and the owner’s word; keys are the host log and the collector health log; event 1102 fact (Microsoft Learn)', d1.traps.join() === 'count,nico' && d1.keys.join() === 'host,health' && await s.page.evaluate(() => G.fm['fact:ev1102'] && /The audit log was cleared/.test(FACTS.ev1102.desc)), d1);
+  const d1n = await s.page.evaluate(() => { const v = BM_DRILLS.gap.verdicts.find(x => x.good); return {needs: v.needs, why: v.needsWhy || '', label: v.label}; });
+  check('drill 1: the outage verdict rests on FS-02’s own log (needs: host), so the collector log alone does not support it; it backfills before closing', d1n.needs === 'host' && /FS-02’s own log/.test(d1n.why) && /Backfill it, then close/.test(d1n.label), d1n);
 
   // ---- Save/reload mid-basement ----
   const before = await s.peek();
@@ -506,7 +508,7 @@ async function recordsDone(s, extra, party) {
   p = await s.waitUI('say');
   check('suspicion file: acting alone tonight is refused (could warn whoever is behind it; Rae’s decision)', /warn whoever is behind it/.test(p.ui.text), p.ui.text);
   p = await settleTo(s, /Suspicion file/);
-  await s.pickLabel(/^Hand it to Rae as a suspicion file/);
+  await s.pickLabel(/^Leave svc-print and the router to Rae/);
   await s.settle();
   p = await s.peek();
   const qc = await s.page.evaluate(() => {

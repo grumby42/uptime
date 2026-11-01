@@ -226,7 +226,7 @@ async function settleTo(s, re) {
   await s.pickLabel(/^Check the job reports/);
   p = await s.waitUI('say');
   check('restore test: “green means it works” is refused', /Green means the job finished/.test(p.ui.text), p.ui.text);
-  await s.untilChoice(); await s.pickLabel(/Restore real systems into the isolated lab/);
+  await s.untilChoice(); await s.pickLabel(/Restore real systems into the separate lab/);
   p = await settleTo(s, /Restore tests/);
   const rt = await s.modalText();
   check('restore test: every job said Success, 2 of 3 restore; the portal fails (its second disk was never selected)', /2 of 3 passed/.test(rt) && /second disk the job never selected/.test(rt) && /Every one of those jobs said Success/.test(rt), rt.slice(0, 300));

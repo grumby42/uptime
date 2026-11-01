@@ -183,7 +183,7 @@ Object.assign(ALERTS, {
     rule: 'Suspicious email attachment opened',
     mal: {clues: ['“Remittance_0927.html” came from an outside address that has never written to us before.', 'In the sandbox, the file draws a copy of our sign-in page and sends whatever you type to another site.', 'Two more staff received it; one of them opened it.'],
           truth: 'Spearphishing attachment: an HTML file that opens a fake sign-in page.',
-          resp: [{label: 'Quarantine every copy, reset the opener’s password, revoke sessions, block the sender', good: true}, {label: 'Isolate every PC that received it until the sandbox report has been read and the file traced', good: false, disrupt: 2, why: 'The file is a fake sign-in page; nothing installs on the PCs. The risk is the opener’s password and the copies still in inboxes.'}, {label: 'Delete it from the opener’s inbox, reset their password, and move on: the other copies were never opened', good: false, why: 'Unopened copies are still waiting to be opened, and the opener’s session still works: quarantine every copy and revoke sessions too.'}]},
+          resp: [{label: 'Quarantine every copy, reset the opener’s password, end their sessions, block the sender', good: true}, {label: 'Isolate every PC that received it until the sandbox report has been read and the file traced', good: false, disrupt: 2, why: 'The file is a fake sign-in page; nothing installs on the PCs. The risk is the opener’s password and the copies still in inboxes.'}, {label: 'Delete it from the opener’s inbox, reset their password, revoke their sessions, and move on: the other copies were never opened', good: false, why: 'Unopened copies are still waiting to be opened: quarantine every copy, not just the opener’s.'}]},
     benign: {clues: ['It came from the town’s payroll provider, which sends a statement every month.', 'The sandbox shows a plain PDF: no script, no links out.', 'Sender, domain and timing match the previous twelve months.'],
              truth: 'Benign: the monthly payroll statement.'},
     fp: {clues: ['The rule fires on any attachment with “invoice” in its name.', 'These are our own accounts team sending invoices to residents.', 'The billing system generates them every night.'],
@@ -203,7 +203,7 @@ Object.assign(ALERTS, {
     rule: 'Many MFA prompts denied for one user',
     mal: {clues: ['Twelve push prompts in ten minutes at 01:30, each one after a correct password.', 'The sign-in attempts come from a hosting provider abroad.', 'The user says the buzzing woke them and they denied every prompt.'],
           truth: 'MFA request generation: the attacker has the password and hopes for one tap.',
-          resp: [{label: 'Reset the password, revoke sessions, turn on number matching', good: true}, {label: 'Turn MFA off for the user until it stops', good: false}, {label: 'Lock the user’s phone remotely, deny the prompts', good: false, disrupt: 1, why: 'The phone isn’t compromised: the password is. Locking the phone doesn’t stop the next sign-in attempt.'}]},
+          resp: [{label: 'Reset the password, revoke sessions, turn on number matching', good: true}, {label: 'Turn MFA off for the user until it stops', good: false}, {label: 'Revoke sessions and lock the user’s phone remotely', good: false, disrupt: 1, why: 'The phone isn’t compromised: the password is. Locking the phone doesn’t stop the next sign-in attempt.'}]},
     benign: {clues: ['The user got a new phone and was re-enrolling MFA.', 'Every prompt came from the office network and the user’s own laptop.', 'A help-desk ticket shows the re-enrolment.'],
              truth: 'Benign: a user re-enrolling MFA on a new phone.'},
     fp: {clues: ['The “prompts” belong to a help-desk test account.', 'A nightly test signs in and denies by design.', 'The rule was never told to exclude it.'],
@@ -213,7 +213,7 @@ Object.assign(ALERTS, {
     rule: 'User granted a new app access to their mailbox',
     mal: {clues: ['A user approved “Docu Viewer”, which asked to read and send mail and to keep access.', 'The app was registered last week by an unknown publisher outside the organisation.', 'Since the approval it has read 2,300 messages from that mailbox.'],
           truth: 'Consent phishing: a malicious app talked a user into granting it a token to the mailbox.',
-          resp: [{label: 'Revoke its consent and tokens, remove it, review what it read, require admin approval for new apps', good: true}, {label: 'Reset the user’s password and close: the app can only reach the mailbox through her account, so the reset cuts it off', good: false, why: 'The app holds its own token; a password reset may not cut it off.'}, {label: 'Block every third-party app across the town until each one is reviewed', good: false, disrupt: 2, why: 'That breaks every approved tool too. Remove this one, and require admin approval for new ones.'}]},
+          resp: [{label: 'Revoke its consent and tokens, remove it, review what it read, require admin approval for new apps', good: true}, {label: 'Reset the user’s password and revoke her sessions: the app can only reach the mailbox through her account, so that cuts it off', good: false, why: 'The app holds its own consent and token: a reset and her revoked sessions don’t touch them. Revoke the app’s consent.'}, {label: 'Block every third-party app across the town until each one is reviewed', good: false, disrupt: 2, why: 'That breaks every approved tool too. Remove this one, and require admin approval for new ones.'}]},
     benign: {clues: ['The app is the town’s new meeting scheduler, approved by IT.', 'It asks only to read calendars.', 'Its publisher is verified and listed in the IT catalogue.'],
              truth: 'Benign: an approved app with narrow permissions.'},
     fp: {clues: ['The alert fired on the security team’s own mailbox-scanning app.', 'An admin granted it during setup.', 'The rule does not exclude admin grants.'],
@@ -319,7 +319,7 @@ const MR_CALLS = [
   {caller: '“Mara Finch, Harrow & Finch Paving”', open: 'Hello, Mara from Harrow & Finch. Our bank has changed and I’m emailing the new details now. Can you update them before today’s payment run? Call me back on this number if you need to.',
    opts: [{label: 'Update the details now: she knows the invoice numbers and sounds legitimate', why: 'Voices, names and invoice numbers can all be faked or stolen. A bank change is exactly what this pretext is for.'},
           {label: 'Call back the number she just gave you, to confirm it really reaches Harrow & Finch', why: 'That number belongs to whoever is calling. A call-back only proves something if you dial a number you already had.'},
-          {label: 'Confirm with Harrow & Finch on the number in the vendor master file', good: true}],
+          {label: 'Call Harrow & Finch to confirm, on the number in the vendor master file', good: true}],
    result: 'You call the number in the vendor file. The real Mara Finch: “We haven’t changed banks. Please don’t pay anything new.”'}
 ];
 
@@ -485,7 +485,7 @@ const MR_DRILLS = {
          specific: {q: 'Was any MFA prompt for kofi.mensah approved between 01:45 and 02:30? If so, from which address?', text: 'Yes, one: 02:14:07, for a sign-in from 203.0.113.143. A new authenticator was registered on the account at 02:16:40.'}},
     verdicts: [
       {label: 'MFA fatigue worked: the attacker had his password and got one approval. Compromised.', good: true, why: 'The approved prompt matches the attacker’s sign-in from 203.0.113.143, and an attacker authenticator followed.'},
-      {label: 'Blocked attack: 26 of 27 prompts were denied, and the MFA log shows no successful sign-in', why: 'It only takes one. The 27th was approved and a session was issued.'},
+      {label: 'Blocked attack: 26 of 27 prompts were denied, and the MFA log shows no successful sign-in; close it', why: 'It only takes one. The 27th was approved and a session was issued.'},
       {label: 'Benign: the approval came from Kofi’s real, enrolled phone, so it was Kofi signing in', why: 'Kofi’s finger, the attacker’s sign-in. That’s how fatigue works.'}],
     reasons: [
       {label: 'Prompts followed correct passwords from a host abroad; the approval matched that sign-in; a new authenticator followed', good: true, why: 'Address, timing and the follow-on registration tell one story.'},
@@ -521,8 +521,8 @@ const MR_CARDS = [
   {id: 'search', name: 'Search every inbox', csf: 'Detect', good: true, text: 'Find every message from the vendor’s address in the last 30 days, in every mailbox.', fx: 'Stage 3 becomes much easier.'},
   {id: 'twoapprove', name: 'Two approvers for bank changes', csf: 'Govern', good: true, text: 'From now on no one person approves a payment or a bank-detail change alone, whoever is on leave.', fx: 'A single hijacked request can no longer move money on one person’s say-so.'},
   {id: 'ic3', name: 'Report to FBI IC3', csf: 'Respond', good: true, text: 'File a complaint at ic3.gov with the transaction details, and tell leadership.', fx: 'Reputation up; the report supports the recovery effort.'},
-  {id: 'reply', name: 'Reply to the vendor email', csf: 'Respond', text: 'Ask them by email whether the new details are real.', fx: 'Doesn’t help: the attacker controls that mailbox and answers yes.'},
-  {id: 'delete', name: 'Delete the email', csf: 'Respond', text: 'Get rid of it so nobody else pays.', fx: 'Destroys evidence, and copies in other inboxes stay.'}
+  {id: 'reply', name: 'Reply to the vendor email', csf: 'Respond', text: 'Email them to find out if the new details are real.', fx: 'Doesn’t help: the attacker controls that mailbox and answers yes.'},
+  {id: 'delete', name: 'Delete the email', csf: 'Respond', text: 'Get rid of it and the evidence so no one else pays.', fx: 'Destroys evidence, and copies in other inboxes stay.'}
 ];
 
 /* ---------- Field Manual additions ---------- */

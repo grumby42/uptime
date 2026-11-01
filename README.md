@@ -80,8 +80,11 @@ Need Node and Playwright (Chromium).
                                    #   Dwell bar), bar fills >= 3:1 in Amber/Green, sound off by default + one-time toast, sound events
                                    #   per mode (stubbed Web Audio; alerts only; previews; no AudioContext), reduced flashing, large text
     node tests/tells.js            # word tells: no tracked word (close, ignore, leave, check, verify, confirm, evidence, scope,
-                                   #   preserve, hunt, review, ...) leans 70%+ to right or wrong options (n >= 5, rates per option) in any
-                                   #   district or overall; static scan of every graded list, no browser (--report prints the full table)
+                                   #   preserve, hunt, review, tonight, isolate, revoke, reset, already, just, ...) or synonym group
+                                   #   (preserve/keep/save logs, find/search/trace/hunt, dismissal openings, end-the-case phrases) leans
+                                   #   70%+ to right or wrong options (n >= 5, rates per option) in any district, any list type (drill
+                                   #   verdicts, alert verdicts, board rounds, boss stages, story choices, ...) or overall; outside 35-65%
+                                   #   prints a warning; static scan of every graded list, no browser (--report prints both tables)
     node tests/frontdesk.js        # Front Desk: escalation evidence gate + precision, boss MFA-card fix, alert weighting,
                                    #   scoping question, ATT&CK licence in Credits
     node tests/quiet.js            # Quiet Thread: scripted clue path, saves across reload / New game / export-import, summary lines

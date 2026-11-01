@@ -16,7 +16,10 @@
    {id, title, intro(html), artefact(html), question, budget,
     sources: [{id, name, qs: [{q, kind: 'focus'|'broad'|'trap', key, res: [lines], wall: [row templates]}]}],
     ai: {everything: {text, wrong, reveal}, specific: {q, text}},
-    verdicts: [{label, good, why}], reasons: [{label, good, why}],
+    verdicts: [{label, good, why, needs?, needsWhy?}], reasons: [{label, good, why}],
+   A right verdict may name the source its claim rests on (needs: source id). It then counts as
+   supported only if a key query on that source was run: a close that cites a log the player never
+   read is a guess, however many other key queries they ran.
     alts: [{label, good, why}], altPick, path(html), response: [lines], techs: [ids], acts: [keys]}
    ============================================================ */
 'use strict';
@@ -51,7 +54,7 @@ function drillKeysLeft(D, st) {
 }
 
 async function doDrill(D) {
-  const st = {budget: D.budget || 2, used: [], findings: [], broad: 0, trap: 0, keys: 0, aiMode: null};
+  const st = {budget: D.budget || 2, used: [], findings: [], broad: 0, trap: 0, keys: 0, keySrc: [], aiMode: null};
   UI.showPanel(false);
   touchCSF('Detect');
   const rules = '<p class="small">Query budget <b>' + st.budget + '</b>. A query is one evidence source plus one question. Focused questions return a short exact answer (1 Focus). Broad questions return a wall of rows (3 Focus). Then give a verdict and your reasoning, and name alternative explanations you ruled out. (Scoring is a game model.)</p>';
@@ -87,7 +90,7 @@ async function doDrill(D) {
     G.focus = Math.max(0, G.focus - DRILL_COST[q.kind]);
     let html;
     if (q.kind === 'broad') { st.broad++; html = drillWall(q); }
-    else { if (q.kind === 'trap') st.trap++; if (q.key) st.keys++; html = drillPre(q.res); }
+    else { if (q.kind === 'trap') st.trap++; if (q.key) { st.keys++; st.keySrc.push(src.id); } html = drillPre(q.res); }
     if (q.note) html += '<p class="small">' + esc(q.note) + '</p>';
     st.findings.push({head: src.name + ': ' + q.q, html: html});
     await UI.openModal('Result', html, [{label: 'Back to the investigation', meta: {good: true}}], {closable: false, cls: 'drill'});
@@ -110,7 +113,9 @@ async function doDrill(D) {
   const altOk = alts.filter(a => D.alts[a] && D.alts[a].good).length;
   const keyTotal = D.sources.reduce((n, s) => n + s.qs.filter(q => q.key).length, 0);
   const keyScore = Math.round(20 * Math.min(st.keys, Math.min(keyTotal, D.budget || 2)) / Math.min(keyTotal, D.budget || 2));
-  const supported = st.keys > 0;
+  const goodV = D.verdicts.find(x => x.good) || {};
+  const needsMissed = !!(goodV.needs && st.keys > 0 && !st.keySrc.includes(goodV.needs));
+  const supported = st.keys > 0 && !needsMissed;
   let score = (verdictOk ? (supported ? 40 : 20) : 0) + (reasonOk && supported ? 20 : 0) + keyScore + altOk * 10 - st.broad * 5 - st.trap * 5;
   score = clamp(score, 0, 100);
   const aiWrong = st.aiMode === 'everything' && D.ai && D.ai.everything.wrong;
@@ -119,7 +124,7 @@ async function doDrill(D) {
   h += '<p><b>Verdict:</b> ' + esc(D.verdicts[v].label) + ' — ' + (verdictOk ? 'correct. ' : 'not supported. ') + esc(D.verdicts[v].why || '') + '</p>';
   if (!verdictOk) h += '<p><b>Better verdict:</b> ' + esc(D.verdicts.find(x => x.good).label) + '</p>';
   h += '<p><b>Reasoning:</b> ' + (reasonOk ? (supported ? 'sound. ' : 'sound in principle, but it rests on evidence you never queried (no credit). ') : 'weak. ') + esc(D.reasons[r].why || '') + '</p>';
-  if (verdictOk && !supported) h += '<p><b>Unsupported:</b> the right answer, but none of your queries reached the decisive evidence. In a real case that is a guess, and a guess can’t be defended in a report.</p>';
+  if (verdictOk && !supported) h += '<p><b>Unsupported:</b> ' + (needsMissed ? esc(goodV.needsWhy || 'the right answer, but it rests on evidence you never queried.') + ' In a real case that is a guess, and a guess can’t be defended in a report.' : 'the right answer, but none of your queries reached the decisive evidence. In a real case that is a guess, and a guess can’t be defended in a report.') + '</p>';
   h += '<p><b>Alternatives:</b> ' + altOk + ' of ' + pickN + ' worth ruling out.</p><ul>' +
     D.alts.filter(x => x.good).map(x => '<li>' + esc(x.label) + ': ' + esc(x.why) + '</li>').join('') + '</ul>';
   h += '<p><b>Queries:</b> ' + st.keys + ' focused on the decisive evidence' + (st.broad ? ', ' + st.broad + ' broad (a wall of rows costs time and Focus)' : '') + (st.trap ? ', ' + st.trap + ' that could only mislead' : '') + '.</p>';

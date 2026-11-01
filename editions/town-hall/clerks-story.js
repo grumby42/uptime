@@ -343,7 +343,7 @@ async function crAsrTask() {
   while (true) {
     const i = await choose('How do you roll it out?', [
       {label: 'Rules and an app allow-list in audit mode first, review a week of hits, then block', meta: {good: true}},
-      {label: 'Block mode on every rule and the allow-list today, with a help-desk line for anything that breaks'},
+      {label: 'Block mode on every rule and the allow-list today; the help desk reviews anything that breaks'},
       {label: 'Skip it: antivirus already catches malicious documents and scripts when they land'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('Some line-of-business tools will break, and people will ask for blanket exceptions. Audit first, then block.');
@@ -454,7 +454,7 @@ async function crException() {
   const c = CR();
   while (true) {
     const i = await choose('Gus’s request.', [
-      {label: 'Log a help-desk request: IT checks it, installs the signed driver for him, records it and closes it', meta: {good: true}},
+      {label: 'Leave his rights as they are: IT checks the signed driver, installs it for him, records it and closes it', meta: {good: true}},
       {label: 'Give Gus admin rights for one hour, logged, through the help desk'},
       {label: 'Make Gus a permanent admin: he’s trustworthy, has been here for years, and installs drivers every few months'},
       {label: 'Tell Gus no, and to find a plotter that doesn’t need a driver'}], {shuffle: true});
@@ -603,7 +603,7 @@ async function crBossFinish() {
      title: 'Stage 2: restore points vanish', host: 'infected laptops (isolated)', enemy: {spr: 'shade', pal: 'shade'},
      clues: ['On the infected laptops, vssadmin deletes every shadow copy.', 'The worm installed itself as a new service on each one.', 'Sunday’s offline backups are intact: nothing on the network could reach them.'],
      truth: 'Inhibit System Recovery: the worm removes restore points before it encrypts.',
-     resp: [{label: 'Keep them isolated, plan rebuilds from the offline backups, patch every clean laptop now', good: true},
+     resp: [{label: 'Keep them off the network, plan rebuilds from the offline backups, patch every clean laptop now', good: true},
             {label: 'Restore the infected laptops from their shadow copies and reconnect them once the worm’s service is removed', good: false, why: 'The shadow copies have just been deleted, and an unpatched laptop back on the network gets reinfected.'},
             {label: 'Pay for a decryption key now, while nothing is encrypted yet and the attacker’s price is still low', good: false, why: 'Nothing is encrypted yet, and paying guarantees nothing.'}],
      chain: [{at: 60, text: 'A laptop starts renaming files.'}]},

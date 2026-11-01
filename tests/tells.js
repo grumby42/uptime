@@ -6,15 +6,20 @@
 //   - Dojo puzzles ({opts, good: index}), the tiering mini-game ({fix, bad[]}), the assessment owner question
 //     ({owner[], ownerGood}) and the tabletop cards ({name, csf, text, good?}).
 // Non-graded menus (End shift, Keep exploring, Yes/No ...) are left out, as in work/lentell.js.
+// Each list also gets a list type (drill verdicts, drill reasons, alert verdicts/responses, board rounds, boss stages,
+// story choices, other), because a tell can hide in one list type while the district totals look balanced.
 // For each district and overall, and for each tracked word, it counts the options containing the word among the
 // correct options (g of G) and among the wrong ones (b of B). Because there are about twice as many wrong options as
 // right ones, raw counts are compared as rates: lean = (b/B) / (g/G + b/B), 0.5 = no tell, 1 = only ever wrong,
 // 0 = only ever right. A word that appears in at least MIN_N options of a district (or of the whole game) and leans
-// 70% or more either way fails the test. Words are matched on the text the player sees, in any sense ("close the
+// 70% or more either way fails the test, and so does one that does so inside one list type (all districts together).
+// Anything outside 35–65% at n >= MIN_N is printed as a warning (not a failure), so the next edit sees a thin margin. Words are matched on the text the player sees, in any sense ("close the
 // case" and "close the port" are both "close"), because that is what a player can learn to spot.
-// Usage: node tests/tells.js            (test; exit 1 on failure)
-//        node tests/tells.js --report   (full table, every word, every district; no failure)
-//        node tests/tells.js --hits=close [--d=basement]   (list the options carrying a word)
+// Besides single words it tracks synonym groups (a tell that moves from "preserve" to "keep the logs" is still a tell)
+// and the opening of a label (a dismissal verdict at the start: "Ignore", "Let it go", "Skip it", "Benign:" ...).
+// Usage: node tests/tells.js            (test; exit 1 on failure; warnings printed)
+//        node tests/tells.js --report   (full tables by district and by list type, every word; no failure)
+//        node tests/tells.js --hits=close [--d=basement] [--t=drill-verdicts]   (list the options carrying a word)
 //        UPTIME_ROOT=/path/to/tree node tests/tells.js     (scan another checkout)
 const fs = require('fs');
 const path = require('path');
@@ -22,7 +27,7 @@ let acorn = null;
 for (const m of ['acorn', '/opt/node-tools/node_modules/acorn']) { try { acorn = require(m); break; } catch (e) {} }
 if (!acorn) { console.error('acorn not found (npm i acorn, or /opt/node-tools/node_modules/acorn)'); process.exit(2); }
 const root = process.env.UPTIME_ROOT || path.resolve(__dirname, '..');
-const THRESH = 0.70, MIN_N = 5;
+const THRESH = 0.70, WARN = 0.65, MIN_N = 5;
 
 // Tracked words. "close" is the surface word a player sees, in any sense (close a ticket, close a port).
 // The first group is the "this option is wrong" family; the second the "this option is right" family.
@@ -44,15 +49,30 @@ const WORDS = [
   ['preserve', /\bpreserv(e|ed|es|ing)\b/i],
   ['hunt', /\bhunt(ed|s|ing)?\b/i],
   ['review', /\breview(ed|s|ing)?\b/i],
+  // Older strong tells, enforced since the second word-tell pass.
+  ['tonight', /\btonight\b/i],
+  ['isolate', /\bisolat(e|ed|es|ing)\b/i],
+  ['revoke', /\brevok(e|ed|es|ing)\b/i],
+  ['reset', /\breset(s|ting)?\b/i],
+  ['already', /\balready\b/i],
+  ['just', /\bjust\b/i],
+  // Synonym groups.
+  ['G:preserve', /(\bpreserv(e|ed|es|ing)\b|\bsecur(e|ed|es|ing)\b|(?<!(golden|clean|known-good|good|signed|same) )\bimag(e|ed|es|ing)\b|\bevidence\b|\b(keep|keeps|kept|keeping|save|saves|saved|saving|copy|copies|copied|copying|hold|holds|retain|retains)\b[^.;:]{0,40}\blogs?\b)/i],
+  ['G:find', /\b(find|finds|finding|search(ed|es|ing)?|trac(e|ed|es|ing)|hunt(ed|s|ing)?)\b/i],
+  ['G:dismiss-open', /^(Ignore|Leave|Let (it|them|the)\b|Keep (it|them)(:| as it)|Skip it|No change|No need|Not ours|Accept the|Benign|Expected activity|Harmless|Noise|Dismiss|Close(:| it\b)|File it as|False positive|Legitimate|Genuine|Not an attack|Not malicious)/i],
+  // Phrases that end the response (enforced since the second pass: a phrase that is never right is a tell too).
+  ['G:end-early', /\b(stop there|and stop:|stand down|move on|carry on|call it (done|contained|handled|closed)|treat it as handled|mark(ed)? (it |the alert |the case )?resolved)\b|(^|[,;:.]\s*|\b(so|then|and)\s+)clos(e|ed|es|ing)\b(?!\s+(the (port|ports|rule|account|accounts|session|sessions|gap|door|hole|share)\b|ports?\b|a\b|an\b|its\b|card\b|that\b|this\b|off\b|down\b|in\b|to\b|enough\b))/i],
 ];
 // Extra words measured in --report only (not enforced): candidates for future tracking.
 const EXTRA = [
   ['delete', /\bdelet(e|ed|es|ing)\b/i], ['block', /\bblock(ed|s|ing)?\b/i], ['restart/rerun', /\b(restart|rerun|re-run)/i],
-  ['reset', /\breset(s|ting)?\b/i], ['isolate', /\bisolat(e|ed|es|ing)\b/i], ['revoke', /\brevok(e|ed|es|ing)\b/i],
-  ['already', /\balready\b/i], ['only', /\bonly\b/i], ['every', /\bevery(thing|one)?\b/i], ['just', /\bjust\b/i],
-  // Phrases that end the response early (the distractors' replacements for "and close"). Wrong by content: stopping
-  // before containment is the mistake the game teaches. Reported so their spread stays visible.
-  ['end-early', /\b(stop there|and stop:|stand down|move on|call it (done|contained|handled)|treat it as handled|mark (it|the alert) resolved|carry on)\b/i],
+  ['only', /\bonly\b/i], ['every', /\bevery(thing|one)?\b/i], ['now', /\bnow\b/i],
+  // The broad investigate family (every enforced investigative word above, plus their synonyms). Reported, not
+  // enforced: right answers to an open question naturally include an investigative step; each word in it is enforced.
+  // Synonym families for the containment and credential words enforced above, so a move to synonyms stays visible.
+  ['G:contain', /\b(isolat(e|ed|es|ing)|contain(ed|s|ing)?|quarantin(e|ed|es|ing)|cut (it|them|the [^ ]+|[A-Z][^ ]*) off|off the network|take [^,;:]{1,30} offline)\b/i],
+  ['G:credential', /\b(reset(s|ting)?|revok(e|ed|es|ing)|end (its|their|her|his|all its) sessions|sign(ed)? (it|them|her|him|[a-z.-]+) out|chang(e|ed|ing) (the|her|his|its) password|rotat(e|ed|es|ing))\b/i],
+  ['G:investigate', /\b(check(ed|s|ing)?|verif(y|ied|ies|ying)|confirm(ed|s|ing)?|scop(e|ed|es|ing)|hunt(ed|s|ing)?|find|finds|search(ed|es|ing)?|trac(e|ed|es|ing)|review(ed|s|ing)?|audit(ed|s|ing)?|work out|go through|make sure|investigat(e|ed|es|ing))\b/i],
 ];
 
 const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
@@ -76,10 +96,23 @@ function goodOf(o) {
   return false;
 }
 const lists = [];
+// List type, from where the list sits: the top-level constant or function around it and the property holding it.
+function listType(top, key, kind) {
+  if (kind !== 'list') return 'other';
+  if (key === 'verdicts') return 'drill-verdicts';
+  if (key === 'reasons' || key === 'alts') return 'drill-reasons';
+  if (/BOARD_SPECS/.test(top)) return 'board-rounds';
+  if (key === 'resp' && /^(s\d|stages|.*[bB]ossStages\(\))$/.test(top)) return 'boss-stages';
+  if (key === 'resp') return 'alert-verdicts';
+  if (key === '' || key.startsWith('(')) return 'story-choices';
+  return 'other';
+}
+const TYPES = ['drill-verdicts', 'drill-reasons', 'alert-verdicts', 'board-rounds', 'boss-stages', 'story-choices', 'other'];
 for (const f of files) {
   const src = fs.readFileSync(root + '/' + f, 'utf8');
   const ast = acorn.parse(src, {ecmaVersion: 2022, locations: true, sourceType: 'script', allowReturnOutsideFunction: true});
-  const push = (n, key, items) => lists.push({file: f, line: n.loc.start.line, key, items});
+  let top = '', key = '';
+  const push = (n, kind, items) => lists.push({file: f, line: n.loc.start.line, key: kind, type: listType(top, key, kind), items});
   (function walk(n) {
     if (!n || typeof n.type !== 'string') return;
     if (n.type === 'ArrayExpression' && n.elements.length >= 2 && n.elements.every(e => e && e.type === 'ObjectExpression' && prop(e, 'label'))) {
@@ -103,13 +136,21 @@ for (const f of files) {
       const items = n.elements.map(e => ({label: strOf(prop(e, 'name').value) + ' — ' + strOf(prop(e, 'text').value), good: goodOf(e), line: e.loc.start.line}));
       if (items.every(x => x.good !== undefined) && items.some(x => x.good) && items.some(x => !x.good)) push(n, 'cards', items);
     }
+    const saveTop = top, saveKey = key;
+    if (n.type === 'VariableDeclarator' && n.id.name) top = n.id.name;
+    if (n.type === 'FunctionDeclaration' && n.id) top = n.id.name + '()';
     for (const k in n) { if (k === 'loc') continue; const v = n[k];
-      if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v.type === 'string') walk(v); }
+      const kk = key;
+      if (n.type === 'Property' && k === 'value') key = n.key.name || n.key.value;
+      if (n.type === 'CallExpression' && k === 'arguments') key = '(' + (n.callee.name || (n.callee.property && n.callee.property.name)) + ')';
+      if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v.type === 'string') walk(v);
+      key = kk; }
+    top = saveTop; key = saveKey;
   })(ast);
 }
 const SKIP = /^(End shift|Not yet|Keep exploring|Title screen|Fix it|Done|Yes|No)\b/;
 const graded = lists.filter(L => !L.items.filter(x => x.good).every(x => SKIP.test(x.label)));
-const opts = graded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key}, x)));
+const opts = graded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
 
 function stat(set, re) {
   const G = set.filter(x => x.good), B = set.filter(x => !x.good);
@@ -118,36 +159,52 @@ function stat(set, re) {
   return {g, G: G.length, b, B: B.length, n: g + b, lean: rg + rb ? rb / (rg + rb) : 0.5};
 }
 const scopes = DISTRICTS.concat(['all']);
-const inScope = s => s === 'all' ? opts : opts.filter(x => x.d === s);
+const inScope = s => s === 'all' ? opts : TYPES.includes(s) ? opts.filter(x => x.t === s) : opts.filter(x => x.d === s);
 const args = process.argv.slice(2);
-const hitsArg = (args.find(a => a.startsWith('--hits=')) || '').slice(7), dArg = (args.find(a => a.startsWith('--d=')) || '').slice(4);
+const argOf = k => (args.find(a => a.startsWith('--' + k + '=')) || '').slice(k.length + 3);
+const hitsArg = argOf('hits'), dArg = argOf('d'), tArg = argOf('t');
 if (hitsArg) {
   const w = WORDS.concat(EXTRA).find(x => x[0] === hitsArg); if (!w) { console.error('unknown word ' + hitsArg); process.exit(2); }
-  for (const x of opts) if ((!dArg || x.d === dArg) && w[1].test(x.label)) console.log((x.good ? 'GOOD ' : 'bad  ') + x.file.split('/').pop() + ':' + x.line, x.label);
+  for (const x of opts) if ((!dArg || x.d === dArg) && (!tArg || x.t === tArg) && w[1].test(x.label)) console.log((x.good ? 'GOOD ' : 'bad  ') + x.file.split('/').pop() + ':' + x.line + ' [' + x.t + ']', x.label);
   process.exit(0);
 }
 const fmt = s => (s.n ? (s.g + '/' + s.G + ' ' + s.b + '/' + s.B + ' ' + (s.lean * 100).toFixed(0) + '%') : '-');
-const fails = [];
+const fails = [], warns = [];
 const report = args.includes('--report');
 const words = report ? WORDS.concat(EXTRA) : WORDS;
-if (report) console.log('cell = in-correct g/G  in-wrong b/B  lean-to-wrong%  (* = tell: n>=' + MIN_N + ' and lean >=' + THRESH * 100 + '% or <=' + Math.round((1 - THRESH) * 100) + '%)');
-if (report) console.log('word'.padEnd(18) + scopes.map(s => s.padEnd(18)).join(''));
-for (const [name, re] of words) {
-  const cells = [];
-  for (const s of scopes) {
-    const st = stat(inScope(s), re), tell = st.n >= MIN_N && (st.lean >= THRESH || st.lean <= 1 - THRESH);
-    if (tell && WORDS.some(w => w[0] === name)) fails.push(name + ' in ' + s + ': ' + fmt(st) + (st.lean >= THRESH ? ' (predicts wrong)' : ' (predicts right)'));
-    cells.push(((tell ? '*' : ' ') + fmt(st)).padEnd(18));
+const enforced = name => WORDS.some(w => w[0] === name);
+function table(title, cols) {
+  if (report) console.log('\n' + title + '\n' + 'word'.padEnd(18) + cols.map(s => s.padEnd(19)).join(''));
+  for (const [name, re] of words) {
+    const cells = [];
+    for (const s of cols) {
+      const st = stat(inScope(s), re), big = st.n >= MIN_N;
+      const tell = big && (st.lean >= THRESH || st.lean <= 1 - THRESH), warn = big && !tell && (st.lean > WARN || st.lean < 1 - WARN);
+      const where = (TYPES.includes(s) ? 'list type ' : '') + s;
+      if (tell && enforced(name)) fails.push(name + ' in ' + where + ': ' + fmt(st) + (st.lean >= THRESH ? ' (predicts wrong)' : ' (predicts right)'));
+      if (warn && enforced(name)) warns.push(name + ' in ' + where + ': ' + fmt(st));
+      cells.push(((tell ? '*' : warn ? '~' : ' ') + fmt(st)).padEnd(19));
+    }
+    if (report) console.log((enforced(name) ? name : '(' + name + ')').padEnd(18) + cells.join(''));
   }
-  if (report) console.log((EXTRA.some(w => w[0] === name) ? '(' + name + ')' : name).padEnd(18) + cells.join(''));
 }
+if (report) console.log('cell = in-correct g/G  in-wrong b/B  lean-to-wrong%  (* = tell: n>=' + MIN_N + ' and lean >=' + THRESH * 100 + '% or <=' + Math.round((1 - THRESH) * 100) + '%; ~ = warning: outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%)');
+table('By district', scopes);
+table('By list type (all districts)', TYPES);
 const nG = opts.filter(x => x.good).length;
-console.log('Scanned ' + graded.length + ' graded lists, ' + opts.length + ' options (' + nG + ' correct, ' + (opts.length - nG) + ' wrong), ' + WORDS.length + ' tracked words.');
-if (report) { if (fails.length) console.log('Tells:\n  ' + fails.join('\n  ')); process.exit(0); }
+console.log('Scanned ' + graded.length + ' graded lists, ' + opts.length + ' options (' + nG + ' correct, ' + (opts.length - nG) + ' wrong), ' + WORDS.length + ' tracked words and groups.');
+if (report) {
+  console.log('Lists by type: ' + TYPES.map(t => t + ' ' + graded.filter(L => L.type === t).length).join(', '));
+  if (fails.length) console.log('Tells:\n  ' + fails.join('\n  '));
+  if (warns.length) console.log('Warnings:\n  ' + warns.join('\n  '));
+  process.exit(0);
+}
 const checks = [
   ['source scan found graded lists in every district', DISTRICTS.every(d => graded.some(L => district(L.file) === d))],
-  ['no tracked word leans ' + THRESH * 100 + '% or more to right or wrong (n>=' + MIN_N + ') in any district or overall', !fails.length],
+  ['source scan found graded lists of every list type', TYPES.every(t => graded.some(L => L.type === t))],
+  ['no tracked word or group leans ' + THRESH * 100 + '% or more to right or wrong (n>=' + MIN_N + ') in any district, any list type, or overall', !fails.length],
 ];
+if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);
 if (fails.length) console.log('  ' + fails.join('\n  '));
 process.exit(checks.every(c => c[1]) ? 0 : 1);
