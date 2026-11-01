@@ -71,8 +71,6 @@ function sprite(key, palKey, opts) {
   if (SPR_CACHE[id]) return SPR_CACHE[id];
   let grid = S[key];
   if (!grid) throw new Error('no sprite ' + key);
-  if (opts.variant === 'back') grid = grid.map((r, y) => (y >= 3 && y <= 7) ? r.replace(/[34]/g, '2') : r);
-  if (opts.variant === 'step') grid = grid.slice(0, 13).concat(['0000122112210000', '0000122011110000', '0000111000000000']);
   if (opts.variant === 'tuned') grid = tunedGrid(grid);
   const pal = PAL[palKey];
   const c = document.createElement('canvas');
