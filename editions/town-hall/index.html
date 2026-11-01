@@ -188,7 +188,7 @@ pre.art.ai{border-left-color:var(--gold)}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261101-0418Z', BUILD_TS = '2026-11-01 04:18 UTC';
+const BUILD_ID = 'ARCD-20261101-1045Z', BUILD_TS = '2026-11-01 10:45 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -251,17 +251,25 @@ S.playerU = ["0000011111100000", "0000122222210000", "0001222222221000", "001122
 S.playerL = ["0000011111100000", "0000122222211000", "0001222222122100", "0012333322122100", "0013133321412100", "0133333321412100", "0013313322222100", "0001333322211000", "0000011111100000", "0000144444410000", "0001444414441000", "0001444414441000", "0000111131110000", "0000012222100000", "0000012222100000", "0001111111000000"];
 S.playerW = ["0000011111100000", "0000122222210000", "0001222222221000", "0011233333321100", "0141344334431410", "0141333333331410", "0011133113311100", "0001133333311000", "0000111111110000", "0001444444441000", "0014414444144100", "0014414444144100", "0001111111111000", "0000122112210000", "0000122011110000", "0000111000000000"];
 S.playerUW = ["0000011111100000", "0000122222210000", "0001222222221000", "0011222222221100", "0141222222221410", "0141222222221410", "0011122222211100", "0001122222211000", "0000111111110000", "0001444444441000", "0014414444144100", "0014414444144100", "0001111111111000", "0000122112210000", "0000111122110000", "0000000011110000"];
-S.playerLW = ["0000011111100000", "0000122222211000", "0001222222122100", "0012333322122100", "0013133321412100", "0133333321412100", "0013313322222100", "0001333322211000", "0000011111100000", "0000144444410000", "0001444414441000", "0001444414441000", "0000111131110000", "0000122222100000", "0001221012210000", "0011100001110000"];
+S.playerLW = ["0000011111100000", "0000122222211000", "0001222222122100", "0012333322122100", "0013133321412100", "0133333321412100", "0013313322222100", "0001333322211000", "0000011111100000", "0000144444410000", "0001444414441000", "0001444414441000", "0000111131110000", "0000122222100000", "0001221011110000", "0011100001110000"];
 S.actorU = ["0000011111100000", "0000122222210000", "0001222222221000", "0012222222222100", "0012222222222100", "0012222222222100", "0012222222222100", "0001222222221000", "0011222222221100", "0122122222212210", "0122122222212210", "0011122222211100", "0000122222210000", "0000122112210000", "0000122112210000", "0000111001110000"];
 S.actorL = ["0000011111100000", "0000122222211000", "0001222222222100", "0012111222222100", "0014433222222100", "0013332222222100", "0011112222222100", "0001222222221000", "0001222222221100", "0001222122222100", "0001222122222100", "0001122122221000", "0000122222210000", "0000012222100000", "0000012222100000", "0001111111000000"];
 S.actorW = ["0000011111100000", "0000122222210000", "0001222222221000", "0012221111222100", "0012214334122100", "0012213333122100", "0012221111222100", "0001222222221000", "0011222222221100", "0122122222212210", "0122122442212210", "0011122222211100", "0000122222210000", "0000122112210000", "0000122011110000", "0000111000000000"];
 S.actorUW = ["0000011111100000", "0000122222210000", "0001222222221000", "0012222222222100", "0012222222222100", "0012222222222100", "0012222222222100", "0001222222221000", "0011222222221100", "0122122222212210", "0122122222212210", "0011122222211100", "0000122222210000", "0000122112210000", "0000111122110000", "0000000011110000"];
-S.actorLW = ["0000011111100000", "0000122222211000", "0001222222222100", "0012111222222100", "0014433222222100", "0013332222222100", "0011112222222100", "0001222222221000", "0001222222221100", "0001222122222100", "0001222122222100", "0001122122221000", "0000122222210000", "0000122222100000", "0001221012210000", "0011100001110000"];
+S.actorLW = ["0000011111100000", "0000122222211000", "0001222222222100", "0012111222222100", "0014433222222100", "0013332222222100", "0011112222222100", "0001222222221000", "0001222222221100", "0001222122222100", "0001222122222100", "0001122122221000", "0000122222210000", "0000122222100000", "0001221011110000", "0011100001110000"];
 const CHAR_SPRITES = ['player', 'actor'];
 const FACINGS = {down: '', up: 'U', left: 'L', right: 'R'};
-for (const c of CHAR_SPRITES) { S[c + 'R'] = S[c + 'L'].map(r => r.split('').reverse().join('')); S[c + 'RW'] = S[c + 'LW'].map(r => r.split('').reverse().join('')); }
-// Sprite key for a character facing a direction, standing or mid-step (the 2-frame walk cycle).
-function facingKey(base, dir, step) { return base + (FACINGS[dir] || '') + (step ? 'W' : ''); }
+const mirrorRows = g => g.map(r => r.split('').reverse().join(''));
+for (const c of CHAR_SPRITES) {
+  // Second stepping frame (W2), the other foot forward: front and back views are left-right symmetric, so the mirror of
+  // the first stepping frame is the other foot. In profile the far leg is shaded: W shades the back leg, W2 the front one.
+  S[c + 'W2'] = mirrorRows(S[c + 'W']); S[c + 'UW2'] = mirrorRows(S[c + 'UW']);
+  S[c + 'LW2'] = S[c + 'LW'].map((r, y) => y === 14 ? r.slice(0, 3) + '1111' + r.slice(7, 9) + '1221' + r.slice(13) : r);
+  S[c + 'R'] = mirrorRows(S[c + 'L']); S[c + 'RW'] = mirrorRows(S[c + 'LW']); S[c + 'RW2'] = mirrorRows(S[c + 'LW2']);
+}
+// Sprite key for a character facing a direction: step 0 standing, 1 or 2 the two stepping frames (feet alternate;
+// true counts as 1). Walk cycle: standing, step 1, standing, step 2, ...
+function facingKey(base, dir, step) { return base + (FACINGS[dir] || '') + (step ? (step === 2 ? 'W2' : 'W') : ''); }
 const PAL = {
   G: ['#1f3d2b','#2f6e3e','#5aa64b','#a6d96a'],
   R: ['#2b2f3a','#4a5163','#8b93a7','#d7dbe4'],
@@ -994,7 +1002,7 @@ const NPCS = [
   {id:'lin', name:'Lin Zhao', role:'accounts', map:'desk', x:12, y:3, dir:'down', pal:'lin', acct:true},
   {id:'hal', name:'Hal Benning', role:'facilities', map:'hub', x:17, y:7, dir:'down', pal:'hal', acct:true},
   {id:'sam', name:'Sam Ortiz', role:'visitor', map:'hub', x:9, y:7, dir:'down', pal:'sam'},
-  {id:'owen', name:'Owen Pike', role:'records clerk', map:'hub', x:8, y:10, dir:'left', pal:'owen', acct:true, cond:G=>G.day>=2},
+  {id:'owen', name:'Owen Pike', role:'records clerk', map:'hub', x:8, y:10, dir:'right', pal:'owen', acct:true, cond:G=>G.day>=2},
   {id:'grace', name:'Grace Kim', role:'HR partner', map:'hub', x:12, y:9, dir:'down', pal:'grace', acct:true, cond:G=>G.day>=2},
   {id:'vex', name:'Vex', role:'red teamer', map:'hub', x:15, y:12, dir:'up', spr:'actor', pal:'actor', cond:G=>G.f.vexMet && !G.f.vexDone},
   {id:'marisol', name:'Marisol Diaz', role:'identity lead', map:'board', x:9, y:2, dir:'down', pal:'marisol', acct:true},
@@ -9649,7 +9657,8 @@ let lastT = 0, encCooldown = 0, toastT = 0, shake = 0, titleOpen = false;
 const DIRS = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0]};
 
 /* ---------- Helpers ---------- */
-const say = (t, who) => UI.say(t, who);
+// A named speaker standing on this map turns to face the player while speaking (talks and walk-triggered scenes alike).
+const say = (t, who) => { faceSpeaker(who); return UI.say(t, who); };
 const choose = (p, items, o) => UI.choose(p, items, o);
 function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); toastT = 2600; }
 function unlock(kind, key) { if (!G.fm[kind + ':' + key]) { G.fm[kind + ':' + key] = true; return true; } return false; }
@@ -9728,8 +9737,18 @@ function camera() {
   let cy = mh <= VH ? -(VH - mh) / 2 : clamp(py + 8 - VH / 2, 0, mh - VH);
   return {cx: Math.round(cx), cy: Math.round(cy), px: px, py: py};
 }
-let npcFace = null;  // {id, dir}: the NPC the player is talking to faces the player until the conversation ends
+let npcFace = {};  // NPC id -> facing: NPCs in the current conversation or scene face the player until it ends (run(), busy -> 0)
 let drawnEnts = [];  // what the last world frame drew (characters: sprite key, facing, screen position); read by tests
+let drawnWanted = false;  // drawnEnts is only built once a test asks for it (__UPTIME.drawn), so normal play allocates nothing for it
+// Turn the NPC named `who` (if they stand on this map and are present) to face the player, by the dominant axis.
+function faceSpeaker(who) {
+  if (!who || !G || !started) return;
+  for (const n of NPCS) {
+    if (n.name !== who || n.map !== G.map || (n.cond && !n.cond(G))) continue;
+    const dx = G.x - n.x, dy = G.y - n.y;
+    if (dx || dy) npcFace[n.id] = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  }
+}
 const OPP_DIR = {up: 'down', down: 'up', left: 'right', right: 'left'};
 function drawWorld(ctx) {
   ctx.fillStyle = '#10141f'; ctx.fillRect(0, 0, VW, VH);
@@ -9743,17 +9762,18 @@ function drawWorld(ctx) {
     ctx.drawImage(sprite(d.spr, d.pal), sx, sy);
   }
   // entities sorted by y
-  // NPCs keep their configured facing, except the one being talked to, which turns to the player (npcFace).
-  const ents = NPCS.filter(n => n.map === G.map && (!n.cond || n.cond(G))).map(n => ({id: n.id, x: n.x * TS, y: n.y * TS, spr: n.spr || 'player', pal: n.pal, dir: npcFace && npcFace.id === n.id ? npcFace.dir : n.dir}));
-  // 2-frame walk cycle: the stepping frame for the middle half of each tile-to-tile move, standing otherwise.
-  const walkFrame = !!(moving && moving.t > 0.25 && moving.t < 0.75);
+  // NPCs keep their configured facing, except those speaking to the player, who turn to face them (npcFace).
+  const ents = NPCS.filter(n => n.map === G.map && (!n.cond || n.cond(G))).map(n => ({id: n.id, x: n.x * TS, y: n.y * TS, spr: n.spr || 'player', pal: n.pal, dir: npcFace[n.id] || n.dir}));
+  // Walk cycle: a stepping frame for the middle half of each tile-to-tile move, standing otherwise; the stepping frame
+  // alternates feet on successive steps (1 on even G.steps, 2 on odd), so the walk reads left, right, left...
+  const walkFrame = moving && moving.t > 0.25 && moving.t < 0.75 ? 1 + (G.steps & 1) : 0;
   ents.push({id: 'me', x: cam.px, y: cam.py, spr: 'player', pal: 'player', dir: G.dir, me: true, step: walkFrame});
   ents.sort((a, b) => a.y - b.y);
-  drawnEnts = [];
+  if (drawnWanted) drawnEnts.length = 0;
   for (const e of ents) {
     const key = facingKey(e.spr, e.dir, e.step), sx = Math.round(e.x - cam.cx), sy = Math.round(e.y - cam.cy - (e.step ? 1 : 0));
     ctx.drawImage(sprite(key, e.pal), sx, sy);
-    drawnEnts.push({id: e.id, key: key, pal: e.pal, dir: e.dir, x: sx, y: sy});
+    if (drawnWanted) drawnEnts.push({id: e.id, key: key, pal: e.pal, dir: e.dir, x: sx, y: sy});
   }
   drawMarker(ctx, cam);
   if (fade > 0) { ctx.fillStyle = 'rgba(16,20,31,' + fade + ')'; ctx.fillRect(0, 0, VW, VH); }
@@ -9840,7 +9860,7 @@ async function run(fn) {
   catch (e) { console.error(e); }
   finally {
     busy--;
-    if (!busy) { npcFace = null; UI.hidePanel(); hudUpdate(); autosave(); }
+    if (!busy) { npcFace = {}; UI.hidePanel(); hudUpdate(); autosave(); }
   }
 }
 function autosave() { if (G && started && !B) storeSet(encodeSave(G)); }
@@ -10423,7 +10443,7 @@ function onButton(b) {
     // Talking to someone: they turn to face you for the conversation, then go back to their own facing (see run()).
     const [dx, dy] = DIRS[G.dir], npc = npcHere(G.map, G.x + dx, G.y + dy);
     interact();
-    if (npc && busy) npcFace = {id: npc.id, dir: OPP_DIR[G.dir]};
+    if (npc && busy) npcFace[npc.id] = OPP_DIR[G.dir];
   }
   else if (b === 'start') run(startMenu);
   else if (b === 'select') run(openQueue);
@@ -10450,7 +10470,7 @@ window.__UPTIME = {
   turbo(on) { UI.turbo = !!on; },
   seed(n) { seedOverride = n >>> 0; },
   state() { return G; },
-  drawn() { return drawnEnts.slice(); },
+  drawn() { drawnWanted = true; return drawnEnts.slice(); },  // the first call turns recording on; read again after a frame
   series() { return Series.load(); }
 };
 

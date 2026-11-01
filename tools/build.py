@@ -45,7 +45,7 @@ VALIDATE = r"""
   for (const t in TILES) { const d = TILES[t]; if (d.spr && !S[d.spr]) errs.push('tile ' + t + ' sprite'); if (d.pal && !PAL[d.pal]) errs.push('tile ' + t + ' pal'); }
   for (const n of NPCS) { if (!PAL[n.pal]) errs.push('npc pal ' + n.id); }
   for (const t in THREATS) { if (!TECH[THREATS[t].tech]) errs.push('threat tech ' + t); }
-  for (const c of CHAR_SPRITES) for (const d in FACINGS) for (const w of [0, 1]) if (!S[facingKey(c, d, w)]) errs.push('character ' + c + ' has no ' + d + (w ? ' step' : '') + ' frame');
+  for (const c of CHAR_SPRITES) for (const d in FACINGS) for (const w of [0, 1, 2]) if (!S[facingKey(c, d, w)]) errs.push('character ' + c + ' has no ' + d + (w ? ' step ' + w : '') + ' frame');
   for (const n of NPCS) { if (CHAR_SPRITES.indexOf(n.spr || 'player') < 0) errs.push('npc ' + n.id + ' sprite is not a character'); if (!FACINGS.hasOwnProperty(n.dir)) errs.push('npc ' + n.id + ' facing ' + n.dir); if (!PAL[n.pal]) errs.push('npc ' + n.id + ' pal'); }
   // Quiet Thread: every clue maps to a known technique, and none of its techniques is in the alert mix.
   if (typeof QT_CLUES !== 'undefined') {

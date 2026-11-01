@@ -1,10 +1,16 @@
 // Character sprites and facing:
 //  (a) every character sprite (player, and every NPC's sprite) has down/up/left/right frames, standing and stepping,
 //      16x16 with palette indices 0-4, the four facings drawn differently, and every NPC names a valid facing and palette;
+//      plus a second stepping frame (the other foot: the mirror of the first for front and back views);
 //  (b) the player turns to the last move or attempted move (walking, bumping into a wall), the screen shows that facing
-//      (pixel sample of the canvas against the sprite), walking shows the 2-frame cycle, and save/reload keeps the facing;
-//  (c) arriving through a door, the player faces the door's `dir` (every open door, entered with the keyboard);
-//  (d) an NPC turns to face the player while talking, and goes back to its own facing when the conversation ends.
+//      (pixel sample of the canvas against the sprite), walking alternates the two stepping frames on successive steps,
+//      and save/reload keeps the facing;
+//  (c) arriving through a door, the player faces the door's `dir`, even when facing another way as the step lands (every
+//      open door; warp alone must set the facing);
+//  (d) an NPC turns to face the player while talking (drawn facing and canvas pixels), and goes back to its own facing
+//      when the conversation ends;
+//  (e) a scripted speaker (a scene started by walking, not by talking) turns to face the player while speaking, and back after;
+//  (f) no NPC faces straight into an adjacent solid tile or off the map, except the allowlisted ones behind a desk or counter.
 // Usage: node sprites.js   (UPTIME_FILE=file:///... to test another build)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -26,7 +32,7 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
   page.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) errs.push('request ' + r.url()); });
   await page.goto(FILE);
   await page.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
-  await page.evaluate(() => { __UPTIME.seed(7); __UPTIME.turbo(true); });
+  await page.evaluate(() => { __UPTIME.seed(7); __UPTIME.turbo(true); __UPTIME.drawn(); });  // drawn(): start recording drawn characters
   const peek = () => page.evaluate(() => __UPTIME.peek());
   const press = b => page.keyboard.press(KEY[b]);
   async function pickLabel(re) {
@@ -60,14 +66,18 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
   async function idle() { for (let i = 0; i < 200; i++) { const p = await peek(); if (!p.moving && !p.busy && !p.ui) return p; await sleep(15); } return peek(); }
   // The player's entity in the last drawn frame, plus how its 16x16 screen area compares with the expected sprite
   // and with the down sprite (canvas pixels sampled at the centre of each logical pixel; transparent pixels skipped).
-  const me = () => page.evaluate(() => {
+  // For an NPC, `want` is the sprite key it should show; the mismatch is counted against that key, not the reported one.
+  const ent = (id, want) => page.evaluate(([id, want]) => {
     const ents = (__UPTIME.drawn && __UPTIME.drawn()) || [];
-    const e = ents.find(x => x.id === 'me'); if (!e) return null;
+    const e = ents.find(x => x.id === id); if (!e) return null;
     const k = Screen.k, img = Screen.ctx.getImageData(0, 0, Screen.canvas.width, Screen.canvas.height);
     const hex = (px, py) => { const i = ((py * k + (k >> 1)) * img.width + (px * k + (k >> 1))) * 4; return '#' + [0, 1, 2].map(j => img.data[i + j].toString(16).padStart(2, '0')).join(''); };
     const diff = key => { let n = 0; S[key].forEach((row, y) => [...row].forEach((c, x) => { if (c !== '0' && hex(e.x + x, e.y + y) !== PAL[e.pal][+c - 1].toLowerCase()) n++; })); return n; };
-    return { key: e.key, dir: e.dir, mismatch: diff(e.key), vsDown: diff('player') };
-  });
+    const base = e.key.replace(/[ULR]?(W2?)?$/, '');
+    return { key: e.key, dir: e.dir, mismatch: diff(want || e.key), vsDown: diff(base) };
+  }, [id, want || null]);
+  const me = () => ent('me');
+  const frames = () => page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
 
   // ---------- (a) sprite definitions ----------
   const defs = await page.evaluate(() => {
@@ -79,14 +89,20 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
     let count = 0;
     for (const c of CHAR_SPRITES) {
       const seen = {};
-      for (const d of dirs) for (const w of [false, true]) {
+      const mirror = g => g.map(r => r.split('').reverse().join('')).join('');
+      for (const d of dirs) for (const w of [0, 1, 2]) {
         const k = facingKey(c, d, w), g = S[k]; count++;
-        if (!g) { bad.push(c + ' ' + d + (w ? ' step' : '') + ': missing (' + k + ')'); continue; }
+        if (!g) { bad.push(c + ' ' + d + (w ? ' step ' + w : '') + ': missing (' + k + ')'); continue; }
         if (g.length !== 16 || g.some(r => typeof r !== 'string' || r.length !== 16)) bad.push(k + ': not 16x16');
         if (g.some(r => /[^0-4]/.test(r))) bad.push(k + ': palette index outside 0-4');
-        if (!w) seen[d] = g.join('');
-        else if (g.join('') === S[facingKey(c, d, false)].join('')) bad.push(k + ': step frame same as standing');
+        if (!w) { seen[d] = g.join(''); if ((d === 'down' || d === 'up') && mirror(g) !== g.join('')) bad.push(k + ': front/back view not left-right symmetric'); }
+        else if (g.join('') === S[facingKey(c, d, 0)].join('')) bad.push(k + ': step frame same as standing');
+        if (w === 2 && S[facingKey(c, d, 1)]) {
+          if (g.join('') === S[facingKey(c, d, 1)].join('')) bad.push(k + ': second step frame same as the first (feet never alternate)');
+          if ((d === 'down' || d === 'up') && g.join('') !== mirror(S[facingKey(c, d, 1)])) bad.push(k + ': not the mirror of the first step frame');
+        }
       }
+      for (const w of [0, 1, 2]) if (S[facingKey(c, 'right', w)] && S[facingKey(c, 'left', w)] && S[facingKey(c, 'right', w)].join('') !== mirror(S[facingKey(c, 'left', w)])) bad.push(facingKey(c, 'right', w) + ': not the mirror of ' + facingKey(c, 'left', w));
       for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) if (seen[dirs[i]] && seen[dirs[i]] === seen[dirs[j]]) bad.push(c + ': ' + dirs[i] + ' and ' + dirs[j] + ' identical');
       info[c] = dirs.map(d => facingKey(c, d, false));
     }
@@ -96,7 +112,7 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
     }
     return { bad, count, info, npcs: NPCS.length, chars: CHAR_SPRITES.slice() };
   });
-  check('(a) every character sprite has down/up/left/right (standing + step), 16x16, indices 0-4, facings distinct; NPC facings/palettes valid', defs.bad.length === 0 && defs.count >= 16, defs.bad);
+  check('(a) every character sprite has down/up/left/right (standing + two step frames), 16x16, indices 0-4, facings distinct; NPC facings/palettes valid', defs.bad.length === 0 && defs.count >= 24, defs.bad);
 
   // ---------- new game ----------
   await pickLabel(/New game/); await settle([/Ledger/]);
@@ -138,29 +154,40 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
   }
   check('(b) bumping into a wall turns the player to face it without moving (drawn sprite matches)', bumps.every(b => b.stayed && b.dir === b.d && b.key === 'player' + { down: '', up: 'U', left: 'L', right: 'R' }[b.d] && b.mismatch === 0), bumps);
 
-  // walk cycle: hold a direction with normal speed and record the frames drawn
+  // walk cycle: hold a direction with normal speed and record, per step (G.steps before it lands), the frames drawn
   await page.evaluate(() => __UPTIME.turbo(false));
   const walk = {};
   for (const d of ['left', 'right', 'up', 'down']) {
     const spot = await page.evaluate(d => {
       const G = __UPTIME.state(), rows = MAPS[G.map].rows, v = {up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0]}[d];
       for (let y = 0; y < rows.length; y++) for (let x = 0; x < rows[0].length; x++) {
-        let ok = true; for (let i = 0; i <= 2; i++) { const xx = x + v[0] * i, yy = y + v[1] * i; const t = tileDef(G.map, xx, yy); if (!t || blocked(G.map, xx, yy) || doorAt(G.map, xx, yy) || t.grass) ok = false; }
+        let ok = true; for (let i = 0; i <= 6; i++) { const xx = x + v[0] * i, yy = y + v[1] * i; const t = tileDef(G.map, xx, yy); if (!t || blocked(G.map, xx, yy) || doorAt(G.map, xx, yy) || t.grass) ok = false; }
         if (ok) return {x, y};
       }
       return null;
     }, d);
     if (!spot) { walk[d] = 'no spot'; continue; }
-    await page.evaluate(s => { const G = __UPTIME.state(); G.x = s.x; G.y = s.y; window.__keys = new Set(); window.__rec = true;
-      (function loop() { const e = (__UPTIME.drawn ? __UPTIME.drawn() : []).find(x => x.id === 'me'); if (e) __keys.add(e.key); if (__rec) requestAnimationFrame(loop); })(); }, spot);
-    await page.keyboard.down(KEY[d]); await sleep(260); await page.keyboard.up(KEY[d]);
+    await page.evaluate(s => { const G = __UPTIME.state(); G.x = s.x; G.y = s.y; window.__keys = new Set(); window.__steps = {}; window.__rec = true;
+      (function loop() { const e = (__UPTIME.drawn ? __UPTIME.drawn() : []).find(x => x.id === 'me');
+        if (e) { __keys.add(e.key); if (/W2?$/.test(e.key)) { const n = __UPTIME.state().steps; (__steps[n] = __steps[n] || []).includes(e.key) || __steps[n].push(e.key); } }
+        if (__rec) requestAnimationFrame(loop); })(); }, spot);
+    await page.keyboard.down(KEY[d]); await sleep(620); await page.keyboard.up(KEY[d]);
     await idle();
-    walk[d] = await page.evaluate(() => { __rec = false; return [...__keys]; });
+    walk[d] = await page.evaluate(() => { __rec = false; return { keys: [...__keys], steps: Object.keys(__steps).map(Number).sort((a, b) => a - b).map(n => ({n, keys: __steps[n]})) }; });
   }
   await page.evaluate(() => __UPTIME.turbo(true));
   const SUF = { down: '', up: 'U', left: 'L', right: 'R' };
-  check('(b) walking shows the 2-frame cycle for each facing (standing and stepping frames both drawn)',
-    Object.entries(walk).every(([d, ks]) => Array.isArray(ks) && ks.includes('player' + SUF[d]) && ks.includes('player' + SUF[d] + 'W')), walk);
+  check('(b) walking shows standing and stepping frames for each facing',
+    Object.entries(walk).every(([d, w]) => w.keys && w.keys.includes('player' + SUF[d]) && w.keys.some(k => k.startsWith('player' + SUF[d] + 'W'))), walk);
+  // each step shows exactly one stepping frame, successive steps alternate W / W2 (feet alternate), at least 3 steps
+  const alt = Object.entries(walk).map(([d, w]) => {
+    if (!w.steps) return { d, ok: false, w };
+    const st = w.steps, ok = st.length >= 3 && st.every(s => s.keys.length === 1) &&
+      st.every((s, i) => i === 0 || (s.n === st[i - 1].n + 1 && s.keys[0] !== st[i - 1].keys[0])) &&
+      st.every(s => s.keys[0] === 'player' + SUF[d] + (s.n % 2 ? 'W2' : 'W'));
+    return { d, ok, steps: st };
+  });
+  check('(b) walking alternates the two stepping frames (left foot, right foot) on successive steps', alt.every(a => a.ok), alt);
 
   // save / reload keeps the facing
   await page.evaluate(() => { __UPTIME.state().dir = 'down'; });
@@ -170,10 +197,35 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
   await pickLabel(/^Save/); await settle([/^(OK|Back|Close)$/]);
   await page.reload();
   await page.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
-  await page.evaluate(() => { __UPTIME.seed(7); __UPTIME.turbo(true); });
-  await pickLabel(/Continue/); await settle(); await sleep(80);
+  await page.evaluate(() => { __UPTIME.seed(7); __UPTIME.turbo(true); __UPTIME.drawn(); });
+  await pickLabel(/Continue/); await settle(); await sleep(80); await frames();
   const re = await peek(), rm = await me();
   check('save/reload keeps the player facing (state and drawn sprite)', savedDir === 'left' && re.dir === 'left' && rm && rm.key === 'playerL' && rm.mismatch === 0, { savedDir, dir: re.dir, drawn: rm });
+
+  // ---------- (e) scripted speaker turns to the player ----------
+  // Walking into the Mail Room before the Front Desk is secure starts a scene in which Bea speaks (a trigger, not a talk).
+  // The player stands west of Bea, so she should turn left while speaking and go back to her own facing after.
+  const scene = await page.evaluate(() => {
+    const G = __UPTIME.state(), n = NPCS.find(n => n.id === 'bea');
+    if (G.f.bossDone) return { err: 'boss already done' };
+    for (let x = n.x - 3; x > 0; x--) { if (!blocked(n.map, x, n.y) && !blocked(n.map, x - 1, n.y) && !doorAt(n.map, x - 1, n.y) && !doorAt(n.map, x, n.y)) { G.map = n.map; G.x = x; G.y = n.y; G.dir = 'right'; return { x: x - 1, def: n.dir, spr: n.spr || 'player' }; } }
+    return { err: 'no free tile' };
+  });
+  let sceneLog = { scene };
+  if (!scene.err) {
+    await sleep(40); await frames();
+    const before = await ent('bea');
+    await press('left');
+    let during = null;
+    for (let i = 0; i < 80 && !during; i++) { await sleep(25); const p = await peek(); if (p.ui && p.ui.type === 'say') { await frames(); during = await ent('bea', scene.spr + 'L'); } }
+    await settle(); await frames();
+    const after = await ent('bea');
+    sceneLog = { scene, before, during, after };
+  }
+  check('(e) a scripted speaker (scene started by walking) turns to face the player while speaking (drawn facing and pixels)',
+    !!(sceneLog.during && sceneLog.during.dir === 'left' && sceneLog.during.key === scene.spr + 'L' && sceneLog.during.mismatch === 0 && sceneLog.during.vsDown > 0), sceneLog);
+  check('(e) the scripted speaker faces its own way before the scene and goes back to it after',
+    !!(sceneLog.before && sceneLog.after && sceneLog.before.dir === scene.def && sceneLog.after.dir === scene.def), sceneLog);
 
   // ---------- (c) door arrival ----------
   const doors = await page.evaluate(() => {
@@ -189,16 +241,18 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
   });
   const arrivals = [];
   for (const d of doors) {
-    // stand on the tile in front of the door, facing the other way, then walk in with the keyboard
-    await page.evaluate(d => { const G = __UPTIME.state(); G.map = d.m; G.x = d.ax; G.y = d.ay; G.dir = {up: 'down', down: 'up', left: 'right', right: 'left'}[d.dir]; }, d);
-    await sleep(30);
-    await step(d.dir);
+    // The step onto the door is already under way (tryMove has run) and the player faces away from the door's `dir`
+    // when it lands, so only warp() can turn them: a test that walked in with the key would pass on tryMove alone.
+    await page.evaluate(d => { const G = __UPTIME.state(); G.map = d.m; G.x = d.ax; G.y = d.ay;
+      G.dir = {up: 'down', down: 'up', left: 'right', right: 'left'}[d.dir];
+      moving = {fx: d.ax, fy: d.ay, tx: d.x, ty: d.y, t: 0.9}; }, d);
+    await idle(); await frames();
     const p = await peek(), m = await me();
     arrivals.push({ door: d.m + ' ' + d.x + ',' + d.y + ' -> ' + d.to, want: d.dir, map: p.map, at: p.x + ',' + p.y, dir: p.dir, key: m && m.key, mismatch: m && m.mismatch });
     if (p.ui) await settle();
   }
   const badArr = arrivals.filter(a => a.map !== a.door.split(' -> ')[1] || a.dir !== a.want || a.key !== 'player' + SUF[a.want] || a.mismatch !== 0);
-  check('(c) door arrival: the player faces the door `dir` (state and drawn sprite), every open door', arrivals.length >= 20 && badArr.length === 0, { tested: arrivals.length, bad: badArr });
+  check('(c) door arrival: warp turns the player to the door `dir` from the opposite facing (state and drawn sprite), every open door', arrivals.length >= 20 && badArr.length === 0, { tested: arrivals.length, bad: badArr });
 
   // ---------- (d) NPC turns to the player while talking ----------
   const talks = [];
@@ -217,14 +271,30 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
     const before = await page.evaluate(id => ((__UPTIME.drawn ? __UPTIME.drawn() : []).find(e => e.id === id) || {}).dir, id);
     await press('a');
     let during = null;
-    for (let i = 0; i < 40 && !during; i++) { await sleep(25); const p = await peek(); if (p.ui) during = await page.evaluate(id => (__UPTIME.drawn ? __UPTIME.drawn() : []).find(e => e.id === id), id); }
+    const spr = await page.evaluate(id => NPCS.find(n => n.id === id).spr || 'player', id);
+    for (let i = 0; i < 40 && !during; i++) { await sleep(25); const p = await peek(); if (p.ui) { await frames(); during = await ent(id, spr + SUF[side]); } }
     await settle([/^(Leave|Not now|Later|Bye|Back)/i]);
     await sleep(60);
     const after = await page.evaluate(id => ((__UPTIME.drawn ? __UPTIME.drawn() : []).find(e => e.id === id) || {}).dir, id);
-    talks.push({ id, side, def: spot.def, before, during: during && during.dir, duringKey: during && during.key, after });
+    talks.push({ id, side, def: spot.def, before, during: during && during.dir, duringKey: during && during.key, mismatch: during && during.mismatch, vsDown: during && during.vsDown, after });
   }
   check('(d) an NPC turns to face the player while talking (drawn facing)', talks.every(t => t.during === t.side && /^(player|actor)[ULR]?$/.test(t.duringKey || '') && t.duringKey.endsWith(SUF[t.side])), talks);
   check('(d) the NPC keeps its own facing before talking and goes back to it after', talks.every(t => t.before === t.def && t.after === t.def), talks);
+  // pixel sample of the turned NPC against the sprite it should show (not the key it reports), for every NPC talked to
+  const px = talks.filter(t => t.mismatch === 0 && (t.side === 'down' || t.vsDown > 0));
+  check('(d) pixel sample: the canvas shows each talked-to NPC turned to the player (0 mismatched pixels, at least 2 NPCs)', px.length === talks.length && px.length >= 2, talks.map(t => ({ id: t.id, side: t.side, mismatch: t.mismatch, vsDown: t.vsDown })));
+
+  // ---------- (f) NPC facing data ----------
+  // Allowed to face an adjacent solid tile: NPCs behind a desk or counter, facing across it to the room.
+  const FACE_ALLOW = { rae: 'behind the desk, facing the room', kofi: 'behind the help desk counter', oona: 'at the payment kiosk she runs' };
+  const facing = await page.evaluate(() => {
+    const V = {up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0]};
+    return NPCS.map(n => { const v = V[n.dir] || [0, 0], t = tileDef(n.map, n.x + v[0], n.y + v[1]);
+      return { id: n.id, map: n.map, dir: n.dir, ahead: t ? (t.name || t.spr) : 'off map', solid: !t || !!t.solid }; });
+  });
+  const intoWall = facing.filter(f => f.solid && !FACE_ALLOW[f.id]);
+  const staleAllow = Object.keys(FACE_ALLOW).filter(id => !facing.some(f => f.id === id && f.solid));
+  check('(f) no NPC faces straight into an adjacent solid tile or off the map (allowlist: behind a desk or counter)', facing.length > 0 && intoWall.length === 0 && staleAllow.length === 0, { intoWall, staleAllow });
 
   check('no console errors or network requests', errs.length === 0, errs);
   await browser.close();

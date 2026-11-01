@@ -17,7 +17,7 @@ Planned home: GitHub Pages at `grumby42/uptime` (open `index.html` for the serie
 index.html                  series menu (generated)
 engine/                     shared code
   shell.html, style.css     page skeleton and layout (HUD band above the map; phone portrait: taller map view, dialogue, then the pad at the bottom, modals above the pad; desktop: dialogue below the map when there is room)
-  core-data.js              sprites (characters in four facings, each with a stepping frame), palettes, tile legend, tool classes, tools, abilities, NIST CSF function names
+  core-data.js              sprites (characters in four facings, each with two stepping frames so the feet alternate), palettes, tile legend, tool classes, tools, abilities, NIST CSF function names
   engine.js                 RNG, sprite cache, integer scaling, input, dialogue/choice/modal UI (answer lists opt into a seeded shuffle and the highlight starts on a random answer, so neither position nor highlight gives it away; fixed menus that hint a choice say {nav: true}), save codec
   drill.js                  investigation drills: one artefact, a query budget, verdict, reasoning, alternatives, AI helper
   series.js                 series save ('uptime.series') and the Quiet Thread core
@@ -66,9 +66,10 @@ Need Node and Playwright (Chromium).
     node tests/bot.js desktop      # plays New game -> Front Desk -> Mail Room -> Clerks' Row -> Market Square -> Records Hall -> IT Basement -> Server Room -> end-of-district with the keyboard
     node tests/bot.js phone        # same with taps on the on-screen pad (360x800); run it last and alone (about 15 minutes)
     GAMER=1 node tests/bot.js desktop   # closes everything as a false positive; hidden missed attacks must surface
-    node tests/sprites.js          # every character sprite has down/up/left/right (+ step frames); the player faces the last move or bump
-                                   #   (pixel-sampled), walks with a 2-frame cycle, keeps facing on save/reload and faces the door's dir on
-                                   #   arrival; NPCs turn to the player while talking and go back to their own facing after
+    node tests/sprites.js          # every character sprite has down/up/left/right (+ two step frames); the player faces the last move or bump
+                                   #   (pixel-sampled), alternates feet on successive steps, keeps facing on save/reload and faces the door's dir
+                                   #   on arrival (set by the warp itself); NPCs turn to the player while talking or speaking in a walk-triggered
+                                   #   scene (pixel-sampled) and go back to their own facing after; no NPC faces into an adjacent wall
     node tests/layout.js           # pad and screen fit in phone portrait/landscape and desktop; series menu fits a phone
     node tests/frontdesk.js        # Front Desk: escalation evidence gate + precision, boss MFA-card fix, alert weighting,
                                    #   scoping question, ATT&CK licence in Credits

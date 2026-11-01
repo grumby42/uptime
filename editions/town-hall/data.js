@@ -107,7 +107,7 @@ const NPCS = [
   {id:'lin', name:'Lin Zhao', role:'accounts', map:'desk', x:12, y:3, dir:'down', pal:'lin', acct:true},
   {id:'hal', name:'Hal Benning', role:'facilities', map:'hub', x:17, y:7, dir:'down', pal:'hal', acct:true},
   {id:'sam', name:'Sam Ortiz', role:'visitor', map:'hub', x:9, y:7, dir:'down', pal:'sam'},
-  {id:'owen', name:'Owen Pike', role:'records clerk', map:'hub', x:8, y:10, dir:'left', pal:'owen', acct:true, cond:G=>G.day>=2},
+  {id:'owen', name:'Owen Pike', role:'records clerk', map:'hub', x:8, y:10, dir:'right', pal:'owen', acct:true, cond:G=>G.day>=2},
   {id:'grace', name:'Grace Kim', role:'HR partner', map:'hub', x:12, y:9, dir:'down', pal:'grace', acct:true, cond:G=>G.day>=2},
   {id:'vex', name:'Vex', role:'red teamer', map:'hub', x:15, y:12, dir:'up', spr:'actor', pal:'actor', cond:G=>G.f.vexMet && !G.f.vexDone},
   {id:'marisol', name:'Marisol Diaz', role:'identity lead', map:'board', x:9, y:2, dir:'down', pal:'marisol', acct:true},

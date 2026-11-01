@@ -18,7 +18,8 @@ let lastT = 0, encCooldown = 0, toastT = 0, shake = 0, titleOpen = false;
 const DIRS = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0]};
 
 /* ---------- Helpers ---------- */
-const say = (t, who) => UI.say(t, who);
+// A named speaker standing on this map turns to face the player while speaking (talks and walk-triggered scenes alike).
+const say = (t, who) => { faceSpeaker(who); return UI.say(t, who); };
 const choose = (p, items, o) => UI.choose(p, items, o);
 function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); toastT = 2600; }
 function unlock(kind, key) { if (!G.fm[kind + ':' + key]) { G.fm[kind + ':' + key] = true; return true; } return false; }
@@ -97,8 +98,18 @@ function camera() {
   let cy = mh <= VH ? -(VH - mh) / 2 : clamp(py + 8 - VH / 2, 0, mh - VH);
   return {cx: Math.round(cx), cy: Math.round(cy), px: px, py: py};
 }
-let npcFace = null;  // {id, dir}: the NPC the player is talking to faces the player until the conversation ends
+let npcFace = {};  // NPC id -> facing: NPCs in the current conversation or scene face the player until it ends (run(), busy -> 0)
 let drawnEnts = [];  // what the last world frame drew (characters: sprite key, facing, screen position); read by tests
+let drawnWanted = false;  // drawnEnts is only built once a test asks for it (__UPTIME.drawn), so normal play allocates nothing for it
+// Turn the NPC named `who` (if they stand on this map and are present) to face the player, by the dominant axis.
+function faceSpeaker(who) {
+  if (!who || !G || !started) return;
+  for (const n of NPCS) {
+    if (n.name !== who || n.map !== G.map || (n.cond && !n.cond(G))) continue;
+    const dx = G.x - n.x, dy = G.y - n.y;
+    if (dx || dy) npcFace[n.id] = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  }
+}
 const OPP_DIR = {up: 'down', down: 'up', left: 'right', right: 'left'};
 function drawWorld(ctx) {
   ctx.fillStyle = '#10141f'; ctx.fillRect(0, 0, VW, VH);
@@ -112,17 +123,18 @@ function drawWorld(ctx) {
     ctx.drawImage(sprite(d.spr, d.pal), sx, sy);
   }
   // entities sorted by y
-  // NPCs keep their configured facing, except the one being talked to, which turns to the player (npcFace).
-  const ents = NPCS.filter(n => n.map === G.map && (!n.cond || n.cond(G))).map(n => ({id: n.id, x: n.x * TS, y: n.y * TS, spr: n.spr || 'player', pal: n.pal, dir: npcFace && npcFace.id === n.id ? npcFace.dir : n.dir}));
-  // 2-frame walk cycle: the stepping frame for the middle half of each tile-to-tile move, standing otherwise.
-  const walkFrame = !!(moving && moving.t > 0.25 && moving.t < 0.75);
+  // NPCs keep their configured facing, except those speaking to the player, who turn to face them (npcFace).
+  const ents = NPCS.filter(n => n.map === G.map && (!n.cond || n.cond(G))).map(n => ({id: n.id, x: n.x * TS, y: n.y * TS, spr: n.spr || 'player', pal: n.pal, dir: npcFace[n.id] || n.dir}));
+  // Walk cycle: a stepping frame for the middle half of each tile-to-tile move, standing otherwise; the stepping frame
+  // alternates feet on successive steps (1 on even G.steps, 2 on odd), so the walk reads left, right, left...
+  const walkFrame = moving && moving.t > 0.25 && moving.t < 0.75 ? 1 + (G.steps & 1) : 0;
   ents.push({id: 'me', x: cam.px, y: cam.py, spr: 'player', pal: 'player', dir: G.dir, me: true, step: walkFrame});
   ents.sort((a, b) => a.y - b.y);
-  drawnEnts = [];
+  if (drawnWanted) drawnEnts.length = 0;
   for (const e of ents) {
     const key = facingKey(e.spr, e.dir, e.step), sx = Math.round(e.x - cam.cx), sy = Math.round(e.y - cam.cy - (e.step ? 1 : 0));
     ctx.drawImage(sprite(key, e.pal), sx, sy);
-    drawnEnts.push({id: e.id, key: key, pal: e.pal, dir: e.dir, x: sx, y: sy});
+    if (drawnWanted) drawnEnts.push({id: e.id, key: key, pal: e.pal, dir: e.dir, x: sx, y: sy});
   }
   drawMarker(ctx, cam);
   if (fade > 0) { ctx.fillStyle = 'rgba(16,20,31,' + fade + ')'; ctx.fillRect(0, 0, VW, VH); }
@@ -209,7 +221,7 @@ async function run(fn) {
   catch (e) { console.error(e); }
   finally {
     busy--;
-    if (!busy) { npcFace = null; UI.hidePanel(); hudUpdate(); autosave(); }
+    if (!busy) { npcFace = {}; UI.hidePanel(); hudUpdate(); autosave(); }
   }
 }
 function autosave() { if (G && started && !B) storeSet(encodeSave(G)); }
@@ -792,7 +804,7 @@ function onButton(b) {
     // Talking to someone: they turn to face you for the conversation, then go back to their own facing (see run()).
     const [dx, dy] = DIRS[G.dir], npc = npcHere(G.map, G.x + dx, G.y + dy);
     interact();
-    if (npc && busy) npcFace = {id: npc.id, dir: OPP_DIR[G.dir]};
+    if (npc && busy) npcFace[npc.id] = OPP_DIR[G.dir];
   }
   else if (b === 'start') run(startMenu);
   else if (b === 'select') run(openQueue);
@@ -819,7 +831,7 @@ window.__UPTIME = {
   turbo(on) { UI.turbo = !!on; },
   seed(n) { seedOverride = n >>> 0; },
   state() { return G; },
-  drawn() { return drawnEnts.slice(); },
+  drawn() { drawnWanted = true; return drawnEnts.slice(); },  // the first call turns recording on; read again after a frame
   series() { return Series.load(); }
 };
 
