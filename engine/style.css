@@ -1,14 +1,18 @@
-/* UPTIME · style.css — phone-first layout; menus readable in light and dark */
+/* UPTIME · style.css — phone-first layout; menus readable in light and dark.
+   Colour tokens: Classic uses these defaults; the other palettes (engine/settings.js) set them on <html>.
+   paper = modal pages, box = dialogue panel and battle cards, hud = the status band. */
 :root{
   --bg:#10141f; --ink:#e9edf5; --paper:#f4f2ec; --paper-ink:#1b2233; --muted:#4a5163;
   --cur:#e6f5c8; --accent:#2f6e3e; --warn:#b8432f; --gold:#ffd96a;
+  --hud-bg:#161b29; --hud-ink:#ffffff; --box:#ffffff; --box-ink:#1b2233; --box-muted:#4a5163; --box-cur:#e6f5c8; --box-accent:#2f6e3e;
+  --line:#1b2233; --foot:#8b93a7; --toast:#1b2233; --toast-ink:#ffffff;
   --fs:14px; --s:1;
   --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){ --paper:#1f2533; --paper-ink:#e9edf5; --muted:#aab3c5; --cur:#2c4a35; }
+  :root:not([data-theme="light"]){ --paper:#1f2533; --paper-ink:#e9edf5; --muted:#aab3c5; --cur:#2c4a35; --accent:#a6d96a; --warn:#ff8a70; }
 }
-:root[data-theme="dark"]{ --paper:#1f2533; --paper-ink:#e9edf5; --muted:#aab3c5; --cur:#2c4a35; }
+:root[data-theme="dark"]{ --paper:#1f2533; --paper-ink:#e9edf5; --muted:#aab3c5; --cur:#2c4a35; --accent:#a6d96a; --warn:#ff8a70; }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);overflow-x:hidden;max-width:100vw}
 body{font-family:var(--mono);-webkit-text-size-adjust:100%;touch-action:manipulation;min-height:100vh;min-height:100dvh;
@@ -21,50 +25,50 @@ body.portrait #app{height:100vh;height:100dvh;min-height:0}
 #cv{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 
 /* HUD: its own band above the map (never over it); both lines wrap, nothing is cut off */
-#hud{flex:none;width:var(--hudW,100%);max-width:100vw;padding:3px 8px 4px;font-size:13px;line-height:1.3;color:#fff;background:#161b29;
+#hud{flex:none;width:var(--hudW,100%);max-width:100vw;padding:3px 8px 4px;font-size:13px;line-height:1.3;color:var(--hud-ink);background:var(--hud-bg);
   pointer-events:none;white-space:normal;overflow-wrap:anywhere;min-height:calc(2 * 1.3em + 7px)}
 body.portrait #hud{width:100%;font-size:11.5px;min-height:calc(3 * 1.3em + 7px)}
 #hud.off{visibility:hidden}
 #hud .obj{color:var(--gold)}
-#toast{position:absolute;left:50%;top:24%;transform:translateX(-50%);background:#1b2233;color:#fff;border:2px solid var(--gold);
+#toast{position:absolute;left:50%;top:24%;transform:translateX(-50%);background:var(--toast);color:var(--toast-ink);border:2px solid var(--gold);
   padding:3px 8px;font-size:calc(var(--fs) * .8);opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:96%;overflow:hidden;text-overflow:ellipsis}
 #toast.show{opacity:1}
 #screen.battle #toast{top:50%}
 
 /* Battle panels (real text over the canvas) */
-.bpanel{position:absolute;display:none;background:#fff;color:#1b2233;border:2px solid #1b2233;padding:3px 6px;font-size:var(--fs);line-height:1.25}
+.bpanel{position:absolute;display:none;background:var(--box);color:var(--box-ink);border:2px solid var(--line);padding:3px 6px;font-size:var(--fs);line-height:1.25}
 .bpanel.show{display:block}
 /* positions match BATTLE_LAYOUT in game.js: alert card top-left, opponent top-right; tool bottom-left, tool card bottom-right */
 #bcard{left:2.5%;top:3%;width:52%}
 #btool{right:2.5%;bottom:4%;width:52%}
 .bt{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bcard .bt{white-space:normal}
-.bs{font-size:.8em;color:#4a5163;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs{font-size:.8em;color:var(--box-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar{display:flex;align-items:center;gap:4px;font-size:.8em;margin-top:2px}
 .bl{width:5.6em;flex:none}
-.bo{flex:1;height:.8em;border:2px solid #1b2233;display:block;position:relative}
+.bo{flex:1;height:.8em;border:2px solid var(--line);display:block;position:relative}
 .bi{display:block;height:100%}
 .bn{width:3.6em;flex:none;text-align:right}
 
 /* Dialogue / choice panel */
-#panel{background:#fff;color:#1b2233;font-size:var(--fs);line-height:1.4;display:none}
+#panel{background:var(--box);color:var(--box-ink);font-size:var(--fs);line-height:1.4;display:none}
 #panel.show{display:block}
-body.landscape #panel{position:absolute;left:0;right:0;bottom:0;max-height:58%;overflow:auto;border-top:3px solid #1b2233;padding:.5em .9em;z-index:5}
+body.landscape #panel{position:absolute;left:0;right:0;bottom:0;max-height:58%;overflow:auto;border-top:3px solid var(--line);padding:.5em .9em;z-index:5}
 /* Desktop with room to spare: the dialogue sits below the map instead of over it (the battle scene stays whole) */
 body.landscape.below #panel{position:static;display:block;visibility:hidden;width:var(--hudW);height:var(--panelH,180px);max-height:none;overflow:auto}
 body.landscape.below #panel.show{visibility:visible}
 /* Touch landscape battle: no HUD or footer; the scene sits at the top and the panel has its own band below it,
    as wide as the gap between the D-pad and the A/B buttons, with a readable font. It scrolls inside if it must. */
 body.landscape.touch.inbattle #hud,body.landscape.touch.inbattle #foot{display:none}
-body.landscape.touch.below #panel{width:min(500px,calc(100vw - 316px));margin:0 auto;font-size:12.5px;line-height:1.3;padding:.35em .7em;border-top:3px solid #1b2233}
+body.landscape.touch.below #panel{width:min(500px,calc(100vw - 316px));margin:0 auto;font-size:12.5px;line-height:1.3;padding:.35em .7em;border-top:3px solid var(--line)}
 /* Two-column choice grids (the battle menu): the note sits beside its label, so every row stays short */
 body.landscape #panel.choosing #popts.cols2 .opt .note{display:inline;padding-left:.6em}
 #panel.choosing #pmore{display:none}
 #panel:not(.show) #pmore{visibility:hidden!important}
 body.portrait #stage{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;width:100%}
-body.portrait #panel{display:block;visibility:hidden;width:100%;flex:1 1 auto;min-height:150px;overflow:auto;font-size:14px;padding:8px 12px;border-top:3px solid #1b2233}
+body.portrait #panel{display:block;visibility:hidden;width:100%;flex:1 1 auto;min-height:150px;overflow:auto;font-size:14px;padding:8px 12px;border-top:3px solid var(--line)}
 body.portrait #panel.show{visibility:visible}
-#pwho{font-weight:700;color:var(--accent)}
+#pwho{font-weight:700;color:var(--box-accent)}
 #ptext{white-space:pre-wrap;min-height:1.4em}
 #pmore{text-align:right;animation:blink 1s steps(2) infinite;height:1em;line-height:1em}
 @keyframes blink{50%{opacity:0}}
@@ -72,10 +76,10 @@ body.portrait #panel.show{visibility:visible}
 .opt{display:block;width:100%;text-align:left;background:none;border:2px solid transparent;color:inherit;font-size:inherit;
   padding:2px 4px;cursor:pointer;line-height:1.25}
 .opt .car{display:inline-block;width:1em;visibility:hidden}
-.opt.cur{border-color:#1b2233;background:#e6f5c8}
+.opt.cur{border-color:var(--line);background:var(--box-cur)}
 .opt.cur .car{visibility:visible}
 .opt.dis{opacity:.45;cursor:default}
-.opt .note{display:block;font-size:.78em;color:#4a5163;padding-left:1.25em}
+.opt .note{display:block;font-size:.78em;color:var(--box-muted);padding-left:1.25em}
 body.portrait #popts .opt{min-height:36px}
 
 /* On-screen pad */
@@ -98,7 +102,7 @@ body.landscape.touch #pad{position:fixed;inset:0;pointer-events:none;display:blo
 body.landscape.touch .dpad{position:fixed;left:14px;bottom:20px;pointer-events:auto}
 body.landscape.touch .ab{position:fixed;right:18px;bottom:30px;pointer-events:auto}
 body.landscape.touch .sys{position:fixed;right:18px;top:14px;flex-direction:row;pointer-events:auto}
-#foot{font-size:11px;color:#8b93a7;padding:6px 10px;text-align:center;max-width:100vw}
+#foot{font-size:11px;color:var(--foot);padding:6px 10px;text-align:center;max-width:100vw}
 body.portrait #foot{flex:none;padding:2px 10px calc(4px + env(safe-area-inset-bottom))}
 body.portrait #foot .keys,body.touch #foot .keys{display:none}
 
@@ -108,7 +112,7 @@ body.portrait #foot .keys,body.touch #foot .keys{display:none}
 body.portrait #modal{bottom:var(--padZone,0px);padding:6px}
 body.landscape.touch #modal{padding:8px 150px 8px 168px}
 #modal.show{display:flex}
-.mbox{background:var(--paper);color:var(--paper-ink);width:min(760px,100%);max-height:100%;display:flex;flex-direction:column;border:3px solid #1b2233;box-shadow:0 0 0 3px var(--paper)}
+.mbox{background:var(--paper);color:var(--paper-ink);width:min(760px,100%);max-height:100%;display:flex;flex-direction:column;border:3px solid var(--line);box-shadow:0 0 0 3px var(--paper)}
 .mhead{font-weight:700;padding:10px 14px 0;font-size:17px;letter-spacing:1px}
 .mhead:empty{display:none}
 .mbody{overflow:auto;flex:1 1 auto;min-height:0;padding:6px 14px;font-size:15px;line-height:1.45;-webkit-user-select:text;user-select:text;overscroll-behavior:contain}
@@ -131,7 +135,7 @@ table.sc.score td+td,table.sc.score th+th{white-space:nowrap;text-align:right}
 .dir{color:var(--warn);font-weight:700}
 .card{border:2px solid var(--paper-ink);padding:6px 8px;margin:6px 0;font-size:14px}
 .tag{font-size:11px;border:1px solid var(--muted);padding:0 4px;color:var(--muted)}
-textarea{width:100%;font-family:var(--mono);font-size:12px;background:#fff;color:#1b2233;border:2px solid #1b2233;-webkit-user-select:text;user-select:text}
+textarea{width:100%;font-family:var(--mono);font-size:12px;background:var(--box);color:var(--box-ink);border:2px solid var(--line);-webkit-user-select:text;user-select:text}
 .err{color:var(--warn)}
 .title{text-align:center;padding:10px 0}
 .logo{font-size:44px;font-weight:800;letter-spacing:8px;color:var(--accent)}
@@ -150,3 +154,14 @@ pre.art.ai{border-left-color:var(--gold)}
 .mail .cue{display:block;margin-top:4px;font-size:12px;border-left:3px solid var(--gold);padding-left:6px}
 .sms{max-width:85%;border-radius:10px;padding:6px 10px;margin:6px 0;background:rgba(127,127,127,.18);font-size:14px}
 .sms .from{display:block;font-size:11px;color:var(--muted)}
+
+/* Settings: palette preview, reduced flashing, large text */
+.setprev{margin:.3em 0}
+#setprev{display:block;width:min(480px,100%);aspect-ratio:5/1;image-rendering:pixelated;image-rendering:crisp-edges;border:2px solid var(--paper-ink)}
+body.calm #pmore{animation:none}
+body.calm #toast{transition:none}
+body.bigtext .mbody{font-size:18px}
+body.bigtext .mopts .opt{font-size:18px}
+body.bigtext .mbody .small,body.bigtext .small{font-size:15px}
+body.bigtext #panel{font-size:calc(var(--fs) * 1.2)}
+body.portrait.bigtext #panel{font-size:17px}

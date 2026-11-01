@@ -67,12 +67,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const SPR_CACHE = {};
 function sprite(key, palKey, opts) {
   opts = opts || {};
-  const id = key + '|' + palKey + '|' + (opts.variant || '');
+  // Colours come through the active palette (engine/settings.js), so a palette change redraws every sprite.
+  const id = key + '|' + palKey + '|' + (opts.variant || '') + '|' + (typeof Settings !== 'undefined' && Settings.v ? Settings.v.palette : '');
   if (SPR_CACHE[id]) return SPR_CACHE[id];
   let grid = S[key];
   if (!grid) throw new Error('no sprite ' + key);
   if (opts.variant === 'tuned') grid = tunedGrid(grid);
-  const pal = PAL[palKey];
+  const pal = typeof Settings !== 'undefined' && Settings.v ? Settings.palColours(palKey) : PAL[palKey];
   const c = document.createElement('canvas');
   c.width = 16; c.height = 16;
   const x = c.getContext('2d');
@@ -256,7 +257,7 @@ const UI = {
       e.stopPropagation();
       if (this.ghost()) return;
       const i = +b.dataset.i; if (c.items[i].disabled) return;
-      c.cursor = i; this.finishChoice(i);
+      c.cursor = i; sfx('select'); this.finishChoice(i);
     }));
     const cur = this.opts.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
   },
@@ -278,11 +279,11 @@ const UI = {
     }
     if (this.mode === 'choice') {
       const c = this.choice, n = c.items.length;
-      const move = d => { let i = c.cursor; for (let k = 0; k < n; k++) { i = (i + d + n) % n; if (!c.items[i].disabled) break; } c.cursor = i; this.renderChoice(); };
+      const move = d => { let i = c.cursor; for (let k = 0; k < n; k++) { i = (i + d + n) % n; if (!c.items[i].disabled) break; } if (i !== c.cursor) sfx('move'); c.cursor = i; this.renderChoice(); };
       if (b === 'up') move(-c.cols); else if (b === 'down') move(c.cols);
       else if (b === 'left') move(-1); else if (b === 'right') move(1);
-      else if (b === 'a') { if (!c.items[c.cursor].disabled) this.finishChoice(c.cursor); }
-      else if (b === 'b' && c.cancel) this.finishChoice(-1);
+      else if (b === 'a') { if (!c.items[c.cursor].disabled) { sfx('select'); this.finishChoice(c.cursor); } }
+      else if (b === 'b' && c.cancel) { sfx('back'); this.finishChoice(-1); }
       return true;
     }
     return false;
@@ -314,7 +315,7 @@ const UI = {
     box.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => {
       if (this.ghost()) return;
       const i = +b.dataset.i; if (m.items[i].disabled) return;
-      m.cursor = i; this.modalActivate(i);
+      m.cursor = i; sfx(m.items[i].meta && m.items[i].meta.back ? 'back' : 'select'); this.modalActivate(i);
     }));
     const cur = box.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
   },
@@ -330,18 +331,22 @@ const UI = {
   closeModal(v) {
     const m = this.modal; this.modal = null;
     this.modalEl.classList.remove('show'); this.modalEl.innerHTML = '';
-    if (m) m.resolve(Array.isArray(v) ? v.map(i => m.perm[i]) : v < 0 ? v : m.perm[v]);
+    // {lr, i}: left/right on a settings-style row (opts.lr); i is already the caller's index
+    if (m) m.resolve(Array.isArray(v) ? v.map(i => m.perm[i]) : v && typeof v === 'object' ? v : v < 0 ? v : m.perm[v]);
   },
   modalHandle(b) {
     const m = this.modal, n = m.items.length;
     const mb = document.getElementById('mbody');
-    const move = d => { let i = m.cursor; for (let k = 0; k < n; k++) { i = (i + d + n) % n; if (!m.items[i].disabled) break; } m.cursor = i; this.renderModal(); };
+    const move = d => { let i = m.cursor; for (let k = 0; k < n; k++) { i = (i + d + n) % n; if (!m.items[i].disabled) break; } if (i !== m.cursor) sfx('move'); m.cursor = i; this.renderModal(); };
+    const it = m.items[m.cursor];
+    // Settings-style rows: left/right change the value (the caller reopens the page with the new value).
+    if ((b === 'left' || b === 'right') && m.opts.lr && it && it.meta && it.meta.lr) { sfx('move'); this.closeModal({lr: true, d: b === 'left' ? -1 : 1, i: m.perm[m.cursor]}); return true; }
     if (b === 'up') { if (n <= 1 && mb) mb.scrollTop -= 60; else move(-1); }
     else if (b === 'down') { if (n <= 1 && mb) mb.scrollTop += 60; else move(1); }
     else if (b === 'left' && mb) mb.scrollTop -= 120;
     else if (b === 'right' && mb) mb.scrollTop += 120;
-    else if (b === 'a') { if (!m.items[m.cursor].disabled) this.modalActivate(m.cursor); }
-    else if ((b === 'b' || b === 'start') && m.closable) this.closeModal(-1);
+    else if (b === 'a') { if (!m.items[m.cursor].disabled) { sfx(it.meta && it.meta.back ? 'back' : 'select'); this.modalActivate(m.cursor); } }
+    else if ((b === 'b' || b === 'start') && m.closable) { sfx('back'); this.closeModal(-1); }
     return true;
   }
 };

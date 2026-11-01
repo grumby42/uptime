@@ -10,6 +10,7 @@
 const EDITION = {
   id: 'town-hall',
   saveKey: 'uptime.slice1.save',
+  badgeFlags: ['mrSeal', 'crShield', 'mkLantern', 'rhVault', 'bmBeacon', 'svCrown'],  // G.f flags that mean a badge was earned (the Key Badge is G.badge)
   title: 'Town Hall · Front Desk district',
   blurb: 'You’re the new intern in a small town’s security team. Investigate alerts, fix what’s broken, and keep the district running.',
   creditsName: 'vertical slice 1: Town Hall, Front Desk district',

@@ -112,7 +112,7 @@ function faceSpeaker(who) {
 }
 const OPP_DIR = {up: 'down', down: 'up', left: 'right', right: 'left'};
 function drawWorld(ctx) {
-  ctx.fillStyle = '#10141f'; ctx.fillRect(0, 0, VW, VH);
+  ctx.fillStyle = Settings.col('#10141f'); ctx.fillRect(0, 0, VW, VH);
   const r = mapRows(G.map), cam = camera();
   const x0 = Math.max(0, Math.floor(cam.cx / TS)), y0 = Math.max(0, Math.floor(cam.cy / TS));
   const x1 = Math.min(r[0].length - 1, Math.floor((cam.cx + VW) / TS)), y1 = Math.min(r.length - 1, Math.floor((cam.cy + VH) / TS));
@@ -121,6 +121,7 @@ function drawWorld(ctx) {
     const sx = x * TS - cam.cx, sy = y * TS - cam.cy;
     if (d.under) { const u = TILES[d.under]; ctx.drawImage(sprite(u.spr, u.pal), sx, sy); }
     ctx.drawImage(sprite(d.spr, d.pal), sx, sy);
+    const badge = stateBadge(d.pal); if (badge) drawBadge(ctx, badge, sx, sy);  // fixed / isolated: a shape, not only a colour
   }
   // entities sorted by y
   // NPCs keep their configured facing, except those speaking to the player, who turn to face them (npcFace).
@@ -137,7 +138,7 @@ function drawWorld(ctx) {
     if (drawnWanted) drawnEnts.push({id: e.id, key: key, pal: e.pal, dir: e.dir, x: sx, y: sy});
   }
   drawMarker(ctx, cam);
-  if (fade > 0) { ctx.fillStyle = 'rgba(16,20,31,' + fade + ')'; ctx.fillRect(0, 0, VW, VH); }
+  if (fade > 0) { ctx.globalAlpha = fade; ctx.fillStyle = Settings.col('#10141f'); ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
 }
 function ellipse(ctx, cx, cy, rx, ry, c1, c2) {
   for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) {
@@ -151,21 +152,21 @@ const BATTLE_LAYOUT = {enemy: {x: 236, y: 42, w: 32, h: 32}, enemyPad: {cx: 252,
 let platformCache = null;
 function drawBattle(ctx) {
   const L = BATTLE_LAYOUT;
-  if (!platformCache) {
+  if (!platformCache || platformCache.pal !== Settings.v.palette) {
     const c = document.createElement('canvas'); c.width = VW; c.height = VH0;
-    const x = c.getContext('2d');
-    x.fillStyle = '#dbeaf7'; x.fillRect(0, 0, VW, 96);
-    x.fillStyle = '#c9e3a8'; x.fillRect(0, 96, VW, VH0 - 96);
-    ellipse(x, L.enemyPad.cx, L.enemyPad.cy, L.enemyPad.rx, L.enemyPad.ry, '#5aa64b', '#a6d96a');
-    ellipse(x, L.toolPad.cx, L.toolPad.cy, L.toolPad.rx, L.toolPad.ry, '#5aa64b', '#a6d96a');
-    platformCache = c;
+    const x = c.getContext('2d'), k = Settings.col.bind(Settings);
+    x.fillStyle = k('#dbeaf7'); x.fillRect(0, 0, VW, 96);
+    x.fillStyle = k('#c9e3a8'); x.fillRect(0, 96, VW, VH0 - 96);
+    ellipse(x, L.enemyPad.cx, L.enemyPad.cy, L.enemyPad.rx, L.enemyPad.ry, k('#5aa64b'), k('#a6d96a'));
+    ellipse(x, L.toolPad.cx, L.toolPad.cy, L.toolPad.rx, L.toolPad.ry, k('#5aa64b'), k('#a6d96a'));
+    c.pal = Settings.v.palette; platformCache = c;
   }
   ctx.drawImage(platformCache, 0, 0);
   if (!B) return;
-  const sh = shake > 0 ? Math.round((Math.random() - 0.5) * 4) : 0;
+  const sh = shake > 0 && !Settings.calm() ? Math.round((Math.random() - 0.5) * 4) : 0;
   let es = B.spec.enemy;
   if (!B.spec.story && !B.revealed) es = {spr: 'beacon', pal: 'beacon'};
-  const bob = Math.round(Math.sin(performance.now() / 300) * 1);
+  const bob = Settings.calm() ? 0 : Math.round(Math.sin(performance.now() / 300) * 1);
   ctx.drawImage(sprite(es.spr, es.pal), L.enemy.x + sh, L.enemy.y + bob, L.enemy.w, L.enemy.h);
   const t = tool();
   if (t) ctx.drawImage(sprite(TOOLS[t.id].spr, TOOLS[t.id].spr, {variant: t.tuned ? 'tuned' : ''}), L.tool.x, L.tool.y, L.tool.w, L.tool.h);
@@ -207,11 +208,11 @@ function markerDoor() {
 }
 function drawMarker(ctx, cam) {
   const d = markerDoor(); if (!d) return;
-  const bob = Math.round(Math.sin(performance.now() / 220) * 1.5);
+  const bob = Settings.calm() ? 0 : Math.round(Math.sin(performance.now() / 220) * 1.5);
   const cx = d.x * TS - cam.cx + 8, cy = d.y * TS - cam.cy + 3 + bob;
   // a gold down-pointing chevron with a dark outline, inside the door tile
   const rows = ['1111111', '1444441', '0144410', '0014100', '0001000'];
-  rows.forEach((r, yy) => { for (let xx = 0; xx < 7; xx++) { const c = r[xx]; if (c === '0') continue; ctx.fillStyle = c === '1' ? '#1b2233' : '#ffd96a'; ctx.fillRect(cx - 3 + xx, cy + yy, 1, 1); } });
+  rows.forEach((r, yy) => { for (let xx = 0; xx < 7; xx++) { const c = r[xx]; if (c === '0') continue; ctx.fillStyle = Settings.col(c === '1' ? '#1b2233' : '#ffd96a'); ctx.fillRect(cx - 3 + xx, cy + yy, 1, 1); } });
 }
 
 /* ---------- Script runner ---------- */
@@ -263,9 +264,10 @@ function stepDone() {
   }
 }
 async function warp(map, x, y, dir) {
-  if (!UI.turbo) for (let i = 1; i <= 6; i++) { fade = i / 6; await sleep(25); }
+  const still = UI.turbo || Settings.calm();  // reduced flashing: no fade to dark between rooms
+  if (!still) for (let i = 1; i <= 6; i++) { fade = i / 6; await sleep(25); }
   G.map = map; G.x = x; G.y = y; G.dir = dir || G.dir;
-  if (!UI.turbo) for (let i = 5; i >= 0; i--) { fade = i / 6; await sleep(25); }
+  if (!still) for (let i = 5; i >= 0; i--) { fade = i / 6; await sleep(25); }
   fade = 0;
 }
 /* ---------- Shifts, days, briefing ---------- */
@@ -354,9 +356,9 @@ function bhud() {
   if (!B) { card.classList.remove('show'); tp.classList.remove('show'); return; }
   const s = B.spec, t = tool();
   card.innerHTML = '<div class="bt">ALERT · ' + esc(s.title) + '</div><div class="bs">' + esc(s.host) + '</div>' +
-    bar('Evidence', B.ev, '#2f74b5') + bar('Dwell', B.dwell, '#b8432f');
+    bar('Evidence', B.ev, Settings.col('#2f74b5')) + bar('Dwell', B.dwell, Settings.col('#b8432f'));
   tp.innerHTML = '<div class="bt">' + esc(toolName(t).toUpperCase()) + ' · Lv ' + t.lvl + '</div><div class="bs">' + CLASSES[TOOLS[t.id].cls].label + ' · ' + TOOLS[t.id].sub + '</div>' +
-    bar('Focus', G.focus / G.focusMax * 100, '#5aa64b', G.focus + '/' + G.focusMax);
+    bar('Focus', G.focus / G.focusMax * 100, Settings.col('#5aa64b'), G.focus + '/' + G.focusMax);
   card.classList.add('show'); tp.classList.add('show');
 }
 function bar(label, pct, color, txt) {
@@ -375,6 +377,7 @@ async function doBattle(spec) {
   UI.showPanel(true);
   bhud();
   G.focus = Math.max(0, G.focus - 1);
+  sfx('battle');
   let result = null;
   try {
     await say((spec.story ? 'INCIDENT! ' : 'ALERT! ') + spec.title + '. (' + spec.host + ')');
@@ -432,7 +435,7 @@ async function useAbility(k, m) {
   G.focus -= a.cost;
   unlock('act', k);
   if (typeof onAbility === 'function') onAbility(k, B);
-  shake = 300;
+  if (!Settings.calm()) shake = 300;
   if (a.type === 'inv') {
     let gain = a.ev * m * power();
     if (a.social && (s.tags || []).includes('voice')) gain *= 1.5;
@@ -490,8 +493,8 @@ async function closeFlow() {
   const r = resp[ri];
   const correct = verdict === s.kind;
   if (s.story) {
-    if (!correct) { await say('Rae: Not that verdict. Look at the evidence again.'); return null; }
-    if (!r.good) { await say('Rae: Right verdict, wrong response.' + (r.why ? ' ' + r.why : ' Think about what actually stops this attacker.')); if (r.disrupt) { bumpUptime(-0.01 * r.disrupt); } return null; }
+    if (!correct) { sfx('wrong'); await say('Rae: Not that verdict. Look at the evidence again.'); return null; }
+    if (!r.good) { sfx('wrong'); await say('Rae: Right verdict, wrong response.' + (r.why ? ' ' + r.why : ' Think about what actually stops this attacker.')); if (r.disrupt) { bumpUptime(-0.01 * r.disrupt); } return null; }
   }
   // scoring
   G.m.closed++; G.m.today++; G.m.judged++;
@@ -523,6 +526,8 @@ async function closeFlow() {
     msg += ' But you disrupted people’s work for an alert that wasn’t an attack: reputation and uptime drop.';
   }
   if (s.kind === 'fp') { G.focus = Math.max(0, G.focus - 2); msg += ' (False positives drain Focus: −2.)'; }
+  // A missed attack sounds like any close (nobody knows yet); a reviewed wrong verdict sounds wrong.
+  sfx(correct && (s.kind !== 'mal' || r.good) ? 'correct' : correct || s.kind === 'mal' ? 'select' : 'wrong');
   await say(msg);
   if (correct && s.kind === 'mal' && r.good && !s.story) await scopeQuestion();
   if (typeof onAlertClosed === 'function') await onAlertClosed(s, verdict, correct, r);
@@ -550,14 +555,15 @@ async function escalate() {
   if (s.kind === 'mal') {
     G.m.correctShown++; touchCSF('Respond');
     if (B.ev < 40) {
+      sfx('wrong');
       await say(to + ' confirms it’s real: ' + s.truth + ' But you sent it up with almost no evidence (' + Math.round(B.ev) + '). Next time, gather some first: say what you saw and why it matters.');
       await gainXP(8); return 'closed';
     }
-    G.m.escOk++;
+    G.m.escOk++; sfx('correct');
     await say('Escalated with evidence (' + Math.round(B.ev) + '). ' + to + ' confirms: ' + s.truth + ' Good escalation.');
     await gainXP(20);
   } else {
-    G.rep -= 2;
+    G.rep -= 2; sfx('wrong');
     await say(to + ' looked and found nothing malicious: ' + s.truth + ' Escalations cost their time; bring evidence.');
     await gainXP(3);
   }
@@ -642,7 +648,7 @@ async function startMenu() {
       {label: 'Tools', meta: {k: 'tools'}}, {label: 'Save', meta: {k: 'save'}},
       {label: 'Export save code', meta: {k: 'export'}}, {label: 'Import save code', meta: {k: 'import'}}];
     if (G.f.autoUnlocked) items.push({label: 'Automation: ' + (G.auto ? (G.autoReview ? 'ON, sampled weekly' : 'ON, no review') : 'off'), meta: {k: 'auto'}});
-    items.push({label: 'Credits', meta: {k: 'credits'}}, {label: 'Close', meta: {k: 'close'}});
+    items.push({label: 'Settings', note: 'colours, sound, flashing, text size', meta: {k: 'settings'}}, {label: 'Credits', meta: {k: 'credits'}}, {label: 'Close', meta: {k: 'close'}});
     const body = '<p><b>' + esc(objective().text) + '</b></p><p class="small">Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · played ' + fmtTime(G.playMs) + '</p>' +
       '<p class="small">Controls: arrows / D-pad move · Z = A (talk, confirm) · X = B (back) · Enter = Start (this menu) · Shift = Select (alert queue)</p><p class="small">Build ' + BUILD_ID + ' · ' + BUILD_TS + '</p>';
     const i = await UI.openModal('Menu', body, items);
@@ -658,6 +664,7 @@ async function startMenu() {
     // Cycles off -> on with a weekly sample review -> on with no review -> off.
     if (k === 'auto') { if (!G.auto) { G.auto = true; G.autoReview = true; } else if (G.autoReview) G.autoReview = false; else G.auto = false; }
     if (k === 'credits') await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]);
+    if (k === 'settings') await settingsMenu();
   }
 }
 async function toolsMenu() {
@@ -683,7 +690,7 @@ async function titleScreen() {
   const has = !!storeGet();
   const items = [];
   if (has) items.push({label: 'Continue', meta: {k: 'cont'}});
-  items.push({label: 'New game', meta: {k: 'new'}}, {label: 'Import save code', meta: {k: 'import'}}, {label: 'Credits', meta: {k: 'credits'}});
+  items.push({label: 'New game', meta: {k: 'new'}}, {label: 'Import save code', meta: {k: 'import'}}, {label: 'Settings', meta: {k: 'settings'}}, {label: 'Credits', meta: {k: 'credits'}});
   const body = '<div class="title"><div class="logo">UPTIME</div><div>' + esc(EDITION.title) + '</div></div>' +
     '<p>' + esc(EDITION.blurb) + '</p>' +
     '<p class="small">Move: arrows / D-pad · A: Z · B: X · Start: Enter · Select: Shift (alert queue)</p>' +
@@ -697,6 +704,7 @@ async function titleScreen() {
     return;
   }
   if (k === 'credits') { await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]); return titleScreen(); }
+  if (k === 'settings') { await settingsMenu(); return titleScreen(); }
   if (k === 'import') { const ok = await importFlow(); if (!ok) return titleScreen(); return; }
   newGame();
 }
@@ -761,6 +769,7 @@ function frame(t) {
   if (tallOK !== Screen.tallOK) { Screen.tallOK = tallOK; Screen.fit(); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) document.getElementById('toast').classList.remove('show'); }
   if (shake > 0) shake -= dt;
+  watchSounds();
   if (G && started) {
     if (!titleOpen) G.playMs += dt;
     if (moving) {
@@ -794,6 +803,19 @@ function drawTitleBg(ctx, t) {
     const k = (x + y) % 7 === 0 ? 'L' : (x * 3 + y) % 5 === 0 ? 'K' : 'G';
     ctx.drawImage(sprite(S[k] ? k : 'G', k), x * 16 - (Math.floor(t / 60) % 16), y * 16);
   }
+}
+
+// Sounds for things any edition's code can cause: a new alert in the queue, a badge earned. Loading a save resets
+// the watch silently.
+const soundWatch = {g: null, q: 0, b: 0};
+function badgeCount() { return G ? (G.badge ? 1 : 0) + (EDITION.badgeFlags || []).filter(k => G.f[k]).length : 0; }
+function watchSounds() {
+  if (!G || !started) { soundWatch.g = null; return; }
+  const q = G.queue, b = badgeCount();
+  if (soundWatch.g !== G) { soundWatch.g = G; soundWatch.q = q; soundWatch.b = b; return; }
+  if (b > soundWatch.b) sfx('badge');
+  else if (q > soundWatch.q) sfx('alert');
+  soundWatch.q = q; soundWatch.b = b;
 }
 
 /* ---------- Button dispatch ---------- */
@@ -832,13 +854,18 @@ window.__UPTIME = {
   seed(n) { seedOverride = n >>> 0; },
   state() { return G; },
   drawn() { drawnWanted = true; return drawnEnts.slice(); },  // the first call turns recording on; read again after a frame
-  series() { return Series.load(); }
+  series() { return Series.load(); },
+  settings() { return Object.assign({}, Settings.v); }
 };
 
 /* ---------- Boot ---------- */
 function boot() {
   const touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || (window.matchMedia && matchMedia('(pointer: coarse)').matches);
   document.body.classList.toggle('touch', !!touch);
+  Settings.load();
+  // Audio may only start from a user gesture (autoplay policy): the first key, tap or click unlocks it.
+  for (const ev of ['keydown', 'pointerdown', 'touchend', 'mousedown']) window.addEventListener(ev, () => Sound.unlock(), {capture: true, passive: true});
+  Settings.hooks.push(() => { platformCache = null; if (B) bhud(); });
   Series.load();
   Screen.init(); UI.init(); Input.init();
   Input.handler = onButton;

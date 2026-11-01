@@ -18,6 +18,8 @@ index.html                  series menu (generated)
 engine/                     shared code
   shell.html, style.css     page skeleton and layout (HUD band above the map; phone portrait: taller map view, dialogue, then the pad at the bottom, modals above the pad; desktop: dialogue below the map when there is room)
   core-data.js              sprites (characters in four facings, each with two stepping frames so the feet alternate), palettes, tile legend, tool classes, tools, abilities, NIST CSF function names
+  settings.js               Settings ('uptime.settings', shared by every edition): colour palettes applied at render time, Web Audio
+                            sound sets, volume / mute / alerts only, reduced flashing, text size, the state-badge glyphs, the Settings page
   engine.js                 RNG, sprite cache, integer scaling, input, dialogue/choice/modal UI (answer lists opt into a seeded shuffle and the highlight starts on a random answer, so neither position nor highlight gives it away; fixed menus that hint a choice say {nav: true}), save codec
   drill.js                  investigation drills: one artefact, a query budget, verdict, reasoning, alternatives, AI helper
   series.js                 series save ('uptime.series') and the Quiet Thread core
@@ -71,6 +73,10 @@ Need Node and Playwright (Chromium).
                                    #   on arrival (set by the warp itself); NPCs turn to the player while talking or speaking in a walk-triggered
                                    #   scene (pixel-sampled) and go back to their own facing after; no NPC faces into an adjacent wall
     node tests/layout.js           # pad and screen fit in phone portrait/landscape and desktop; series menu fits a phone
+                                   #   (UPTIME_PALETTE=contrast|light|... and UPTIME_TEXT=large run it under a palette / text size)
+    node tests/settings.js         # Settings: persistence across reload, storage blocked, each palette on canvas pixels and CSS, WCAG
+                                   #   contrast >= 4.5:1, colour-blind simulation of status pairs, no colour-only cue, sound events per
+                                   #   mode (stubbed Web Audio; alerts only; no AudioContext), reduced flashing, large text
     node tests/frontdesk.js        # Front Desk: escalation evidence gate + precision, boss MFA-card fix, alert weighting,
                                    #   scoping question, ATT&CK licence in Credits
     node tests/quiet.js            # Quiet Thread: scripted clue path, saves across reload / New game / export-import, summary lines
@@ -119,6 +125,16 @@ The bots also check: zero console errors, zero network requests, mid-game save/r
 A hidden, series-long intruder that lives off the land and never raises a normal alert. It has no wild encounter and is never in the alert mix. In Town Hall it relays its traffic through a hijacked old small-office router and signs in with a real service account. From Day 2 there are five faint clues, each visible only with the right capability: overnight sign-ins on the Ledger console at your desk (logging on), the closet router's connections (Lanternkeep, after the firewall fix), a short security log on FD-STAFF-14 (Ledger), a scheduled task on FD-STAFF-11 (Sentry's process tree), and a remark from Hal in facilities. Each adds an entry to the Field Manual's Unexplained chapter. Three or more and the end-of-slice summary says something is moving; hunt mode opens in a later edition. In the IT Basement, with clocks synchronised and logs kept, the thread becomes visible: one more clue in the old any-to-any firewall rule's hit log, then every Unexplained note on one timeline, handed to Rae as a suspicion file. It is not resolved; it continues.
 
 Real-world basis: joint advisory AA24-038A (CISA, NSA, FBI and partners, February 2024) on Volt Typhoon. See CREDITS.md.
+
+## Settings
+
+Start menu or title screen > Settings. Up/down choose a row; left/right (or A) change it; B goes back. Saved in `uptime.settings` (separate from game saves, shared by every edition; if the browser blocks storage they last until the page closes).
+
+- **Colours**: Classic (the original; menus follow the system light/dark setting), High contrast, Colour-blind safe (reds to orange/vermilion, greens to bluish green, fixed equipment blue, after Okabe & Ito; checked under simulated protanopia, deuteranopia and tritanopia), Amber terminal, Green terminal, Light. A palette is a whole-game swap applied at render time to every 4-colour tile and sprite palette, the battle scene, the door marker and the UI colour tokens; a preview strip shows it live. Every palette's UI text meets WCAG 2.2 contrast (4.5:1).
+- **Never colour alone**: fixed equipment shows a tick and an isolated laptop a small box in every palette; lit and dark screens differ in brightness; bars carry their label and number; verdicts are written out; the door marker is a shape.
+- **Sound**: generated with Web Audio (no files): Soft, Retro chip, Console beeps, Minimal clicks, Warm synth, for menu move, select, back, alert arrives, correct, wrong, badge and battle start. Volume 0 to 100 in steps of 10, mute, and alerts only (only new alerts and incidents make a sound). Audio starts after your first key press or tap.
+- **Reduced flashing**: no screen shake, blinking prompt, bobbing sprites or fade between rooms. On by default when the system asks for reduced motion.
+- **Text size**: normal or large (menus and dialogue; the status band and battle cards keep their size, because a larger status band pushes the longest objectives past the line limit the layout test allows on phones).
 
 ## Controls
 

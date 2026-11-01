@@ -8,13 +8,14 @@
 //    never covers any of them, and every option and note in it is fully visible or reachable by scrolling it
 //  - scorecard / summary table: numbers and targets never wrap, the table never overflows its page
 //  - the current objective's door carries a marker
-// Usage: node layout.js   (UPTIME_FILE=file:///... to test another build)
+// Usage: node layout.js   (UPTIME_FILE=file:///... to test another build; UPTIME_PALETTE=contrast|light|... and UPTIME_TEXT=large)
 const { chromium } = require('playwright');
 const path = require('path');
 const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../editions/town-hall/index.html');
 const OUT = process.env.UPTIME_OUT || __dirname + '/out';
 require('fs').mkdirSync(OUT, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const SETTINGS_INIT = process.env.UPTIME_PALETTE || process.env.UPTIME_TEXT ? JSON.stringify({ v: 1, palette: process.env.UPTIME_PALETTE || 'classic', textSize: process.env.UPTIME_TEXT || 'normal' }) : null;
 // The longest objective text in the edition is read from the page itself: every string literal returned as an
 // objective by objective() and the districts' xxObjective() functions (computed, not hand-copied).
 let LONG = null;
@@ -47,7 +48,10 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     phone412: { viewport: { width: 412, height: 915 }, deviceScaleFactor: 2.625, isMobile: true, hasTouch: true },
     phoneLand: { viewport: { width: 800, height: 360 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
     desktop: { viewport: { width: 1280, height: 800 } } })) {
-    const c = await b.newContext(opt); const p = await c.newPage(); const errs = [], reqs = [];
+    const c = await b.newContext(opt);
+    // UPTIME_PALETTE=<id> / UPTIME_TEXT=large: run the whole layout check under a palette and text size (engine/settings.js)
+    if (SETTINGS_INIT) await c.addInitScript(v => { try { localStorage.setItem('uptime.settings', v); } catch (e) {} }, SETTINGS_INIT);
+    const p = await c.newPage(); const errs = [], reqs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
     p.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) reqs.push(r.url()); });
     await p.goto(FILE); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui);
@@ -207,6 +211,6 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
   }
   await b.close();
   const failed = results.filter(x => !x.ok);
-  console.log(JSON.stringify({ suite: 'layout', passed: results.length - failed.length, failed: failed.length, results }, null, 1));
+  console.log(JSON.stringify({ suite: 'layout', palette: process.env.UPTIME_PALETTE || 'classic', text: process.env.UPTIME_TEXT || 'normal', passed: results.length - failed.length, failed: failed.length, results }, null, 1));
   process.exit(failed.length ? 1 : 0);
 })().catch(e => { console.error('LAYOUT FAILED:', e.message); process.exit(2); });

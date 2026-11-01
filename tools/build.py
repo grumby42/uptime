@@ -15,7 +15,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENGINE = os.path.join(ROOT, 'engine')
 EDITIONS = os.path.join(ROOT, 'editions')
 # Script order inside each page: shared data and engine first, then the edition, then the game core.
-ENGINE_PRE = ['core-data.js', 'engine.js', 'series.js']
+ENGINE_PRE = ['core-data.js', 'engine.js', 'settings.js', 'series.js']
 ENGINE_POST = ['drill.js', 'game.js']
 
 

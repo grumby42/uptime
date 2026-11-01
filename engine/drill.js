@@ -114,6 +114,7 @@ async function doDrill(D) {
   let score = (verdictOk ? (supported ? 40 : 20) : 0) + (reasonOk && supported ? 20 : 0) + keyScore + altOk * 10 - st.broad * 5 - st.trap * 5;
   score = clamp(score, 0, 100);
   const aiWrong = st.aiMode === 'everything' && D.ai && D.ai.everything.wrong;
+  sfx(verdictOk && supported ? 'correct' : 'wrong');  // the debrief says it in words too
   let h = '<p class="big">Score ' + score + ' / 100 <span class="small">(game)</span></p>';
   h += '<p><b>Verdict:</b> ' + esc(D.verdicts[v].label) + ' — ' + (verdictOk ? 'correct. ' : 'not supported. ') + esc(D.verdicts[v].why || '') + '</p>';
   if (!verdictOk) h += '<p><b>Better verdict:</b> ' + esc(D.verdicts.find(x => x.good).label) + '</p>';
