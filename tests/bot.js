@@ -1,5 +1,6 @@
 // Uptime Town Hall — Playwright playthrough bot + checks.
-// Plays from New game through the Front Desk, the Mail Room, Clerks' Row, Market Square, Records Hall, the IT Basement, the Server Room and the Water Plant to the end-of-district screen using real inputs:
+// Plays from New game through the Front Desk, the Mail Room, Clerks' Row, Market Square, Records Hall, the IT Basement, the Server Room, the Water Plant
+// and Council Chambers to the edition ending using real inputs:
 //   desktop: keyboard (arrows, Z, X, Enter, Shift); phone: taps on the on-screen pad and on menu options.
 // Usage: node bot.js desktop|phone [outdir]   (UPTIME_FILE=file:///... to test another build)
 // Also checks: no Quiet Thread technique ever shows up as an ordinary alert, and the series save
@@ -185,7 +186,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -222,7 +223,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (sig !== lastSig) { lastSig = sig; lastProgress = Date.now(); }
     if (p.battle && !p.battle.story) stats.alertTechs[p.battle.tech] = (stats.alertTechs[p.battle.tech] || 0) + 1;
     else if (Date.now() - lastProgress > 15000) throw new Error('stuck: ' + sig);
-    if (p.extra && p.extra.wtSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (p.extra && p.extra.ccSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (p.extra && p.extra.wtSummary && !stats.wtSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.wtSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-water'); }
+    if (p.map === 'council' && !p.ui && !stats.shots.council && p.started && p.f.ccPlan) { stats.shots.council = 1; await shot('council'); }
+    if (p.ui && p.ui.type === 'modal' && !stats.shots.delegate && /Delegate ·/.test(await page.textContent('#modal'))) { stats.shots.delegate = 1; await shot('delegate'); }
     if (p.extra && p.extra.svSummary && !stats.svSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.svSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-server'); }
     if (p.map === 'water' && !p.ui && !stats.shots.water && p.started && p.f.wtInv) { stats.shots.water = 1; await shot('water'); }
     if (p.ui && p.ui.type === 'modal' && !stats.shots.zones && /Conduits ·/.test(await page.textContent('#modal'))) { stats.shots.zones = 1; await shot('zones'); }
@@ -276,6 +280,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     // Same at the Water Plant, once the fieldwork is done, so its plant (OT) templates get played.
     if (p.map === 'water' && p.f.wtMon && !p.f.wtBoss && p.queue > 0 && p.focus > 12 && (stats.waterQueue || 0) < 8) { stats.waterQueue = (stats.waterQueue || 0) + 1; await press('select'); await sleep(30); continue; }
     if (!savedCheckWater && p.map === 'water' && p.f.wtDrill1 && !p.f.wtDrill2) { savedCheckWater = await saveReload(); continue; }
+    if (!savedCheckCouncil && p.map === 'council' && p.f.ccDrill1 && !p.f.ccDirective) { savedCheckCouncil = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -289,11 +294,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const result = {
     quietTechInAlertMix: quietInAlerts,
     mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter,
-    errors, requests, saveReload: savedCheck, saveReloadMailRoom: savedCheckMail, saveReloadClerks: savedCheckClerks, saveReloadMarket: savedCheckMarket, saveReloadRecords: savedCheckRecords, saveReloadBasement: savedCheckBasement, saveReloadServer: savedCheckServer, saveReloadWater: savedCheckWater, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll,
-    final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, party: fin.party, m: fin.m, mfa: fin.mfa, insider: fin.f.insider, cards: fin.f.cards, mrCards: fin.f.mrCards, mr: fin.extra && fin.extra.mr, crCards: fin.f.crCards, cr: fin.extra && fin.extra.cr, mkCards: fin.f.mkCards, mk: fin.extra && fin.extra.mk, rhCards: fin.f.rhCards, rh: fin.extra && fin.extra.rh, bmCards: fin.f.bmCards, bm: fin.extra && fin.extra.bm, svCards: fin.f.svCards, sv: fin.extra && fin.extra.sv, wtCards: fin.f.wtCards, wt: fin.extra && fin.extra.wt, objective: fin.objective },
+    errors, requests, saveReload: savedCheck, saveReloadMailRoom: savedCheckMail, saveReloadClerks: savedCheckClerks, saveReloadMarket: savedCheckMarket, saveReloadRecords: savedCheckRecords, saveReloadBasement: savedCheckBasement, saveReloadServer: savedCheckServer, saveReloadWater: savedCheckWater, saveReloadCouncil: savedCheckCouncil, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll,
+    final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, party: fin.party, m: fin.m, mfa: fin.mfa, insider: fin.f.insider, cards: fin.f.cards, mrCards: fin.f.mrCards, mr: fin.extra && fin.extra.mr, crCards: fin.f.crCards, cr: fin.extra && fin.extra.cr, mkCards: fin.f.mkCards, mk: fin.extra && fin.extra.mk, rhCards: fin.f.rhCards, rh: fin.extra && fin.extra.rh, bmCards: fin.f.bmCards, bm: fin.extra && fin.extra.bm, svCards: fin.f.svCards, sv: fin.extra && fin.extra.sv, wtCards: fin.f.wtCards, wt: fin.extra && fin.extra.wt, cc: fin.extra && fin.extra.cc, objective: fin.objective },
     stats
   };
   console.log(JSON.stringify(result, null, 1));
   await browser.close();
-  process.exit(errors.length || requests.length || !savedCheck || !savedCheck.restored || !savedCheckMail || !savedCheckMail.restored || !savedCheckMail.exportRoundTrip || !savedCheckClerks || !savedCheckClerks.restored || !savedCheckClerks.exportRoundTrip || !savedCheckMarket || !savedCheckMarket.restored || !savedCheckMarket.exportRoundTrip || !savedCheckRecords || !savedCheckRecords.restored || !savedCheckRecords.exportRoundTrip || !savedCheckBasement || !savedCheckBasement.restored || !savedCheckBasement.exportRoundTrip || !savedCheckServer || !savedCheckServer.restored || !savedCheckServer.exportRoundTrip || !savedCheckWater || !savedCheckWater.restored || !savedCheckWater.exportRoundTrip || quietInAlerts.length ? 1 : 0);
+  process.exit(errors.length || requests.length || !savedCheck || !savedCheck.restored || !savedCheckMail || !savedCheckMail.restored || !savedCheckMail.exportRoundTrip || !savedCheckClerks || !savedCheckClerks.restored || !savedCheckClerks.exportRoundTrip || !savedCheckMarket || !savedCheckMarket.restored || !savedCheckMarket.exportRoundTrip || !savedCheckRecords || !savedCheckRecords.restored || !savedCheckRecords.exportRoundTrip || !savedCheckBasement || !savedCheckBasement.restored || !savedCheckBasement.exportRoundTrip || !savedCheckServer || !savedCheckServer.restored || !savedCheckServer.exportRoundTrip || !savedCheckWater || !savedCheckWater.restored || !savedCheckWater.exportRoundTrip || !savedCheckCouncil || !savedCheckCouncil.restored || !savedCheckCouncil.exportRoundTrip || !fin.objective.done || !fin.f.ccSummary || quietInAlerts.length ? 1 : 0);
 })().catch(async e => { console.error('BOT FAILED:', e.message); process.exit(2); });

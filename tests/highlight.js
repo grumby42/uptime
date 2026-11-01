@@ -27,7 +27,7 @@ const results = []; const check = (name, ok, info) => { results.push({ name, ok:
 // meta.good; none of them is a judgement call the game grades. Adding an id here needs the same review.
 const NAV_ALLOW = {
   'end-shift': 'Desk menu: End shift / (Quiet Thread console) / Not yet. Both choices are fine; good is the bot hint to end the day.',
-  'district-end': 'End-of-district summary: Keep exploring / Title screen. Pure navigation.',
+  'district-end': 'End-of-district summary: Keep exploring / Title screen (the edition ending adds Credits). Pure navigation.',
   'tune-tool': 'Use the Tuning Guide now or later. Same result either way, only timing.',
   'evolve-tool': 'Evolve Sieve now or later. Same result either way, only timing.',
   'integrate-tools': 'Integrate Sentry with Ledger now or later. Same result either way, only timing.',

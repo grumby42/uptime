@@ -60,7 +60,7 @@ const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../
     { name: 'old save on a now-wall tile (hub 1,10) loads onto the nearest walkable floor tile', ok: mig.was && !mig.solid && !mig.door && !mig.blocked && Math.abs(mig.x - 1) + Math.abs(mig.y - 10) <= 2, info: mig },
     { name: 'every door pair: exit wall matches the arrival side, facing away from the door', ok: r.bad.length === 0, info: r.bad },
     { name: 'every exit tile is a working door', ok: r.orphans.length === 0, info: r.orphans },
-    { name: 'checked all doors (at least 34 one-way links, Water Plant included)', ok: r.pairs.length >= 34 && r.pairs.some(x => /^water /.test(x)) && r.pairs.some(x => /^ptboard /.test(x)), info: r.pairs.length },
+    { name: 'checked all doors (at least 38 one-way links, Water Plant and Council Chambers included)', ok: r.pairs.length >= 38 && r.pairs.some(x => /^water /.test(x)) && r.pairs.some(x => /^ptboard /.test(x)) && r.pairs.some(x => /^water 14,15 -> council /.test(x)) && r.pairs.some(x => /^council /.test(x)) && r.pairs.some(x => /^ccboard /.test(x)), info: r.pairs.length },
     { name: 'no console errors or network requests', ok: errs.length === 0, info: errs }];
   const failed = results.filter(x => !x.ok);
   console.log(JSON.stringify({ suite: 'doors', passed: results.length - failed.length, failed: failed.length, results: results.map(x => x.ok ? { name: x.name, ok: true } : x), doors: r.pairs }, null, 1));

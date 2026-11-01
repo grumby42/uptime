@@ -122,6 +122,7 @@ function wtObjective() {
   if (!f.wtNight3) return at('End your shift at your desk.', 12, 13);
   if (!f.wtBoss) return at('Mae needs you: a booster station has gone dark.', 4, 3);
   if (!f.wtFile) return at('Rae wants a word about svc-print. By the vendor box.', 16, 8);
+  if (typeof ccObjective === 'function') return ccObjective();
   return {text: 'Water Plant secured. Next: Council Chambers.', done: true, district: 'water'};
 }
 

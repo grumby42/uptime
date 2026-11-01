@@ -74,6 +74,11 @@ const EXTRA = [
   ['G:urgent', /\b(now|at once|straight away|immediately|this (afternoon|evening))\b/i],
   ['delete', /\bdelet(e|ed|es|ing)\b/i], ['block', /\bblock(ed|s|ing)?\b/i], ['restart/rerun', /\b(restart|rerun|re-run)/i],
   ['only', /\bonly\b/i], ['every', /\bevery(thing|one)?\b/i], ['now', /\bnow\b/i],
+  // Leadership words (Council Chambers, 1 Nov 2026): reported game-wide, and held to the 35-65% band inside Council
+  // Chambers (COUNCIL_BAND below), where right answers could otherwise be the ones that sound like good governance.
+  ['brief', /\bbrief(s|ed|ing|ings)?\b/i], ['council', /\bcouncil(s|lor|lors)?\b/i], ['stakeholder', /\bstakeholders?\b/i],
+  ['transparent', /\b(transparen(t|cy)|open with|open about|being open)\b/i], ['accountable', /\baccountab(le|ility)\b/i],
+  ['risk', /\brisks?\b/i], ['owner', /\bown(s|ed|er|ers|ership|ing)?\b/i], ['budget', /\bbudget(s|ed)?\b|\$\d/i],
   // The broad investigate family (every enforced investigative word above, plus their synonyms). Reported, not
   // enforced: right answers to an open question naturally include an investigative step; each word in it is enforced.
   // Synonym families for the containment and credential words enforced above, so a move to synonyms stays visible.
@@ -84,7 +89,7 @@ const EXTRA = [
 
 const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
   .concat(fs.readdirSync(root + '/engine').filter(f => f.endsWith('.js')).map(f => 'engine/' + f));
-const DISTRICTS = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water'];
+const DISTRICTS = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water', 'council'];
 const district = f => { const b = path.basename(f); if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
 function strOf(n) {
   if (!n) return null;
@@ -210,10 +215,14 @@ if (report) {
 // 35–65% band on each of them at n >= MIN_N.
 const WATER_BAND = ['G:shutdown', 'operator', 'compare', 'G:urgent'];
 const waterBand = WATER_BAND.map(n => { const st = stat(inScope('water'), EXTRA.find(w => w[0] === n)[1]); return {n, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
+// Council Chambers is held to the same band on the leadership words, and on the hurry words (G:urgent).
+const COUNCIL_BAND = ['brief', 'council', 'stakeholder', 'transparent', 'accountable', 'risk', 'owner', 'budget', 'G:urgent'];
+const councilBand = COUNCIL_BAND.map(n => { const st = stat(inScope('council'), EXTRA.find(w => w[0] === n)[1]); return {n, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
 const checks = [
   ['source scan found graded lists in every district', DISTRICTS.every(d => graded.some(L => district(L.file) === d))],
   ['source scan found graded lists of every list type', TYPES.every(t => graded.some(L => L.type === t))],
   ['Water Plant stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on the OT groups (' + waterBand.map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', waterBand.every(x => x.ok)],
+  ['Council Chambers stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on the leadership words (' + councilBand.map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', councilBand.every(x => x.ok)],
   ['no tracked word or group leans ' + THRESH * 100 + '% or more to right or wrong (n>=' + MIN_N + ') in any district, any list type, or overall', !fails.length],
 ];
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));

@@ -393,7 +393,7 @@ async function doBattle(spec) {
       });
       items.push({label: 'Close alert', note: 'verdict + response', meta: {kind: 'close'}});
       items.push({label: 'Switch tool', disabled: G.party.length < 2, meta: {kind: 'switch'}});
-      if (!spec.story) items.push({label: G.rank === 'Intern' ? 'Ask Rae (escalate)' : /^Tier [23]/.test(G.rank) ? 'Escalate to Rae (incident lead)' : 'Escalate to Tier 2', note: 'bring evidence', meta: {kind: 'escalate'}});
+      if (!spec.story) items.push({label: G.rank === 'Intern' ? 'Ask Rae (escalate)' : /^Tier [23]/.test(G.rank) ? 'Escalate to Rae (incident lead)' : /team lead$/.test(G.rank) ? 'Hand to the district lead' : 'Escalate to Tier 2', note: 'bring evidence', meta: {kind: 'escalate'}});
       const lastClue = B.clue > 0 ? 'Latest: ' + spec.clues[B.clue - 1] : 'What do you check first?';
       const i = await choose(lastClue, items, {cols: 2});
       const meta = items[i].meta;
@@ -549,7 +549,7 @@ async function scopeQuestion() {
 }
 // Escalation is judged on evidence: a real attack sent up with Evidence under 40 is not a good escalation.
 async function escalate() {
-  const s = B.spec, intern = G.rank === 'Intern', to = intern || /^Tier [23]/.test(G.rank) ? 'Rae' : 'Tier 2';
+  const s = B.spec, intern = G.rank === 'Intern', to = intern || /^Tier [23]/.test(G.rank) ? 'Rae' : /team lead$/.test(G.rank) ? 'The district lead' : 'Tier 2';
   G.m.esc++; G.m.closed++; G.m.today++; G.m.judged++; B.revealed = true;
   if (B.ev >= 40) G.m.evOk = (G.m.evOk || 0) + 1;
   unlock('tech', s.tech);

@@ -95,6 +95,11 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     await p.evaluate(() => { G.map = 'hub'; G.x = 14; G.y = 7; }); await sleep(150);
     r.marker = await p.evaluate(() => __UPTIME.peek().marker);
     check(name + ': the objective’s door carries a marker (hub → Front Desk door 4,6)', r.marker && r.marker.x === 4 && r.marker.y === 6, r.marker);
+    // Council Chambers (the finale's map): with the Council Board as the objective, the marker sits on the west-wall door.
+    await p.evaluate(() => { window.__realObjective = objective; objective = () => ({ text: 'Take the Council Board challenge.', map: 'ccboard', x: 8, y: 2 }); G.map = 'council'; G.x = 14; G.y = 6; }); await sleep(150);
+    r.ccMarker = await p.evaluate(() => __UPTIME.peek().marker); r.ccHud = await hudCheck();
+    check(name + ': Council Chambers: the objective’s door carries a marker (west wall 0,7 → Council Board), HUD clear of the map', r.ccMarker && r.ccMarker.x === 0 && r.ccMarker.y === 7 && !r.ccHud.overlap && !r.ccHud.truncated, { m: r.ccMarker, h: r.ccHud });
+    await p.evaluate(() => { objective = window.__realObjective; });
     await p.evaluate(() => { G.map = 'desk'; G.x = 9; G.y = 8; }); await sleep(100);
     // 2. modal open: controls visible and working
     await p.evaluate(() => { run(startMenu); }); await sleep(500);

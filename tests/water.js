@@ -487,7 +487,7 @@ const optLabels = async s => ((await s.peek()).ui.options || []).map(o => o.labe
     /Water Plant district: secured/.test(sum) && /Tide/.test(sum) && /A set point at ten past two/.test(sum) && /still on file/.test(sum) && /Next: Council Chambers/.test(sum), sum.slice(0, 400));
   await s.pickLabel(/Keep exploring/); await s.settle();
   p = await s.peek();
-  check('after the district: objective done (Next: Council Chambers); series save marks the Water Plant done', p.objective.done && /Council Chambers/.test(p.objective.text) && await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).editions['town-hall'].waterPlant === true), p.objective);
+  check('after the district: objective points to Council Chambers (done, or the Council Chambers district); series save marks the Water Plant done', (p.objective.done || p.objective.district === 'council') && /Council Chambers/.test(p.objective.text) && await s.page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series')).editions['town-hall'].waterPlant === true), p.objective);
   check('Credits list the Water Plant sources and keep the MITRE notice', await s.page.evaluate(() => { const c = creditsHtml(); return /AA23-335A/.test(c) && /800-82/.test(c) && /62443-3-2/.test(c) && /T1694\.001/.test(c) && /reproduced and distributed with the permission of The MITRE Corporation/.test(c); }));
   results.errors = s.errors; results.requests = s.requests;
   if (s.errors.length || s.requests.length) failed = true;

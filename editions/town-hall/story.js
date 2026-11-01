@@ -10,7 +10,7 @@
 const EDITION = {
   id: 'town-hall',
   saveKey: 'uptime.slice1.save',
-  badgeFlags: ['mrSeal', 'crShield', 'mkLantern', 'rhVault', 'bmBeacon', 'svCrown', 'wtTide'],  // G.f flags that mean a badge was earned (the Key Badge is G.badge)
+  badgeFlags: ['mrSeal', 'crShield', 'mkLantern', 'rhVault', 'bmBeacon', 'svCrown', 'wtTide', 'ccCharter'],  // G.f flags that mean a badge was earned (the Key Badge is G.badge)
   title: 'Town Hall · Front Desk district',
   blurb: 'You’re the new intern in a small town’s security team. Investigate alerts, fix what’s broken, and keep the district running.',
   creditsName: 'vertical slice 1: Town Hall, Front Desk district',
@@ -53,6 +53,7 @@ function editionTile(d, ch, x, y) {
   if (typeof bmTile === 'function') d = bmTile(d, ch, x, y);
   if (typeof svTile === 'function') d = svTile(d, ch, x, y);
   if (typeof wtTile === 'function') d = wtTile(d, ch, x, y);
+  if (typeof ccTile === 'function') d = ccTile(d, ch, x, y);
   return d;
 }
 async function introScript() {
@@ -92,6 +93,7 @@ function triggers() {
   if (typeof bmTriggers === 'function' && bmTriggers()) return true;
   if (typeof svTriggers === 'function' && svTriggers()) return true;
   if (typeof wtTriggers === 'function' && wtTriggers()) return true;
+  if (typeof ccTriggers === 'function' && ccTriggers()) return true;
   if (G.map === 'hub' && G.y >= 11) {
     if (!G.f.portDone || G.day < 2) {
       run(async () => {
@@ -121,6 +123,7 @@ function interact() {
   if (typeof bmInteract === 'function' && bmInteract(ch, tx, ty)) return;
   if (typeof svInteract === 'function' && svInteract(ch, tx, ty)) return;
   if (typeof wtInteract === 'function' && wtInteract(ch, tx, ty)) return;
+  if (typeof ccInteract === 'function' && ccInteract(ch, tx, ty)) return;
   if (ch === 'k') run(kioskTask);
   else if (ch === 'n') run(wifiTask);
   else if (ch === 'p') run(() => pcTask(tx));
@@ -176,7 +179,7 @@ async function talk(npc) {
     case 'vex': await vexScript(); break;
     case 'marisol': await boardScript(); break;
     case 'imani': await dojoIntro(); break;
-    default: if (typeof mrTalk === 'function') await mrTalk(npc); if (typeof crTalk === 'function') await crTalk(npc); if (typeof mkTalk === 'function') await mkTalk(npc); if (typeof rhTalk === 'function') await rhTalk(npc); if (typeof bmTalk === 'function') await bmTalk(npc); if (typeof svTalk === 'function') await svTalk(npc); if (typeof wtTalk === 'function') await wtTalk(npc);
+    default: if (typeof mrTalk === 'function') await mrTalk(npc); if (typeof crTalk === 'function') await crTalk(npc); if (typeof mkTalk === 'function') await mkTalk(npc); if (typeof rhTalk === 'function') await rhTalk(npc); if (typeof bmTalk === 'function') await bmTalk(npc); if (typeof svTalk === 'function') await svTalk(npc); if (typeof wtTalk === 'function') await wtTalk(npc); if (typeof ccTalk === 'function') await ccTalk(npc);
   }
   await mfaMeet(npc);
 }
