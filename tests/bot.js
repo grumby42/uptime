@@ -5,10 +5,14 @@
 // Usage: node bot.js desktop|phone [outdir]   (UPTIME_FILE=file:///... to test another build)
 // Also checks: no Quiet Thread technique ever shows up as an ordinary alert, and the series save
 // (quietThread) survives the mid-game reload.
+// Crossroads (edition 2): UPTIME_FILE=.../editions/crossroads/index.html (or UPTIME_EDITION=crossroads) plays the
+// prologue and the Public Library on one track: TRACK=manager (default) or TRACK=dfir. It checks the track lock in the
+// series save, a save/reload mid-Library and the end-of-district summary.
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
-const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../editions/town-hall/index.html');
+const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../editions/' + (process.env.UPTIME_EDITION || 'town-hall') + '/index.html');
+const CR = /crossroads/.test(FILE), TRACK = process.env.TRACK === 'dfir' ? 'dfir' : 'manager';
 const MODE = process.argv[2] || 'desktop';
 const GAMER = process.env.GAMER === '1';
 const OUT = process.argv[3] || process.env.UPTIME_OUT || __dirname + '/out';
@@ -104,6 +108,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       if (find(m => m.good !== undefined) >= 0 && o.some(x => x.meta && x.meta.back)) return find(m => m.good === true);
       if (find(m => m.idx !== undefined) >= 0) return o.length - 1;
     }
+    if (CR && o.some(x => x.meta && x.meta.track)) return find(m => m.track === TRACK);
     if (o.some(x => x.meta && x.meta.k === 'new')) {
       const want = p.__wantContinue ? 'cont' : 'new';
       return find(m => m.k === want);
@@ -186,7 +191,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheckCr = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -224,6 +229,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (p.battle && !p.battle.story) stats.alertTechs[p.battle.tech] = (stats.alertTechs[p.battle.tech] || 0) + 1;
     else if (Date.now() - lastProgress > 15000) throw new Error('stuck: ' + sig);
     if (p.extra && p.extra.ccSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (CR && p.extra && p.extra.crSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (CR && p.map === 'library' && !p.ui && !stats.shots.library && p.started && p.f.lbMet) { stats.shots.library = 1; await shot('library-' + TRACK); }
+    if (CR && p.ui && p.ui.type === 'modal' && !stats.shots.rota && /On-call rota ·/.test(await page.textContent('#modal'))) { stats.shots.rota = 1; await shot('rota'); }
+    if (CR && p.ui && p.ui.type === 'modal' && !stats.shots.report && /^Finding /.test(await page.textContent('#modal .mhead'))) { stats.shots.report = 1; await shot('report'); }
     if (p.extra && p.extra.wtSummary && !stats.wtSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.wtSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-water'); }
     if (p.map === 'council' && !p.ui && !stats.shots.council && p.started && p.f.ccPlan) { stats.shots.council = 1; await shot('council'); }
     if (p.ui && p.ui.type === 'modal' && !stats.shots.delegate && /Delegate ·/.test(await page.textContent('#modal'))) { stats.shots.delegate = 1; await shot('delegate'); }
@@ -281,6 +290,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (p.map === 'water' && p.f.wtMon && !p.f.wtBoss && p.queue > 0 && p.focus > 12 && (stats.waterQueue || 0) < 8) { stats.waterQueue = (stats.waterQueue || 0) + 1; await press('select'); await sleep(30); continue; }
     if (!savedCheckWater && p.map === 'water' && p.f.wtDrill1 && !p.f.wtDrill2) { savedCheckWater = await saveReload(); continue; }
     if (!savedCheckCouncil && p.map === 'council' && p.f.ccDrill1 && !p.f.ccDirective) { savedCheckCouncil = await saveReload(); continue; }
+    if (CR && !savedCheckCr && p.map === 'library' && p.f.lbDrillA && !p.f.lbDirective) { savedCheckCr = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -291,6 +301,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const fin = await peek();
   const hscroll = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth }));
   const quietInAlerts = Object.keys(stats.alertTechs).filter(t => QT_TECHS.includes(t));
+  if (CR) {
+    const ser = await page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series') || '{}'));
+    const crRes = { edition: 'crossroads', track: TRACK, mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter, errors, requests,
+      saveReloadLibrary: savedCheckCr, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, quietTechInAlertMix: quietInAlerts,
+      seriesCrossroads: ser.editions && ser.editions.crossroads, final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, qt: fin.qt, cr: fin.extra && fin.extra.cr, objective: fin.objective }, stats };
+    console.log(JSON.stringify(crRes, null, 1));
+    await browser.close();
+    const lockOk = crRes.seriesCrossroads && crRes.seriesCrossroads.track === TRACK && crRes.seriesCrossroads.library === true;
+    process.exit(errors.length || requests.length || !savedCheckCr || !savedCheckCr.restored || !savedCheckCr.exportRoundTrip || !fin.objective.done || !fin.extra.crSummary || !lockOk || fin.extra.track !== TRACK || quietInAlerts.length || !crRes.noHorizontalScroll ? 1 : 0);
+  }
   const result = {
     quietTechInAlertMix: quietInAlerts,
     mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter,

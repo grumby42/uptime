@@ -58,6 +58,8 @@ const METRICS = [
   {k: 'mfa', label: 'MFA coverage', unit: '%', higher: true},
   {k: 'patch', label: 'Hardening (baseline fixes)', unit: '%', higher: true}
 ];
+// An edition with its own scorecard (EDITION.ownMetrics) replaces the analyst metrics above with EDITION_METRICS.
+if (typeof EDITION !== 'undefined' && EDITION.ownMetrics) METRICS.length = 0;
 if (typeof EDITION_METRICS !== 'undefined') METRICS.push(...EDITION_METRICS);
 function track() {
   const v = metricVals();
@@ -180,7 +182,7 @@ function hudUpdate() {
   if (!G || !started || B) { el.classList.add('off'); return; }
   el.classList.remove('off');
   const v = metricVals();
-  const st = 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · Queue ' + G.queue + ' · Up ' + v.uptime.toFixed(2) + '%';
+  const st = typeof hudStatus === 'function' ? hudStatus(v) : 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · Queue ' + G.queue + ' · Up ' + v.uptime.toFixed(2) + '%';
   const ob = objective().text;
   if (st + '|' + ob !== hudStr) {
     const lines = hudLines();
@@ -325,12 +327,14 @@ function genAlert(forceKind) {
   return spec;
 }
 async function randomAlert(src) {
+  if (typeof editionQueue === 'function') return editionQueue(src);  // an edition without wild alerts says what happens instead
   if (!G.party.length) { await say('No tool on your console yet. Talk to Rae.'); return; }
   if (G.focus <= 0) { await say('You’re out of Focus. End your shift at your desk.'); return; }
   const spec = genAlert();
   await doBattle(spec);
 }
 async function openQueue() {
+  if (typeof editionQueue === 'function') return editionQueue('queue');
   if (!G.party.length) { await say('No tool on your console yet. Talk to Rae.'); return; }
   if (G.queue <= 0) { await say('Alert queue: empty. New alerts arrive as the district works.'); return; }
   if (G.focus <= 0) { await say('You’re out of Focus. End your shift at your desk.'); return; }
@@ -580,6 +584,7 @@ async function gainXP(n) {
 
 /* ---------- Menus ---------- */
 function scorecardHtml() {
+  if (typeof editionScorecard === 'function') return editionScorecard();  // an edition with its own scorecard layout
   const v = metricVals();
   const fmt = (d, x) => x === null || x === undefined ? '—' : (d.k === 'uptime' ? x.toFixed(2) : x) + d.unit;
   const rows = METRICS.filter(d => !d.when || d.when()).map(d => {
@@ -600,7 +605,7 @@ function scorecardHtml() {
 function fmEntries() {
   const out = [];
   for (const id in TECH) out.push({cat: 'ATT&CK techniques', key: 'tech:' + id, name: id + ' ' + TECH[id].name, desc: TECH[id].desc + ' Tactic: ' + TECH[id].tactic.join(', ') + '.'});
-  for (const k in ABIL) out.push({cat: 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: ABIL[k].name, desc: ABIL[k].desc});
+  if (!EDITION.noTools) for (const k in ABIL) out.push({cat: 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: ABIL[k].name, desc: ABIL[k].desc});  // tool abilities only where there is a tool console
   for (const k in EXTRA_ACTIONS) out.push({cat: 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: EXTRA_ACTIONS[k].name, desc: EXTRA_ACTIONS[k].desc});
   for (const k in CSF) out.push({cat: 'NIST CSF 2.0 functions', key: 'csf:' + k, name: k, desc: CSF[k]});
   for (const k in FACTS) out.push({cat: 'Facts', key: 'fact:' + k, name: FACTS[k].name, desc: FACTS[k].desc + ' Source: ' + FACTS[k].src + '.'});
@@ -648,6 +653,7 @@ async function startMenu() {
       {label: 'Scorecard', meta: {k: 'score'}}, {label: 'Field Manual (' + fmPct() + '%)', meta: {k: 'fm'}},
       {label: 'Tools', meta: {k: 'tools'}}, {label: 'Save', meta: {k: 'save'}},
       {label: 'Export save code', meta: {k: 'export'}}, {label: 'Import save code', meta: {k: 'import'}}];
+    if (EDITION.noTools) items.splice(items.findIndex(x => x.meta.k === 'tools'), 1);  // an edition without a tool console
     if (G.f.autoUnlocked) items.push({label: 'Automation: ' + (G.auto ? (G.autoReview ? 'ON, sampled weekly' : 'ON, no review') : 'off'), meta: {k: 'auto'}});
     items.push({label: 'Settings', note: 'colours, sound, flashing, text size', meta: {k: 'settings'}}, {label: 'Credits', meta: {k: 'credits'}}, {label: 'Close', meta: {k: 'close'}});
     const body = '<p><b>' + esc(objective().text) + '</b></p><p class="small">Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + ' · played ' + fmtTime(G.playMs) + '</p>' +
@@ -700,7 +706,7 @@ async function titleScreen() {
   const k = items[i].meta.k;
   titleOpen = false;
   if (k === 'cont') {
-    try { G = decodeSave(storeGet()); fixupState(); qtAdopt(); started = true; hudUpdate(); }
+    try { G = sameEdition(decodeSave(storeGet())); fixupState(); qtAdopt(); started = true; hudUpdate(); }
     catch (e) { await UI.openModal('Continue', '<p>That save could not be read: ' + esc(e.message) + '</p>', [{label: 'OK'}]); return titleScreen(); }
     return;
   }
@@ -708,6 +714,12 @@ async function titleScreen() {
   if (k === 'settings') { await settingsMenu(); return titleScreen(); }
   if (k === 'import') { const ok = await importFlow(); if (!ok) return titleScreen(); return; }
   newGame();
+}
+// A save from another edition is refused (Town Hall saves carry no edition field; later editions set G.edition).
+function sameEdition(g) {
+  const want = EDITION.id === 'town-hall' ? undefined : EDITION.id;
+  if (g && g.edition !== want) throw new Error('That save is from another Uptime edition. Open that edition to load it.');
+  return g;
 }
 function fixupState() {
   const base = newState(G.seed || 1);
@@ -751,7 +763,7 @@ async function importFlow() {
   // the textarea is removed when the modal closes, so read it on click (see modal hook below)
   if (i !== 0) return false;
   try {
-    G = decodeSave(lastImportText); fixupState(); qtAdopt(); started = true; storeSet(encodeSave(G)); hudUpdate();
+    G = sameEdition(decodeSave(lastImportText)); fixupState(); qtAdopt(); started = true; storeSet(encodeSave(G)); hudUpdate();
     await UI.openModal('Import', '<p>Save loaded. Day ' + G.day + ', ' + esc(G.rank) + '.</p>', [{label: 'OK'}]);
     return true;
   } catch (e) {

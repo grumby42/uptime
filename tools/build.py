@@ -32,7 +32,7 @@ def editions():
             m = json.loads(read(meta))
             m['dir'] = os.path.join(EDITIONS, name)
             out.append(m)
-    return out
+    return sorted(out, key=lambda m: (m.get('slice', 99), m['id']))  # the series menu lists editions in play order
 
 
 VALIDATE = r"""

@@ -12,12 +12,15 @@
 //     (rule reviews, triage advisories) are kept apart: the key is the title, labels and good flags.
 //  5. The verdict scale (False positive / Benign / Malicious) is fixed, so its highlight must start on Back; every other
 //     fixed-order graded list that opens on a chosen item ({cursor}) must not open on a good option either.
-// Usage: node highlight.js   (UPTIME_FILE=file:///... to test another build)
+// Usage: node highlight.js   (UPTIME_FILE=file:///... to test another build; UPTIME_EDITION=crossroads TRACK=manager|dfir
+//        plays Crossroads instead: it has no alert battles, so the verdict-scale check is not applicable there, and its
+//        run records fewer lists)
 const { chromium } = require('playwright');
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../editions/town-hall/index.html');
+const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../editions/' + (process.env.UPTIME_EDITION || 'town-hall') + '/index.html');
+const CR = /crossroads/.test(FILE);
 const OUT = process.env.UPTIME_OUT || __dirname + '/out';
 fs.mkdirSync(OUT, { recursive: true });
 const LOG = OUT + '/highlight-log.jsonl';
@@ -33,7 +36,10 @@ const NAV_ALLOW = {
   'integrate-tools': 'Integrate Sentry with Ledger now or later. Same result either way, only timing.',
   'patch-plan-confirm': 'After the graded triage (shuffled): deploy the plan you made, or redo it. Confirmation of your own answers.',
   'waf-review-confirm': 'After the graded WAF rule review (shuffled): switch to blocking with your plan, or redo it. Confirmation.',
-  'starter-pick': 'Starter tool: all three are valid, by preference. good is only the bot\'s pick.'
+  'starter-pick': 'Starter tool: all three are valid, by preference. good is only the bot\'s pick.',
+  'name-plate': 'Crossroads: keep the carried name or use the one typed. Not graded; good is the bot\'s pick.',
+  'track-pick': 'Crossroads: the two offers (IR manager / DFIR). A preference, never graded; good marks the open (unlocked) offers.',
+  'track-confirm': 'Crossroads: take the chosen track or go back to the offers. Confirmation of your own choice.'
 };
 
 // Static scan of the sources (acorn, from the global tool install if it is not local).
@@ -43,7 +49,8 @@ function staticScan() {
   if (!acorn) return { error: 'acorn not found (npm i acorn, or /opt/node-tools/node_modules/acorn)' };
   const root = path.resolve(__dirname, '..');
   const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
-    .concat(fs.readdirSync(root + '/engine').filter(f => f.endsWith('.js')).map(f => 'engine/' + f));
+    .concat(fs.readdirSync(root + '/engine').filter(f => f.endsWith('.js')).map(f => 'engine/' + f))
+    .concat(fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : []);
   const sites = [], bad = [];
   const prop = (o, k) => o && o.type === 'ObjectExpression' && o.properties.find(p => p.key && (p.key.name === k || p.key.value === k));
   for (const f of files) {
@@ -118,7 +125,7 @@ function staticScan() {
     catch (e) { check('bot run finished', false, 'exit ' + e.status); }
   }
   const recs = fs.readFileSync(LOG, 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l));
-  check('recorded the lists of a full run', recs.length > 300, recs.length);
+  check('recorded the lists of a full run', recs.length > (CR ? 80 : 300), recs.length);
   const free = r => r.items.filter(i => !i.pin);
   const graded = r => { const f = free(r); return f.some(i => i.good) && f.some(i => !i.good); };
   const G = recs.filter(graded);
@@ -137,10 +144,11 @@ function staticScan() {
   check('run: first highlight is good no more often than chance', H <= lim, { lists: n, goodHighlighted: H, expected: +E.toFixed(1), limit: +lim.toFixed(1) });
   // Fixed-order lists that open on a chosen item (verdict scale, patch batches, WAF actions, Quiet Thread) never open on an answer.
   const fixed = G.filter(r => r.cursorOpt && !r.shuffle);
-  check('run: fixed-order graded lists open on a neutral item (Back / Leave it), never on a good one', fixed.length > 0 && fixed.every(r => !r.cursorGood), [...new Set(fixed.filter(r => r.cursorGood).map(r => r.title + ' → ' + r.cursorLabel))]);
+  check('run: fixed-order graded lists open on a neutral item (Back / Leave it), never on a good one' + (CR ? ' (Crossroads: the report scale; none on the manager track)' : ''), (fixed.length > 0 || CR) && fixed.every(r => !r.cursorGood), [...new Set(fixed.filter(r => r.cursorGood).map(r => r.title + ' → ' + r.cursorLabel))]);
   // Verdict scale starts on Back.
   const verdicts = recs.filter(r => r.items.some(i => i.verdict));
-  check('verdict scale opens on Back', verdicts.length > 0 && verdicts.every(r => r.items.find(i => i.label === r.cursorLabel && i.back)), verdicts.slice(0, 3).map(r => r.cursorLabel));
+  if (CR) check('Crossroads: no alert battles, so no verdict scale is opened (n/a)', verdicts.length === 0, verdicts.length);
+  else check('verdict scale opens on Back', verdicts.length > 0 && verdicts.every(r => r.items.find(i => i.label === r.cursorLabel && i.back)), verdicts.slice(0, 3).map(r => r.cursorLabel));
   // Many seeds through the engine's own shuffle + cursor code.
   // Keyed by title + labels + good flags, so repeated rounds with the same labels (and different answers) stay distinct.
   const uniq = new Map(); for (const r of G.filter(r => r.shuffle && !r.cursorOpt)) uniq.set(r.kind + '\u0001' + r.title + '\u0001' + r.items.map(i => i.label + (i.dis ? '#' : '') + (i.good ? '*' : '')).join('|'), r);

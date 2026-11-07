@@ -495,6 +495,22 @@ const FAKE_AUDIO = () => {
     await b.close();
   }
 
+  // ---- Crossroads (edition 2) shares the settings: one key, the palette swap, the tick on fixed equipment ----
+  {
+    const b = await chromium.launch(); const c = await b.newContext(); const p = await c.newPage(); const errs = [];
+    p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+    p.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) errs.push('request ' + r.url()); });
+    await p.goto(FILE); await p.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
+    await p.evaluate(() => Settings.set({ palette: 'contrast', textSize: 'large' }));
+    await p.goto('file://' + require('path').resolve(__dirname, '../editions/crossroads/index.html')); await p.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
+    const r = await p.evaluate(() => ({ pal: Settings.v.palette, text: Settings.v.textSize, swapped: JSON.stringify(Settings.palColours('lbPubOk')) !== JSON.stringify(PAL.lbPubOk),
+      ticks: ['lbPubOk', 'lbCircOk', 'closetOk'].every(k => stateBadge(k) === 'ok'), plain: ['lbPub', 'lbCirc', 'closetBad'].every(k => !stateBadge(k)), key: EDITION.saveKey }));
+    check('Crossroads reads the shared settings (palette, text size), swaps its own palettes, and ticks its fixed equipment (not colour alone)', r.pal === 'contrast' && r.text === 'large' && r.swapped && r.ticks && r.plain && r.key === 'uptime.crossroads.save', r);
+    await p.evaluate(() => Settings.set({ palette: 'classic', textSize: 'normal' }));
+    check('Crossroads settings run: no console errors or requests', !errs.length, errs);
+    await b.close();
+  }
+
   const failed = results.filter(x => !x.ok);
   console.log(JSON.stringify({ suite: 'settings', passed: results.length - failed.length, failed: failed.length, results: results.map(x => x.ok ? { name: x.name, ok: true } : x), contrast, cvd, bars: info.bars, sound: soundInfo, classicWeak: info.classicWeak }, null, 1));
   process.exit(failed.length ? 1 : 0);

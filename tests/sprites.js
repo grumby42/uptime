@@ -296,6 +296,42 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
   const staleAllow = Object.keys(FACE_ALLOW).filter(id => !facing.some(f => f.id === id && f.solid));
   check('(f) no NPC faces straight into an adjacent solid tile or off the map (allowlist: behind a desk or counter)', facing.length > 0 && intoWall.length === 0 && staleAllow.length === 0, { intoWall, staleAllow });
 
+  // ---------- Crossroads (edition 2): the same rules on its maps and people ----------
+  {
+    const CRF = 'file://' + path.resolve(__dirname, '../editions/crossroads/index.html');
+    const cp = await ctx.newPage();
+    cp.on('pageerror', e => errs.push('crossroads pageerror: ' + e.message));
+    cp.on('console', m => { if (m.type() === 'error') errs.push('crossroads: ' + m.text()); });
+    cp.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) errs.push('crossroads request ' + r.url()); });
+    await cp.goto(CRF); await cp.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
+    await cp.evaluate(() => { __UPTIME.seed(7); __UPTIME.turbo(true); __UPTIME.drawn(); [...document.querySelectorAll('#mopts .opt')].find(e => /New game/.test(e.textContent)).click(); });
+    for (let i = 0; i < 300; i++) { const q = await cp.evaluate(() => __UPTIME.peek()); if (!q.ui && !q.busy && q.started) break; if (q.ui) await cp.evaluate(() => { if (UI.mode === 'say') UI.handle('a'); else { const m = UI.modal || UI.choice; const g = m.items.findIndex(o => o.meta && o.meta.good); m.cursor = g < 0 ? 0 : g; UI.handle('a'); } }); await sleep(15); }
+    const cf = await cp.evaluate(() => { const V = {up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0]};
+      return NPCS.map(n => { const v = V[n.dir] || [0, 0], t = tileDef(n.map, n.x + v[0], n.y + v[1]); return { id: n.id, map: n.map, solid: !t || !!t.solid, chars: CHAR_SPRITES.includes(n.spr || 'player') }; }); });
+    check('Crossroads (f): no NPC faces into an adjacent solid tile; every NPC uses a four-facing character sprite', cf.length >= 15 && cf.every(f => !f.solid && f.chars), cf.filter(f => f.solid || !f.chars));
+    const arr = await cp.evaluate(async () => {
+      const out = []; G.trackId = 'manager'; G.f.lbMet = true;
+      for (const m in MAPS) for (const k in MAPS[m].doors || {}) {
+        const d = MAPS[m].doors[k]; if (!d.to || d.locked) continue;
+        G.dir = {up: 'down', down: 'up', left: 'right', right: 'left'}[d.dir];
+        await warp(d.to, d.x, d.y, d.dir); out.push({ door: m + ' ' + k, want: d.dir, got: G.dir, map: G.map === d.to });
+      }
+      return out;
+    });
+    check('Crossroads (c): every door’s warp turns the player to face away from it (all 6 links)', arr.length === 6 && arr.every(a => a.got === a.want && a.map), arr);
+    const turn = await cp.evaluate(async () => {
+      G.map = 'library'; G.x = 12; G.y = 4; G.dir = 'right'; G.f.lbMet = true; G.trackId = 'manager';
+      interact(); await new Promise(r => setTimeout(r, 120));
+      const e = __UPTIME.drawn().find(x => x.id === 'dot'); const dir = e && e.dir;
+      for (let i = 0; i < 20 && (UI.mode || UI.modal); i++) { UI.handle('a'); await new Promise(r => setTimeout(r, 30)); }
+      await new Promise(r => setTimeout(r, 80));
+      const e2 = __UPTIME.drawn().find(x => x.id === 'dot');
+      return { during: dir, after: e2 && e2.dir };
+    });
+    check('Crossroads (d): an NPC turns to the player while talking (Dot faces left), then back to her own facing', turn.during === 'left' && turn.after === 'down', turn);
+    await cp.close();
+  }
+
   check('no console errors or network requests', errs.length === 0, errs);
   await browser.close();
   const failed = results.filter(r => !r.ok);

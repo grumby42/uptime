@@ -367,6 +367,8 @@ function decodeSave(code) {
   if (checksum(json) !== parts[2]) throw new Error('Save code is damaged (checksum mismatch).');
   return JSON.parse(json);
 }
-function storeGet() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } }
-function storeSet(v) { try { localStorage.setItem(SAVE_KEY, v); return true; } catch (e) { return false; } }
-function storeDel() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+// Each edition keeps its own save (EDITION.saveKey; Town Hall's is SAVE_KEY), so one edition never writes another's.
+function saveKey() { return (typeof EDITION !== 'undefined' && EDITION.saveKey) || SAVE_KEY; }
+function storeGet() { try { return localStorage.getItem(saveKey()); } catch (e) { return null; } }
+function storeSet(v) { try { localStorage.setItem(saveKey(), v); return true; } catch (e) { return false; } }
+function storeDel() { try { localStorage.removeItem(saveKey()); } catch (e) {} }

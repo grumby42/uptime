@@ -9,6 +9,7 @@ Planned home: GitHub Pages at `grumby42/uptime` (open `index.html` for the serie
 | # | Edition | District | Status |
 |---|---|---|---|
 | 1 | Town Hall | Front Desk, the Mail Room, Clerks' Row, Market Square, Records Hall, the IT Basement, the Server Room, the Water Plant, then Council Chambers (the finale) | playable (about 30 minutes each) |
+| 2 | Crossroads | the prologue (the Town Hall war room) and the Public Library, on either track: IR manager or principal DFIR consultant | slice 1 playable; next: School District |
 | | | next edition | coming later |
 
 ## Layout
@@ -54,7 +55,16 @@ editions/town-hall/
   council-story.js          Council Chambers objectives, fieldwork (incident response plan, risk register, delegation, outside contacts, council briefing), road-budget directive, drills, dojo, Council Board, incident command, ending
   server-story.js           Server Room objectives, fieldwork (privileged accounts, PAWs, LAPS, Protected Users, audit, tiering), directive, drills, Assessment Findings, Server Board, domain-compromise incident, metrics, summary
   index.html                the built game (generated)
-tools/build.py              builds every edition and the menu
+editions/crossroads/          edition 2 (the branch): IR manager or principal DFIR consultant, chosen once per save
+  edition.json              build entry (slice 2)
+  data.js                   the prologue's maps (war room, town square), people, ATT&CK techniques, Field Manual text, game notes; no wild alerts
+  quiet.js                  the Quiet Thread clue found in the Library (lb-rdp, T1021.001) and the carried suspicion file's lines
+  rota.js                   the rota / budget primitive (IR manager): nights, rest rules, fatigue, overtime against a budget, a forecast
+  report.js                 the report-writing primitive (DFIR): confirmed / likely / unknown, overclaims corrected and counted
+  story.js                  EDITION settings, state, the carry-over from Town Hall (read only), the track lock and New Game+, hooks, the prologue
+  library-data.js           the Public Library: map, people, both tracks' tables, six drills, two reports, directive, Board, dojos, boss stages
+  library-story.js          the Public Library's objectives and scripts for both tracks, the nights, the boss from each seat, the summary
+tools/build.py              builds every edition and the menu (the menu lists editions in play order)
 tests/                      Playwright checks (district suites, quiet, layout, highlight, doors, sprites, bot)
 ```
 
@@ -73,6 +83,13 @@ Need Node and Playwright (Chromium).
 
     node tests/bot.js desktop      # plays New game -> Front Desk -> Mail Room -> Clerks' Row -> Market Square -> Records Hall -> IT Basement -> Server Room -> Water Plant -> Council Chambers -> the edition ending with the keyboard
     node tests/bot.js phone        # same with taps on the on-screen pad (360x800); run it last and alone (about 15 minutes)
+    UPTIME_EDITION=crossroads TRACK=manager node tests/bot.js desktop   # Crossroads: the prologue and the Library on one track
+    UPTIME_EDITION=crossroads TRACK=dfir node tests/bot.js phone        #   (TRACK=manager|dfir; checks the lock, a save/reload mid-Library)
+    node tests/crossroads.js       # Crossroads: carry-over with and without a Town Hall save (the Town Hall save left byte-for-byte unchanged),
+                                   #   the rota's fatigue (Evidence and Focus), the two-step track choice and its lock, a fresh save on the
+                                   #   locked browser, New Game+ (test hook), save/reload, both tracks' fieldwork, a two-source `needs`
+                                   #   verdict read from one source is unsupported, an overclaim in a report corrected and counted, the
+                                   #   Quiet Thread clue on both tracks, the end summary, Town Hall save codes refused, no errors or requests
     GAMER=1 node tests/bot.js desktop   # closes everything as a false positive; hidden missed attacks must surface
     node tests/sprites.js          # every character sprite has down/up/left/right (+ two step frames); the player faces the last move or bump
                                    #   (pixel-sampled), alternates feet on successive steps, keeps facing on save/reload and faces the door's dir
@@ -143,8 +160,8 @@ The bots also check: zero console errors, zero network requests, mid-game save/r
 
 ## Saves
 
-- Edition save: `uptime.slice1.save` (Town Hall), plus an export/import code (`UPT1.…`).
-- Series save: `uptime.series`, shared by every edition: `{v, quietThread: {stage, cluesFound[], evicted}, editions: {<id>: {done}}}`. Each edition save also carries a copy of `quietThread`, so an export code moves it to another device; Continue and Import merge it back.
+- Edition save: `uptime.slice1.save` (Town Hall) and `uptime.crossroads.save` (Crossroads), plus an export/import code (`UPT1.…`). An edition refuses another edition's code. Crossroads reads the Town Hall save for its carry-over and never writes it.
+- Series save: `uptime.series`, shared by every edition: `{v, quietThread: {stage, cluesFound[], evicted}, editions: {<id>: {done}}}`. Crossroads adds `editions.crossroads: {track: 'manager'|'dfir', tracksPlayed, library, ngPlus}`. Each edition save also carries a copy of `quietThread`, so an export code moves it to another device; Continue and Import merge it back.
 
 ## The Quiet Thread (spoilers)
 
@@ -208,3 +225,10 @@ Reached from the Server Room (the west-wall door of its lower room, opened by th
 ## Council Chambers (district 9, the finale)
 
 Reached from the Water Plant (the south door of its desk room, opened by the Tide Badge). Governance, leadership and incident command. On arrival you are promoted to the town's first Security team lead: you no longer run every investigation yourself; you assign, coach and brief the council. (The NICE Framework has no team-lead work role; the closest are Incident Response, PD-WRL-003, and Systems Security Management, OG-WRL-014; see the Field Manual.) Mayor Dalia Merrin's problem: no incident response plan the council has seen, nobody owning cyber risk at council level, an insurer's questionnaire nobody can answer, and nine district leads reporting straight to you. Fieldwork: a one-page incident response plan (commander, technical lead, legal, communications, executive decider; the town attorney decides notification; mapped to SP 800-61 Rev. 3's example roles), a risk register with business owners and a councillor who chairs a risk committee (CSF 2.0 Govern), the delegation mini-game (eight alerts, one recycled from each earlier district, to leads by skill and load; then read every close and send back the one whose evidence can't tell a hijacked supplier mailbox from the real supplier), the plan's outside contacts (FBI and CISA, the insurer's notice, counsel for the rest; CIRCIA's final rule not yet published on 1 November 2026), and a plain-words briefing to the council on the booster-station incident. A roads councillor's directive (cut two night posts, game) teaches risk in business terms with the council deciding. Three drills: reviewing a lead's close (her query log and the portal's own logs decide; seniority and certainty are traps), a press story that says the town was hacked (our incident records and the named server's logs decide; the reporter's certainty and the shares are traps), and the insurer's MFA question (the sign-in records and the exceptions list decide; the policy and the CIO's memory are traps). Then the Governance dojo, the Council Board (Charter Badge: queued alerts arrive with a lead's first look), and a town-wide incident played as incident command: command and assign, brief with incomplete facts and a next-update time, recover in the owners' order and leave notification to counsel. No new alerts on the map. New metrics: mean time to assign, busiest person's load, decisions with a named owner, council briefings on time, post-incident actions closed. The suspicion file goes to the town attorney, the council's risk committee and an outside firm; the thread stays open. The edition ends with a summary of all nine districts, credits, and "Next edition: coming later".
+
+
+## Crossroads (edition 2): the prologue and the Public Library
+
+A week after the Town Hall edition's last night. You start as the town's Security team lead, carrying what the Town Hall save in this browser holds: the rank you reached, your badges (as history) and the suspicion file (read only; with no Town Hall save you start with a clean history). The prologue is in the Town Hall war room: build next week's on-call rota (the night post the council kept is still advertised; Magda offers to take five nights running, and a lead on a third night in a row makes a thin first look, Evidence 5 instead of 15, and costs you Focus the next morning, game), decide who grows into the next hard job, then hear two offers: the Mayor's (run the Riverbend Shared Services Compact's permanent incident response programme: IR manager) and Tallowmere Forensics' (the outside firm that took the suspicion file: principal DFIR consultant). The choice takes two steps, is locked for that save, and is recorded in the series save; New Game+, after the edition ending, opens the other track on a fresh save.
+
+The Public Library: patron PCs that don't reset between sessions, patron Wi-Fi on the circulation system's network, and nobody who knows whom to call when Shelfwright, the patron-records system, breaks. Patron privacy runs through it: the Library keeps no borrowing history, and Noor, the town attorney, decides privilege, notification and disclosure (ALA's statement on state library-records laws is shown as ALA's, and no statute is named). On the manager track: a tabletop from the Library's risk register (CISA CTEP), a retainer activation drill (who calls, and the four things the firm needs on arrival), an after-action review with owners and dates (CTEP's improvement-plan columns), after-hours cover through the rota/budget primitive, and three records drills (an on-call note, a paste-site claim, an AAR that blames "user error"). On the DFIR track: a scoping letter, evidence intake with a custody log and hashes (NIST SP 800-86; FIPS 180-4), one evidence store per client, three evidence drills that each need two decisive sources (`needs` lists), and two reports in the report-writing mini-game (confirmed, likely, unknown; an overclaim is graded like a wrong verdict and corrected before filing). Both tracks: the Library Board's directive to drop the overnight restore (the Director decides), the Library Board (Bookmark Badge), a dojo (Incident Management or Forensics Reporting) and the boss, a patron-records extortion claim worked from your seat: coordinate the Director, counsel, the vendor, the firm and the Board, or establish from the evidence what was taken (6,212 holds rows, five fields) and write the unknowns. One Quiet Thread clue: svc-print signing in to the Library's server over remote desktop at 03:12 (T1021.001), seen in evidence (DFIR) or in the firm's status report (manager). Not resolved. Next: School District.

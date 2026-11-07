@@ -201,6 +201,58 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     res[name] = r;
     await q.context().close().catch(() => {});
   }
+  // Crossroads (edition 2): HUD band, the longest objective, modals above the pad, the rota and report modals and the
+  // scorecard, at phone portrait, phone landscape and desktop. Crossroads has no battles, so no battle checks here.
+  const CRF = 'file://' + path.resolve(__dirname, '../editions/crossroads/index.html');
+  for (const [name, opt] of Object.entries({
+    phone360: { viewport: { width: 360, height: 800 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    phoneLand: { viewport: { width: 800, height: 360 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    desktop: { viewport: { width: 1280, height: 800 } } })) {
+    const c = await b.newContext(opt);
+    if (SETTINGS_INIT) await c.addInitScript(v => { try { localStorage.setItem('uptime.settings', v); } catch (e) {} }, SETTINGS_INIT);
+    const p = await c.newPage(); const errs = [];
+    p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+    p.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) errs.push('request ' + r.url()); });
+    await p.goto(CRF); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui);
+    await p.evaluate(() => { __UPTIME.seed(5); __UPTIME.turbo(true); }); await sleep(450);
+    await p.evaluate(() => { [...document.querySelectorAll('#mopts .opt')].find(e => /New game/.test(e.textContent)).click(); });
+    for (let i = 0; i < 300; i++) { const q = await p.evaluate(() => __UPTIME.peek()); if (!q.ui && !q.busy && q.started) break; if (q.ui) await p.evaluate(() => { if (UI.mode === 'say') UI.handle('a'); else { const m = UI.modal || UI.choice; const g = m.items.findIndex(o => o.meta && o.meta.good); m.cursor = g < 0 ? 0 : g; UI.handle('a'); } }); await sleep(15); }
+    await p.evaluate(() => __UPTIME.turbo(false)); await sleep(250);
+    const touch = !!opt.hasTouch, portrait = opt.viewport.height > opt.viewport.width;
+    const hud = () => p.evaluate(() => { const hud = document.getElementById('hud'), sc = document.getElementById('screen'), ob = hud.querySelector('.obj'), st = hud.querySelector('.st');
+      const h = hud.getBoundingClientRect(), s = sc.getBoundingClientRect(), lh = parseFloat(getComputedStyle(hud).lineHeight) || 15;
+      return { overlap: h.bottom > s.top + 0.5 && h.top < s.bottom, truncated: ob.scrollWidth > ob.clientWidth + 1 || ob.scrollHeight > ob.clientHeight + 1 || st.scrollWidth > st.clientWidth + 1, lines: Math.round(ob.getBoundingClientRect().height / lh), sw: document.documentElement.scrollWidth, W: innerWidth }; });
+    const h0 = await hud();
+    check('Crossroads ' + name + ': HUD band clear of the map, nothing truncated, no horizontal scroll', !h0.overlap && !h0.truncated && h0.sw <= h0.W, h0);
+    const lo = await p.evaluate(() => { const re = /(?:\bat\(|\btext:\s*)(['"])((?:(?!\1)[^\\]|\\.)*)\1/g, all = []; for (const f of [objective, lbObjective]) { const src = f.toString(); let m; while ((m = re.exec(src))) all.push(m[2]); } all.sort((a, b) => b.length - a.length); return all[0]; });
+    await p.evaluate(t => { window.__ro = objective; objective = () => ({ text: t, map: 'cwar', x: 1, y: 1 }); }, lo); await sleep(150);
+    const h1 = await hud();
+    check('Crossroads ' + name + ': the longest objective (' + lo.length + ' chars) wraps in full, at most 3 lines', !h1.truncated && !h1.overlap && h1.lines <= 3, h1);
+    await p.evaluate(() => { objective = window.__ro; });
+    const modalFit = () => p.evaluate(() => { const box = document.querySelector('#modal .mbox').getBoundingClientRect(), pad = document.getElementById('pad'), mb = document.getElementById('mbody');
+      const padTop = pad.getBoundingClientRect().height ? pad.getBoundingClientRect().top : innerHeight;
+      const btnsOk = [...document.querySelectorAll('[data-btn]')].every(e => { const q = e.getBoundingClientRect(); if (!q.width) return true; const t = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return t && (t === e || e.contains(t)); });
+      const t = mb.querySelector('table'); const wrapped = t ? [...t.querySelectorAll('td+td, th+th')].filter(td => { const lh = parseFloat(getComputedStyle(td).lineHeight) || 16; const rg = document.createRange(); rg.selectNodeContents(td); return rg.getBoundingClientRect().height > lh * 1.5 || td.scrollWidth > td.clientWidth + 1; }).map(td => td.textContent) : [];
+      return { top: Math.round(box.top), bottom: Math.round(box.bottom), padTop: Math.round(padTop), H: innerHeight, btnsOk, overflow: mb.scrollWidth > mb.clientWidth + 1, wrapped }; });
+    const fits = (m) => m.top >= 0 && (touch && portrait ? m.bottom <= m.padTop + 0.5 : m.bottom <= m.H + 0.5) && (!touch || m.btnsOk) && !m.overflow;
+    await p.evaluate(() => { G.cr.rota = { assign: ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae'], stats: rotaStats(CR_ROTA, ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae']) }; G.cr.ex = { run: 1, actions: 3, closed: 3 }; G.cr.activate = 15; G.cr.aar = { total: 3, onTime: 3 }; G.trackId = 'manager'; track(); UI.openModal('Scorecard', scorecardHtml(), [{ label: 'Back' }]); }); await sleep(250);
+    const sc = await modalFit();
+    check('Crossroads ' + name + ': scorecard modal fits, table numbers and targets on one line', fits(sc) && !sc.wrapped.length, sc);
+    await p.evaluate(() => UI.closeModal(-1)); await sleep(100);
+    await p.evaluate(() => { run(() => doRota(CR_ROTA)); }); await sleep(300);
+    const ro = await modalFit();
+    check('Crossroads ' + name + ': rota modal (week table and seven leads) fits above the controls, no overflow', fits(ro), ro);
+    await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-rota.png' });
+    await p.evaluate(() => UI.closeModal(0)); await sleep(150);
+    for (let i = 0; i < 12; i++) { const open = await p.evaluate(() => !!UI.modal); if (!open) break; await p.evaluate(() => UI.closeModal(0)); await sleep(60); }
+    await p.evaluate(() => { run(() => doReport(LB_REPORT_PC)); }); await sleep(250);
+    await p.evaluate(() => UI.closeModal(0)); await sleep(250);
+    const rp = await modalFit();
+    check('Crossroads ' + name + ': report finding modal (claim and the four wording options) fits above the controls', fits(rp) && /Finding 1 of 6/.test(await p.textContent('#modal')), rp);
+    await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-report.png' });
+    check('Crossroads ' + name + ': no console errors or network requests', !errs.length, errs);
+    await c.close();
+  }
   // Series menu (repo root index.html): fits a phone, no network, and its link opens the built edition.
   {
     const c = await b.newContext({ viewport: { width: 360, height: 800 }, isMobile: true, hasTouch: true }); const p = await c.newPage(); const errs = [], reqs = [];
@@ -212,6 +264,10 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     await p.click('a.ed'); await p.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui, null, { timeout: 5000 });
     const opens = /editions\/town-hall\/index\.html$/.test(p.url());
     check('series menu: fits a phone, opens the edition, no errors or requests', scrollW <= 360 && opens && !errs.length && !reqs.length, { scrollW, opens, errs, reqs });
+    await p.goto('file://' + path.resolve(__dirname, '../index.html'));
+    await p.click('a.ed[href*="crossroads"]'); await p.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui, null, { timeout: 5000 });
+    const opens2 = /editions\/crossroads\/index\.html$/.test(p.url()) && await p.evaluate(() => EDITION.id === 'crossroads');
+    check('series menu: the Crossroads entry opens the Crossroads edition', opens2 && !errs.length && !reqs.length, { opens2, errs, reqs });
     await c.close();
   }
   await b.close();

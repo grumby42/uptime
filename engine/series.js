@@ -66,6 +66,9 @@ const QT_TECH = {
                 plain: 'Taking over routers and similar network gear, often old small-office models, to use as infrastructure such as relays.'},
   'T1555':     {name: 'Credentials from Password Stores', tactic: ['Credential Access'],
                 plain: 'Reading passwords from the places software keeps them (credential vaults, password managers, saved logins) instead of guessing them.'},
+  // Crossroads (verified on attack.mitre.org, 7 Nov 2026, ATT&CK content v20.1).
+  'T1021.001': {name: 'Remote Services: Remote Desktop Protocol', tactic: ['Lateral Movement'],
+                plain: 'Signing in to another computer over remote desktop with a valid account, then acting as that user. A real account’s sign-in looks like ordinary admin work.'},
   // ATT&CK for ICS (verified on attack.mitre.org, 1 Nov 2026, ATT&CK v20.0).
   'T0859':     {name: 'Valid Accounts', tactic: ['Persistence', 'Lateral Movement'],
                 plain: '(ATT&CK for ICS) Using a real account on a plant system, such as a remote-access box or an engineering workstation, to get in and come back. A legitimate account raises no alarm when it is used.'}

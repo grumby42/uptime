@@ -21,6 +21,10 @@
 //        node tests/tells.js --report   (full tables by district and by list type, every word; no failure)
 //        node tests/tells.js --hits=close [--d=basement] [--t=drill-verdicts]   (list the options carrying a word)
 //        UPTIME_ROOT=/path/to/tree node tests/tells.js     (scan another checkout)
+// Crossroads (editions/crossroads) is scanned as its own population (districts cr-prologue and cr-library), so the
+// Town Hall tables above are unchanged by it. The same 70% rule applies to it, any warning inside 35-65% fails it
+// (Crossroads starts clean), and it is held to the band on its own word groups (CROSSROADS_BAND: rota/rest/fatigue,
+// retainer/firm, custody/hash, confirmed/likely/unknown, counsel words, hurry words).
 const fs = require('fs');
 const path = require('path');
 let acorn = null;
@@ -86,12 +90,18 @@ const EXTRA = [
   ['G:contain', /\b(isolat(e|ed|es|ing)|contain(ed|s|ing)?|quarantin(e|ed|es|ing)|cut (it|them|the [^ ]+|[A-Z][^ ]*) off|off the network|take [^,;:]{1,30} offline)\b/i],
   ['G:credential', /\b(reset(s|ting)?|revok(e|ed|es|ing)|end (its|their|her|his|all its) sessions|sign(ed)? (it|them|her|him|[a-z.-]+) out|chang(e|ed|ing) (the|her|his|its) password|rotat(e|ed|es|ing))\b/i],
   ['G:investigate', /\b(check(ed|s|ing)?|verif(y|ied|ies|ying)|confirm(ed|s|ing)?|scop(e|ed|es|ing)|hunt(ed|s|ing)?|find|finds|search(ed|es|ing)?|trac(e|ed|es|ing)|review(ed|s|ing)?|audit(ed|s|ing)?|work out|go through|make sure|investigat(e|ed|es|ing))\b/i],
+  // Crossroads word groups (7 Nov 2026): reported game-wide, held to the 35-65% band inside Crossroads (CROSSROADS_BAND).
+  ['G:rota', /\b(rota|rest(ed|ing)?|fatigue[ds]?|tired|in a row|nights? running|on call)\b/i],
+  ['G:retainer', /\b(retainer|firm|firm’s|Tallowmere)\b/i],
+  ['G:custody', /\b(custody|hash(es|ed|ing)?|SHA-256|seal(ed|s)?)\b/i],
+  ['G:certainty', /\b(confirmed|likely|unknown|certain(ty)?|sure)\b/i],
 ];
 
 const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
   .concat(fs.readdirSync(root + '/engine').filter(f => f.endsWith('.js')).map(f => 'engine/' + f));
+const crFiles = fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : [];
 const DISTRICTS = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water', 'council'];
-const district = f => { const b = path.basename(f); if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
+const district = f => { const b = path.basename(f); if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
 function strOf(n) {
   if (!n) return null;
   if (n.type === 'Literal' && typeof n.value === 'string') return n.value;
@@ -108,7 +118,7 @@ function goodOf(o) {
   if (m && m.value.type === 'ObjectExpression') { const mg = prop(m.value, 'good'); if (mg) return mg.value.type === 'Literal' ? mg.value.value === true : undefined; }
   return false;
 }
-const lists = [];
+let lists = [];
 // List type, from where the list sits: the top-level constant or function around it and the property holding it.
 function listType(top, key, kind) {
   if (kind !== 'list') return 'other';
@@ -121,6 +131,7 @@ function listType(top, key, kind) {
   return 'other';
 }
 const TYPES = ['drill-verdicts', 'drill-reasons', 'alert-verdicts', 'board-rounds', 'boss-stages', 'story-choices', 'other'];
+function scanFiles(files) {
 for (const f of files) {
   const src = fs.readFileSync(root + '/' + f, 'utf8');
   const ast = acorn.parse(src, {ecmaVersion: 2022, locations: true, sourceType: 'script', allowReturnOutsideFunction: true});
@@ -161,9 +172,16 @@ for (const f of files) {
     top = saveTop; key = saveKey;
   })(ast);
 }
+}
+scanFiles(files);
+const thLists = lists; lists = [];
+scanFiles(crFiles);
+const crLists = lists; lists = thLists;
 const SKIP = /^(End shift|Not yet|Keep exploring|Title screen|Fix it|Done|Yes|No)\b/;
 const graded = lists.filter(L => !L.items.filter(x => x.good).every(x => SKIP.test(x.label)));
 const opts = graded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
+const crGraded = crLists.filter(L => !L.items.filter(x => x.good).every(x => SKIP.test(x.label)));
+const crOpts = crGraded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
 
 function stat(set, re) {
   const G = set.filter(x => x.good), B = set.filter(x => !x.good);
@@ -178,7 +196,7 @@ const argOf = k => (args.find(a => a.startsWith('--' + k + '=')) || '').slice(k.
 const hitsArg = argOf('hits'), dArg = argOf('d'), tArg = argOf('t');
 if (hitsArg) {
   const w = WORDS.concat(EXTRA).find(x => x[0] === hitsArg); if (!w) { console.error('unknown word ' + hitsArg); process.exit(2); }
-  for (const x of opts) if ((!dArg || x.d === dArg) && (!tArg || x.t === tArg) && w[1].test(x.label)) console.log((x.good ? 'GOOD ' : 'bad  ') + x.file.split('/').pop() + ':' + x.line + ' [' + x.t + ']', x.label);
+  for (const x of opts.concat(crOpts)) if ((!dArg || x.d === dArg) && (!tArg || x.t === tArg) && w[1].test(x.label)) console.log((x.good ? 'GOOD ' : 'bad  ') + x.file.split('/').pop() + ':' + x.line + ' [' + x.t + ']', x.label);
   process.exit(0);
 }
 const fmt = s => (s.n ? (s.g + '/' + s.G + ' ' + s.b + '/' + s.B + ' ' + (s.lean * 100).toFixed(0) + '%') : '-');
@@ -210,7 +228,6 @@ if (report) {
   console.log('Lists by type: ' + TYPES.map(t => t + ' ' + graded.filter(L => L.type === t).length).join(', '));
   if (fails.length) console.log('Tells:\n  ' + fails.join('\n  '));
   if (warns.length) console.log('Warnings:\n  ' + warns.join('\n  '));
-  process.exit(0);
 }
 // The OT groups above are report-only game-wide, but the Water Plant (where they were found) must stay inside the
 // 35–65% band on each of them at n >= MIN_N.
@@ -220,6 +237,26 @@ const waterBand = WATER_BAND.map(n => { const st = stat(inScope('water'), EXTRA.
 // lawyer: report-only game-wide) and the hurry words (G:urgent).
 const COUNCIL_BAND = ['brief', 'council', 'stakeholder', 'transparent', 'accountable', 'risk', 'owner', 'budget', 'counsel', 'G:urgent'];
 const councilBand = COUNCIL_BAND.map(n => { const st = stat(inScope('council'), EXTRA.find(w => w[0] === n)[1]); return {n, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
+// ---- Crossroads: its own population, scopes and band ----
+const CR_DISTRICTS = ['cr-prologue', 'cr-library'];
+const crScope = s => s === 'cr-all' ? crOpts : TYPES.includes(s) ? crOpts.filter(x => x.t === s) : crOpts.filter(x => x.d === s);
+const crFails = [], crWarns = [];
+for (const [name, re] of WORDS) for (const s of CR_DISTRICTS.concat(['cr-all'], TYPES)) {
+  const st = stat(crScope(s), re); if (st.n < MIN_N) continue;
+  const where = (TYPES.includes(s) ? 'crossroads list type ' : '') + s;
+  if (st.lean >= THRESH || st.lean <= 1 - THRESH) crFails.push(name + ' in ' + where + ': ' + fmt(st));
+  else if (st.lean > WARN || st.lean < 1 - WARN) crWarns.push(name + ' in ' + where + ': ' + fmt(st));
+}
+const CROSSROADS_BAND = ['G:rota', 'G:retainer', 'G:custody', 'G:certainty', 'counsel', 'G:urgent'];
+const crBand = [];
+for (const n of CROSSROADS_BAND) for (const s of CR_DISTRICTS.concat(['cr-all'])) { const st = stat(crScope(s), EXTRA.find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
+if (report && crOpts.length) {
+  console.log('\nCrossroads (' + crGraded.length + ' graded lists, ' + crOpts.length + ' options)\n' + 'word'.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => s.padEnd(19)).join(''));
+  for (const [name, re] of WORDS.concat(EXTRA)) console.log(name.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => fmt(stat(crScope(s), re)).padEnd(19)).join(''));
+  if (crFails.length) console.log('Crossroads tells:\n  ' + crFails.join('\n  '));
+  if (crWarns.length) console.log('Crossroads warnings:\n  ' + crWarns.join('\n  '));
+}
+if (report) process.exit(0);  // --report prints both populations' tables and never fails
 const checks = [
   ['source scan found graded lists in every district', DISTRICTS.every(d => graded.some(L => district(L.file) === d))],
   ['source scan found graded lists of every list type', TYPES.every(t => graded.some(L => L.type === t))],
@@ -227,7 +264,14 @@ const checks = [
   ['Council Chambers stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on the leadership words (' + councilBand.map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', councilBand.every(x => x.ok)],
   ['no tracked word or group leans ' + THRESH * 100 + '% or more to right or wrong (n>=' + MIN_N + ') in any district, any list type, or overall', !fails.length],
 ];
+if (crFiles.length) checks.push(
+  ['Crossroads: source scan found graded lists in the prologue and the Library (' + crGraded.length + ' lists, ' + crOpts.length + ' options)', CR_DISTRICTS.every(d => crGraded.some(L => district(L.file) === d))],
+  ['Crossroads: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ') in its districts, its list types or overall', !crFails.length],
+  ['Crossroads: no tracked word or group outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !crWarns.length],
+  ['Crossroads stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on its own groups (' + crBand.filter(x => x.st.n >= MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', crBand.every(x => x.ok)]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);
 if (fails.length) console.log('  ' + fails.join('\n  '));
+if (crFails.length || crWarns.length) console.log('  Crossroads: ' + crFails.concat(crWarns).join('\n  Crossroads: '));
+const crBad = crBand.filter(x => !x.ok); if (crBad.length) console.log('  Crossroads band: ' + crBad.map(x => x.n + ' ' + fmt(x.st)).join(', '));
 process.exit(checks.every(c => c[1]) ? 0 : 1);

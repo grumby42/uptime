@@ -17,9 +17,10 @@
     sources: [{id, name, qs: [{q, kind: 'focus'|'broad'|'trap', key, res: [lines], wall: [row templates]}]}],
     ai: {everything: {text, wrong, reveal}, specific: {q, text}},
     verdicts: [{label, good, why, needs?, needsWhy?}], reasons: [{label, good, why}],
-   A right verdict may name the source its claim rests on (needs: source id). It then counts as
-   supported only if a key query on that source was run: a close that cites a log the player never
-   read is a guess, however many other key queries they ran.
+   A right verdict may name the source its claim rests on (needs: source id, or a list of ids when the
+   claim rests on several). It then counts as supported only if a key query on each of those sources
+   was run: a close that cites a log the player never read is a guess, however many other key queries
+   they ran.
     alts: [{label, good, why}], altPick, path(html), response: [lines], techs: [ids], acts: [keys]}
    ============================================================ */
 'use strict';
@@ -114,7 +115,9 @@ async function doDrill(D) {
   const keyTotal = D.sources.reduce((n, s) => n + s.qs.filter(q => q.key).length, 0);
   const keyScore = Math.round(20 * Math.min(st.keys, Math.min(keyTotal, D.budget || 2)) / Math.min(keyTotal, D.budget || 2));
   const goodV = D.verdicts.find(x => x.good) || {};
-  const needsMissed = !!(goodV.needs && st.keys > 0 && !st.keySrc.includes(goodV.needs));
+  // needs: one source id, or a list of them (every one must have had a key query, e.g. two decisive sources).
+  const needList = goodV.needs ? [].concat(goodV.needs) : [];
+  const needsMissed = !!(needList.length && st.keys > 0 && needList.some(n => !st.keySrc.includes(n)));
   const supported = st.keys > 0 && !needsMissed;
   let score = (verdictOk ? (supported ? 40 : 20) : 0) + (reasonOk && supported ? 20 : 0) + keyScore + altOk * 10 - st.broad * 5 - st.trap * 5;
   score = clamp(score, 0, 100);
