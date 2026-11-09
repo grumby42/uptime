@@ -9,7 +9,7 @@ Planned home: GitHub Pages at `grumby42/uptime` (open `index.html` for the serie
 | # | Edition | District | Status |
 |---|---|---|---|
 | 1 | Town Hall | Front Desk, the Mail Room, Clerks' Row, Market Square, Records Hall, the IT Basement, the Server Room, the Water Plant, then Council Chambers (the finale) | playable (about 30 minutes each) |
-| 2 | Crossroads | the prologue (the Town Hall war room), the Public Library and the School District, on either track: IR manager or principal DFIR consultant | slices 1–2 playable; next: Community Clinic |
+| 2 | Crossroads | the prologue (the Town Hall war room), the Public Library, the School District and the Community Clinic, on either track: IR manager or principal DFIR consultant | slices 1–3 playable; next: Fire & EMS Dispatch |
 | | | next edition | coming later |
 
 ## Layout
@@ -58,7 +58,7 @@ editions/town-hall/
 editions/crossroads/          edition 2 (the branch): IR manager or principal DFIR consultant, chosen once per save
   edition.json              build entry (slice 2)
   data.js                   the prologue's maps (war room, town square), people, ATT&CK techniques, Field Manual text, game notes; no wild alerts
-  quiet.js                  the Quiet Thread clues found in the Library (lb-rdp, T1021.001) and the School District (sd-probe, T1018), and the carried suspicion file's lines
+  quiet.js                  the Quiet Thread clues found in the Library (lb-rdp, T1021.001), the School District (sd-probe, T1018) and the Community Clinic (cn-folders, T1083), and the carried suspicion file's lines
   rota.js                   the rota / budget primitive (IR manager): nights, rest rules, fatigue, overtime against a budget, a forecast
   report.js                 the report-writing primitive (DFIR): confirmed / likely / unknown, overclaims corrected and counted
   story.js                  EDITION settings, state, the carry-over from Town Hall (read only), the track lock and New Game+, hooks, the prologue
@@ -66,6 +66,8 @@ editions/crossroads/          edition 2 (the branch): IR manager or principal DF
   library-story.js          the Public Library's objectives and scripts for both tracks, the nights, the boss from each seat, the summary
   school-data.js            the School District: map, people, both tracks' tables, six drills, two reports, directive, School Board, dojos, boss stages
   school-story.js           the School District's objectives and scripts for both tracks, the week-2 rota, the nights, the boss from each seat, the summary
+  clinic-data.js            the Community Clinic: map, people, both tracks' tables, six drills, two reports, directive, Clinic Board, dojos, boss stages
+  clinic-story.js           the Community Clinic's objectives and scripts for both tracks, the weekend plan, the nights, the boss from each seat, the AAR and tabletop, the summary
 tools/build.py              builds every edition and the menu (the menu lists editions in play order)
 tests/                      Playwright checks (district suites, quiet, layout, highlight, doors, sprites, bot)
 ```
@@ -85,8 +87,8 @@ Need Node and Playwright (Chromium).
 
     node tests/bot.js desktop      # plays New game -> Front Desk -> Mail Room -> Clerks' Row -> Market Square -> Records Hall -> IT Basement -> Server Room -> Water Plant -> Council Chambers -> the edition ending with the keyboard
     node tests/bot.js phone        # same with taps on the on-screen pad (360x800); run it last and alone (about 15 minutes)
-    UPTIME_EDITION=crossroads TRACK=manager node tests/bot.js desktop   # Crossroads: the prologue, the Library and the School District on one track
-    UPTIME_EDITION=crossroads TRACK=dfir node tests/bot.js phone        #   (TRACK=manager|dfir; checks the lock, save/reloads mid-Library and mid-district)
+    UPTIME_EDITION=crossroads TRACK=manager node tests/bot.js desktop   # Crossroads: the prologue, the Library, the School District and the Community Clinic on one track
+    UPTIME_EDITION=crossroads TRACK=dfir node tests/bot.js phone        #   (TRACK=manager|dfir; checks the lock, save/reloads mid-Library, mid-district and mid-Clinic)
     node tests/crossroads.js       # Crossroads: carry-over with and without a Town Hall save (the Town Hall save left byte-for-byte unchanged),
                                    #   the rota's fatigue (a thin first look and Focus), the two-step track choice and its lock, a fresh save on the
                                    #   locked browser, New Game+ (test hook), save/reload, both tracks' fieldwork, a two-source `needs`
@@ -163,7 +165,7 @@ The bots also check: zero console errors, zero network requests, mid-game save/r
 ## Saves
 
 - Edition save: `uptime.slice1.save` (Town Hall) and `uptime.crossroads.save` (Crossroads), plus an export/import code (`UPT1.…`). An edition refuses another edition's code. Crossroads reads the Town Hall save for its carry-over and never writes it.
-- Series save: `uptime.series`, shared by every edition: `{v, quietThread: {stage, cluesFound[], evicted}, editions: {<id>: {done}}}`. Crossroads adds `editions.crossroads: {track: 'manager'|'dfir', tracksPlayed, library, school, ngPlus}`. Each edition save also carries a copy of `quietThread`, so an export code moves it to another device; Continue and Import merge it back.
+- Series save: `uptime.series`, shared by every edition: `{v, quietThread: {stage, cluesFound[], evicted}, editions: {<id>: {done}}}`. Crossroads adds `editions.crossroads: {track: 'manager'|'dfir', tracksPlayed, library, school, clinic, ngPlus}`. Each edition save also carries a copy of `quietThread`, so an export code moves it to another device; Continue and Import merge it back.
 
 ## The Quiet Thread (spoilers)
 
@@ -238,3 +240,7 @@ The Public Library: patron PCs that don't reset between sessions, patron Wi-Fi o
 ## Crossroads (edition 2): the School District
 
 The east door of the town square opens with the Library Board's Bookmark Badge. Day 8 is the Monday after the Library's week. Lumenlark, the reading app in grades 3 to 8 (invented, as is every vendor here), has sent a breach notice that names no district and no data. The district has no list of which vendors hold which student data, half its science teachers share a department login on Inkstone, the student information system, and nobody knows which contract clause covers a breach. Student privacy runs through it: FERPA is described only in the US Department of Education's own words, state law is left to "check your state's law", and the district's counsel and privacy officer decide what families are told. On the manager track: the district annex's retainer test (the records may have been reached wherever they are held), the notice worked under the contract's incident clause (questions dated and logged), a vendor and data inventory with business owners (PTAC's best practices), a tabletop with the Superintendent, the district's nights absorbed into a week-2 rota whose in-a-row rule counts last week's nights, the facts for counsel (no law, no promises), and three records drills (a first note, a 02:04 sign-in from abroad, the vendor's "full report" offer). On the DFIR track: a scoping letter amended for a third-party incident (what the firm can't see at the vendor), evidence intake, requests for vendor-held evidence dated Day 8, one store per district, three two-source drills (what the vendor held; the sign-in; two dates for the token's last use) and two reports where the decisive evidence sits at the vendor: "unknown: held by the vendor; requested on Day 8 (Monday)". Both tracks: the Superintendent's directive to sign a new app without a data review (a minimum review; she decides), the School Board (Slate Badge), a dojo (Third-Party Risk or Cloud & SaaS Log Analysis) and the boss: the vendor confirms our roster data was in the copied files and an extortion post names the district. One Quiet Thread clue: pings from FD-STAFF-11's address to eleven of the district's addresses at 03:21, all dropped (T1018). Not resolved. Next: Community Clinic.
+
+## Crossroads (edition 2): the Community Clinic
+
+The west door of the town square opens with the School Board's Slate Badge. Day 12 is the Friday after the district's week. At 07:10 the front desk finds a ransom note on one PC and files on the shared drive that won't open. The clinic's exam rooms run all day on one shared login, its downtime binder has never been opened, and the records system's vendor keeps a remote-support tool always on (Wrenfold and Tetherline are invented, as is every vendor here). Patient safety and care continuity come first: the practice manager decides operations (downtime, restores, staffing), the privacy officer decides patient-privacy questions with counsel, the Clinic Board decides any payment with counsel and the insurer, and clinicians decide care. HIPAA appears only in HHS's own words (its ransomware fact sheet), with whether it applies to the clinic left to counsel and the privacy officer; HHS's 405(d) HICP is named from HHS's page. Patient data in the game is names, contact details, appointment times and a visit reason only. Containment never waits for evidence: the PC is isolated and left running, memory is captured before shutdown, and nothing is restored before it is preserved. On the manager track: the Clinic annex's retainer test (ransomware found), the downtime decision with the practice manager (care goes on, on paper), three records drills (which PCs are really encrypted; whether the vendor's support tool connected; whether last night's backup is safe to restore), a weekend plan with day shifts, handovers and the week-2 rota's nights, a blameless AAR and a tabletop on "the records system is down for three days". On the DFIR track: a scoping letter, containment that preserves (memory, then the disk), evidence intake (an unlogged handover recorded as a gap even though the hashes match; a vendor request dated as it goes), three two-source drills and two reports, with every count including inactive records. Both tracks: the practice manager's directive to keep the shared exam login (fast re-authentication; she owns the risk), the Clinic Board (Pulse Badge), a dojo (Business Continuity or Ransomware Forensics) and the boss: a post claiming "12,000 patients' full medical records" while the front desk is on paper; the evidence shows 5,210 patients' lists, 1,180 of them inactive records, likely left. One Quiet Thread clue: svc-print listing the folders of the clinic's Facilities share at 03:14 (T1083). Not resolved. Next: Fire & EMS Dispatch.

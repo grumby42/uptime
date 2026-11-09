@@ -21,12 +21,13 @@
 //        node tests/tells.js --report   (full tables by district and by list type, every word; no failure)
 //        node tests/tells.js --hits=close [--d=basement] [--t=drill-verdicts]   (list the options carrying a word)
 //        UPTIME_ROOT=/path/to/tree node tests/tells.js     (scan another checkout)
-// Crossroads (editions/crossroads) is scanned as its own population (districts cr-prologue, cr-library and cr-school), so the
+// Crossroads (editions/crossroads) is scanned as its own population (districts cr-prologue, cr-library, cr-school and cr-clinic), so the
 // Town Hall tables above are unchanged by it. The same 70% rule applies to it, any warning inside 35-65% fails it
 // (Crossroads starts clean), and it is held to the band on its own word groups (CROSSROADS_BAND: rota/rest/fatigue,
 // retainer/firm, custody/hash, confirmed/likely/unknown, counsel words, hurry words; and, since the slice-1 review, the
 // "… decides" words, the absolutes and the "so/because" clause, from n >= 3; since slice 2 (the School District), the
-// vendor/contract, notify/notice and student/parent words too).
+// vendor/contract, notify/notice and student/parent words too; since slice 3 (the Community Clinic), the patient/care,
+// privacy-officer, downtime/paper and HHS/OCR words, and the slice-2 groups are held in the Clinic as well).
 const fs = require('fs');
 const path = require('path');
 let acorn = null;
@@ -110,13 +111,18 @@ const CR_EXTRA = [
   ['G:vendor', /\b(vendors?|vendor’s|contracts?|contract’s|Lumenlark|Lumenlark’s|clause|suppliers?|terms)\b/i],
   ['G:notify', /\b(notif(y|ies|ied|ying|ication|ications)|notices?|tell(s|ing)? families|told)\b/i],
   ['G:student', /\b(students?|students’|student’s|parents?|famil(y|ies)|children|children’s|pupils?)\b/i],
+  // Slice 3 (the Community Clinic, 9 Nov 2026): patient/care, the privacy officer, downtime/paper, HHS/OCR words.
+  ['G:patient', /\b(patients?|patients’|patient’s|care|clinicians?)\b/i],
+  ['G:privacy', /\b(privacy officer|privacy officer’s|Weller|Weller’s)\b/i],
+  ['G:downtime', /\b(downtime|paper|forms?|cart|cart’s)\b/i],
+  ['G:hhs', /\b(HHS|HHS’s|OCR|HIPAA)\b/],
 ];
 
 const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
   .concat(fs.readdirSync(root + '/engine').filter(f => f.endsWith('.js')).map(f => 'engine/' + f));
 const crFiles = fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : [];
 const DISTRICTS = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water', 'council'];
-const district = f => { const b = path.basename(f); if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
+const district = f => { const b = path.basename(f); if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : /^clinic-/.test(b) ? 'cr-clinic' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
 function strOf(n) {
   if (!n) return null;
   if (n.type === 'Literal' && typeof n.value === 'string') return n.value;
@@ -253,7 +259,7 @@ const waterBand = WATER_BAND.map(n => { const st = stat(inScope('water'), EXTRA.
 const COUNCIL_BAND = ['brief', 'council', 'stakeholder', 'transparent', 'accountable', 'risk', 'owner', 'budget', 'counsel', 'G:urgent'];
 const councilBand = COUNCIL_BAND.map(n => { const st = stat(inScope('council'), EXTRA.find(w => w[0] === n)[1]); return {n, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
 // ---- Crossroads: its own population, scopes and band ----
-const CR_DISTRICTS = ['cr-prologue', 'cr-library', 'cr-school'];
+const CR_DISTRICTS = ['cr-prologue', 'cr-library', 'cr-school', 'cr-clinic'];
 const crScope = s => s === 'cr-all' ? crOpts : TYPES.includes(s) ? crOpts.filter(x => x.t === s) : crOpts.filter(x => x.d === s);
 const crFails = [], crWarns = [];
 for (const [name, re] of WORDS) for (const s of CR_DISTRICTS.concat(['cr-all'], TYPES)) {
@@ -262,14 +268,17 @@ for (const [name, re] of WORDS) for (const s of CR_DISTRICTS.concat(['cr-all'], 
   if (st.lean >= THRESH || st.lean <= 1 - THRESH) crFails.push(name + ' in ' + where + ': ' + fmt(st));
   else if (st.lean > WARN || st.lean < 1 - WARN) crWarns.push(name + ' in ' + where + ': ' + fmt(st));
 }
-const CROSSROADS_BAND = ['G:rota', 'G:retainer', 'G:custody', 'G:certainty', 'counsel', 'G:urgent', 'G:decide', 'G:absolute', 'G:because', 'G:vendor', 'G:notify', 'G:student'];
+const CROSSROADS_BAND = ['G:rota', 'G:retainer', 'G:custody', 'G:certainty', 'counsel', 'G:urgent', 'G:decide', 'G:absolute', 'G:because', 'G:vendor', 'G:notify', 'G:student', 'G:patient', 'G:privacy', 'G:downtime', 'G:hhs'];
 // Crossroads' band groups are checked from n >= 3 (review S15: G:rota had fewer than 5 hits, so its band was vacuous).
 const CR_BAND_MIN_N = 3;
 const crBand = [];
 // The slice-2 groups (vendor, notify, student) were introduced for the School District: checked there and across Crossroads
 // (cr-all), not inside the prologue or the Library, whose lists were written and reviewed before them.
-const CR_SD_ONLY = ['G:vendor', 'G:notify', 'G:student'];
-for (const n of CROSSROADS_BAND) for (const s of CR_DISTRICTS.concat(['cr-all']).filter(s => !CR_SD_ONLY.includes(n) || s === 'cr-school' || s === 'cr-all')) { const st = stat(crScope(s), EXTRA.concat(CR_EXTRA).find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
+// The slice-3 groups (patient, privacy officer, downtime, HHS) were introduced for the Clinic: checked there and across
+// Crossroads. The slice-2 groups are held in the Clinic too.
+const CR_SD_ONLY = ['G:vendor', 'G:notify', 'G:student'], CR_CN_ONLY = ['G:patient', 'G:privacy', 'G:downtime', 'G:hhs'];
+const crBandScopes = n => CR_DISTRICTS.concat(['cr-all']).filter(s => CR_CN_ONLY.includes(n) ? (s === 'cr-clinic' || s === 'cr-all') : CR_SD_ONLY.includes(n) ? (s === 'cr-school' || s === 'cr-clinic' || s === 'cr-all') : true);
+for (const n of CROSSROADS_BAND) for (const s of crBandScopes(n)) { const st = stat(crScope(s), EXTRA.concat(CR_EXTRA).find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
 if (report && crOpts.length) {
   console.log('\nCrossroads (' + crGraded.length + ' graded lists, ' + crOpts.length + ' options)\n' + 'word'.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => s.padEnd(19)).join(''));
   for (const [name, re] of WORDS.concat(EXTRA, CR_EXTRA)) console.log(name.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => fmt(stat(crScope(s), re)).padEnd(19)).join(''));
@@ -286,7 +295,8 @@ if (report && crOpts.length) {
 // It also counts the "lone mark" strategy (pick, or rule out, the only option in a list that carries the mark) against
 // chance, both ways.
 // S7: options naming a character are held to the same rule in Crossroads (any named character, by district), and the
-// School District's four deciders and doers (Kole, Priya, Dr Vale, Marsh) one by one and together.
+// School District's four deciders and doers (Kole, Priya, Dr Vale, Marsh) one by one and together; since slice 3, the
+// Clinic's deciders and doers (Marisol, Weller, Renata Osei, Kowal; Kit) one by one and together.
 const PUNCT = [
   ['P:semicolon', /;/],
   ['P:colon', /:/],
@@ -294,9 +304,11 @@ const PUNCT = [
   ['P:parentheses', /[()]/],
 ];
 const CR_NAMES = [
-  ['N:named', /\b(Adaeze|Kole|Priya|Lindgren|Corinne|Vale|Owen|Marsh|Hal Brooks|Brooks|Ilse|Brandt|Nell|Sato|Wim|Haddad|Lorna|Pike|Lucia|Ferrand|Theo|Marchetti|Noor|Castellanos|Mina|Strand|Cyrus|Hallowell|Agnes|Pell|Dot Ferreira|Ferreira|Juno|Barros|Kemal|Osterhout|Merrin|Rae|Okafor|Paz|Delgado|Magda|Petrov|Ruth|Avila|Bea|Lindqvist|Odile|Brennan|Beatriz|Solano)\b/],
+  ['N:named', /\b(Adaeze|Kole|Priya|Lindgren|Corinne|Vale|Owen|Marsh|Hal Brooks|Brooks|Ilse|Brandt|Nell|Sato|Wim|Haddad|Lorna|Pike|Lucia|Ferrand|Theo|Marchetti|Noor|Castellanos|Mina|Strand|Cyrus|Hallowell|Agnes|Pell|Dot Ferreira|Ferreira|Juno|Barros|Kemal|Osterhout|Merrin|Rae|Okafor|Paz|Delgado|Magda|Petrov|Ruth|Avila|Bea|Lindqvist|Odile|Brennan|Beatriz|Solano|Marisol|Quintero|Tomasz|Weller|Renata|Osei|Kit|Ambrose|Joy|Okonjo|Ines|Vidal|Bettina|Ruiz|Harriet|Kowal)\b/],
   ['N:Kole', /\bKole\b/], ['N:Priya', /\bPriya\b/], ['N:Vale', /\bVale\b/], ['N:Marsh', /\bMarsh\b/],
   ['N:sd-deciders', /\b(Kole|Priya|Vale)\b/],
+  ['N:Marisol', /\bMarisol\b/], ['N:Weller', /\bWeller\b/], ['N:Osei', /\b(Renata|Osei)\b/], ['N:Kit', /\bKit\b/],
+  ['N:cn-deciders', /\b(Marisol|Weller|Renata|Osei|Kowal)\b/],
 ];
 const PUNCT_BAND_N = 6;
 const markText = x => x.key === 'cards' ? x.label.replace(' — ', ' ') : x.label;
@@ -329,7 +341,8 @@ for (const [name, re] of PUNCT) for (const s of CR_DISTRICTS.concat(['cr-all']))
   punctRows.push({n: name + '@' + s, st, ln, ok: pOk(st) && ln.ok});
 }
 const nameRows = [];
-for (const [name, re] of CR_NAMES) for (const s of (name === 'N:named' ? CR_DISTRICTS.concat(['cr-all']) : ['cr-school'])) {
+const CN_NAMES = ['N:Marisol', 'N:Weller', 'N:Osei', 'N:Kit', 'N:cn-deciders'];
+for (const [name, re] of CR_NAMES) for (const s of (name === 'N:named' ? CR_DISTRICTS.concat(['cr-all']) : CN_NAMES.includes(name) ? ['cr-clinic'] : ['cr-school'])) {
   const st = pstat(crScope(s), re);
   nameRows.push({n: name + '@' + s, st, ok: pOk(st)});
 }
@@ -357,12 +370,12 @@ const checks = [
   ['no tracked word or group leans ' + THRESH * 100 + '% or more to right or wrong (n>=' + MIN_N + ') in any district, any list type, or overall', !fails.length],
 ];
 if (crFiles.length) checks.push(
-  ['Crossroads: source scan found graded lists in the prologue, the Library and the School District (' + crGraded.length + ' lists, ' + crOpts.length + ' options)', CR_DISTRICTS.every(d => crGraded.some(L => district(L.file) === d))],
+  ['Crossroads: source scan found graded lists in the prologue, the Library, the School District and the Clinic (' + crGraded.length + ' lists, ' + crOpts.length + ' options)', CR_DISTRICTS.every(d => crGraded.some(L => district(L.file) === d))],
   ['Crossroads: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ') in its districts, its list types or overall', !crFails.length],
   ['Crossroads: no tracked word or group outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !crWarns.length],
   ['Crossroads stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on its own groups, n>=' + CR_BAND_MIN_N + ' (' + crBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', crBand.every(x => x.ok)],
   ['Crossroads: no punctuation tell (; : dash parentheses) — within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it, and the lone-mark pick no better than chance (' + punctRows.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln)).join(', ') + ')', punctRows.every(x => x.ok)],
-  ['Crossroads: no name tell — options naming a character, and Kole, Priya, Dr Vale and Marsh in the School District, within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it (' + nameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', nameRows.every(x => x.ok)]);
+  ['Crossroads: no name tell — options naming a character, Kole, Priya, Dr Vale and Marsh in the School District, and Marisol, Weller, Renata Osei, Kowal and Kit in the Clinic, within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it (' + nameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', nameRows.every(x => x.ok)]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);
 if (fails.length) console.log('  ' + fails.join('\n  '));

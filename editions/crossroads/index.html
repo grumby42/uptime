@@ -206,7 +206,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261109-1436Z', BUILD_TS = '2026-11-09 14:36 UTC';
+const BUILD_ID = 'ARCD-20261109-1631Z', BUILD_TS = '2026-11-09 16:31 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -1295,6 +1295,9 @@ const QT_TECH = {
   // Crossroads, School District (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
   'T1018':     {name: 'Remote System Discovery', tactic: ['Discovery'],
                 plain: 'Finding out which other computers are on a network and which of them answer, by name or address. Even refused attempts leave a line in a firewall’s log.'},
+  // Crossroads, Community Clinic (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
+  'T1083':     {name: 'File and Directory Discovery', tactic: ['Discovery'],
+                plain: 'Listing the files and folders on a computer or a network share to see what is there worth taking. A listing opens no file, so it rarely raises an alarm.'},
   // ATT&CK for ICS (verified on attack.mitre.org, 1 Nov 2026, ATT&CK v20.0).
   'T0859':     {name: 'Valid Accounts', tactic: ['Persistence', 'Lateral Movement'],
                 plain: '(ATT&CK for ICS) Using a real account on a plant system, such as a remote-access box or an engineering workstation, to get in and come back. A legitimate account raises no alarm when it is used.'}
@@ -1372,7 +1375,8 @@ Object.assign(TILES, {
 
 /* ---------- Maps: the Town Hall war room and the town square ---------- */
 // The war room (prologue): the team board (north-west), the command table, your desk, the door south to the square.
-// The square: Town Hall's door in the north edge, the Library's door in the south edge, the School District's in the east edge.
+// The square: Town Hall's door in the north edge, the Library's door in the south edge, the School District's in the east
+// edge, the Community Clinic's in the west edge.
 const MAPS = {
   cwar: {
     name: 'Town Hall · war room',
@@ -1399,7 +1403,7 @@ const MAPS = {
       "h..S...............h",
       "h..................h",
       "h..hhhh......hhhh..h",
-      "h..................D",
+      "D..................D",
       "h..................h",
       "h..hhhh......hhhh..h",
       "h..................h",
@@ -1410,7 +1414,9 @@ const MAPS = {
       '9,10': {to: 'library', x: 15, y: 1, dir: 'down',
         get locked() { return (typeof G !== 'undefined' && G && G.trackId) ? undefined : 'The Public Library. It opens to you once you’ve answered the two offers (game).'; }},
       '19,5': {to: 'school', x: 1, y: 7, dir: 'right',
-        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.lbBookmark) ? undefined : 'The School District office. Its door opens to you after the Library Board (the Bookmark Badge, game).'; }}},
+        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.lbBookmark) ? undefined : 'The School District office. Its door opens to you after the Library Board (the Bookmark Badge, game).'; }},
+      '0,5': {to: 'clinic', x: 28, y: 7, dir: 'left',
+        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.sdSlate) ? undefined : 'Riverbend Community Clinic. Its door opens to you after the School Board (the Slate Badge, game).'; }}},
     outdoor: true
   }
 };
@@ -1490,6 +1496,8 @@ const GAME_NOTES = [
    The School District: pings from FD-STAFF-11's address to eleven district
    addresses at 03:21, all dropped (ATT&CK T1018), seen in FW-SD's log (DFIR, S-07)
    or in the firm's status report (manager); counsel first, then Rae.
+   The Community Clinic: svc-print listing the folders of CL-FS-01's Facilities share at 03:14 (ATT&CK T1083), seen in
+   the share audit (DFIR, C-04) or in the firm's status report (manager); counsel first, then Rae.
    The clue situations are invented (game); the technique IDs are real (QT_TECH).
    ============================================================ */
 'use strict';
@@ -1499,7 +1507,10 @@ const QT_CLUES = {
              seen: 'svc-print signed in to CIRC-01, the Library’s Shelfwright server, over remote desktop (logon type 10) from FD-STAFF-11’s address at 03:12 on Day 2, and signed out at 03:16. CIRC-01 audits sign-ins, not process starts, so what it did is unknown.'},
   // The School District (slice 2): T1018 Remote System Discovery (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
   'sd-probe': {tech: 'T1018', where: 'FW-SD’s log, Night 8 (the School District)',
-             seen: 'At 03:21–03:22 on Night 8 the district firewall dropped pings from FD-STAFF-11’s address, arriving over the Compact’s link, to eleven district addresses in turn, SIS-01’s among them: which hosts answer, not which services. The link lets only logs out of the district. What sent them is unknown.'}
+             seen: 'At 03:21–03:22 on Night 8 the district firewall dropped pings from FD-STAFF-11’s address, arriving over the Compact’s link, to eleven district addresses in turn, SIS-01’s among them: which hosts answer, not which services. The link lets only logs out of the district. What sent them is unknown.'},
+  // The Community Clinic (slice 3): T1083 File and Directory Discovery (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
+  'cn-folders': {tech: 'T1083', where: 'CL-FS-01’s share audit, Night 11 (the Community Clinic)',
+             seen: 'At 03:14 on Night 11 svc-print, from FD-STAFF-11’s address, listed the folders of the clinic’s Facilities share (building plans, the generator’s service records) for under a minute and opened no file. The ransomware’s writes, two hours later, came from another PC’s session; nothing in the evidence links the two. What listed the folders, and why, is unknown.'}
 };
 
 // One line per Town Hall clue, for the suspicion file you carry (written from the Town Hall clue text; game).
@@ -1693,11 +1704,11 @@ const EDITION = {
   saveKey: 'uptime.crossroads.save',
   ownMetrics: true,           // the analyst scorecard is replaced by each track's own (EDITION_METRICS)
   noTools: true,              // no tool console: you lead, or you investigate evidence
-  badgeFlags: ['lbBookmark', 'sdSlate'],
+  badgeFlags: ['lbBookmark', 'sdSlate', 'cnPulse'],
   title: 'Crossroads edition',
-  blurb: 'A week after Town Hall, two offers: run the region’s incident response programme, or join the outside firm working the hardest cases. Choose once; the Public Library is first, then the School District.',
+  blurb: 'A week after Town Hall, two offers: run the region’s incident response programme, or join the outside firm working the hardest cases. Choose once; the Public Library is first, then the School District and the Community Clinic.',
   creditsName: 'Crossroads edition',
-  creditsFacts: 'Crossroads: MITRE ATT&CK content v20.1 (T1056.001, T1078, T1657; Quiet Thread T1021.001). NIST SP 800-86 (August 2006): collection, examination, analysis, reporting; chain of custody; message digests of original and copy. NIST FIPS 180-4, Secure Hash Standard (SHA-256). Microsoft Learn, event 4624 (logon type 10, RemoteInteractive). CISA Tabletop Exercise Packages and the CTEP After-Action Report / Improvement Plan template. NICE Framework (CISA NICCS task pages T1450, T1510, T1617; v2.2.0 summary of changes). American Library Association: State Privacy Laws Regarding Library Records; ALA Code of Ethics. Joint Cybersecurity Advisory AA24-038A (Volt Typhoon), the basis of the Quiet Thread. School District: ATT&CK v20.1 T1078, T1550.001 and T1657; Quiet Thread T1018; US Department of Education, Student Privacy Policy Office, “What is FERPA?”, and PTAC, Protecting Student Privacy While Using Online Educational Services (February 2014); CISA, Protecting Our Future: Partnering to Safeguard K–12 Organizations from Cybersecurity Threats (January 2023).'
+  creditsFacts: 'Crossroads: MITRE ATT&CK content v20.1 (T1056.001, T1078, T1657; Quiet Thread T1021.001). NIST SP 800-86 (August 2006): collection, examination, analysis, reporting; chain of custody; message digests of original and copy. NIST FIPS 180-4, Secure Hash Standard (SHA-256). Microsoft Learn, event 4624 (logon type 10, RemoteInteractive). CISA Tabletop Exercise Packages and the CTEP After-Action Report / Improvement Plan template. NICE Framework (CISA NICCS task pages T1450, T1510, T1617; v2.2.0 summary of changes). American Library Association: State Privacy Laws Regarding Library Records; ALA Code of Ethics. Joint Cybersecurity Advisory AA24-038A (Volt Typhoon), the basis of the Quiet Thread. School District: ATT&CK v20.1 T1078, T1550.001 and T1657; Quiet Thread T1018; US Department of Education, Student Privacy Policy Office, “What is FERPA?”, and PTAC, Protecting Student Privacy While Using Online Educational Services (February 2014); CISA, Protecting Our Future: Partnering to Safeguard K–12 Organizations from Cybersecurity Threats (January 2023). Community Clinic: ATT&CK v20.1 T1486, T1566.001, T1219 and T1657; Quiet Thread T1083; HHS, Fact Sheet: Ransomware and HIPAA; HHS 405(d), Health Industry Cybersecurity Practices (HICP, 2023 edition).'
 };
 const TH_SAVE_KEY = 'uptime.slice1.save';   // Town Hall's save: read for the carry-over, never written
 const CR_TRACK = {manager: {rank: 'IR manager', offer: 'the Mayor’s offer'}, dfir: {rank: 'Principal DFIR consultant', offer: 'Tallowmere’s offer'}};
@@ -1716,7 +1727,7 @@ function newState(seed) {
     mfaSet: [], fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
     fpWeight: 50, queue: 0, steps: 0, auto: false, autoReview: false, playMs: 0,
     cr: {carry: null, rota: null, growth: null, ex: {run: 0, actions: 0, closed: 0}, activate: null, aar: null, cover: null,
-      needs: {met: 0, total: 0}, corrected: 0, custody: null, first: null, drills: {}, reports: {}, board: null, boss: null, dojo: [false, false, false], status: null, sd: null}
+      needs: {met: 0, total: 0}, corrected: 0, custody: null, first: null, drills: {}, reports: {}, board: null, boss: null, dojo: [false, false, false], status: null, sd: null, cn: null}
   };
 }
 // The engine owns G.track (best/worst per metric), so the career track lives in G.trackId (and G.f.crTrack).
@@ -1756,28 +1767,28 @@ function crLockedTrack() { const s = crSeries(); return s.track && !s.ngPlus ? s
 function crGrantNgPlus() { Series.markEdition('crossroads', {ngPlus: true}); return crSeries(); }
 
 /* ---------- Engine hooks ---------- */
-function hudStatus() { return 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + (G.map === 'library' || G.map === 'lboard' ? ' · Library' : G.map === 'school' || G.map === 'sboard' ? ' · School District' : ''); }
+function hudStatus() { return 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + (G.map === 'library' || G.map === 'lboard' ? ' · Library' : G.map === 'school' || G.map === 'sboard' ? ' · School District' : G.map === 'clinic' || G.map === 'cnboard' ? ' · Clinic' : ''); }
 async function editionQueue() {
   const t = crTrack();
   await say(t === 'dfir' ? 'No alert queue on a consultant’s desk: your cases come to you through scoping letters. The Compact’s on-call leads work its queue.'
     : t === 'manager' ? 'The on-call queue: the Compact’s leads work it, and anything that needs you reaches you by phone. Your job is the rota, the exercises and the records.'
     : 'The team’s queue: the leads have it. Today is the rota and the people.');
 }
-function editionTile(d, ch, x, y) { if (typeof lbTile === 'function') d = lbTile(d, ch, x, y); if (typeof sdTile === 'function') d = sdTile(d, ch, x, y); return d; }
+function editionTile(d, ch, x, y) { if (typeof lbTile === 'function') d = lbTile(d, ch, x, y); if (typeof sdTile === 'function') d = sdTile(d, ch, x, y); if (typeof cnTile === 'function') d = cnTile(d, ch, x, y); return d; }
 function surfaceMissed() { return Promise.resolve(); }   // no wild alerts here, so nothing can be missed
 async function evolveCheck() {}
 const crPct = (a, b) => b ? Math.round(a / b * 100) : null;
 function editionMetricVals() {
-  const c = G.cr || {}, r = c.rota ? c.rota.stats : null, sd = c.sd || {}, r2 = sd.rota ? sd.rota.stats : null;
-  // Week 2 (the School District) adds its rota and the district's cover to the gaps and tired nights; the budget line
-  // shows the latest cover forecast (the district's once it is set, game).
+  const c = G.cr || {}, r = c.rota ? c.rota.stats : null, sd = c.sd || {}, r2 = sd.rota ? sd.rota.stats : null, cn = c.cn || {};
+  // Week 2 (the School District) adds its rota and the district's cover to the gaps and tired nights; the Clinic adds its
+  // weekend plan's gaps. The budget line shows the latest cover forecast (the Clinic's weekend once it is set, game).
   return {
     crExAct: c.ex && c.ex.actions ? crPct(c.ex.closed, c.ex.actions) : null,
     crActivate: c.activate === null || c.activate === undefined ? null : c.activate,
-    crGaps: r ? r.gaps + (c.cover && c.cover.gaps ? c.cover.gaps : 0) + (crTrack() === 'manager' && r2 ? r2.gaps + (sd.cover && sd.cover.gaps ? sd.cover.gaps : 0) : 0) : null,
+    crGaps: r ? r.gaps + (c.cover && c.cover.gaps ? c.cover.gaps : 0) + (crTrack() === 'manager' && r2 ? r2.gaps + (sd.cover && sd.cover.gaps ? sd.cover.gaps : 0) : 0) + (crTrack() === 'manager' && cn.cover && cn.cover.gaps ? cn.cover.gaps : 0) : null,
     crTired: r ? r.tired.length + (crTrack() === 'manager' && r2 ? r2.tired.length : 0) : null,
     crAar: c.aar ? crPct(c.aar.onTime, c.aar.total) : null,
-    crBudget: r ? (sd.cover && sd.cover.variance !== undefined ? sd.cover.variance : c.cover && c.cover.variance !== undefined ? c.cover.variance : r.variance) : null,
+    crBudget: r ? (cn.cover && cn.cover.variance !== undefined ? cn.cover.variance : sd.cover && sd.cover.variance !== undefined ? sd.cover.variance : c.cover && c.cover.variance !== undefined ? c.cover.variance : r.variance) : null,
     crNeeds: c.needs && c.needs.total ? crPct(c.needs.met, c.needs.total) : null,
     crCorrected: crTrack() === 'dfir' ? c.corrected : null,
     crCustody: c.custody ? crPct(c.custody.complete, c.custody.items) : null,
@@ -1811,15 +1822,16 @@ function editionScorecard() {
   }).join('');
   const t = crTrack(), c = G.cr;
   return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
-    (typeof lbScoreHtml === 'function' ? lbScoreHtml() : '') + (typeof sdScoreHtml === 'function' ? sdScoreHtml() : '') +
+    (typeof lbScoreHtml === 'function' ? lbScoreHtml() : '') + (typeof sdScoreHtml === 'function' ? sdScoreHtml() : '') + (typeof cnScoreHtml === 'function' ? cnScoreHtml() : '') +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (t ? ' · track: ' + (t === 'manager' ? 'IR manager (the Compact)' : 'principal DFIR consultant (Tallowmere)') : ' · the offers come at 16:00') +
-    ' · Bookmark Badge: ' + (G.f.lbBookmark ? 'yes' : 'not yet') + (G.f.sdMet ? ' · Slate Badge: ' + (G.f.sdSlate ? 'yes' : 'not yet') : '') + '</p>' +
+    ' · Bookmark Badge: ' + (G.f.lbBookmark ? 'yes' : 'not yet') + (G.f.sdMet ? ' · Slate Badge: ' + (G.f.sdSlate ? 'yes' : 'not yet') : '') + (G.f.cnMet ? ' · Pulse Badge: ' + (G.f.cnPulse ? 'yes' : 'not yet') : '') + '</p>' +
     (c && c.carry ? '<p class="small">Carried from Town Hall: ' + (c.carry.rank ? esc(c.carry.rank) : 'no save') + (c.carry.badges.length ? ' · badges ' + c.carry.badges.join(', ') : '') + ' · suspicion file ' + qtCount() + ' notes.</p>' : '') +
     '<p class="small">Every number here is a game model (game). Objective: ' + esc(objective().text) + '</p>';
 }
 function peekExtra() {
-  // crSummary: the end of the edition so far (the School District's summary, slice 2); lbSummary: the Library's.
-  return {track: crTrack(), crSummary: !!(G.f && G.f.sdSummary), lbSummary: !!(G.f && G.f.lbSummary), cr: G.cr ? JSON.parse(JSON.stringify(G.cr)) : null, series: crSeries()};
+  // crSummary: the end of the edition so far (the Community Clinic's summary, slice 3); sdSummary and lbSummary: the
+  // School District's and the Library's.
+  return {track: crTrack(), crSummary: !!(G.f && G.f.cnSummary), sdSummary: !!(G.f && G.f.sdSummary), lbSummary: !!(G.f && G.f.lbSummary), cr: G.cr ? JSON.parse(JSON.stringify(G.cr)) : null, series: crSeries()};
 }
 
 /* ---------- Intro (new game) ---------- */
@@ -1848,12 +1860,13 @@ function objective() {
   if (!f.crGrowth) return at('Paz wants a word about the insurer’s timeline.', 'cwar', 13, 5);
   if (!G.trackId) return at('16:00: the Mayor is on her way to the war room. The command table.', 'cwar', 7, 3);
   if (typeof lbObjective === 'function') { const o = lbObjective(); if (o && !o.done) return o; }
-  if (typeof sdObjective === 'function') { const o = sdObjective(); if (o) return o; }
-  return {text: 'School District done. Next: Community Clinic.', done: true};
+  if (typeof sdObjective === 'function') { const o = sdObjective(); if (o && !o.done) return o; }
+  if (typeof cnObjective === 'function') { const o = cnObjective(); if (o) return o; }
+  return {text: 'Community Clinic done. Next: Fire & EMS Dispatch.', done: true};
 }
 
 /* ---------- Triggers and interactions ---------- */
-function triggers() { return (typeof lbTriggers === 'function' && lbTriggers()) || (typeof sdTriggers === 'function' && sdTriggers()); }
+function triggers() { return (typeof lbTriggers === 'function' && lbTriggers()) || (typeof sdTriggers === 'function' && sdTriggers()) || (typeof cnTriggers === 'function' && cnTriggers()); }
 function interact() {
   const [dx, dy] = DIRS[G.dir];
   const tx = G.x + dx, ty = G.y + dy;
@@ -1864,15 +1877,17 @@ function interact() {
   if (door && door.locked) { run(async () => { await say(door.locked); }); return; }
   if (typeof lbInteract === 'function' && lbInteract(ch, tx, ty)) return;
   if (typeof sdInteract === 'function' && sdInteract(ch, tx, ty)) return;
+  if (typeof cnInteract === 'function' && cnInteract(ch, tx, ty)) return;
   if (G.map !== 'cwar' && G.map !== 'csquare') return;
   if (ch === 'µ') run(async () => { await say(G.cr.rota ? 'The team board: next week’s nights, a name on each, and the night post still advertised.' : 'The team board: next week’s nights, every one of them blank.'); });
   else if (ch === '¥') run(crCommandTable);
   else if (ch === 'Y') run(async () => { await say(G.trackId ? 'Your desk, cleared for whoever sits here next.' : 'Your desk: the team board on a screen, the plan on the wall behind it.'); });
-  else if (ch === 'S') run(async () => { await say('THE TOWN SQUARE. North: Town Hall. South: the Public Library. East: the School District.'); });
+  else if (ch === 'S') run(async () => { await say('THE TOWN SQUARE. North: Town Hall. South: the Public Library. East: the School District. West: the Community Clinic.'); });
 }
 async function talk(npc) {
   if (typeof lbTalk === 'function' && await lbTalk(npc)) return;
   if (typeof sdTalk === 'function' && await sdTalk(npc)) return;
+  if (typeof cnTalk === 'function' && await cnTalk(npc)) return;
   const who = npc.name, f = G.f;
   switch (npc.id) {
     case 'raecr':
@@ -4738,9 +4753,1365 @@ async function sdSummary() {
     '<p>Open risk (game): Inkstone issued every integration token with its default “read: all” scope. Ferrylane’s and Chimewell’s still have it. Their owners, Transportation and Communications, with Owen Marsh, have not yet accepted or fixed that risk. And Ferrylane holds student names and bus stops under a 2022 contract with no data agreement: Transportation, with Priya, to put one in place.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, the 03:00 pattern' + (qtFound('lb-rdp') ? ', a remote-desktop sign-in on the Library’s server' : '') + (qtFound('sd-probe') ? ', and now pings from FD-STAFF-11’s address to eleven of the district’s addresses' : '') + '. It continues.</p>') +
-    '<p class="big">Next: Community Clinic.</p>';
+    '<p class="big">Next: Community Clinic. Its door is on the west side of the square.</p>';
   while (true) {
     const i = await UI.openModal('End of the School District', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Credits'}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
+    if (i === 1) { await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]); continue; }
+    storeSet(encodeSave(G));
+    if (i === 2) { started = false; titleScreen(); }
+    break;
+  }
+}
+
+/* ---- editions/crossroads/clinic-data.js ---- */
+/* ============================================================
+   UPTIME · editions/crossroads/clinic-data.js
+   Crossroads district 3: the Community Clinic (both tracks). Art, map, people,
+   the manager track's tables (the Clinic annex's retainer test, the downtime
+   decision, the weekend plan, the AAR, the tabletop on a three-day outage), the
+   DFIR track's tables (the scoping letter, containment that preserves, evidence
+   intake), three drills per track, two reports, the directive, the Clinic Board,
+   the two dojos, the boss's stages for each seat, and Field Manual text.
+   One decider per decision (game): Marisol Quintero, the practice manager,
+   decides the clinic's operations (downtime, restores, staffing, the exam-room
+   login and its risk, the vendor contract); Tomasz Weller, the privacy officer,
+   decides patient-privacy questions (what patients are told, any notice, what is
+   reported), with counsel; Renata Osei, counsel for the Clinic, engages the firm,
+   decides who receives its reports and handles privilege and the law; the Clinic
+   Board decides any payment, with counsel and the insurer; clinicians decide care.
+   The game never says whether HIPAA applies to the clinic, names no deadline and
+   says nothing about what must be reported: HHS is quoted only in its own words
+   (Field Manual). Patient data stays generic (names, contact details, appointment
+   times, a visit-reason field): no diagnoses. Wrenfold, Wrenfold Health Software,
+   Tetherline, the clinic, its people, hosts, counts, times and the attack are
+   invented (game). Addresses: RFC 5737 only. Domains: RFC 2606 only. Real facts:
+   CREDITS.md, section "Crossroads". Timeline: scratchpad crossroads-timeline.md
+   (Community Clinic section); every line here is checked against it.
+   ============================================================ */
+'use strict';
+
+/* ---------- Art ---------- */
+Object.assign(PAL, {
+  cnDesk: ['#1b2233', '#5b3a26', '#a8703f', '#ffd96a'],
+  cnDeskOk: ['#1b2233', '#24402f', '#2f6e3e', '#9ff0c8'],
+  cnRack: ['#1b2233', '#3a3a3a', '#7a7a7a', '#d7dbe4'],
+  cnRackOk: ['#1b2233', '#24402f', '#2f6e3e', '#9ff0c8'],
+  cnExam: ['#1b2233', '#1f5a8a', '#7fa2d6', '#dbeaf7'],
+  cnCart: ['#1b2233', '#6e2a2a', '#c05a5a', '#f2d7d7'],
+  cnCartOk: ['#1b2233', '#24402f', '#2f6e3e', '#9ff0c8'],
+  marisol: ['#1a1a2e', '#2b1d16', '#c98a54', '#7a3d3d'],
+  weller: ['#1a1a2e', '#8c8c8c', '#f0c8a0', '#2a3a6e'],
+  osei: ['#1a1a2e', '#141414', '#6e4a2c', '#4a2a5a'],
+  kit: ['#1a1a2e', '#3b2418', '#e0b090', '#2f6e3e'],
+  okonjo: ['#1a1a2e', '#141414', '#8a5a3a', '#e0a030'],
+  vidal: ['#1a1a2e', '#3a1d10', '#c98a54', '#3a8a8a'],
+  ruiz: ['#1a1a2e', '#5b3a26', '#f2c7a0', '#8a3a6e'],
+  kowal: ['#1a1a2e', '#d7dbe4', '#f0c8a0', '#2a5a3a']
+});
+Object.assign(TILES, {
+  'Ð': {spr: 'counter', pal: 'cnDesk', solid: true, under: ','},   // the front desk (check-in)
+  'ŋ': {spr: 'pc', pal: 'cnExam', solid: true, under: ','},        // the exam-room PCs (one shared login)
+  'Ħ': {spr: 'K', pal: 'cnRack', solid: true},                     // the server closet: WF-01 and CL-FS-01
+  'Ŋ': {spr: 'K', pal: 'cnCart', solid: true}                      // the downtime cart (paper forms)
+});
+
+/* ---------- Map: the clinic and the Clinic Board room ---------- */
+// East door from the town square. North: two exam rooms, the server closet, the training room (dojo). Middle: the front
+// desk, the waiting area, the downtime cart. South: the practice manager's office, the privacy office, the incident room
+// (the table and the evidence locker), the staff room (the desk). West door: the Clinic Board room.
+Object.assign(MAPS, {
+  clinic: {
+    name: 'Riverbend Community Clinic',
+    rows: [
+      "wwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+      "w,ŋ,,,w,ŋ,,,w,Ħ,Ħ,,w¤,¤,¤,,,,w",
+      "w,,,,,w,,,,,w,,,,,,w,,,,,,,,,w",
+      "w,,,,,w,,,,,w,,,,,,w,,,,,,,,,w",
+      "w,,,,,w,,,,,w,,,,,,w,,,,,,,,,w",
+      "www,wwwww,wwwww,wwwwwwww,wwwww",
+      "w,,,,,,,,,,ÐÐÐ,,Ŋ,,,,,,,,,,,,w",
+      "E,,,,,,,,,,,,,,,,,,,,,,,,,,,,D",
+      "w,,,,,,,,,,,,,,,,,,,,,,,,,,,,w",
+      "wwww,wwwwwwww,wwwwww,wwwww,www",
+      "w,,,,,,,,,w,,,,,w,,,,,,,w,,,,w",
+      "w,,,,,,,,,w,,,,,w,,§§,,,w,,,,w",
+      "w,,,,,,,,,w,,,,,w,,,,,£,w,,Y,w",
+      "w,,,,,,,,,w,,,,,w,,,,,,,w,,,,w",
+      "w,,,,,,,,,w,,,,,w,,,,,,,w,,,,w",
+      "wwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+    ],
+    doors: {'29,7': {to: 'csquare', x: 1, y: 5, dir: 'right'}, '0,7': {to: 'cnboard', x: 16, y: 5, dir: 'left'}}
+  },
+  cnboard: {
+    name: 'The Clinic Board room',
+    rows: [
+      "wwwwwwwwwwwwwwwwww",
+      "w±±,,,,,,,,,,,,±±w",
+      "w±±,,,,,,,,,,,,±±w",
+      "w,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,D",
+      "w,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,w",
+      "w,,,,,,,,,,,,,,,,w",
+      "wwwwwwwwwwwwwwwwww"
+    ],
+    doors: {'17,5': {to: 'clinic', x: 1, y: 7, dir: 'right'}}
+  }
+});
+const CN_MAPS = ['clinic', 'cnboard'];
+
+/* ---------- People ---------- */
+NPCS.push(
+  {id: 'marisol', name: 'Marisol Quintero', role: 'practice manager', map: 'clinic', x: 3, y: 12, dir: 'right', pal: 'marisol'},
+  {id: 'weller', name: 'Tomasz Weller', role: 'privacy officer', map: 'clinic', x: 13, y: 12, dir: 'left', pal: 'weller'},
+  {id: 'osei', name: 'Renata Osei', role: 'counsel for the Clinic', map: 'clinic', x: 18, y: 13, dir: 'up', pal: 'osei'},
+  {id: 'kit', name: 'Kit Ambrose', role: 'the Compact’s field technician for the clinic', map: 'clinic', x: 17, y: 3, dir: 'left', pal: 'kit'},
+  {id: 'okonjo', name: 'Joy Okonjo', role: 'front desk lead', map: 'clinic', x: 12, y: 7, dir: 'down', pal: 'okonjo'},
+  {id: 'vidal', name: 'Ines Vidal', role: 'nurse lead', map: 'clinic', x: 9, y: 3, dir: 'left', pal: 'vidal'},
+  {id: 'ruiz', name: 'Bettina Ruiz', role: 'clinical educator', map: 'clinic', x: 26, y: 3, dir: 'left', pal: 'ruiz'},
+  {id: 'luciacn', name: 'Lucia Ferrand', role: 'engagement lead, Tallowmere Forensics', map: 'clinic', x: 22, y: 13, dir: 'left', pal: 'lucia', cond: G => G.trackId === 'dfir' || !!G.f.cnBoss},
+  {id: 'theocn', name: 'Theo Marchetti', role: 'junior analyst, Tallowmere Forensics', map: 'clinic', x: 18, y: 10, dir: 'down', pal: 'theo', cond: G => G.trackId === 'dfir'},
+  {id: 'kowal', name: 'Harriet Kowal', role: 'chair of the Clinic Board', map: 'cnboard', x: 8, y: 3, dir: 'down', pal: 'kowal'}
+);
+const CN_NPC_IDS = ['marisol', 'weller', 'osei', 'kit', 'okonjo', 'vidal', 'ruiz', 'luciacn', 'theocn', 'kowal'];
+
+/* ---------- Manager: the Clinic annex's retainer test (Day 12 07:35) ---------- */
+const CN_ACTIVATE = [
+  {label: 'Met: ransomware on a clinic PC and patient lists on the share. Call the firm now', good: true},
+  {label: 'Not yet: count how many PCs are encrypted first, then call the firm with a sure number', why: 'The annex says found on any clinic system. Waiting for a count is how the call comes an hour late.'},
+  {label: 'Not met: no patient record is shown to be touched yet. For now it is an IT outage for the technician', why: 'Ransomware found on a clinic system meets the annex on its own, and S: holds patient lists, so patient information may have been reached.'},
+  {label: 'Marisol decides when the firm comes in, and she can phone it herself once the clinic is open', why: 'The retainer is the Compact’s and its annex says when it is called. You make the call, and Marisol and counsel are told at once.'}];
+const CN_ACT_OK = 15, CN_ACT_LATE = 20;   // game minutes
+
+/* ---------- Manager: the downtime decision (Day 12 07:45, with the practice manager) ---------- */
+const CN_DOWNTIME = [
+  {label: 'Marisol decides: the cart’s paper forms at the front desk, exam rooms stay on Wrenfold under watch', good: true},
+  {label: 'Shut Wrenfold and the clinic’s PCs down now and go to paper before the 08:00 patients, to be safe', why: 'Nothing points at WF-01 or the exam rooms, and no paper is out yet. Switching the records off mid-clinic puts care at risk. Contain what is hit and keep care going.'},
+  {label: 'Open as normal on the other two front-desk PCs: only one of them shows any encrypted files', why: 'They show the note too, and nobody has checked them yet. Paper at the front desk until they are cleared.'},
+  {label: 'You decide the clinic’s downtime yourself: during an incident the IR manager runs operations', why: 'You advise. Running the clinic, paper or not, is Marisol’s decision, and clinicians decide care.'}];
+
+/* ---------- Manager: the weekend plan (Day 12 15:30; rota/budget forecast, game) ---------- */
+const CN_COVER = [
+  {label: 'Two 12-hour day shifts with handovers, so nights stay on the rota, under a threshold Marisol signs', good: true, k: 'shifts', gaps: 0, overtime: 26},
+  {label: 'The whole team in until it’s fixed: the clinic needs as many hands as it can get', k: 'all', gaps: 0, overtime: 58, why: 'Thirty-hour stretches make slow, thin calls by Sunday, and nobody is fresh on Monday. Forecast: 58 overtime hours against 30.'},
+  {label: 'You and the technician cover it between you, day and night, with no handover to lose things in', k: 'two', gaps: 0, overtime: 44, why: 'Two people, no rest, and one of them is the only person who can rebuild the PCs. Forecast: 44 hours, and nobody sleeps.'},
+  {label: 'Stand down until Monday: Marisol runs Saturday’s four hours on paper alone, and Sunday is closed', k: 'none', gaps: 48, overtime: 9, why: 'Saturday’s paper clinic would have no IT cover, the share’s restore would wait, and a page about clinic data would go unanswered. Forecast: 48 hours uncovered.'},
+  {label: 'The night lead also works Saturday’s day shift, to keep the picture in one head', k: 'double', gaps: 0, overtime: 31, why: 'Eighteen hours on call, then twelve more: a 30-hour stretch is the tired call the rota exists to prevent.'}];
+
+/* ---------- Manager: the AAR (Day 15 09:00; blameless; owners arrive Board-approved) ---------- */
+const CN_FACTORS = [
+  {id: 'console', name: 'A console nobody watched', csf: 'Detect', text: 'The clinic’s night alerts went to its own console. The 05:33 alert sat unread until 07:40.', good: true},
+  {id: 'scans', name: 'One PC could reach the share', csf: 'Protect', text: 'Attachments went to a Scans folder every front-desk PC could write, so one PC could encrypt the shared files.', good: true},
+  {id: 'lists', name: 'Old lists kept', csf: 'Identify', text: '90 days of daily lists and a recall list with 1,180 inactive patients sat on that share.', good: true},
+  {id: 'binder', name: 'An unopened binder', csf: 'Recover', text: 'The downtime binder’s call tree named two people who had left, with no step for paper back-entry.', good: true},
+  {id: 'user', name: 'User error', csf: 'Protect', text: 'Root cause: a front-desk clerk opened an attachment they should have known was a trap, and that is where it stops.'},
+  {id: 'vendor', name: 'The vendor’s agent', csf: 'Protect', text: 'Wrenfold’s Tetherline agent, on day and night, let the attacker in to the clinic.'},
+  {id: 'backup', name: 'A failed backup', csf: 'Recover', text: 'The nightly backup failed, and the share couldn’t be restored from it.'}];
+const CN_AAR = [
+  {id: 'route', name: 'Night alerts to the Compact’s on-call', owner: 'the Compact’s on-call (you)',
+   dates: [{label: 'Day 12, Friday 15:30: done with the weekend plan', good: true},
+           {label: 'As soon as possible', why: 'A date nobody can check. It was done on Friday with the weekend plan: write that.'},
+           {label: 'When the budget allows', why: 'Routing costs nothing to buy. Friday, with the plan.'},
+           {label: 'Day 30, once the night post is filled: until then the cover is too thin', why: 'The post may take months. The rota covers the clinic now: Friday.'}]},
+  {id: 'lists', name: 'Daily lists kept 7 days; the recall list inside Wrenfold', owner: 'Marisol Quintero',
+   dates: [{label: 'Day 19, Friday next week', good: true},
+           {label: 'As soon as possible', why: 'An action without a date doesn’t close. Day 19.'},
+           {label: 'When the budget allows', why: 'Nothing to buy: Kit changes the job and the folder. Day 19.'},
+           {label: 'Day 90, after the next Board meeting', why: 'The lists are what left. Three months is too long for a change with nothing to buy: Day 19.'}]},
+  {id: 'tether', name: 'Tetherline on demand only, from the vendor’s range, with MFA', owner: 'Marisol Quintero, with Wrenfold Health Software',
+   dates: [{label: 'Day 22, Monday after next', good: true},
+           {label: 'As soon as possible', why: 'The vendor needs a date to plan the change. Day 22.'},
+           {label: 'When the budget allows', why: 'It is a setting and a contract letter, not a purchase. Day 22.'},
+           {label: 'Day 12, today, before Wrenfold’s next nightly heartbeat', why: 'Drill B found no session, and the vendor needs a change window: switching it off mid-incident could cut the support you need. Day 22.'}]}];
+
+/* ---------- Manager: the tabletop, "Wrenfold down for three days" (Day 15 11:00; CISA CTEP-style) ---------- */
+const CN_OBJECTIVE = [
+  {label: 'Find the downtime procedure’s gaps before a real three-day outage finds them', good: true},
+  {label: 'Be sure how fast Wrenfold Health Software can restore the system once called', why: 'The vendor’s speed is its own matter. The exercise is for the clinic’s side: what staff do for three days.'},
+  {label: 'Rehearse last weekend’s ransomware again, while the steps are fresh in people’s minds', why: 'The AAR has done that. A three-day outage tests a different plan: running care on paper.'},
+  {label: 'Read CTEP’s ransomware scenario word for word, and nobody can say it was made up', why: 'CTEP gives templates, not this clinic’s plan. Use them for the clinic’s own outage.'}];
+const CN_INJECTS = [
+  {t: 'Day 1, 07:30 (exercise): Wrenfold won’t start. The vendor says up to three days. Who decides, and what first?',
+   opts: [{label: 'Marisol calls downtime: cart forms, and today’s list rebuilt from confirmation calls', good: true},
+          {label: 'Cancel the appointments until it is back: nobody seen without a record on screen', why: 'Three days of patients unseen is the harm. The paper procedure exists so care goes on.'},
+          {label: 'Keep seeing patients, and put the paper forms aside until Wrenfold is back up', why: 'Care without a record is how mistakes follow patients. Paper forms, every visit.'},
+          {label: 'Weller decides: patient records are involved, and the privacy officer runs the clinic through an outage', why: 'Weller decides privacy questions. Running the clinic on paper is Marisol’s operations call.'}]},
+  {t: 'Day 2, 10:00 (exercise): a patient asks the front desk whether her records are safe while the system is down.',
+   opts: [{label: 'What is known, from Weller’s agreed script: no promises, Weller follows up', good: true},
+          {label: 'Tell her they are completely safe: an outage isn’t a breach, and she needn’t worry', why: 'A promise the desk can’t check. Say what is known; Weller decides what patients are told.'},
+          {label: 'Send her to Renata Osei, who as counsel decides what any patient may be told', why: 'Weller decides what patients are told, with counsel. Renata doesn’t take patients’ questions: the desk answers from the agreed script.'},
+          {label: 'Read her the vendor’s last status email word for word: she hears it from the source', why: 'A vendor’s status email isn’t written for patients. Use the script.'}]},
+  {t: 'Day 3, 16:00 (exercise): Wrenfold is back, with three days of paper to enter. Who, and in what order?',
+   opts: [{label: 'Ines Vidal’s team, next visits first, with a second person reading back', good: true},
+          {label: 'Whoever is free enters the paper tonight, in any order, to be finished by the morning', why: 'Tired people entering three days at speed make the errors that follow patients. A set order and a check.'},
+          {label: 'The technician enters the forms: he knows Wrenfold best, and it is a data job', why: 'Kit runs the systems, not the clinical record. Ines Vidal’s team knows what the paper means.'},
+          {label: 'Scan the paper and attach it to each patient instead of entering anything', why: 'A scan nobody reads isn’t in the record. Enter it, and check it.'}]}];
+const CN_EX_ACTIONS = 3;
+
+/* ---------- The directive (game): keep the shared exam-room login ---------- */
+const CN_DIRECTIVE = {
+  manager: [
+    {label: 'One daily sign-in, a badge tap or PIN per exam PC, a two-room trial, her call', good: true},
+    {label: 'Keep the shared login as it is: patients come first, and no harm is shown in the exam rooms', why: 'Nothing went wrong that anyone can see: with one shared account, nobody can say who viewed what there.'},
+    {label: 'Full password sign-in at each exam PC for each visit, from today, with no exceptions', why: 'It slows every visit, and staff will find a way round it. Fast re-authentication keeps both.'},
+    {label: 'Weller decides alone: who can see patient records is a privacy question, and his', why: 'Weller advises on privacy. How the exam rooms run, and the risk the clinic accepts, is Marisol’s decision.'}],
+  dfir: [
+    {label: 'The fact: named desks could be answered, the exam rooms can’t. Then the options, and her call', good: true},
+    {label: 'Tell her the report requires named logins in each room from today: Marisol must comply', why: 'A report recommends. The practice manager decides, knowing what the case showed.'},
+    {label: 'Say the login is outside the letter counsel signed, and tell her no more', why: 'Renata has agreed the facts can be shared. Silence leaves her deciding blind.'},
+    {label: 'Tell her, and the privacy officer, that the shared login caused the ransomware, so it must go', why: 'It didn’t: the attack came through a front-desk PC. Its cost is that nobody can say who viewed what in the exam rooms.'}]};
+
+/* ---------- DFIR D1: the scoping letter (game) ---------- */
+const CN_LETTER = [
+  {label: 'Confirm the questions, then capture before anything changes: memory, then disk, then the log', good: true},
+  {label: 'Restore the share from last night’s backup first, then seal what is left and start the case', why: 'A restore before preservation can overwrite the evidence, and last night’s copy may carry the way in. Preserve first.'},
+  {label: 'Image each PC in the clinic and hash it before reading the letter, in case the questions turn out wider', why: 'Collection follows the questions. Thirteen images before a question is scope by worry.'},
+  {label: 'Ask Weller and counsel to write to the patients today, before anything is known, to get ahead of it', why: 'What patients are told is Weller’s decision, with counsel, on facts the firm hasn’t found yet.'}];
+
+/* ---------- DFIR D2: containment that preserves ---------- */
+const CN_CONTAIN = [
+  {label: 'Memory now, then shut it down and image the disk, hash both, snapshot the share, restore nothing yet', good: true},
+  {label: 'Power CL-FD-02 off now and image the disk: memory changes too fast to be worth the wait', why: 'Memory holds what the disk doesn’t: the running loader, its connections, keys. It is isolated and running, so capture it first.'},
+  {label: 'Reimage CL-FD-02 now and give the front desk its PC back: the share holds the rest', why: 'Wiping first destroys the record of how it got in and what it took. Preserve, then rebuild.'},
+  {label: 'Reconnect CL-FD-02 for a few minutes to pull the rest of its logs, hashed as they arrive, then isolate it again', why: 'That reopens a path for whatever is running on it. The EDR’s console link is enough. Capture memory where it is.'}];
+
+/* ---------- DFIR D3: evidence intake (the clinic's store, case CLN) ---------- */
+const CN_INTAKE = {
+  c01: {id: 'C-01', what: 'CL-FD-02 memory capture', form: 'Captured 08:35 by Kit Ambrose under the firm’s instruction; SHA-256 at collection recorded (Bookmark Badge).',
+    opts: [{label: 'Check the hash on receipt against the collection hash, log the handover, seal it, work on a copy', good: true},
+           {label: 'Analyse it straight from the technician’s drive and seal it after: copying a file that size takes too long', why: 'Work on a copy, always. The original stays sealed.'},
+           {label: 'Skip the hash comparison on a file the technician captured under our instruction an hour ago', why: 'The check is about the file, not Kit. Compare the hashes for every item.'},
+           {label: 'Seal it in the School District’s locker: it has room, and the cases run side by side', why: 'One store per client. The clinic’s evidence stays in the clinic’s store.'}]},
+  c02: {id: 'C-02', what: 'CL-FD-02 disk image', form: 'Imaged 09:10–09:50 by Kit Ambrose with a write blocker; SHA-256 at collection recorded (Bookmark Badge).',
+    opts: [{label: 'As each item: compare the hashes, log Kit’s handover, seal the original, and use only a copy', good: true},
+           {label: 'Mount the original image read-write and hash it after, to recover deleted files faster', why: 'Writing to the original changes it. Copy it, and work on the copy.'},
+           {label: 'Log it once the analysis is done: the log then shows only what turned out useful', why: 'The log records what was received and when, before anyone reads it.'},
+           {label: 'Give the image back for the rebuild: it is the most recent copy of the PC', why: 'Evidence isn’t a rebuild source. Kit rebuilds from a clean image.'}]},
+  c03: {id: 'C-03', what: 'EDR telemetry, every clinic host, Day 11 12:00 to Day 12 07:30', form: 'Exported 09:00 by Kit Ambrose from the EDR console; SHA-256 at export recorded.',
+    opts: [{label: 'Hash it on receipt against the export record, log it, seal it, read a copy', good: true},
+           {label: 'Read the console live instead: it is the same telemetry, and more up to date', why: 'The console rolls on and changes. The export is the fixed record.'},
+           {label: 'Keep only CL-FD-02’s rows: the others weren’t encrypted', why: 'Which hosts were hit is question 1. Keep the whole export as it was handed over.'},
+           {label: 'Send a hashed copy to the EDR vendor for its analysts to work on, and tell counsel after', why: 'Who sees the clinic’s evidence goes through Renata. Ask her first.'}]},
+  c04: {id: 'C-04', what: 'CL-FS-01 share audit and snapshot', form: 'Snapshot and audit exported 09:20 by Kit Ambrose, before any restore; SHA-256 recorded for both.',
+    opts: [{label: 'Log both as handed over, compared with the export record: the audit records which session wrote each file', good: true},
+           {label: 'Delete the 214 notes from the snapshot, then seal it: staff won’t open them by mistake', why: 'Editing the snapshot changes the evidence. Seal it as it was.'},
+           {label: 'Trust the snapshot alone: the audit only repeats what the files show', why: 'The audit says which session wrote each file. The files can’t.'},
+           {label: 'Restore the share from the snapshot now, then log what is left', why: 'Restoring from evidence uses it up. The restore comes from the backup, later.'}]},
+  c05: {id: 'C-05', what: 'CL-FW firewall log, Day 11 12:00 to Day 12 07:30', form: 'Exported 09:05 by Kit Ambrose to a USB stick; SHA-256 at export recorded. The stick went to Marisol’s office before it reached the firm at 09:50; the form doesn’t say so.',
+    opts: [{label: 'Record the unlogged handover as a gap: hash on receipt, compare, keep both records', good: true, gap: true},
+           {label: 'The hashes match: log it as complete. An unchanged file is what a custody record exists to show', why: 'Matching hashes say the file is unchanged. They don’t fill a handover nobody recorded. Write the gap.'},
+           {label: 'Add Marisol to Kit’s form yourself: the record is then complete', why: 'That makes his form say something he didn’t record. A gap is written as a gap.'},
+           {label: 'Discard it and work without the firewall log: a broken chain can’t be used', why: 'The log answers what left, and the hashes match. Keep it, with the gap written down.'}]}
+};
+const CN_INTAKE_VENDOR = {id: 'C-08', what: 'Wrenfold Health Software’s written confirmation', form: 'Email from its support manager, 13:25 Day 12, on the escalation contact in §8 of the contract; received with headers. A call came first, at 13:10.',
+  opts: [{label: 'Log the email with headers as the item, hashed, and note the call as what it was', good: true},
+         {label: 'Log the call as the item: a support manager’s word on the phone is more certain than an email', why: 'A call leaves no record to hash. Log the email; note the call with its time, number and caller.'},
+         {label: 'Ask the vendor to send it again as a PDF on letterhead, and discard the email', why: 'The email as received, with headers, is the original. A later PDF is a copy.'},
+         {label: 'Don’t log it: the vendor’s word about the vendor can’t count', why: 'It is one decisive half of question 2, read beside the session log. Log it as what it is.'}]};
+
+/* ---------- Drills (all cases original; artefacts are invented, fields are real kinds of evidence) ---------- */
+const CN_DRILLS = {
+  hostsmgr: {
+    id: 'hostsmgr', title: 'Kit’s note: how many PCs are encrypted?', budget: 2,
+    intro: '<p>Kit Ambrose wrote a note at 09:45 for Marisol. You are reviewing the record, not the person: which clinic PCs are actually encrypted, and which only show the note?</p>',
+    artefact: '<pre class="art">Kit Ambrose to Marisol Quintero · Day 12 09:45 (game data)\n' +
+      '14 tickets since 07:15, five PCs showing the note.\n' +
+      'Probably all five encrypted. The note says 40\n' +
+      'computers. We only have 13.</pre>' +
+      '<p class="small">A note on a screen can come from a folder every PC shows. Whether a PC is encrypted is in its own file records and in the share’s record of who wrote what.</p>',
+    question: 'Which PCs are encrypted, and which only show the note?',
+    sources: [
+      {id: 'note', name: 'The ransom note', qs: [
+        {q: 'What does it claim?', kind: 'trap', res: ['“All files on your network are encrypted (40 computers). Your patients’ data is with us.”', '(The clinic has 13 PCs and servers. A note says what its writer wants believed.)']}]},
+      {id: 'tickets', name: 'The helpdesk queue', qs: [
+        {q: 'How many people have reported it?', kind: 'trap', res: ['14 tickets since 07:15, from five PCs: CL-FD-01, CL-FD-02, CL-FD-03, CL-EX-02, CL-EX-05', '(Tickets count people who saw the note, not encrypted PCs.)']}]},
+      {id: 'edr', name: 'The EDR’s file events, PC by PC', qs: [
+        {q: 'Which PCs had their own files encrypted?', kind: 'focus', key: true,
+         res: ['CL-FD-02: 2,140 local files renamed .rvb7, 05:31–05:41', 'CL-FD-01, CL-FD-03, CL-EX-02, CL-EX-05: no local file renamed; the note they show sits in the Clinic Notices folder on their desktops, which lives on S:', 'No other host shows the behaviour']}]},
+      {id: 'audit', name: 'CL-FS-01’s share audit', qs: [
+        {q: 'Which session wrote to the share in the night?', kind: 'focus', key: true,
+         res: ['3,204 files in S:\\FrontDesk and S:\\Clinic Notices renamed .rvb7, and 214 notes written, 05:31–05:44', 'Every one of those writes from CL-FD-02’s session', 'No write from any other PC in the window']},
+        {q: 'Every line of the share audit for the night', kind: 'broad', rows: 41200,
+         wall: ['{t}  read   CL-FD-0{i}  S:\\FrontDesk\\Daily lists\\{n}.csv', '{t}  write  CL-FD-02  S:\\Clinic Notices\\README-RESTORE.txt', '{t}  rename CL-FD-02  S:\\FrontDesk\\Scans\\{n}.pdf']}]}
+    ],
+    ai: {everything: {text: 'Five PCs reporting a ransom note and 14 tickets indicate at least five encrypted hosts, consistent with the note’s claim of a network-wide attack. Recommend reimaging all five.', wrong: true,
+                      reveal: 'Tally counted tickets and believed the note. It never read which PC’s files were renamed, or which session wrote to the share.'},
+         specific: {q: 'Which PCs had local files renamed in the night?', text: 'One: CL-FD-02, 2,140 files between 05:31 and 05:41.'}},
+    verdicts: [
+      {label: 'One: CL-FD-02, and the share files it could write. The others show the note through the share', good: true, needs: ['edr', 'audit'],
+       needsWhy: 'the finding rests on two records: each PC’s own file events, and the share’s record of who wrote what. You read only one of them.',
+       why: 'The PCs’ own records and the share’s agree.'},
+      {label: 'Five PCs encrypted: each one shows the note, and each one has staff filing tickets about what they see', why: 'A note on screen came through the shared folder. Only one PC’s own files changed.'},
+      {label: 'Most of the clinic: the note says 40 computers, and attackers rarely stop at one PC', why: 'The note is the attacker’s claim. The records show one PC and the share.'}],
+    reasons: [
+      {label: 'Only CL-FD-02 renamed its own files, and every write to the share came from its session that night', good: true, why: 'Each PC’s files from the EDR, and who wrote to the share from its audit.'},
+      {label: 'Fourteen tickets from five PCs means five PCs: nobody files a ticket about a PC that works', why: 'People file tickets about what they see. The note came through the share.'},
+      {label: 'The note was written by the people who did it, and they know best how far it went', why: 'A note is written to frighten, not to inform.'}],
+    alts: [
+      {label: 'The other four PCs encrypted later, after 05:44', good: true, why: 'Not supported: no local file renamed on any of them through 07:30, when the share was unshared.'},
+      {label: 'Another PC writing to the share too', good: true, why: 'Not supported: the audit shows every write in the window from CL-FD-02’s session.'},
+      {label: 'Wrenfold’s server being encrypted', why: 'Beside this question, and nothing points to it: WF-01 shows no such events.'},
+      {label: 'The note being a prank by a member of staff', why: 'Nothing points to it: a PC’s files were renamed.'}],
+    path: '<p>“Which PCs are encrypted?” is decided by <b>each PC’s own file events</b> and <b>the share’s audit</b> (who wrote what). The note’s claim and the number of tickets fit any answer.</p>',
+    response: ['Tell Marisol: one PC encrypted, CL-FD-02, plus the share files its session could write', 'The four other PCs stay off the share until the firm checks them; nothing reimaged yet', 'CL-FD-02 stays isolated and powered for the firm; the share stays unshared, with nothing restored', 'Coach Kit in private: a count of tickets isn’t a count of encrypted PCs'],
+    techs: ['T1486'], acts: ['cnhosts']
+  },
+  hostsdfir: {
+    id: 'hostsdfir', title: 'Question 1: which systems were encrypted?', budget: 3,
+    intro: '<p>The letter’s first question, in part: which clinic systems were encrypted? Your copies of C-01 to C-05 are on the bench. This finding needs two sources that each decide part of it.</p>',
+    artefact: '<pre class="art">Case CLN-01 · question 1 (game data)\n' +
+      'C-02  CL-FD-02 disk image\n' +
+      'C-03  EDR telemetry, every clinic host\n' +
+      'C-04  CL-FS-01 share audit and snapshot\n' +
+      'Note  README-RESTORE.txt: “40 computers”</pre>' +
+      '<p class="small">C-03 says which PCs changed their own files; C-04 says which session wrote to the share.</p>',
+    question: 'Which clinic systems were encrypted?',
+    sources: [
+      {id: 'note', name: 'The ransom note', qs: [
+        {q: 'What does it claim?', kind: 'trap', res: ['“All files on your network are encrypted (40 computers).”', '(The clinic has 13 PCs and servers.)']}]},
+      {id: 'tickets', name: 'The helpdesk queue', qs: [
+        {q: 'How many PCs were reported?', kind: 'trap', res: ['14 tickets, five PCs.', '(A ticket reports what someone saw.)']}]},
+      {id: 'edr', name: 'C-03: EDR file events, every host', qs: [
+        {q: 'Which hosts renamed their own files in the window?', kind: 'focus', key: true,
+         res: ['CL-FD-02: 2,140 local files renamed .rvb7, 05:31–05:41', 'CL-FD-01, CL-FD-03, CL-EX-02, CL-EX-05: none; their note is the Clinic Notices folder on S:', 'WF-01, CL-FS-01 and every other host: none']}]},
+      {id: 'audit', name: 'C-04: the share audit', qs: [
+        {q: 'Which session wrote to the share in the window?', kind: 'focus', key: true,
+         res: ['3,204 renames and 214 notes in S:\\FrontDesk and S:\\Clinic Notices, 05:31–05:44', 'All from CL-FD-02’s session; no write from any other host']},
+        {q: 'Every line of the night’s share audit', kind: 'broad', rows: 41200,
+         wall: ['{t}  read   CL-FD-0{i}  S:\\FrontDesk\\Daily lists\\{n}.csv', '{t}  write  CL-FD-02  S:\\Clinic Notices\\README-RESTORE.txt', '{t}  rename CL-FD-02  S:\\FrontDesk\\Scans\\{n}.pdf']}]},
+      {id: 'disk', name: 'C-02: CL-FD-02’s disk timeline', qs: [
+        {q: 'What ran on CL-FD-02 before the renames?', kind: 'focus', key: true,
+         res: ['16:48 Day 11: a script from insurance-forms.zip, opened from S:\\FrontDesk\\Scans, starts a loader', '05:12 Day 12: an archive written to the temp folder; 05:31 the renames begin']}]}
+    ],
+    verdicts: [
+      {label: 'CL-FD-02 and the share files it could write, and no other system', good: true, needs: ['edr', 'audit'],
+       needsWhy: 'the finding rests on two sources: C-03 (each host’s own files) and C-04 (who wrote to the share). You read only one.',
+       why: 'C-03 and C-04 each decide their half, and C-02 agrees.'},
+      {label: 'The five PCs that showed the note: each of them displays the attacker’s message', why: 'Four of them show a shared folder. Their own files never changed.'},
+      {label: 'Unknown until each of the 13 systems has been read in full, one by one', why: 'C-03 covers every host, and C-04 the share. The question has its answer.'}],
+    reasons: [
+      {label: 'C-03: only CL-FD-02 renamed its own files. C-04: every write to the share came from its session', good: true, why: 'Each host from its telemetry, and the share from its audit.'},
+      {label: 'Five PCs showed the note, and an attacker who reached one front-desk PC would reach the others', why: 'The telemetry says what happened, not what could have.'},
+      {label: 'The note says forty: assume the worst until the attacker is proven wrong', why: 'Assuming isn’t a finding.'}],
+    alts: [
+      {label: 'Another host writing to the share', good: true, why: 'Ruled out: C-04 shows every write in the window from CL-FD-02’s session.'},
+      {label: 'WF-01 encrypted too', good: true, why: 'Ruled out: C-03 shows no rename on WF-01 at all.'},
+      {label: 'A second ransomware strain on the exam PCs', why: 'Nothing points to it: C-03 shows no activity there.'},
+      {label: 'The note written by staff as a joke', why: 'Beside the point: files were renamed.'}],
+    path: '<p>Two decisive sources: <b>C-03</b> (each host’s own file events) and <b>C-04</b> (who wrote to the share). C-02 agrees. The note and the tickets decide nothing.</p>',
+    response: ['Report to Renata: CL-FD-02 and the share files its session could write', 'The four other PCs: no encryption; the firm checks them for the loader before they rejoin', 'Nothing restored until the snapshot and images are sealed (done by 09:50)', 'Keep C-03 and C-04 sealed; work on copies'],
+    techs: ['T1486'], acts: ['cnhosts']
+  },
+  tethermgr: {
+    id: 'tethermgr', title: 'Did the vendor’s remote support connect?', budget: 2,
+    intro: '<p>Wrenfold Health Software’s remote-support tool, Tetherline, is always on at WF-01. Kit’s question at 13:30: did its support account connect between Thursday 16:00 and the isolation at 07:30? Review the record.</p>',
+    artefact: '<pre class="art">Kit Ambrose · ticket · Day 12 13:30 (game data)\n' +
+      'Tetherline console: activity every night at 03:00.\n' +
+      'Forum post: “Wrenfold support got hacked last year”.\n' +
+      'Was it them?</pre>' +
+      '<p class="small">A tool that is always on checks in by itself. A session is when somebody connects. The vendor’s own word counts when it comes through a contact you already had.</p>',
+    question: 'Did the remote-support account connect in the window?',
+    sources: [
+      {id: 'forum', name: 'A forum thread about the vendor', qs: [
+        {q: 'What does it say about Wrenfold?', kind: 'trap', res: ['“Wrenfold support got hacked last year, avoid.” No source, no date.', '(A reputation fits a guilty vendor and an innocent one alike.)']}]},
+      {id: 'hour', name: 'Tetherline’s activity graph', qs: [
+        {q: 'When is it active?', kind: 'trap', res: ['A spike at 03:00 every night.', '(Activity isn’t a session. The graph doesn’t say which is which.)']}]},
+      {id: 'sessions', name: 'Tetherline’s session log', qs: [
+        {q: 'Which sessions connected, from where, and what are the 03:00 entries?', kind: 'focus', key: true,
+         res: ['Last operator session: Day 9 (Tuesday) 14:05–14:40, from 198.51.100.121, inside Wrenfold’s documented range 198.51.100.112–127, ticket WF-4471, a scheduled update', 'No session since', 'The 03:00 entries every night: the agent’s check-in heartbeat, no operator, no session']}]},
+      {id: 'vendor', name: 'Wrenfold’s support manager, on the escalation line', qs: [
+        {q: 'What does the vendor say, on which contact?', kind: 'focus', key: true,
+         res: ['13:10, the escalation number from the contract’s incident clause, on the plan’s contact page since you arrived (Slate Badge)', 'No technician session to the clinic since Tuesday’s update; their own relay records agree', 'Written confirmation by email at 13:25']}]}
+    ],
+    ai: {everything: {text: 'Nightly 03:00 activity on a remote-support tool, a vendor with a reported breach and a ransomware attack at 05:31 suggest vendor-access compromise. Recommend treating Tetherline as the initial access vector.', wrong: true,
+                      reveal: 'Tally joined an hour, a rumour and a ransomware note. It never read which entries were sessions, or asked the vendor on a known number.'},
+         specific: {q: 'What are the 03:00 entries in Tetherline’s log?', text: 'Agent check-in heartbeats: no operator and no session.'}},
+    verdicts: [
+      {label: 'No session in the window: not the way in, though an always-on agent is still a risk to fix', good: true, needs: ['sessions', 'vendor'],
+       needsWhy: 'the answer rests on two records: the tool’s own session log, and the vendor’s word on a contact you already had. You read only one.',
+       why: 'The clinic’s log and the vendor’s records agree.'},
+      {label: 'Yes: activity at 03:00 each night, from a vendor said to have been hacked, is how this kind of attack starts', why: 'The 03:00 entries are heartbeats, and the thread is a rumour. The session log shows no session.'},
+      {label: 'Can’t say: switch Tetherline off and remove it from WF-01 today, then decide', why: 'The log and the vendor answer it. Removing it mid-incident cuts the support you may need; the AAR sets a date.'}],
+    reasons: [
+      {label: 'No session since Tuesday, heartbeats at 03:00, and the vendor’s word on a known contact', good: true, why: 'The clinic’s record, and the vendor’s, from a number on file.'},
+      {label: 'A vendor with a breach in its past can’t be trusted: its tool is the likeliest way in for anyone', why: 'A past breach is a reason to look, not a finding.'},
+      {label: 'Ransomware usually runs overnight, and what is active at 03:00 is part of it', why: 'An hour isn’t a session.'}],
+    alts: [
+      {label: 'A session the log didn’t record', good: true, why: 'Not supported: the vendor’s relay records, on its side, show none either.'},
+      {label: 'Someone posing as the vendor on the phone', good: true, why: 'Ruled out: the number came from the contract’s incident clause, not from a caller.'},
+      {label: 'The vendor’s update on Tuesday carrying the malware', why: 'Nothing points to it: the loader came from an attachment on Thursday.'},
+      {label: 'The forum poster being an attacker', why: 'Beside the point: the session log answers the question.'}],
+    path: '<p>“Did the vendor connect?” is decided by <b>the tool’s session log</b> (sessions, not heartbeats) and <b>the vendor’s word on a contact you already had</b>. An hour and a reputation fit either answer. T1219 (Remote Access Tools) is the explanation this evidence ruled out.</p>',
+    response: ['Tell Marisol: no remote-support session in the window; the way in was the attachment', 'Keep the session log and the vendor’s email', 'Tetherline on demand only, with MFA: an action for the AAR, with a date', 'Coach Kit in private: a heartbeat isn’t a session'],
+    techs: ['T1219'], acts: ['cnvendor']
+  },
+  tetherdfir: {
+    id: 'tetherdfir', title: 'Question 2: the vendor’s remote support', budget: 3,
+    intro: '<p>The letter’s second question: did the records vendor’s remote-support access play any part? C-06 and C-08 are on the bench. The finding needs two sources.</p>',
+    artefact: '<pre class="art">Case CLN-01 · question 2 (game data)\n' +
+      'C-05  CL-FW log, the window\n' +
+      'C-06  Tetherline session log\n' +
+      'C-08  Wrenfold’s written confirmation\n' +
+      'R-01  requested Day 12 (Friday) 10:15</pre>' +
+      '<p class="small">C-06 says which sessions connected; C-08 is the vendor’s account, through the contract’s escalation contact.</p>',
+    question: 'Did the remote-support access play any part?',
+    sources: [
+      {id: 'forum', name: 'A forum thread about the vendor', qs: [
+        {q: 'What does it say?', kind: 'trap', res: ['“Wrenfold support got hacked last year, avoid.”', '(No source, no date: a rumour.)']}]},
+      {id: 'hour', name: 'Tetherline’s activity graph', qs: [
+        {q: 'When is it busy?', kind: 'trap', res: ['03:00 every night.', '(Busy isn’t a session.)']}]},
+      {id: 'sessions', name: 'C-06: the session log', qs: [
+        {q: 'Which operator sessions, from where, and what is the 03:00 entry?', kind: 'focus', key: true,
+         res: ['Last session: Day 9 14:05–14:40 from 198.51.100.121, in Wrenfold’s documented range, ticket WF-4471', 'None since; the 03:00 lines are the agent’s heartbeat, no operator']}]},
+      {id: 'vendor', name: 'C-08: the vendor’s confirmation', qs: [
+        {q: 'What does Wrenfold say, through which contact?', kind: 'focus', key: true,
+         res: ['Its support manager, on the escalation contact in §8: no technician session since Tuesday; its relay records agree', 'Email 13:25 with headers; the 13:10 call is in the case notes']}]},
+      {id: 'fw', name: 'C-05: CL-FW, the window', qs: [
+        {q: 'Any Tetherline traffic beyond the heartbeat?', kind: 'focus', key: true,
+         res: ['WF-01 to the vendor’s relay at 03:00 each night, a few kilobytes', 'Nothing else between WF-01 and the vendor’s range in the window']},
+        {q: 'Every line of the window’s firewall log', kind: 'broad', rows: 88000,
+         wall: ['{t}  allow  WF-01 → 198.51.100.11{i}:443', '{t}  allow  CL-FD-0{i} → 203.0.113.{n}:443', '{t}  deny   198.51.100.{n} → CL-FW:3389']}]}
+    ],
+    verdicts: [
+      {label: 'No part: no session from Tuesday’s update to the isolation, from C-06 and C-08', good: true, needs: ['sessions', 'vendor'],
+       needsWhy: 'the finding rests on two sources: C-06 (the sessions) and C-08 (the vendor’s account on a known contact). You read only one.',
+       why: 'Each decides its half, and C-05 agrees.'},
+      {label: 'Likely the way in: nightly activity, a vendor with a bad name, and ransomware two hours after', why: 'The activity is a heartbeat and the name a rumour. C-06 and C-08 show no session.'},
+      {label: 'Unknown until Wrenfold sends its relay records, requested at 10:15', why: 'Its support manager’s written account already covers its side. The request stays logged, but question 2 has its answer.'}],
+    reasons: [
+      {label: 'C-06: no session since Tuesday. C-08: the vendor’s word, via §8’s contact', good: true, why: 'The clinic’s log and the vendor’s account, each on its own record.'},
+      {label: 'A vendor that was hacked before is the likeliest way in, because attackers reuse what worked', why: 'A rumour isn’t a record.'},
+      {label: 'Anything that runs at 03:00 is suspicious, and the tool must be part of the attack', why: 'A schedule isn’t a session.'}],
+    alts: [
+      {label: 'A session hidden from C-06', good: true, why: 'Not supported: C-05 shows nothing but heartbeats, and the vendor’s side shows no session.'},
+      {label: 'A caller posing as the vendor', good: true, why: 'Ruled out: the contact came from §8 of the contract.'},
+      {label: 'Tuesday’s update planting the loader', why: 'Nothing points to it: C-02 shows the loader from Thursday’s attachment.'},
+      {label: 'The forum poster attacking the clinic', why: 'Beside the point.'}],
+    path: '<p>Two decisive sources: <b>C-06</b> (sessions, not heartbeats) and <b>C-08</b> (the vendor’s word, through a contact on file). C-05 agrees. T1219 (Remote Access Tools) is the explanation this evidence ruled out.</p>',
+    response: ['Report to Renata: the remote-support access played no part, with both sources', 'R-01 stays open and dated: Day 12 (Friday) 10:15', 'Recommend Tetherline on demand only, from the vendor’s range, with MFA', 'Note in the case that the forum thread was not used'],
+    techs: ['T1219'], acts: ['cnvendor']
+  },
+  restore: {
+    id: 'restore', title: 'Marisol’s restore', budget: 2,
+    intro: '<p>11:30. Marisol wants S: restored from last night’s backup now: the front desk is on paper and the queue is long. Is last night’s copy safe to restore, and what must happen first?</p>',
+    artefact: '<pre class="art">Marisol Quintero · Day 12 11:30 (game data)\n' +
+      'Backup ran at 01:00 last night. Encryption was\n' +
+      'at 05:31. So last night’s copy is clean.\n' +
+      'Restore it now, please.</pre>' +
+      '<p class="small">A copy made before the encryption isn’t a copy made before the attack. What the copy holds is in the backup’s record and in the attack’s timeline.</p>',
+    question: 'Is last night’s copy safe to restore now, and what comes first?',
+    sources: [
+      {id: 'click', name: 'The backup console', qs: [
+        {q: 'How hard is a restore?', kind: 'trap', res: ['“Restore to original location: one click.” Green ticks for the last 30 nights.', '(Easy says nothing about what the copy holds.)']}]},
+      {id: 'queue', name: 'The front desk', qs: [
+        {q: 'How bad is it out there?', kind: 'trap', res: ['31 patients this morning; check-in on paper takes twice as long.', '(A real cost, and a reason to restore well, not a reason to restore blind.)']}]},
+      {id: 'backup', name: 'The backup job log', qs: [
+        {q: 'When did last night’s copy run, and what does it hold?', kind: 'focus', key: true,
+         res: ['Day 12 01:00–01:38, completed: S:\\FrontDesk, Scans folder included, as of 01:00', '30 daily copies on a store the share can’t write to', 'The 09:20 snapshot of the encrypted share is kept separately, for the firm']}]},
+      {id: 'timeline', name: 'The firm’s 11:15 timeline', qs: [
+        {q: 'When did the attack reach the share?', kind: 'focus', key: true,
+         res: ['Day 11 16:47: insurance-forms.zip saved from the front desk’s mailbox to S:\\FrontDesk\\Scans', '16:48 opened from there on CL-FD-02; the loader ran; 05:31 the encryption', 'The check-out account reset at 08:40, after the memory capture; CL-FD-02 imaged by 09:50; 203.0.113.61 blocked at 10:35']}]}
+    ],
+    ai: {everything: {text: 'The 01:00 backup completed successfully and predates the 05:31 encryption. Recommend restoring it immediately to end downtime.', wrong: true,
+                      reveal: 'Tally compared two times. It never asked when the attack reached the share, which was the afternoon before.'},
+         specific: {q: 'Does last night’s copy include S:\\FrontDesk\\Scans?', text: 'Yes: the whole of S:\\FrontDesk as of 01:00, Scans included.'}},
+    verdicts: [
+      {label: 'Not yet as it stands: the copy holds Thursday’s attachment. Preserve, close the way in, restore without it, then her call', good: true, needs: ['backup', 'timeline'],
+       needsWhy: 'the answer rests on two records: what the copy holds and when the attack reached the share. You read only one.',
+       why: 'The copy predates the encryption, not the attack.'},
+      {label: 'Yes, now: the copy is from 01:00 and the encryption started at 05:31, so it is clean', why: 'The attachment reached Scans at 16:47 the day before. Restore it as is and the way in comes back.'},
+      {label: 'No restore: rebuild S: by hand from paper, as any backup could be infected', why: 'The copy is good apart from one known file. Leave that file out; don’t throw away 30 days of copies.'}],
+    reasons: [
+      {label: 'The backup ran at 01:00, and the attachment had reached Scans at 16:47 the afternoon before', good: true, why: 'What the copy holds against when the attack arrived.'},
+      {label: 'The console shows 30 green ticks for the last 30 nights of copies', why: 'A tick says the job ran, not what it copied.'},
+      {label: 'The front desk is struggling on paper, so the fastest way back to Wrenfold is the right one', why: 'A restore that brings the attack back is the slow way.'}],
+    alts: [
+      {label: 'The backup store encrypted too', good: true, why: 'Not supported: the share can’t write to the store, and the log shows 30 completed copies.'},
+      {label: 'Work lost between 01:00 and the encryption', good: true, why: 'Nothing to lose: nobody worked on S: between 01:00 and 05:31.'},
+      {label: 'The backup software itself carrying the attack', why: 'Nothing points to it: the attack came by email.'},
+      {label: 'Marisol overruling the firm', why: 'Beside the point: she decides when, on what the copy holds.'}],
+    path: '<p>“Is the copy safe?” is decided by <b>the backup’s record</b> (when, and what it holds) and <b>the attack’s timeline</b> (when it reached the share). Ease and urgency fit either answer.</p>',
+    response: ['Tell Marisol: not yet as it stands; she decides when, once the way in is closed', 'Preserve first: the snapshot and the images are sealed (done by 09:50)', 'Restore without Scans\\insurance-forms.zip, from Friday’s 01:00 copy, after the firm’s go-ahead', 'The front desk stays on paper until then: the downtime procedure is working'],
+    techs: [], acts: ['cnrestore']
+  },
+  views: {
+    id: 'views', title: 'Question 3: 412 record views on Thursday', budget: 3,
+    intro: '<p>C-07, Wrenfold’s access audit, shows 412 record views by one front-desk account on Thursday afternoon, the day before the attack. Staff work, or someone staging records to take? The finding needs two sources.</p>',
+    artefact: '<pre class="art">Case CLN-01 · question 3 (game data)\n' +
+      'C-07  Wrenfold access audit, 30 days\n' +
+      '      j.okonjo: 412 views, Day 11 13:05–16:40\n' +
+      'C-09  Front desk task sheet, Thursday; next week\n' +
+      'C-05  CL-FW log, the window</pre>' +
+      '<p class="small">A count is a reason to look. Where the session came from and what the person was there to do decide it.</p>',
+    question: 'Were the 412 views staff work, or staging?',
+    sources: [
+      {id: 'count', name: 'The view count', qs: [
+        {q: 'How many records in how long?', kind: 'trap', res: ['412 records in three and a half hours.', '(A big number fits a busy afternoon and a theft alike.)']}]},
+      {id: 'timing', name: 'The timing', qs: [
+        {q: 'When, against the attack?', kind: 'trap', res: ['The afternoon before the attack.', '(The day before is when everyone worked.)']}]},
+      {id: 'host', name: 'C-07: the session in Wrenfold’s audit', qs: [
+        {q: 'From which PC, and how were the records opened?', kind: 'focus', key: true,
+         res: ['Every view from CL-FD-01, the reminder-call desk, not CL-FD-02', 'One record at a time, 20–40 seconds apart; no export, no print, no report run', 'In the window, no account read Wrenfold in bulk; the exam rooms’ views all show one name, “exam-shared”']},
+        {q: 'Every line of the 30-day audit', kind: 'broad', rows: 186000,
+         wall: ['{t}  view  exam-shared  CL-EX-0{i}  record {n}', '{t}  view  j.okonjo  CL-FD-01  record {n}', '{t}  edit  exam-shared  CL-EX-0{i}  record {n}']}]},
+      {id: 'sched', name: 'C-09: the task sheet and next week', qs: [
+        {q: 'What was that desk doing on Thursday afternoon?', kind: 'focus', key: true,
+         res: ['Thursday 13:00–16:45: reminder calls for next week, desk 1 (CL-FD-01)', 'Next week: 418 appointments, 406 distinct patients']}]},
+      {id: 'fw', name: 'C-05: CL-FW', qs: [
+        {q: 'Did anything leave from CL-FD-01 that afternoon?', kind: 'focus', key: true,
+         res: ['Nothing out from CL-FD-01 beyond its usual mail and updates', 'The only large transfer in the window: CL-FD-02, 05:14–05:19']}]}
+    ],
+    verdicts: [
+      {label: 'Staff work: the reminder calls, from the reminder desk, one record at a time. Not staging at all', good: true, needs: ['host', 'sched'],
+       needsWhy: 'the finding rests on two sources: C-07 (where the session came from and how) and C-09 (what the desk was doing). You read only one.',
+       why: 'The session’s source and pattern fit the task sheet, and C-05 agrees.'},
+      {label: 'Staging: 412 records the afternoon before an attack that took patient lists is no coincidence', why: 'The timing and the count fit both. The session came from the reminder desk, one record at a time, with nothing taken.'},
+      {label: 'Unknown: a named account can’t say who sat at the desk, and no more can be concluded', why: 'Who sat there isn’t the question. Where it came from and what was done are in C-07 and C-09.'}],
+    reasons: [
+      {label: 'C-07: desk 1, one by one, no export. C-09: next week’s reminder calls', good: true, why: 'Source and pattern from the audit, the task from the sheet.'},
+      {label: 'Four hundred views is far more than anyone opens in a normal afternoon, so it must be bulk', why: 'Not for a reminder-call afternoon.'},
+      {label: 'The views came the day before the attack: they must be connected to it', why: 'Before isn’t because.'}],
+    alts: [
+      {label: 'The attacker using that account from CL-FD-02', good: true, why: 'Ruled out: every view came from CL-FD-01.'},
+      {label: 'The views copied out and sent later', good: true, why: 'Not supported: no export or print in C-07, and nothing out from CL-FD-01 in C-05.'},
+      {label: 'A curious member of staff browsing through patients’ records', why: 'Nothing points to it: the records match next week’s appointments.'},
+      {label: 'Wrenfold’s clock being wrong', why: 'Beside the point: C-09 and C-07 agree on the afternoon.'}],
+    path: '<p>Two decisive sources: <b>C-07</b> (the session’s source and pattern) and <b>C-09</b> (the task). C-05 agrees. A count and a date decide nothing.</p>',
+    response: ['Report to Renata: staff work, the reminder calls; no account read Wrenfold in bulk in the window', 'Name the desk, not a person, in the report', 'Note the exam rooms’ shared account: who viewed what there can’t be answered', 'Coach Theo in private: a count is a reason to look'],
+    techs: [], acts: ['cnviews']
+  }
+};
+
+/* ---------- DFIR report 1: CLN-01, for counsel (Day 12 17:00) ---------- */
+const CN_REPORT_1 = {
+  title: 'CLN-01: the ransomware at the front desk', audience: 'Renata Osei, counsel for the Clinic',
+  intro: '<p>Seven findings for Renata, covering her three questions, each from the evidence in the custody log.</p>',
+  claims: [
+    {id: 'one', text: 'Only CL-FD-02 had files encrypted on its own disk; the four other PCs that showed the note had none.', truth: 'confirmed',
+     evidence: ['C-03: CL-FD-02 renamed 2,140 local files; no other host renamed any', 'C-04: the note on the other four came from S:\\Clinic Notices'], why: 'Each host’s own records, and the share’s.'},
+    {id: 'share', text: 'From CL-FD-02’s session, 3,204 shared files were encrypted and 214 notes written, 05:31–05:44.', truth: 'confirmed',
+     evidence: ['C-04: every rename and note in the window, all from CL-FD-02’s session'], why: 'The share’s audit records every write.'},
+    {id: 'way', text: 'It came in as an email attachment, saved to the Scans folder and opened on CL-FD-02 at 16:48 Thursday.', truth: 'confirmed',
+     evidence: ['C-02: insurance-forms.zip saved from the mailbox to S:\\FrontDesk\\Scans at 16:47; opened at 16:48', 'C-03: the process tree from the attachment to the loader, and on to the renames'], why: 'The disk and the telemetry agree.'},
+    {id: 'tether', text: 'The vendor’s remote support played no part: no Tetherline session from Tuesday 14:40 to Friday’s isolation.', truth: 'confirmed',
+     evidence: ['C-06: no operator session since Day 9; the 03:00 lines are heartbeats', 'C-08: the vendor’s written word, through the contact in §8', 'C-05: nothing but heartbeats between WF-01 and the vendor'], why: 'The clinic’s log and the vendor’s account agree.'},
+    {id: 'left', text: 'The archive of the front desk’s daily lists and the recall list left the clinic at 05:14–05:19.', truth: 'likely',
+     evidence: ['C-02: the 38.1 MB archive in CL-FD-02’s temp folder', 'C-05: 38.4 MB from CL-FD-02 to 203.0.113.61, 05:14–05:19, encrypted in transit'], why: 'Size and timing point to it; the contents in transit can’t be read.'},
+    {id: 'bulk', text: 'No account read Wrenfold in bulk in the window; Thursday’s 412 views were the reminder calls.', truth: 'confirmed',
+     evidence: ['C-07: every view logged; the 412 from CL-FD-01, one at a time, no export', 'C-09: reminder calls for next week, desk 1'], why: 'The audit and the task sheet agree.'},
+    {id: 'sender', text: 'Who sent the email, and whether other clinics received it.', truth: 'unknown',
+     evidence: ['C-02: the sender is a free-mail address', 'Nothing in scope shows other organisations’ mail'], why: 'Nothing in scope can say.'}]
+};
+
+/* ---------- DFIR report 2 (the boss, stage 3): CLN-02, what left ---------- */
+const CN_REPORT_2 = {
+  title: 'CLN-02: what the post shows, and what left', audience: 'Renata Osei, counsel for the Clinic',
+  intro: '<p>Six findings on the post and its sample, each from the evidence logged since Friday.</p>',
+  claims: [
+    {id: 'sample', text: 'The 20 sample rows in the post are all in the archived daily lists.', truth: 'confirmed',
+     evidence: ['C-11: the post’s 20 rows', 'C-02: all 20 match rows in the archive’s daily lists (a copy, never the original)'], why: 'The sample against the archive.'},
+    {id: 'archive', text: 'The archive held 90 days of daily lists and the recall list: 5,210 patients, 1,180 inactive.', truth: 'confirmed',
+     evidence: ['C-02: the archive’s file list and contents', 'Fields: name, phone, email, appointment times, visit reason; the recall list’s last visit date'], why: 'Read from the archive itself.'},
+    {id: 'left', text: 'That archive is what left at 05:14–05:19.', truth: 'likely',
+     evidence: ['C-05: 38.4 MB out to 203.0.113.61 against a 38.1 MB archive', 'C-03: the archive written at 05:12, the transfer at 05:14'], why: 'Size and timing point to it; the transfer itself is encrypted.'},
+    {id: 'notes', text: 'No clinical notes were in the archive, and Wrenfold shows no bulk read in the window.', truth: 'confirmed',
+     evidence: ['C-02: the archive holds lists only', 'C-07: no bulk read by any account'], why: 'The archive and the audit.'},
+    {id: 'pub', text: 'The lists have been published in full or passed on.', truth: 'unknown',
+     evidence: ['C-11: the post shows 20 rows', 'Nothing in scope can show where the archive went'], why: 'Nothing in scope can say.'},
+    {id: 'more', text: 'The attacker holds patient data from anywhere other than the archive.', truth: 'unknown',
+     evidence: ['C-10: the email claims “12,000 patients’ full medical records”', 'Nothing in the clinic’s records shows anything else leaving'], why: 'The claim isn’t supported by what left the clinic, and nothing in scope can show what else they hold.'}]
+};
+
+/* ---------- Dojos (original puzzles; concepts only, no tool syntax) ---------- */
+const CN_DOJO_MGR = [
+  {q: 'Your records system could be down for three days. What must exist before that day?',
+   opts: ['A practised procedure: what to write on, who runs it, how it gets back in',
+          'A promise from the vendor to restore within four hours, written into the contract',
+          'A second copy of the system somewhere else, so that downtime can never happen'], good: 0,
+   explain: 'A practised procedure keeps care going whatever the cause. A vendor’s promise doesn’t treat patients, and no copy makes downtime impossible.'},
+  {q: 'Ransomware hit the shared drive. Before restoring from backup, what first?',
+   opts: ['Keep the evidence and close the way in: the copy mustn’t carry the attack back',
+          'Restore the newest copy at once: each hour on paper costs the clinic and its staff',
+          'Never restore: rebuild by hand, as a backup could be infected'], good: 0,
+   explain: 'Preserve, close, check, then restore. A blind restore can bring the attack back; refusing every copy throws away the recovery you paid for.'},
+  {q: 'Who decides that the clinic goes to paper?',
+   opts: ['Operations, on advice: clinicians decide care',
+          'The IR manager decides: an incident puts security in charge',
+          'The records vendor decides: it is their system'], good: 0,
+   explain: 'The person who runs the clinic decides how it runs. Security advises; clinicians decide care; the vendor supports.'}];
+const CN_DOJO_DFIR = [
+  {q: 'Five PCs show a ransom note. How do you tell which are encrypted?',
+   opts: ['Each PC’s own file records, and the share’s record of which session wrote what',
+          'The note itself, which lists what the attacker encrypted',
+          'The tickets: more tickets from a PC mean more of its files are encrypted'], good: 0,
+   explain: 'A note can arrive through a shared folder. A PC’s own files and the share’s audit say what changed, and where from.'},
+  {q: 'An encrypted PC is isolated from the network and still running. In what order?',
+   opts: ['Memory first, then shut down and image the disk: hash both, restore only after',
+          'Power off, then image the disk: memory changes too fast to be useful as evidence',
+          'Reimage it now: the shared drive holds what matters'], good: 0,
+   explain: 'Memory holds what the disk doesn’t: the running program, its connections and keys. Preserve both before anything is rebuilt.'},
+  {q: 'An archive left before the encryption. What can you write about what the attacker holds?',
+   opts: ['What the archive held, that it likely left, and unknown for anything beyond it',
+          'The whole records system: assume they have it, and plan for the worst',
+          'Only the rows they published and nothing else'], good: 0,
+   explain: 'Write what the evidence shows and no more: the archive’s contents, the likely transfer, and an honest unknown for the rest.'}];
+
+/* ---------- The Clinic Board (original; Harriet Kowal; three rounds per track) ---------- */
+const CN_BOARD_SPECS_MGR = () => [
+  {title: 'Round 1: what do we tell patients?', who: 'Harriet Kowal',
+   ask: '“Patients are asking at the desk whether their medical records were stolen. What do we say?”',
+   resp: [{label: 'Known and unknown, from Weller’s script with counsel: HIPAA questions are theirs', good: true},
+          {label: 'That their medical records are safe: only lists left, so HIPAA doesn’t apply', why: 'A promise, and a legal conclusion. Whether HIPAA applies is for Weller and counsel; say what the evidence shows.'},
+          {label: 'Nothing from Weller until the investigation is closed, so nobody is told anything wrong', why: 'Silence at the desk is its own answer. A short, agreed script, and a date for more.'}]},
+  {title: 'Round 2: why didn’t we just pay?', who: 'Harriet Kowal',
+   ask: '“Why didn’t we just pay on Saturday?”',
+   resp: [{label: 'The Board decided, with counsel and the insurer: I brought facts and options', good: true},
+          {label: 'Because paying is always wrong, and I made sure the clinic wouldn’t do it on my watch', why: 'Not an absolute, and not the IR manager’s call. The Board decided, on Renata’s and the insurer’s advice.'},
+          {label: 'I decided we wouldn’t: a security matter is the IR manager’s, so it was mine', why: 'Payment is a leadership decision. The IR manager advises.'}]},
+  {title: 'Round 3: what stops this next time?', who: 'Marisol Quintero',
+   ask: '“What changes, and how will the Board know?”',
+   resp: [{label: 'Alerts routed at night, downtime drilled each quarter, the lists off the share, remote support on demand', good: true},
+          {label: 'A new antivirus product across the clinic, before anything else changes, and a training video', why: 'The gaps were routing, old lists and an untested binder. A product fixes none of them.'},
+          {label: 'Nothing much: one clerk made a mistake, and a reminder to staff will do', why: 'Blame fixes nothing. The share, the lists and the binder made one click this costly.'}]}];
+const CN_BOARD_SPECS_DFIR = () => [
+  {title: 'Round 1: were medical records taken?', who: 'Harriet Kowal',
+   ask: '“Were our patients’ medical records taken?”',
+   resp: [{label: 'Contact details and appointments for 5,210 patients, inactive ones too, likely left: nothing shows notes did', good: true},
+          {label: 'Yes: 12,000 patients’ full records, as the post says, so the Board should assume the worst for each record', why: 'That is the attacker’s claim. The archive held lists only, and Wrenfold shows no bulk read.'},
+          {label: 'No: only the 20 rows in the sample. That is what anyone has seen', why: 'The sample is 20 rows of an archive that held 5,210 patients.'}]},
+  {title: 'Round 2: who opened it?', who: 'Harriet Kowal',
+   ask: '“Who opened the attachment? The Board wants a name.”',
+   resp: [{label: 'The report names a desk and a time, not a person: the AAR asks why one click did this', good: true},
+          {label: 'The check-out clerk on Thursday’s rota: whoever was on that desk at 16:48', why: 'A rota says who was scheduled, not who was at the keyboard, and naming someone fixes nothing.'},
+          {label: 'The technician, for not stopping it before it spread from the PC to the shared drive', why: 'Nobody watched the console at night: that was routing, not a person.'}]},
+  {title: 'Round 3: the report', who: 'Harriet Kowal',
+   ask: '“Can the Board have the firm’s report today?”',
+   resp: [{label: 'Renata decides who receives it, and the Board gets her briefing', good: true},
+          {label: 'Yes: I will email it to each member tonight, without troubling Renata. The Board is the client', why: 'Counsel engaged the firm and decides who receives its report.'},
+          {label: 'Never, as reports are for the firm only, whatever counsel decides', why: 'An absolute nobody asked for. Renata decides.'}]}];
+
+/* ---------- The boss: a post claiming patient data, the clinic on paper (game-original), one seat per track ---------- */
+function cnMgrBossStages() {
+  const open = cnN12Open(), thin = !!(G.cr.cn && G.cr.cn.night12 && G.cr.cn.night12.tired);
+  return {
+    s1: {title: 'Stage 1 (' + cnAt('06:20') + '): coordinate',
+      clues: [thin ? 'The email isn’t in front of you yet: Marisol brings it, with the sample rows, at 07:10.' : '05:35: an email to Marisol and the clinic’s public inbox: “We have 12,000 patients’ full medical records. Pay by Wednesday or everything is published.” 20 sample rows: name, phone, appointment time, visit reason.',
+        open ? '05:50: Tallowmere’s leak-site watch rang the on-call number and found nobody on call. At 06:50 the firm rang Marisol, the next name on the plan’s contact page; she rang you at 07:00.'
+        : thin ? '05:50: paged by the firm’s leak-site watch, the on-call lead, on a third night running, sends a thin first look: “a post names the clinic, something about patients.”'
+        : '05:50: paged by the firm’s leak-site watch, the on-call lead captures a post on leaks.example naming the clinic, with the same 20 rows, and forwards the email as received.',
+        'Saturday’s hours start at 08:00, check-in on paper. Renata, Weller and the Board chair don’t know yet. The firm has been engaged since Friday.'],
+      ask: 'You are the IR manager. Who does what, first?',
+      resp: [{label: 'Marisol runs Saturday on paper as planned. Renata, Weller and the firm now, Kowal told', good: true},
+             {label: 'Marisol cancels Saturday’s appointments and closes the clinic until the data question is settled', why: 'Care runs on paper as planned, and the lists left on Friday. Closing helps no patient.'},
+             {label: 'Weller emails each patient at 07:00 to warn them, before the post spreads further', why: 'What patients are told is Weller’s decision, with counsel, on facts. Not at seven, from a claim.'},
+             {label: 'Take Wrenfold offline now: if they have the front desk lists, the records system may be next', why: 'Nothing points at WF-01, and switching the exam rooms’ records off mid-clinic puts care at risk. The downtime procedure is there if it’s needed.'}]},
+    s2: {title: 'Stage 2 (09:00): the Board chair, and the front desk',
+      clues: ['08:40, the firm: all 20 sample rows are in the archived daily lists; the archive held 90 days of lists and the recall list: 5,210 patients, 1,180 of them inactive records.', 'In it: names, phones, emails, appointment times, visit reasons. No clinical notes were in it, and Wrenfold shows no bulk read.', 'Not known: whether the lists are published in full or passed on. Patients at the desk are asking.'],
+      ask: 'Kowal wants a briefing, and the desk wants words. What do you give them?',
+      resp: [{label: 'Known and not, Weller’s desk script agreed with counsel, the next update at 13:00, no promises', good: true},
+             {label: 'Weller tells patients their medical records are safe: only lists left, nothing that matters to them', why: 'A promise about data the clinic no longer controls. Weller decides the words; the desk uses his script.'},
+             {label: 'Hold off until Monday: a half answer would only worry patients more', why: 'The chair hears it from you first, with the gaps named and a time for the next update.'},
+             {label: 'Give Kowal the attacker’s figure, 12,000 full records, as the scale to plan for', why: 'That is the attacker’s claim. Brief what the evidence shows: 5,210 patients’ lists.'}]},
+    s3: {title: 'Stage 3 (13:00): the demand',
+      clues: ['The demand: pay by Wednesday. Renata has updated the insurer.', 'Kowal wants the Board’s options at 15:00.', 'The FBI contact is on the plan’s contact page.'],
+      ask: 'What do you take to the Board?',
+      resp: [{label: 'The Board decides, with counsel and the insurer: I bring facts, options, limits and the FBI contact', good: true},
+             {label: 'Recommend paying today, as the IR manager’s decision, so the lists aren’t published', why: 'Payment is the Board’s decision, with Renata and the insurer. You bring facts and options; payment buys a promise from the people who took the lists.'},
+             {label: 'Refuse on the clinic’s behalf, and tell the attacker before the Board meets', why: 'Not yours to decide or to say. The Board decides; nobody answers the attacker without counsel.'},
+             {label: 'Open talks with the attacker to buy time while the Board and counsel make up their minds about paying', why: 'Nobody talks to the attacker without leadership and counsel deciding it.'}]}
+  };
+}
+function cnDfirBossStages() {
+  return {
+    s1: {title: 'Stage 1 (' + cnAt('06:40') + '): preserve, then scope',
+      clues: ['05:35: an email to the clinic claims “12,000 patients’ full medical records”, with 20 sample rows; 05:40: the same rows in a post on leaks.example.', 'The on-call lead has the email as received and a capture of the post.', 'Renata has engaged the firm under a second letter: what the post shows, and what left (game).'],
+      ask: 'What do you do first?',
+      resp: [{label: 'Hash the email and capture, Kit re-exports the logs, and the sample is compared on a copy of C-02', good: true},
+             {label: 'Reply to the post, with counsel copied, and ask how many patients they hold, to size the problem', why: 'Nobody talks to the attacker without leadership and counsel. The evidence is in the archive.'},
+             {label: 'Kit reimages CL-FD-02 today: it is imaged, and the front desk needs it back', why: 'Not the first step this morning: the sample is compared against the sealed copy, and the PC stays sealed until the case allows.'},
+             {label: 'Ask Weller to tell each patient now, before the post spreads', why: 'Weller decides what patients are told, with counsel, on the facts the firm is about to give him.'}]},
+    s2: {title: 'Stage 2 (11:00): what left',
+      clues: ['C-02: the archive held 90 daily lists and the recall list.', 'Across them: 5,210 distinct patients, 1,180 of them inactive records; name, phone, email, appointment times, visit reason.', 'C-07: no bulk read of Wrenfold in the window. Wrenfold holds 12,960 records: 9,840 active, 3,120 inactive.'],
+      ask: 'From the evidence, what left the clinic?',
+      resp: [{label: 'The archive: 5,210 patients, 1,180 inactive, contact details and appointments, no clinical notes', good: true},
+             {label: '12,000 patients’ full medical records, as the post says: they are certain of what they took from the clinic', why: 'That is the claim. The archive held lists only, and Wrenfold shows no bulk read.'},
+             {label: 'Only the 20 rows in the sample and nothing else shown to have left', why: 'The sample is 20 rows of an archive that held 5,210 patients.'},
+             {label: 'The 9,840 active patients in Wrenfold: active records are the ones that matter', why: 'That isn’t what was archived, and it leaves out the 1,180 inactive records that were.'}]}
+  };
+}
+
+/* ---------- Field Manual additions ---------- */
+Object.assign(EXTRA_ACTIONS, {
+  cnhosts: {name: 'Encrypted, or only showing the note?', desc: 'A ransom note on a screen can come through a shared folder. Which PCs were encrypted is in each PC’s own file records and in the share’s record of which session wrote what.'},
+  cnvendor: {name: 'Vendor remote access: sessions, not heartbeats', desc: 'An always-on support tool checks in by itself. A session is when somebody connects. Read the session log, and confirm with the vendor on a contact you already hold. Then make remote support on demand, from the vendor’s range, with MFA.'},
+  cnrestore: {name: 'Restore after preserving, and not the attack', desc: 'A copy made before the encryption may still hold the way in. Preserve the evidence, close the way in, leave the known-bad file out, then restore, when the owner decides.'},
+  cnviews: {name: 'Bulk views: work or staging?', desc: 'A count is a reason to look. Where the session came from, how the records were opened, and what the person was there to do decide it.'},
+  cnpreserve: {name: 'Containment that preserves', desc: 'Isolate the host from the network and leave it running; capture memory, then shut it down and image the disk; hash both; snapshot the share. Nothing is wiped or restored until it is preserved.'},
+  cndowntime: {name: 'Downtime: care on paper', desc: 'The person who runs operations decides when the clinic goes to paper, on advice; clinicians decide care. Paper forms from the cart, a schedule on paper, and a checked back-entry when the system returns.'},
+  cnweekend: {name: 'Incident shifts with rest', desc: 'Day shifts of 12 hours with written handovers, nights with the on-call rota under a signed threshold, outside help for the specialist work, and nobody on the day after their night.'},
+  cnaar: {name: 'A blameless AAR', desc: 'What made one click this costly, not who clicked: the routing, the share, the old lists, the binder. Each action has one owner and a date.'},
+  cnreauth: {name: 'Fast re-authentication instead of a shared login', desc: 'One sign-in a day, then a badge tap or a short PIN at each shared PC, and a screen that locks when nobody is there. Each person is named in the record without slowing each visit. The owner decides, and records the risk they accept until it is in.'},
+  cnstatus: {name: 'Read the firm’s status report', desc: 'A retained firm reports what it found, what it didn’t, and anything it saw outside its questions, which goes to counsel first.'}
+});
+Object.assign(FACTS, {
+  cnhipaa: {name: 'Ransomware and HIPAA, in HHS’s words', desc: 'HHS’s Fact Sheet: Ransomware and HIPAA (content last reviewed September 20, 2021) says: “The presence of ransomware (or any malware) on a covered entity’s or business associate’s computer systems is a security incident under the HIPAA Security Rule.” It also says: “Whether or not the presence of ransomware would be a breach under the HIPAA Rules is a fact-specific determination.” It calls implementing a data backup plan “a Security Rule requirement” for covered entities and business associates, and names disaster recovery planning, emergency operations planning, analysing the criticality of applications and data, and periodic testing of contingency plans. Whether HIPAA applies to the Community Clinic, and what would follow, is for the clinic’s counsel and its privacy officer. The game says neither.', src: 'HHS, Fact Sheet: Ransomware and HIPAA'},
+  cnhicp: {name: 'HICP: health-sector practices', desc: 'HHS’s 405(d) program publishes Health Industry Cybersecurity Practices: Managing Threats and Protecting Patients (HICP), 2023 edition. It names five threats: Social Engineering; Ransomware; Loss or Theft of Equipment or Data; Insider, Accidental or Malicious Data Loss; and Attacks Against Network Connected Medical Devices. Its ten practices include Email Protection Systems, Endpoint Protection Systems, Identity and Access Management, Data Protection and Loss Prevention, and Security Operations Center & Incident Response.', src: 'HHS Cyber Gateway, HICP page (the HICP publication itself was not read)'}
+});
+TECH['T1486'] = {name: 'Data Encrypted for Impact', tactic: ['Impact'], desc: 'Encrypting data on one system or many, local or on shared drives, to make it unusable, often with a note demanding payment. Here: one front-desk PC, and the shared files its session could write.'};
+TECH['T1219'] = {name: 'Remote Access Tools', tactic: ['Command and Control'], desc: 'Using legitimate remote-access software as an interactive channel into a network. Here it is the explanation the Clinic’s evidence ruled out: the vendor’s support tool had no session in the window.'};
+TECH['T1566.001'] = {name: 'Phishing: Spearphishing Attachment', tactic: ['Initial Access'], desc: 'An email with a malicious attachment, sent to get access to the systems where it is opened. Here: an insurance-forms archive opened at the front desk.'};
+GAME_NOTES.push(
+  'Riverbend Community Clinic, its hours and counts, Wrenfold and Wrenfold Health Software, Tetherline, WF-01, CL-FS-01, every clinic PC, the shared drive and its folders, the daily lists and the recall list, the attack, the note, the archive, the post on leaks.example and every log line are invented. Patient data in the game is names, contact details, appointment times and a visit-reason field only. (game)',
+  'The Clinic’s annex to the Compact’s plan, its night threshold, the weekend plan and its forecasts, the AAR and tabletop, the Pulse Badge’s effects, the report scores and every time and count are invented. The game never says whether HIPAA applies to the clinic, names no deadline and says nothing about what must be reported: the privacy officer, with counsel, decides patient-privacy questions. (game)'
+);
+
+/* ---- editions/crossroads/clinic-story.js ---- */
+/* ============================================================
+   UPTIME · editions/crossroads/clinic-story.js
+   Crossroads district 3: the Community Clinic, both tracks. Objectives, the
+   arrival (a ransom note at the front desk; containment that keeps the evidence;
+   the Clinic annex's retainer test), the manager track (the downtime decision
+   with the practice manager, three records drills, the weekend plan with the
+   week-2 rota's nights, the AAR, a tabletop on a three-day outage), the DFIR
+   track (the scoping letter, containment that preserves, evidence intake, three
+   evidence drills, two reports), the shared directive (the exam rooms' shared
+   login), the Clinic Board (Pulse Badge), the dojos, the boss from each seat, the
+   nights, the Quiet Thread clue and the end-of-district summary.
+   Timeline: scratchpad crossroads-timeline.md (Community Clinic section); every
+   line here is checked against it.
+   ============================================================ */
+'use strict';
+
+function inClinic() { return CN_MAPS.includes(G.map); }
+const cnMgr = () => G.trackId === 'manager', cnDfir = () => G.trackId === 'dfir';
+// The Clinic's state lives in G.cr.cn, made on arrival (saves from before this slice have none until then).
+function cnC() { return G.cr.cn || (G.cr.cn = {activate: null, downtime: null, cover: null, ex: 0, aar: null, night12: null, board: null, boss: null, dojo: [false, false, false], requests: null}); }
+// Nights 11 to 14 are in the week-2 rota (SD_ROTA, Nights 6 to 14): the on-call lead each night is the rota's.
+function cnLead(n) { return typeof sdLead === 'function' ? sdLead(n) : null; }
+function cnTired(n) { return typeof sdTired === 'function' ? sdTired(n) : false; }
+// Night 12 uncovered: the firm's call finds nobody, and reaches Marisol at 06:50, so the boss's first hour runs an hour later (game).
+function cnN12Open() { return !!(G.cr.cn && G.cr.cn.night12 && !G.cr.cn.night12.lead); }
+function cnAt(t) { if (!cnN12Open()) return t; const m = +t.slice(0, 2) * 60 + +t.slice(3) + 60; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+const CN_DAY = {12: 'Friday', 13: 'Saturday', 14: 'Sunday', 15: 'Monday'};
+const cnHm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+
+/* ---------- Map tiles that change as the arrival problems are fixed ---------- */
+function cnTile(d, ch) {
+  if (ch === 'Ð' && G.f.cnFixDesk) d.pal = 'cnDeskOk';    // check-in back on Wrenfold (Monday 07:30)
+  if (ch === 'Ħ' && G.f.cnFixRoute) d.pal = 'cnRackOk';   // the clinic's night alerts routed to the Compact's on-call
+  if (ch === 'Ŋ' && G.f.cnFixCart) d.pal = 'cnCartOk';    // the downtime cart: next day's schedule on paper, back-entry checklist
+  return d;
+}
+
+/* ---------- Objective ---------- */
+function cnObjective() {
+  if (!G.trackId || !G.f.sdSummary) return null;
+  const f = G.f, at = (text, x, y, map) => ({text: text, map: map || 'clinic', x: x, y: y, district: 'clinic'});
+  if (!f.cnMet) return Object.assign(at('Riverbend Community Clinic: its door is on the west side of the square.', 28, 7), {step: true});
+  if (cnMgr()) {
+    if (!f.cnDowntime) return at('The clinic opens at 08:00. Marisol Quintero, in her office: paper or not?', 3, 12);
+    if (!f.cnDrillA) return at('Kit’s note on the encrypted PCs: the server closet.', 17, 3);
+    if (!f.cnDrillC) return at('Marisol wants the share restored now: her office.', 3, 12);
+    if (!f.cnDrillB) return at('Did the vendor’s remote support connect? Kit, in the server closet.', 17, 3);
+    if (!f.cnStaffing) return at('The weekend: who covers it? Marisol, in her office.', 3, 12);
+    if (!f.cnNight12) return at('End the day at the staff room desk.', 27, 12);
+    if (!f.cnBoss) return at('05:35: a post claims patient data. Marisol, in her office.', 3, 12);
+    if (!f.cnStatus) return at('The firm’s status report: Lucia, in the incident room.', 22, 13);
+    if (!f.cnNight13) return at('End the day at the staff room desk.', 27, 12);
+    if (!f.cnAar) return at('Monday: the after-action review with Marisol. The incident room table.', 19, 11);
+    if (!f.cnTabletop) return at('Tabletop: Wrenfold down for three days. The incident room table.', 19, 11);
+  } else {
+    if (!f.cnLetter) return at('Read the scoping letter with Renata Osei: the incident room.', 18, 13);
+    if (!f.cnContain) return at('CL-FD-02 is isolated and running. Lucia, in the incident room.', 22, 13);
+    if (!f.cnIntake) return at('Evidence intake: the evidence locker in the incident room.', 22, 12);
+    if (!f.cnDrillA) return at('Question 1: which systems were encrypted? The bench.', 19, 11);
+    if (!f.cnIntake2) return at('Three more items at the evidence locker.', 22, 12);
+    if (!f.cnDrillB) return at('Question 2: the vendor’s remote support. The bench.', 19, 11);
+    if (!f.cnDrillC) return at('Question 3: 412 record views on Thursday. Theo, in the incident room.', 18, 10);
+    if (!f.cnReport) return at('Write CLN-01 for Renata Osei: the bench.', 19, 11);
+    if (!f.cnNight12) return at('End the day at the staff room desk.', 27, 12);
+    if (!f.cnBoss) return at('05:35: a post claims patient data. Lucia, in the incident room.', 22, 13);
+    if (!f.cnNight13) return at('End the day at the staff room desk.', 27, 12);
+  }
+  if (!f.cnDirective) return at('Marisol wants a word about the exam-room login: her office.', 3, 12);
+  if (!f.cnDojoDone) {
+    if (!f.cnDojoMet) return at('(Optional) Bettina Ruiz’s ' + (cnMgr() ? 'Business Continuity' : 'Ransomware Forensics') + ' dojo, in the training room.', 26, 3);
+    const i = cnC().dojo.findIndex(x => !x);
+    return at('(Optional) Dojo puzzle ' + (i + 1) + ' of 3.', [20, 22, 24][i], 1);
+  }
+  if (!f.cnBoard) return at('Take the Clinic Board challenge: Harriet Kowal, through the west door.', 8, 3, 'cnboard');
+  if (!f.cnSummary) return at('Marisol wants to close the week: her office.', 3, 12);
+  return {text: 'Community Clinic done. Next: Fire & EMS Dispatch.', done: true, district: 'clinic'};
+}
+
+/* ---------- Triggers, interactions, talk ---------- */
+function cnTriggers() {
+  if (G.map === 'clinic' && G.trackId && G.f.sdSummary && !G.f.cnMet) { run(cnArrive); return true; }
+  return false;
+}
+function cnInteract(ch, tx) {
+  if (!inClinic()) return false;
+  const f = G.f;
+  if (!f.cnMet && G.map === 'clinic') { if ('§£YÐŋĦŊ¤'.includes(ch)) { run(async () => { await say('The clinic is open to patients, not to you yet: the School District’s week isn’t closed.'); }); return true; } return false; }
+  if (ch === '§') { run(cnTable); return true; }
+  if (ch === '£') { run(async () => { if (cnDfir() && f.cnContain && !f.cnIntake) await cnIntake(); else if (cnDfir() && f.cnDrillA && !f.cnIntake2) await cnIntake2(); else await say(cnDfir() ? 'The clinic’s evidence store, case CLN: a locked case and a seal log, apart from the School District’s.' : 'The exercise kit: CISA’s tabletop templates, the clinic’s downtime binder, a box of index cards.'); }); return true; }
+  if (ch === 'Y') { run(cnDesk); return true; }
+  if (ch === 'Ð') { run(async () => { await say(f.cnFixDesk ? 'The front desk. Check-in is back on Wrenfold; a tray of Saturday’s paper forms waits to be entered, each with a tick.' : f.cnMet ? 'The front desk. Paper check-in forms, a pen on a string, and a note: “CL-FD-02: do not touch.”' : 'The front desk.'); }); return true; }
+  if (ch === 'ŋ') { run(async () => { await say('An exam-room PC, signed in as “exam-shared” since 07:55, the way it is every day.'); }); return true; }
+  if (ch === 'Ħ') { run(async () => { await say('The server closet: WF-01, which runs Wrenfold, and CL-FS-01, the shared drive. ' + (f.cnFixRoute ? 'A new label on the rack: “Night alerts → the Compact’s on-call.”' : 'Tetherline’s agent light blinks on WF-01, always on.')); }); return true; }
+  if (ch === 'Ŋ') { run(async () => { await say(f.cnFixCart ? 'The downtime cart: paper forms, tomorrow’s schedule printed last night, and a back-entry checklist with two signature boxes.' : 'The downtime cart: check-in forms, visit forms and a blank schedule sheet. The binder on top is dated 2022.'); }); return true; }
+  if (ch === '¤') { run(() => cnDojoPuzzle([20, 22, 24].indexOf(tx))); return true; }
+  if (ch === '±') { run(async () => { await say('The Board’s minutes, by year. This year’s binder has a tab marked “Compact”.'); }); return true; }
+  return false;
+}
+async function cnTalk(npc) {
+  if (!CN_NPC_IDS.includes(npc.id)) return false;
+  const f = G.f, who = npc.name;
+  if (!f.cnMet) { await say(f.sdSummary ? 'Please come in: Marisol is expecting you.' : 'Once the School District’s week is closed, the practice manager would like a word.', who); return true; }
+  switch (npc.id) {
+    case 'marisol':
+      if (cnMgr() && !f.cnDowntime) { await cnDowntimeTask(); break; }
+      if (cnMgr() && f.cnDrillA && !f.cnDrillC) { await cnDrillC(); break; }
+      if (cnMgr() && f.cnDrillB && !f.cnStaffing) { await cnStaffing(); break; }
+      if (cnMgr() && f.cnNight12 && !f.cnBoss) { await cnBoss(); break; }
+      if (f.cnNight13 && !f.cnDirective && (cnDfir() || f.cnTabletop)) { await cnDirective(); break; }
+      if (f.cnBoard && f.cnDirective) { await cnSummary(); break; }
+      await say(cnMgr() ? 'I run the clinic. You tell me what I’m deciding, and what it costs.' : 'Renata says the firm reports to her. Fine by me, as long as somebody tells me when I can have my front desk back.', who); break;
+    case 'kit':
+      if (cnMgr() && f.cnDowntime && !f.cnDrillA) { await cnDrillA(); break; }
+      if (cnMgr() && f.cnDrillC && !f.cnDrillB) { await cnDrillB(); break; }
+      await say(f.cnFixRoute ? 'Night alerts go to the Compact’s on-call now. I sleep better already.' : 'Kit Ambrose. I keep the clinic’s PCs running for the Compact. CL-FD-02 hasn’t been touched since I isolated it.', who); break;
+    case 'osei':
+      if (cnDfir() && !f.cnLetter) { await cnLetterTask(); break; }
+      await say('Facts to me. Who receives the firm’s reports is mine to decide. What patients are told is Tomasz’s decision, with me.', who); break;
+    case 'weller':
+      await say(f.cnBoss ? 'I have the field list, inactive records included. What patients are told is my decision, with Renata, and it rests on that list.' : 'Tomasz Weller, privacy officer. Patient-privacy questions come to me, and I decide them with counsel. Bring me facts.', who); break;
+    case 'okonjo':
+      await say(f.cnFixDesk ? 'Back on Wrenfold. Saturday’s paper goes in with a second pair of eyes on every form.' : 'I found the note at ten past seven and rang Marisol straight away. The paper forms work. They’re just slow.', who); break;
+    case 'vidal':
+      await say(f.cnFixCart ? 'Tomorrow’s schedule is printed every night now, and the checklist has two signature boxes.' : 'Ines Vidal, nurse lead. The exam rooms are on Wrenfold as normal. If it goes down, we have the cart, and an old binder.', who); break;
+    case 'ruiz': await cnDojoIntro(); break;
+    case 'kowal': await cnBoardScript(); break;
+    case 'luciacn':
+      if (cnDfir() && f.cnLetter && !f.cnContain) { await cnContainTask(); break; }
+      if (cnDfir() && f.cnNight12 && !f.cnBoss) { await cnBoss(); break; }
+      if (cnMgr() && f.cnBoss && !f.cnStatus) { await cnStatusReport(); break; }
+      await say(cnDfir() ? 'Preserve first, then answer the questions in the letter, and nothing beyond them without Renata.' : 'Our report goes to Renata; you get the status, the same day.', who); break;
+    case 'theocn':
+      if (cnDfir() && f.cnDrillB && !f.cnDrillC) { await cnDrillCDfir(); break; }
+      await say('Theo. The clinic’s evidence is in its own store. I checked twice.', who); break;
+  }
+  return true;
+}
+
+/* ---------- Arrival (Day 12, Friday) ---------- */
+async function cnArrive() {
+  const f = G.f, c = cnC();
+  f.cnMet = true; G.day = Math.max(G.day, 12); G.focus = G.focusMax; touchCSF('Respond');
+  const n11 = cnLead(11);
+  await say('Day 12, Friday, 07:20. Riverbend Community Clinic. (The School District’s week closed yesterday. game)');
+  await say('I came in at ten past seven and CL-FD-02 had a note on it. Files on the shared drive won’t open. I rang Marisol at 07:12.', 'Joy Okonjo');
+  await say('Marisol Quintero, practice manager. I rang the Compact’s day line at 07:18. And three more things, plainly: the exam rooms run on one shared login all day, our downtime binder has never been opened, and Wrenfold’s vendor has a support tool on our server that is always on.', 'Marisol Quintero');
+  await say('(Night 11’s on-call lead, ' + (n11 ? n11 : 'nobody: the night was uncovered') + ', had no page: the clinic’s alerts went only to its own console, which nobody watches at night. game)');
+  unlock('fact', 'cnhipaa'); unlock('fact', 'cnhicp');
+  if (cnMgr()) {
+    await say('07:25, your advice, with Marisol agreeing: isolate CL-FD-02 with the endpoint tool, leaving it running so its memory is kept; stop sharing the drive on CL-FS-01, leaving the server up; leave the PCs that show the note running, off the share. Clear nothing, restore nothing. Kit does it at 07:30–07:34. (game)');
+    await say('07:35, the Clinic’s annex to the Compact’s plan: the retainer is called when patient information may have been reached, wherever it is held; when ransomware or another destructive attack is found on any clinic system; or when the on-call lead can’t contain an incident. (game)');
+    let mins = CN_ACT_OK;
+    while (true) {
+      const items = CN_ACTIVATE.map(o => ({label: o.label, meta: {good: !!o.good}}));
+      const i = await UI.openModal('The annex’s test', '<p>A ransom note on CL-FD-02; files on S: renamed. S: holds the front desk’s daily lists. Are the annex’s criteria met?</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+      if (items[i].meta.good) break;
+      mins += CN_ACT_LATE;
+      await say(CN_ACTIVATE[i].why + ' (+' + CN_ACT_LATE + ' game minutes)');
+    }
+    c.activate = mins; G.cr.activate = mins; track();
+    // Each wrong answer is a later call (game): the call, its acknowledgement and counsel's engagement follow from it.
+    const call = 7 * 60 + 35 + (mins - CN_ACT_OK), ack = call + CN_ACT_OK, eng = Math.max(8 * 60, ack + 5);
+    const retainer = cnHm(call) + ' retainer line called · ' + cnHm(ack) + ' Tallowmere acknowledges. Renata Osei, counsel for the Clinic, engages the firm at ' + cnHm(eng) + ' under a letter, and tells the clinic’s cyber insurer. Wrenfold’s incident clause, §8, and its escalation line are already on the plan’s contact page (Slate Badge). (game)';
+    const alert = '07:40: Kit finds the endpoint tool’s 05:33 alert on the clinic’s console: “Ransomware behaviour (high)”, CL-FD-02. Nobody saw it at night. (game)';
+    if (call <= 7 * 60 + 40) { await say(retainer); await say(alert); } else { await say(alert); await say(retainer); }
+    await say('The doors open at eight. I have to decide about paper before then. My office.', 'Marisol Quintero');
+  } else {
+    const lead = G.cr.growth === 'paz' ? 'Paz' : G.cr.growth === 'beatriz' ? 'Ruth' : 'Beatriz';
+    await say('07:20: ' + lead + ', the town’s acting team lead, answered the Compact’s day line and had Kit, the Compact’s technician, follow the plan’s runbook: CL-FD-02 isolated with the endpoint tool at 07:30, left running; the drive unshared on CL-FS-01 at 07:34; nothing cleared, nothing restored. 07:40: Kit found the 05:33 alert nobody saw at night. (game)');
+    await say('07:45: Marisol decides the front desk checks patients in on the paper forms from the downtime cart; the exam rooms stay on Wrenfold, watched. The clinic opens at 08:00. (game)');
+    await say('08:00: Renata Osei, counsel for the Clinic, engages Tallowmere under a letter, and tells the clinic’s cyber insurer. (The Compact has no IR manager applying the Clinic’s annex: counsel engages the firm, as before. game)');
+    await say('You lead it. The incident room is ours. Renata first: nothing gets collected before the letter, and Kit has touched nothing since he isolated it.', 'Lucia Ferrand');
+  }
+}
+
+/* ---------- Manager: the downtime decision (07:45) ---------- */
+async function cnDowntimeTask() {
+  const c = cnC(), who = 'Marisol Quintero';
+  await say('Thirty-one patients this morning, the first at eight. CL-FD-02 is isolated, the drive is off, and the other two front-desk PCs show the same note. What do I do with my clinic?', who);
+  let first = true;
+  while (true) {
+    const items = CN_DOWNTIME.map(o => ({label: o.label, meta: {good: !!o.good}}));
+    const i = await UI.openModal('Downtime · 07:45', '<p>The front desk can’t use the share, and nobody has checked the PCs that show the note. Wrenfold (WF-01) shows nothing, and the exam rooms use it. Who decides, and what?</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+    if (items[i].meta.good) break;
+    first = false; await say(CN_DOWNTIME[i].why);
+  }
+  c.downtime = {first: first};
+  G.f.cnDowntime = true; unlock('act', 'cndowntime'); touchCSF('Recover'); track();
+  await say('My decision: the front desk goes to the paper forms on the cart, the exam rooms stay on Wrenfold, and if anything else alerts, the whole clinic goes to paper. (game)', who);
+  await say('07:50: the downtime binder, opened for the first time. Its call tree names two people who have left, and it has no step for entering the paper back into Wrenfold. 08:00: the clinic opens, check-in on paper. (game)');
+  await say('Kit is in the server closet with a note about the PCs. Read it before anyone touches them.', who);
+}
+
+/* ---------- The incident room table (manager: the AAR and the tabletop; DFIR: the bench) ---------- */
+async function cnTable() {
+  const f = G.f;
+  if (cnMgr()) {
+    if (f.cnNight13 && !f.cnAar) return cnAar();
+    if (f.cnAar && !f.cnTabletop) return cnTabletop();
+    return say(f.cnTabletop ? 'The table: six index cards, each with an owner and a date.' : 'The incident room table. Monday’s review will be here.');
+  }
+  if (!f.cnLetter) return say('The bench. Renata has the letter; read it with her first.');
+  if (f.cnIntake && !f.cnDrillA) { await cnDrill('hostsdfir'); f.cnDrillA = true; touchCSF('Detect'); await say(G.cr.drills.hostsdfir.supported ? 'One PC, and the share files it could reach, from C-03 and C-04.' : 'Question 1 has its answer, but write it only from what you’ve read.', 'Lucia Ferrand'); await say('11:15: our first note to Renata, and with her agreement to Weller: one PC encrypted, the way in, and the archive likely what left. (game)', 'Lucia Ferrand'); await say('Three more items will be at the locker after lunch: the vendor’s tool, Wrenfold’s audit, and the vendor’s own word.', 'Lucia Ferrand'); return; }
+  if (f.cnIntake2 && !f.cnDrillB) { await cnDrill('tetherdfir'); f.cnDrillB = true; touchCSF('Detect'); await say('No session, from C-06 and C-08. R-01 stays logged and dated. Theo has something in Wrenfold’s audit.', 'Lucia Ferrand'); return; }
+  if (f.cnDrillC && !f.cnReport) return cnReport1();
+  return say('Your bench: working copies only. The originals are sealed in the store.');
+}
+
+/* ---------- Drills ---------- */
+async function cnDrill(key) {
+  const c = G.cr;
+  const r = await doDrill(CN_DRILLS[key]);
+  c.drills[key] = {score: r.score, verdictOk: r.verdictOk, supported: r.supported, keys: r.keys, ai: r.ai};
+  if (cnDfir()) { c.needs.total++; if (r.verdictOk && r.supported) c.needs.met++; }
+  track();
+  return r;
+}
+async function cnDrillA() {
+  await say('My note to Marisol at 09:45. Read it like you’d read anyone’s.', 'Kit Ambrose');
+  const r = await cnDrill('hostsmgr');
+  G.f.cnDrillA = true; touchCSF('Detect');
+  await say(r.verdictOk ? 'One PC, then, and the share. I counted tickets, not files.' : 'The endpoint records say one PC, and the share’s audit says every write came from it. I’ll count files next time.', 'Kit Ambrose');
+  await say('11:15, the firm’s first note: an attachment saved to S:\\FrontDesk\\Scans at 16:47 on Thursday and opened on CL-FD-02 at 16:48; an archive of the front desk’s daily lists and the recall list made at 05:12, and 38 MB sent to 203.0.113.61 at 05:14–05:19. Likely what left; the firm is checking. (game)');
+  await say('11:20: you pass it to Tomasz Weller and Renata Osei: what patients are told is Weller’s decision, with counsel. (Kit blocked 203.0.113.61 at the clinic’s firewall at 10:35, at the firm’s request, the moment it was seen; the check-out desk account’s password was reset at 08:40, right after the firm’s 08:35 memory capture. game)');
+  await say('Marisol wants the shared drive back. She’s in her office.');
+}
+async function cnDrillC() {
+  await say('The backup ran at one this morning and the encryption was at half past five, so last night’s copy is clean. Restore it, please. The front desk is drowning in paper.', 'Marisol Quintero');
+  const r = await cnDrill('restore');
+  G.f.cnDrillC = true; touchCSF('Recover');
+  await say(r.verdictOk ? 'Not as it stands, then: the copy has Thursday’s attachment in it. Tomorrow at two, without that file, once the firm says the way in is closed. My decision.' : 'The attachment reached the share the afternoon before the backup. Tomorrow at two, without that file, once the firm says the way in is closed. My decision.', 'Marisol Quintero');
+  await say('The front desk stays on paper through Saturday’s hours. Kit wants a word about the vendor’s tool.', 'Marisol Quintero');
+}
+async function cnDrillB() {
+  await say('13:10: Wrenfold’s support manager rang back on the escalation line from the plan’s contact page, and put it in writing at 13:25. (game)');
+  await say('The vendor’s tool lights up every night at three. Was it them?', 'Kit Ambrose');
+  const r = await cnDrill('tethermgr');
+  G.f.cnDrillB = true; touchCSF('Detect');
+  await say(r.verdictOk ? 'Heartbeats, not sessions. Still, an always-on agent is a door left on the latch.' : 'The session log says nothing since Tuesday, and the vendor says the same on a number we had. The 03:00 lines are the agent checking in.', 'Kit Ambrose');
+  await say('15:00: the firm clears the four PCs that showed the note: no encryption, no loader. Marisol keeps check-in on paper until the share is back. She wants to talk about the weekend. (game)');
+}
+async function cnDrillCDfir() {
+  const cu = G.cr.custody || (G.cr.custody = {items: 0, complete: 0, gaps: 0});
+  await say('15:10: C-09, the front desk’s task sheet for Thursday and next week’s appointment count, scanned by Marisol, hashed on receipt, the paper sealed. (game)');
+  cu.items++; cu.complete++;
+  await say('Four hundred and twelve record views from one front-desk account on Thursday afternoon, the day before. Staging?', 'Theo Marchetti');
+  const r = await cnDrill('views');
+  G.f.cnDrillC = true; touchCSF('Detect');
+  await say(r.verdictOk ? 'The reminder calls, one at a time, from desk 1. I’d have written “staging” from the count.' : 'Desk 1, one record at a time, with next week’s list beside it. A count is a reason to look.', 'Theo Marchetti');
+  await say('CLN-01 for Renata, at the bench, when you’re ready.', 'Lucia Ferrand');
+}
+
+/* ---------- Manager: the weekend plan (Friday 15:30) ---------- */
+async function cnStaffing() {
+  const c = cnC(), who = 'Marisol Quintero';
+  await say('Saturday is four hours of clinic on paper, then Kit restores the drive. Sunday the clinic is shut. Who covers the weekend, and who covers our nights from now on?', who);
+  const fc = o => '<li>' + esc(o.label.split(':')[0].split(',')[0]) + ': overtime forecast ' + o.overtime + ' h of ' + SD_ROTA.budget + ', gaps ' + o.gaps + ' h (game)</li>';
+  let pick;
+  while (true) {
+    const items = CN_COVER.map(o => ({label: o.label, meta: {good: !!o.good}}));
+    const i = await UI.openModal('The weekend', '<p>Nights 12 to 14 are already in the week-2 rota. The days, and the clinic’s night alerts, are not (game).</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+    pick = CN_COVER[i];
+    if (pick.good) break;
+    await say(pick.why);
+  }
+  c.cover = {k: pick.k, gaps: pick.gaps, overtime: pick.overtime, variance: Math.round((pick.overtime - SD_ROTA.budget) / SD_ROTA.budget * 100)};
+  const r = G.cr.sd && G.cr.sd.rota, nights = [12, 13, 14].map(n => 'Night ' + n + ' (' + CN_DAY[n] + ' to ' + CN_DAY[n + 1] + '): ' + (cnLead(n) || 'nobody') + (cnTired(n) ? ', a third night or more in a row: a thin first look on any call' : ''));
+  await UI.openModal('The weekend · the plan', '<ul>' + CN_COVER.map(fc).join('') + '</ul>' + (r ? rotaTable(SD_ROTA, r.assign) : '') + '<ul>' + nights.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul><p class="small">Day shifts: Kit, and a lead who wasn’t on call the night before, 07:00–19:00, written handovers. The firm’s retainer hours for the forensic work. (game)</p>',
+    [{label: 'Sign it', meta: {good: true}}], {closable: false, cls: 'drill'});
+  G.f.cnStaffing = true; G.f.cnFixRoute = true; unlock('act', 'cnweekend'); unlock('act', 'crcover'); touchCSF('Govern'); track();
+  await say('Signed. At night, a page only for ransomware or anything destructive, bulk reads or exports of Wrenfold, any Tetherline session, or anything claimed or published about clinic data. The rest waits for 07:00. (game)', who);
+  await say('17:00, the firm’s Friday status: one PC encrypted, and the share files it could reach; the way in, Thursday’s attachment; no vendor session; the archive likely what left. Weller and Renata have it. (game)');
+  await say('End the day when you’re ready.');
+}
+
+/* ---------- Manager: the AAR (Monday 09:00) ---------- */
+async function cnAar() {
+  const c = G.cr, n = cnC(), who = 'Marisol Quintero';
+  await say('Blameless, please. I don’t want a name. I want to know why one click cost us a weekend.', who);
+  const items = CN_FACTORS.map(p => ({label: p.name, meta: {good: !!p.good}})).concat([{label: 'These are the four', done: true, meta: {done: true}}]);
+  const body = '<p>Pick the <b>four</b> contributing factors the AAR should record.</p>' + shownOrder(CN_FACTORS, items).map(p => '<div class="card"><b>' + esc(p.name) + '</b><br>' + esc(p.text) + '</div>').join('');
+  const sel = await UI.openModal('AAR · contributing factors', body, items, {shuffle: true, multi: 4, closable: false, cls: 'tabletop'});
+  const wrong = sel.filter(i => !CN_FACTORS[i].good);
+  for (const i of wrong) await say(CN_FACTORS[i].name + ': ' + (CN_FACTORS[i].id === 'user' ? 'a name, not a cause. One click did this much because of the share, the lists and the routing.' : CN_FACTORS[i].id === 'vendor' ? 'drill B found no session in the window. The way in was the attachment.' : 'it ran at 01:00 and the share was restored from it on Saturday.'));
+  await say('The three actions arrive with the owners the Board approved (Bookmark Badge). What’s left is the dates.');
+  let onTime = 0;
+  for (const a of CN_AAR) {
+    let ok = true;
+    const opts = a.dates.map(o => ({label: o.label, meta: {good: !!o.good}}));
+    while (true) {
+      const i = await UI.openModal('AAR · due date', '<div class="card"><b>' + esc(a.name) + '</b><br>Owner: ' + esc(a.owner) + '</div><p>When is it due?</p>', opts, {shuffle: true, closable: false, cls: 'drill'});
+      if (opts[i].meta.good) break;
+      ok = false; await say(a.dates[i].why);
+    }
+    if (ok) onTime++;
+  }
+  c.aar = {total: ((c.aar && c.aar.total) || 0) + CN_AAR.length, onTime: ((c.aar && c.aar.onTime) || 0) + onTime};
+  n.aar = {factorsWrong: wrong.length, onTime: onTime};
+  G.f.cnAar = true; unlock('act', 'cnaar'); unlock('act', 'craar'); touchCSF('Govern'); track();
+  await say('Three actions, three owners, three dates, and nobody blamed. Now the other thing the binder taught me: the tabletop, at this table.', who);
+}
+
+/* ---------- Manager: the tabletop, Wrenfold down for three days (Monday 11:00) ---------- */
+async function cnTabletop() {
+  const c = G.cr, who = 'Marisol Quintero';
+  await say('Ines and I have an hour. What if it had been Wrenfold itself, down for three days?', who);
+  while (true) {
+    const items = CN_OBJECTIVE.map(o => ({label: o.label, meta: {good: !!o.good}}));
+    const i = await UI.openModal('Tabletop · the objective', '<p>Scenario: Wrenfold down for three days. CISA’s tabletop packages give the templates (game: the scenario is the clinic’s own).</p><p>What is the exercise for?</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+    if (items[i].meta.good) break;
+    await say(CN_OBJECTIVE[i].why);
+  }
+  for (const inj of CN_INJECTS) {
+    const items = inj.opts.map(o => ({label: o.label, meta: {good: !!o.good}}));
+    while (true) {
+      const i = await UI.openModal('Tabletop · inject', '<p><b>' + esc(inj.t) + '</b></p>', items, {shuffle: true, closable: false, cls: 'drill'});
+      if (items[i].meta.good) break;
+      await say(inj.opts[i].why);
+    }
+  }
+  c.ex.run += 1; c.ex.actions += CN_EX_ACTIONS; cnC().ex = CN_EX_ACTIONS; track();
+  G.f.cnTabletop = true; unlock('act', 'crtabletop'); unlock('fact', 'crctep'); touchCSF('Recover'); touchCSF('Govern');
+  await say('Three gaps, three actions (game): a paper print of the next day’s schedule and contact sheet every night, kept in the cart (Marisol; Kit sets it up; by 16:00 today); a back-entry checklist with a second-person check (Ines Vidal; by 16:00 today); the binder’s call tree and Wrenfold’s escalation line updated, and a 20-minute downtime drill each quarter (Marisol; the update by 16:00 today).', who);
+  await say('And the exam-room login. I want a word about it, in my office.', who);
+}
+
+/* ---------- The directive (both tracks): keep the shared exam-room login ---------- */
+async function cnDirective() {
+  const who = 'Marisol Quintero', t = G.trackId;
+  if (G.f.cnDirective) { await say('Two rooms from next week. My decision, and my signature on the risk until then.', who); return; }
+  await say('One thing I won’t give up: the shared login in the exam rooms. Individual logins slow every visit, and my patients wait long enough.', who);
+  if (t === 'dfir') await say('Renata says you can tell me what the case showed. Does the login matter?', who);
+  const L = CN_DIRECTIVE[t];
+  while (true) {
+    const items = L.map(o => ({label: o.label, meta: {good: !!o.good}}));
+    const i = await choose(t === 'dfir' ? 'What do you tell Marisol?' : 'How do you answer the practice manager?', items, {shuffle: true});
+    if (items[i].meta.good) break;
+    await say(L[i].why);
+  }
+  await say(t === 'dfir' ? 'The fact from the case: Thursday’s 412 views could be answered because the front desk signs in by name. In the exam rooms, Wrenfold’s audit shows one name, “exam-shared”, so who viewed what there can’t be answered. The options are hers. Renata agreed I could say that much.' :
+    'A workable alternative: each clinician signs in once a day, then taps back in at each exam PC with a badge or a short PIN, and the screen locks after a few idle minutes. Try it in two rooms for two weeks. Then it is her decision, and she records the risk she accepts until then.');
+  await say('Two rooms from next week; all six by Day 45 if it works. Until then I accept the shared login, in writing. My decision. (game)', who);
+  G.f.cnDirective = true; unlock('act', 'cnreauth'); touchCSF('Protect');
+  await say(cnMgr() ? '(Present the trade-off; the owner decides.)' : '(Give the facts; the owner decides.)');
+}
+
+/* ---------- DFIR D1: the scoping letter ---------- */
+async function cnLetterTask() {
+  const who = 'Renata Osei', f = G.f;
+  const row = (k, v) => '<tr><th style="vertical-align:top;white-space:nowrap">' + k + '</th><td>' + v + '</td></tr>';
+  const letter = '<p><b>Scoping letter · Tallowmere Forensics · case CLN-01 (game)</b></p><table class="sc letter">' +
+    row('Engaged by', 'Renata Osei, counsel for the Clinic') +
+    row('Questions', '1. Which clinic systems were encrypted, and how did the attack get in?<br>2. Did the records vendor’s remote-support access play any part?<br>3. Was patient information accessed or taken, and which?') +
+    row('In scope', 'The clinic’s PCs and servers (CL-FD-01 to 03, CL-EX-01 to 06, CL-FS-01, WF-01), Wrenfold’s audit, CL-FW, the Tetherline console') +
+    row('Can’t see', 'Wrenfold Health Software’s own systems: requests through counsel, logged when sent') +
+    row('Report to', 'Renata Osei, who decides who receives it. Patient-privacy questions: Tomasz Weller, with counsel') +
+    row('Counsel', 'privilege and the law are counsel’s; the firm reports facts. Anything outside the questions goes to counsel first.') + '</table>';
+  await say('Read it before you touch anything. The PC is isolated and running, and the clinic is open on paper. Both of those matter to how you work.', who);
+  while (true) {
+    const items = CN_LETTER.map(o => ({label: o.label, meta: {good: !!o.good}}));
+    const i = await UI.openModal('The scoping letter', letter + '<p><b>Your first step?</b></p>', items, {shuffle: true, closable: false, cls: 'drill'});
+    if (items[i].meta.good) break;
+    await say(CN_LETTER[i].why);
+  }
+  f.cnLetter = true; unlock('act', 'crscope'); touchCSF('Govern'); track();
+  await say('Lucia is waiting for you with Kit. CL-FD-02 first.', who);
+}
+
+/* ---------- DFIR D2: containment that preserves ---------- */
+async function cnContainTask() {
+  const who = 'Lucia Ferrand';
+  await say('CL-FD-02 has been isolated since 07:30 and it is still running. The share is unshared. Kit is standing by. In what order?', who);
+  while (true) {
+    const items = CN_CONTAIN.map(o => ({label: o.label, meta: {good: !!o.good}}));
+    const i = await UI.openModal('Containment that preserves · 08:20', '<p>CL-FD-02: isolated by the endpoint tool, powered, untouched. CL-FS-01: up, not sharing. Nothing restored. What now?</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+    if (items[i].meta.good) break;
+    await say(CN_CONTAIN[i].why);
+  }
+  G.f.cnContain = true; unlock('act', 'cnpreserve'); touchCSF('Respond'); track();
+  await say('08:35: Kit captures CL-FD-02’s memory under our instruction, hashed at collection. 08:40: with the memory kept, the check-out desk account’s password is reset. 08:55: he shuts it down; 09:10–09:50 he images the disk with a write blocker, hashed. 09:00: the endpoint tool’s telemetry; 09:05: the firewall log; 09:20: the share’s snapshot and audit, before any restore. The evidence locker, when you’re ready. (game)', who);
+}
+
+/* ---------- DFIR D3: evidence intake; the vendor request; the Quiet Thread ---------- */
+async function cnIntake() {
+  const c = G.cr, cu = c.custody || (c.custody = {items: 0, complete: 0, gaps: 0});
+  await say('Five items: memory and the disk from Kit, the endpoint telemetry, the share, the firewall. Log each one: who, when, the hash on receipt against the form, where the original is sealed. Work on copies.', 'Lucia Ferrand');
+  for (const it of [CN_INTAKE.c01, CN_INTAKE.c02, CN_INTAKE.c03, CN_INTAKE.c04, CN_INTAKE.c05]) {
+    let first = true;
+    const opts = it.opts.map(o => ({label: o.label, meta: {good: !!o.good}}));
+    while (true) {
+      const i = await UI.openModal('Custody log · ' + it.id, '<div class="card"><b>' + esc(it.id + ' · ' + it.what) + '</b><br>' + esc(it.form) + '</div><p>Received Day 12. How do you log it?</p>', opts, {shuffle: true, closable: false, cls: 'drill'});
+      if (opts[i].meta.good) break;
+      first = false; cu.gaps++;
+      await say(it.opts[i].why);
+    }
+    const inherent = !!it.opts.find(o => o.good).gap;
+    cu.items++; if (inherent) cu.gaps++;
+    if (first && !inherent) cu.complete++;
+    if (it.id === 'C-04') await cnQtEvidence();
+    if (it.id === 'C-05') await say('The firewall log’s hash on receipt matches Kit’s export hash: the file is unchanged. The handover through Marisol’s office stays in the log as a gap. (game)');
+  }
+  const cn = cnC(); cn.requests = {date: 'Day 12 (Friday) 10:15'};
+  G.f.cnIntake = true; unlock('act', 'crcustody'); touchCSF('Respond'); track();
+  await say('10:15, through Renata: a request to Wrenfold Health Software for its own relay records of Tetherline sessions to the clinic’s agent. Logged as it went: R-01, “requested Day 12 (Friday) 10:15” (Slate Badge). (game)', 'Lucia Ferrand');
+  await say('10:30: C-05 shows 38.4 MB from CL-FD-02 to 203.0.113.61 at 05:14–05:19. At our request Kit blocks the address at the clinic’s firewall at 10:35, the moment we see it: blocking keeps every record. Question 1 is on the bench; Renata gets a first note when it has an answer. (game)', 'Lucia Ferrand');
+}
+// The Quiet Thread clue, seen in C-04 (DFIR). Noticing is the mechanic: the prompt opens on "Leave it".
+async function cnQtEvidence() {
+  if (qtFound('cn-folders')) return;
+  const i = await choose('C-04, the share audit. Question 1 needs the writes from 05:31 to 05:44. The audit runs on through the night.', [{label: 'Read the rest of the night’s audit too'}, {label: 'Leave it: question 1 has what it needs'}], {cursor: 1});
+  if (i !== 0) return;
+  await say('03:14, Night 11: svc-print, from FD-STAFF-11’s address, lists the folders of CL-FS-01’s Facilities share (building plans, the generator’s service records) for under a minute, and opens no file. Nothing alerted. What listed them, and why, is unknown. The ransomware’s writes, two hours later, came from CL-FD-02’s session; nothing in the evidence links the two.');
+  await say('Not one of the letter’s questions. It goes to Renata first; with her agreement, to Lucia and Rae’s suspicion-file team. Nothing changes on svc-print without a plan.');
+  await crQtAfterNote(qtNote('cn-folders'));
+}
+async function cnIntake2() {
+  const c = G.cr, cu = c.custody || (c.custody = {items: 0, complete: 0, gaps: 0});
+  await say('C-06, Tetherline’s session log, exported by Kit at 11:50, and C-07, Wrenfold’s access audit for 30 days, exported by Kit from WF-01 at 12:10: both hashed at export, logged and sealed. (game)', 'Lucia Ferrand');
+  cu.items += 2; cu.complete += 2;
+  let first = true;
+  const it = CN_INTAKE_VENDOR, opts = it.opts.map(o => ({label: o.label, meta: {good: !!o.good}}));
+  while (true) {
+    const i = await UI.openModal('Custody log · ' + it.id, '<div class="card"><b>' + esc(it.id + ' · ' + it.what) + '</b><br>' + esc(it.form) + '</div><p>Received Day 12. How do you log it?</p>', opts, {shuffle: true, closable: false, cls: 'drill'});
+    if (opts[i].meta.good) break;
+    first = false; cu.gaps++;
+    await say(it.opts[i].why);
+  }
+  cu.items++; if (first) cu.complete++;
+  G.f.cnIntake2 = true; touchCSF('Respond'); track();
+  await say('Question 2 is on the bench when you are.', 'Lucia Ferrand');
+}
+
+/* ---------- DFIR: CLN-01 ---------- */
+async function cnReport1() {
+  const c = G.cr;
+  const r = await doReport(CN_REPORT_1);
+  c.reports.cn1 = {score: r.score, over: r.over, under: r.under};
+  c.corrected += r.over; track();
+  G.f.cnReport = true; G.f.cnFixRoute = true; touchCSF('Respond');
+  await say('To Renata at 17:00. With her agreement the recommendations went to Marisol, who accepted them: the clinic’s night alerts to the Compact’s on-call (done at 15:30 under a threshold Marisol signed), attachments no longer saved to a share every front-desk PC can write, the daily lists kept seven days and the recall list run inside Wrenfold, Tetherline on demand only with MFA, and named sign-in in the exam rooms, which is her decision. (game)', 'Lucia Ferrand');
+  await say('End the day when you’re ready.', 'Lucia Ferrand');
+}
+
+/* ---------- The desk: end the day, and the nights between ---------- */
+async function cnDesk() {
+  const f = G.f, mgr = cnMgr();
+  const ready = mgr ? ((f.cnStaffing && !f.cnNight12) || (f.cnStatus && !f.cnNight13)) : ((f.cnReport && !f.cnNight12) || (f.cnBoss && !f.cnNight13));
+  if (!ready) { await say('A hot desk in the staff room. Too early to go home.'); return; }
+  const opts = [{label: 'End shift', meta: {good: true, k: 'end'}}, {label: 'Not yet', meta: {k: 'no'}}];
+  const i = await choose('End the day?', opts, {nav: 'end-shift'});
+  if (opts[i].meta.k !== 'end') return;
+  if (!f.cnNight12) await cnNight12(); else await cnWeekend();
+}
+async function cnNight12() {
+  const c = cnC(), lead = cnLead(12), tired = cnTired(12), first = lead ? lead.split(' ')[0] : null;
+  const run = tired && G.cr.sd && G.cr.sd.rota ? rotaRunAt(G.cr.sd.rota.assign, 12 - SD_ROTA.first) : 0;
+  const body = '<p>Night 12 (Friday to Saturday). On call: <b>' + esc(lead || 'nobody') + '</b>' + (tired ? ' (night ' + run + ' in a row)' : '') + '.</p>' +
+    '<p>05:35: an email to Marisol and the clinic’s public inbox. 05:40: a post on leaks.example names the clinic. 05:50: Tallowmere’s leak-site watch sees it and rings the Compact’s on-call number, which the clinic’s new threshold pages for. ' +
+    (first ? first + ' takes the page' + (tired ? ', on a third night or more in a row: a thin first look, with fewer facts in it' : ': a clear first look, the post captured and the email forwarded as received') + '.' : 'Nobody is on call: the call goes unanswered, and the firm rings Marisol at 06:50.') + ' (game)</p>';
+  await UI.openModal('Night 12', body, [{label: 'Morning', meta: {good: true}}], {closable: false, cls: 'summary'});
+  G.day = 13; G.focus = G.focusMax;
+  c.night12 = {lead: lead, tired: tired};
+  if (tired && cnMgr()) { G.focus = Math.max(10, G.focus - 10); await say('You were up at 05:55 with a tired on-call lead. Focus ' + G.focus + '/' + G.focusMax + ' this morning. (game)'); }
+  G.f.cnNight12 = true;
+  await say(cnMgr() ? (!lead ? 'Day 13, Saturday, 07:10. Marisol is in her office with the email open. The doors open at eight, on paper.' : tired ? 'Day 13, Saturday, 06:15. Marisol is in her office with the on-call lead’s thin note: a post names the clinic, something about patients.' : 'Day 13, Saturday, 06:15. Marisol is in her office with the email, forwarded as received by the on-call lead at 05:58. The doors open at eight, on paper.') : 'Day 13, Saturday, ' + cnAt('06:20') + '. Renata has engaged the firm again. Lucia is in the incident room.');
+  track();
+}
+async function cnWeekend() {
+  const n13 = cnLead(13), n14 = cnLead(14);
+  await UI.openModal('Sunday', '<p>Night 13 (Saturday to Sunday): on call <b>' + esc(n13 || 'nobody') + '</b>. Night 14 (Sunday to Monday): on call <b>' + esc(n14 || 'nobody') + '</b>. No page on either.</p>' +
+    '<p>Sunday: ' + (cnMgr() ? 'the weekend plan you signed with Marisol held' : 'the acting team lead’s weekend plan held') + '. Two day shifts with written handovers, nobody past twelve hours. The clinic was shut. (game)</p>', [{label: 'Monday', meta: {good: true}}], {closable: false, cls: 'summary'});
+  G.day = 15; G.focus = G.focusMax;
+  G.f.cnNight13 = true; G.f.cnFixDesk = true;
+  await say('Day 15, Monday, 07:30. Check-in is back on Wrenfold. Ines Vidal’s team enters Saturday’s paper with a checklist they wrote on the spot: the binder had no step for it. (game)');
+  await say(cnMgr() ? 'Marisol wants the after-action review at nine, at the incident room table.' : 'Marisol wants a word about the exam-room login. Her office.');
+  track();
+}
+
+/* ---------- Dojo (Bettina Ruiz; original puzzles) ---------- */
+function cnDojo() { return cnMgr() ? CN_DOJO_MGR : CN_DOJO_DFIR; }
+async function cnDojoIntro() {
+  const who = 'Bettina Ruiz', f = G.f;
+  if (!f.cnDirective) { await say('Bettina Ruiz, clinical educator. The training terminals are free once your week’s work is done.', who); return; }
+  if (!f.cnDojoMet) { f.cnDojoMet = true; await say(cnMgr() ? 'Business Continuity: three terminals. What keeps care going when the systems don’t.' : 'Ransomware Forensics: three terminals. What a note proves, what memory holds, and what you can say about what left.', who); return; }
+  if (f.cnDojoDone) { await say(cnMgr() ? 'Practise the paper. Preserve, then restore. The person who runs the clinic decides.' : 'A note isn’t a count. Memory first. Write what left, and no more.', who); return; }
+  await say('Puzzles solved: ' + cnC().dojo.filter(Boolean).length + ' of 3. The terminals are behind you, along the north wall.', who);
+}
+async function cnDojoPuzzle(i) {
+  const f = G.f, c = cnC();
+  if (i < 0) return;
+  if (!f.cnDojoMet) { await say('A training terminal. Talk to Bettina first.'); return; }
+  const p = cnDojo()[i];
+  if (c.dojo[i]) { await say('Solved. ' + p.explain); return; }
+  while (true) {
+    const k = await choose(p.q, p.opts.map((o, j) => ({label: o, meta: {good: j === p.good}})), {shuffle: true});
+    if (k === p.good) break;
+    await say('Not quite. Read it again as the person who has to act on it would.');
+  }
+  await say('Correct. ' + p.explain);
+  c.dojo[i] = true; touchCSF(cnMgr() ? 'Recover' : 'Detect');
+  if (!c.dojo.every(Boolean) || f.cnDojoDone) return;
+  f.cnDojoDone = true; G.focusMax += 2; G.focus = Math.min(G.focusMax, G.focus + 2);
+  await say('All three. Focus ' + G.focusMax + ' (game).', 'Bettina Ruiz');
+}
+
+/* ---------- The Clinic Board ---------- */
+async function cnBoardScript() {
+  const who = 'Harriet Kowal', f = G.f, c = cnC();
+  if (f.cnBoard) { await say('The Pulse Badge says the clinic trusts how you work. Keep earning it.', who); return; }
+  if (!f.cnDirective) { await say('The Board sits once your week’s work is done.', who); return; }
+  await say('The Clinic Board. Three questions, the way patients and staff put them to us. We grade the answer we can act on.', who);
+  const specs = cnMgr() ? CN_BOARD_SPECS_MGR() : CN_BOARD_SPECS_DFIR();
+  c.board = {first: []};
+  for (const s of specs) {
+    const items = s.resp.map(r => ({label: r.label, meta: {good: !!r.good}}));
+    let first = true;
+    while (true) {
+      const i = await UI.openModal(s.title, '<p><b>' + esc(s.who) + ':</b> ' + esc(s.ask) + '</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+      if (items[i].meta.good) break;
+      first = false;
+      await say(s.resp[i].why, s.who);
+    }
+    c.board.first.push(first);
+  }
+  f.cnBoard = true; f.cnPulse = true;
+  G.focusMax += 4; G.focus = G.focusMax; track();
+  await say('You cleared the Clinic Board. This is the Pulse Badge (game).', who);
+  await say(cnMgr() ? 'Its power, from the next district on: every downtime decision arrives with its owner and its paper fallback already named. And you carry a little more now: Focus +4.' : 'Its power, from the next district on: every host you contain arrives with its memory captured before shutdown. And you carry a little more now: Focus +4.', who);
+  touchCSF('Govern');
+  await say('Marisol wants to close the week in her office.');
+}
+
+/* ---------- The boss (game-original): a post claiming patient data, the clinic on paper ---------- */
+async function cnStages(S, keys) {
+  const b = cnC().boss;
+  for (const k of keys) {
+    const st = S[k];
+    const items = st.resp.map(r => ({label: r.label, meta: {good: !!r.good}}));
+    let first = true;
+    while (true) {
+      const i = await UI.openModal(st.title, '<ul>' + st.clues.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul><p><b>' + esc(st.ask) + '</b></p>', items, {shuffle: true, closable: false, cls: 'drill'});
+      if (items[i].meta.good) break;
+      first = false;
+      await say(st.resp[i].why);
+    }
+    b.first.push(first);
+  }
+}
+async function cnBoss() {
+  const c = cnC(), n12 = c.night12 || {lead: cnLead(12), tired: cnTired(12)};
+  c.boss = {first: [], look: n12.tired ? 'thin' : n12.lead ? 'clear' : 'none'};
+  if (cnMgr()) {
+    await say(c.boss.look === 'thin' ? 'A post names us, “something about patients”: that’s all the note says. I’ll have the email itself in a minute. The doors open at eight. Tell me what we do, and in what order.' : '“We have 12,000 patients’ full medical records.” Twenty rows, with names and appointment times. The doors open at eight. Tell me what we do, and in what order.', 'Marisol Quintero');
+    await say((c.boss.look === 'none' ? 'No first look: Night 12 had nobody on call, so the firm rang Marisol at 06:50.' : c.boss.look === 'thin' ? 'The night’s on-call lead, on a third night running, sent a thin first look: the email and the sample come later, from Marisol.' : 'The night’s on-call lead sent a clear first look: the post captured, the email forwarded as received.') + ' The firm has been on this since Friday. (game)');
+    const S = cnMgrBossStages();
+    await cnStages(S, ['s1']);
+    await say(cnAt('06:40') + ': Renata and Weller are on their way. The firm has the email and the capture. Harriet Kowal is told, and Renata updates the clinic’s cyber insurer. 08:00: the doors open; check-in on paper, as planned. (game)');
+    await cnStages(S, ['s2']);
+    await say('09:00: Kowal heard what we know, what we don’t, who decides what patients are told, and 13:00 for the next update. The front desk has Weller’s script, agreed with Renata. 12:00: Saturday’s hours close on paper, every booked patient seen. (game)');
+    await cnStages(S, ['s3']);
+    await say('14:00–17:00: Kit restores S: from Friday’s 01:00 copy without the attachment, on Marisol’s decision and the firm’s go-ahead. 15:00: the Clinic Board, with Renata and the insurer, decides not to pay. With Renata’s agreement the FBI has the email and the post, as the plan’s contact page says. Weller, with counsel, decides what patients are told, from the field list, inactive records included. (game)');
+  } else {
+    await say('Renata engaged us again at ' + cnAt('06:20') + ': what the post shows, and what left. Your case.', 'Lucia Ferrand');
+    const cu = G.cr.custody || (G.cr.custody = {items: 0, complete: 0, gaps: 0});
+    const open = c.boss.look === 'none';
+    cu.items += 3; cu.complete += open ? 2 : 3; if (open) cu.gaps++;   // C-10 to C-12; uncovered: the email came through Marisol, a hop recorded as a gap
+    await say(open ? 'Nobody was on call: Marisol forwarded the email at 07:05, hashed on receipt, with the forwarding hop recorded as a gap; we captured the post ourselves. Logged as C-10 and C-11. (game)' : 'The Compact’s on-call lead captured the post at 05:55 and forwarded the email as received at 05:58, both hashed. Logged as C-10 and C-11. (game)');
+    const S = cnDfirBossStages();
+    await cnStages(S, ['s1']);
+    await say('07:20: C-12, Kit’s re-export of the firewall and endpoint records since the isolation, hashed and sealed: nothing out to 203.0.113.61, or anything like it, since the block. 08:40: all 20 sample rows are in the archive on a copy of C-02. (game)');
+    await cnStages(S, ['s2']);
+    const r = await doReport(CN_REPORT_2);
+    G.cr.reports.cn2 = {score: r.score, over: r.over, under: r.under};
+    G.cr.corrected += r.over;
+    await say('14:00: to Renata. 14:00–17:00 Kit restores S: without the attachment, on Marisol’s decision. 15:00: the Clinic Board, with Renata and the insurer, decides not to pay. Weller, with counsel, decides what patients are told, from the field list; with Renata’s agreement the FBI has the email and the post. (game)');
+  }
+  c.boss.ok = c.boss.first.every(Boolean);
+  G.f.cnBoss = true; unlock('tech', 'T1657'); unlock('tech', 'T1566.001'); touchCSF('Respond'); touchCSF('Recover'); track();
+  if (cnMgr()) await say('Lucia has the firm’s status report for you in the incident room.', 'Marisol Quintero');
+  else await say('End the day when you’re ready. Monday, Marisol wants a word.', 'Lucia Ferrand');
+}
+
+/* ---------- Manager: the firm's status report (and the Quiet Thread clue) ---------- */
+async function cnStatusReport() {
+  const who = 'Lucia Ferrand';
+  const body = '<pre class="art">Tallowmere · status · CLN-02 · Day 13 16:00 (game)\n' +
+    'Found       one PC encrypted, CL-FD-02, and the share\n' +
+    '            files its session could write; the way in:\n' +
+    '            an attachment opened Thursday 16:48\n' +
+    '            the 20 sample rows are in the archived\n' +
+    '            lists: 5,210 patients, 1,180 inactive;\n' +
+    '            no clinical notes in it\n' +
+    'Not found   whether the lists are published in full\n' +
+    '            or passed on\n' +
+    'Evidence    C-01 to C-12: hashed, sealed\n' +
+    'Report      to Renata Osei\n' +
+    'Appendix    one observation outside the clinic’s\n' +
+    '            questions, not yet explained, passed to\n' +
+    '            counsel first: it touches the suspicion file</pre>';
+  await say('The status, as promised. The report itself goes to Renata; this is yours.', who);
+  await UI.openModal('The firm’s status report', body, [{label: 'Back', meta: {good: true}}], {closable: false, cls: 'drill'});
+  if (!qtFound('cn-folders')) {
+    const i = await choose('The appendix: an observation not yet explained.', [{label: 'Read the appendix'}, {label: 'Leave it: it’s with Renata'}], {cursor: 1});
+    if (i === 0) {
+      await say('Appendix: reading CL-FS-01’s share audit for Night 11, for the question of which PCs were encrypted, the firm saw svc-print, from FD-STAFF-11’s address, list the folders of the Facilities share at 03:14 for under a minute and open no file. Nothing links it to the ransomware. Passed to counsel; with her agreement, to Rae’s suspicion-file team. Not acted on.');
+      await say('Nothing changes on svc-print without a plan. You pass it to Rae, through Renata.');
+      await crQtAfterNote(qtNote('cn-folders'));
+    }
+  }
+  G.f.cnStatus = true; unlock('act', 'cnstatus'); touchCSF('Respond'); track();
+  await say('End the day when you’re ready. Monday is the review.', who);
+}
+
+/* ---------- Scorecard extra and the end-of-district summary ---------- */
+function cnScoreHtml() {
+  if (!G.trackId || !G.f.cnMet) return '';
+  const c = G.cr, s = c.cn || {};
+  if (cnMgr()) return '<p>Community Clinic: retainer ' + (s.activate !== null && s.activate !== undefined ? '<b>' + s.activate + ' min</b>' : 'not called') + ' · downtime ' + (s.downtime ? (s.downtime.first ? '<b>first time</b>' : '<b>after a false start</b>') : 'not yet') + ' · weekend ' + (s.cover ? '<b>' + esc(s.cover.k) + '</b>' : 'not set') + ' (game)</p>';
+  return '<p>Community Clinic: request logged <b>' + (s.requests ? esc(s.requests.date) : 'not yet') + '</b> · reports filed <b>' + ['cn1', 'cn2'].filter(k => c.reports[k]).length + '</b> (game)</p>';
+}
+function cnDrillRows() {
+  const keys = cnMgr() ? ['hostsmgr', 'restore', 'tethermgr'] : ['hostsdfir', 'tetherdfir', 'views'];
+  return keys.map(k => { const d = G.cr.drills[k]; return '<tr><td>' + esc(CN_DRILLS[k].title) + '</td><td>' + (d ? d.score : '—') + '</td><td>' + (d ? (d.supported ? 'yes' : 'no') : '—') + '</td></tr>'; }).join('');
+}
+async function cnSummary() {
+  const f = G.f, c = cnC(), t = G.trackId;
+  if (!f.cnSummary) {
+    if (t === 'manager' && !f.cnExClosed) { f.cnExClosed = true; G.cr.ex.closed += c.ex || 0; f.cnFixCart = true; touchCSF('Recover'); await say('16:00: the tabletop’s three actions closed: tomorrow’s schedule printed into the cart tonight, the back-entry checklist written, the binder’s call tree and Wrenfold’s escalation line updated. (game)'); }
+    f.cnSummary = true; touchCSF('Govern');
+    Series.markEdition('crossroads', {track: t, clinic: true});
+    await say((t === 'manager' ? 'We ran a Saturday on paper and nobody went unseen. ' : 'I know what left, and what didn’t, and I can say it to a patient without guessing. ') + 'And I know who decides what. Thank you.', 'Marisol Quintero');
+  }
+  const body = '<p class="big">The Community Clinic: done.</p>' +
+    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b> · Day <b>' + G.day + '</b> (' + (CN_DAY[G.day] || '') + ')</p>' +
+    '<h3>Drills (game)</h3><table class="sc"><tr><th>Drill</th><th>Score</th><th>Supported</th></tr>' + cnDrillRows() + '</table>' +
+    (t === 'dfir' ? '<p>Reports filed: CLN-01 <b>' + (G.cr.reports.cn1 ? G.cr.reports.cn1.score : '—') + '</b> · CLN-02 <b>' + (G.cr.reports.cn2 ? G.cr.reports.cn2.score : '—') + '</b> (game)</p>' : '') +
+    '<p>The post: ' + (c.boss && c.boss.ok ? 'handled at the first try from your seat' : 'handled, with false starts the debriefs named') + '. ' + (t === 'manager' ? 'Coordinated: care ran on paper, Marisol decided operations, Weller with counsel decides what patients are told, the Board decided payment with counsel and the insurer, and nobody promised what nobody knew.' : 'What left: the front desk’s lists for 5,210 patients, 1,180 of them inactive records; no clinical notes in them; the rest written as unknown.') + '</p>' +
+    '<p>Lesson (game): what left was 90 days of daily lists and a recall list holding 1,180 inactive patients, kept on a share every front-desk PC could write. The 05:33 alert reached a console nobody watched, but the archive had already left at 05:14: keeping less, for less time, mattered more than the alert. Care went on, on paper; the binder had no step for entering it back until Monday.</p>' +
+    (t === 'manager' && f.lbBookmark ? '<p>Bookmark Badge: the AAR’s three actions arrived with their owners agreed. Slate Badge: Wrenfold’s incident clause was on the plan’s contact page before you needed it.</p>' : '') +
+    '<p>Open risk (game): the exam rooms keep their shared login until Marisol’s trial ends (Day 45), a risk she has accepted in writing. Until then Wrenfold’s audit can’t say which clinician viewed what in the exam rooms.</p>' +
+    '<h3>Your scorecard</h3>' + scorecardHtml() +
+    (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, the 03:00 pattern' + (qtFound('lb-rdp') ? ', a remote-desktop sign-in on the Library’s server' : '') + (qtFound('sd-probe') ? ', pings to eleven of the district’s addresses' : '') + (qtFound('cn-folders') ? ', and now a listing of the clinic’s Facilities share' : '') + '. It continues.</p>') +
+    '<p class="big">Next: Fire &amp; EMS Dispatch.</p>';
+  while (true) {
+    const i = await UI.openModal('End of the Community Clinic', body, [{label: 'Keep exploring the clinic', meta: {good: true}}, {label: 'Credits'}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
     if (i === 1) { await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]); continue; }
     storeSet(encodeSave(G));
     if (i === 2) { started = false; titleScreen(); }

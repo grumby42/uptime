@@ -504,8 +504,8 @@ const FAKE_AUDIO = () => {
     await p.evaluate(() => Settings.set({ palette: 'contrast', textSize: 'large' }));
     await p.goto('file://' + require('path').resolve(__dirname, '../editions/crossroads/index.html')); await p.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
     const r = await p.evaluate(() => ({ pal: Settings.v.palette, text: Settings.v.textSize, swapped: JSON.stringify(Settings.palColours('lbPubOk')) !== JSON.stringify(PAL.lbPubOk),
-      ticks: ['lbPubOk', 'lbCircOk', 'closetOk', 'sdFilesOk', 'sdSisOk'].every(k => stateBadge(k) === 'ok'), plain: ['lbPub', 'lbCirc', 'closetBad', 'sdFiles', 'sdSis'].every(k => !stateBadge(k)), sdSwap: JSON.stringify(Settings.palColours('sdSisOk')) !== JSON.stringify(PAL.sdSisOk), key: EDITION.saveKey }));
-    check('Crossroads reads the shared settings (palette, text size), swaps its own palettes (the School District’s too), and ticks its fixed equipment (not colour alone)', r.pal === 'contrast' && r.text === 'large' && r.swapped && r.sdSwap && r.ticks && r.plain && r.key === 'uptime.crossroads.save', r);
+      ticks: ['lbPubOk', 'lbCircOk', 'closetOk', 'sdFilesOk', 'sdSisOk', 'cnDeskOk', 'cnRackOk', 'cnCartOk'].every(k => stateBadge(k) === 'ok'), plain: ['lbPub', 'lbCirc', 'closetBad', 'sdFiles', 'sdSis', 'cnDesk', 'cnRack', 'cnCart', 'cnExam'].every(k => !stateBadge(k)), sdSwap: JSON.stringify(Settings.palColours('sdSisOk')) !== JSON.stringify(PAL.sdSisOk) && JSON.stringify(Settings.palColours('cnCartOk')) !== JSON.stringify(PAL.cnCartOk), key: EDITION.saveKey }));
+    check('Crossroads reads the shared settings (palette, text size), swaps its own palettes (the School District’s and the Clinic’s too), and ticks its fixed equipment (not colour alone)', r.pal === 'contrast' && r.text === 'large' && r.swapped && r.sdSwap && r.ticks && r.plain && r.key === 'uptime.crossroads.save', r);
     await p.evaluate(() => Settings.set({ palette: 'classic', textSize: 'normal' }));
     check('Crossroads settings run: no console errors or requests', !errs.length, errs);
     await b.close();

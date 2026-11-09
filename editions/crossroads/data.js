@@ -33,7 +33,8 @@ Object.assign(TILES, {
 
 /* ---------- Maps: the Town Hall war room and the town square ---------- */
 // The war room (prologue): the team board (north-west), the command table, your desk, the door south to the square.
-// The square: Town Hall's door in the north edge, the Library's door in the south edge, the School District's in the east edge.
+// The square: Town Hall's door in the north edge, the Library's door in the south edge, the School District's in the east
+// edge, the Community Clinic's in the west edge.
 const MAPS = {
   cwar: {
     name: 'Town Hall · war room',
@@ -60,7 +61,7 @@ const MAPS = {
       "h..S...............h",
       "h..................h",
       "h..hhhh......hhhh..h",
-      "h..................D",
+      "D..................D",
       "h..................h",
       "h..hhhh......hhhh..h",
       "h..................h",
@@ -71,7 +72,9 @@ const MAPS = {
       '9,10': {to: 'library', x: 15, y: 1, dir: 'down',
         get locked() { return (typeof G !== 'undefined' && G && G.trackId) ? undefined : 'The Public Library. It opens to you once you’ve answered the two offers (game).'; }},
       '19,5': {to: 'school', x: 1, y: 7, dir: 'right',
-        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.lbBookmark) ? undefined : 'The School District office. Its door opens to you after the Library Board (the Bookmark Badge, game).'; }}},
+        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.lbBookmark) ? undefined : 'The School District office. Its door opens to you after the Library Board (the Bookmark Badge, game).'; }},
+      '0,5': {to: 'clinic', x: 28, y: 7, dir: 'left',
+        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.sdSlate) ? undefined : 'Riverbend Community Clinic. Its door opens to you after the School Board (the Slate Badge, game).'; }}},
     outdoor: true
   }
 };

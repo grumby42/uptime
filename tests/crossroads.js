@@ -19,6 +19,12 @@
 // districts' stores apart (3 clients), and writes SCH-01 (seven findings) and SCH-02 with "unknown: held by the vendor; requested on Day
 // 8 (Monday)"; save/reload mid-district; the Slate Badge; the Quiet Thread clue sd-probe (T1018) on both tracks; the
 // end summary ("Next: Community Clinic").
+// Community Clinic (slice 3), both tracks: the door opens only with the Slate Badge; Day 12 is a Friday; the manager meets
+// the Clinic annex (ransomware found), leaves the downtime decision to the practice manager, reviews three records drills
+// (one read with a single `needs` source is unsupported), signs a weekend plan, and runs the boss, the AAR and a tabletop;
+// the DFIR consultant works the letter, containment that preserves, intake (an unlogged handover as a gap; the vendor
+// request dated as it went), three two-source drills and CLN-01/CLN-02 (an overclaim corrected; inactive records counted);
+// save/reload mid-Clinic; the Pulse Badge; the Quiet Thread clue cn-folders (T1083); the summary ("Next: Fire & EMS Dispatch").
 // Usage: node tests/crossroads.js   (UPTIME_FILE=file:///.../crossroads/index.html to test another build)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -299,7 +305,7 @@ async function session(ctx, file) {
     check('manager drill C (the vendor’s offer): right and supported', sdA.C.verdictOk && sdA.C.supported, sdA.C);
     check('School Board cleared: the Slate Badge', sdA.slate === true, sdA);
     check('Quiet Thread (manager): the firm’s status report shows the pings (sd-probe, T1018), not in the alert mix, not evicted', sdA.clue && sdA.tech === 'T1018' && sdA.qt && sdA.inAlerts === 0 && !sdA.evicted, sdA);
-    check('School District summary: “Next: Community Clinic”; series records the district; the token-scope risk named as open; the objective done', /Next: Community Clinic/.test(sdSum) && /Open risk/.test(sdSum) && /read: all/.test(sdSum) && sdA.obj.done && sdA.ser.school === true, sdA.obj);
+    check('School District summary: “Next: Community Clinic”, with its door; series records the district; the token-scope risk named as open; the objective moves to the Clinic', /Next: Community Clinic\. Its door is on the west side of the square/.test(sdSum) && /Open risk/.test(sdSum) && /read: all/.test(sdSum) && !sdA.obj.done && /Community Clinic/.test(sdA.obj.text) && sdA.obj.map === 'clinic' && sdA.ser.school === true, sdA.obj);
     const brS = await A.page.evaluate(() => {
       const keep = G.cr.sd.night10, out = {};
       try {
@@ -326,6 +332,80 @@ async function session(ctx, file) {
       out.n1 = /Math\.max\(9 \* 60, ack \+ 5\)/.test(arrive) && SD_ROTA.waitUntil === '07:00';
       return out; });
     check('review fixes (slice 2): revoke first, clearing nothing, then export, on both tracks (B3); no “grades were never shared” to a parent (B2); no Day 10 Board line mentions the post or its sample (B4); 4,410 students, former ones included (S2); Dr Vale in her office on Day 11 (S3); the clue is pings, T1018 (S11); SCH-01 answers all four questions (S12); the retainer clock and the district’s 07:00 (N1, N2)', Object.values(rv).every(Boolean), rv);
+    await A.pickLabel(/^Keep exploring/); await A.settle();
+    // ---- Community Clinic (slice 3), manager track ----
+    const cdoor = await A.page.evaluate(() => { const keep = G.f.sdSlate; G.f.sdSlate = false; const d = MAPS.csquare.doors['0,5'], shut = d.locked; G.f.sdSlate = keep; return { shut, open: !d.locked, to: d.to }; });
+    check('Clinic: the square’s west door is locked without the Slate Badge and opens with it', /Slate Badge/.test(cdoor.shut || '') && cdoor.open && cdoor.to === 'clinic', cdoor);
+    await A.follow(p => p.f.cnMet && !p.ui && !p.busy, []);
+    const carr = await A.page.evaluate(() => ({ day: G.day, act: G.cr.cn.activate, act2: G.cr.activate, hud: hudStatus(), obj: objective().text }));
+    check('Clinic arrival: Day 12 (Friday); ransomware found meets the Clinic annex; the retainer called in 15 game minutes; next, the downtime decision with Marisol', carr.day === 12 && carr.act === 15 && carr.act2 === 15 && /Clinic/.test(carr.hud) && /Marisol/.test(carr.obj), carr);
+    await A.follow(p => p.f.cnDowntime, []);
+    check('downtime: Marisol decides, check-in on paper, exam rooms stay on Wrenfold (first time)', await A.page.evaluate(() => G.cr.cn.downtime.first === true && CN_DOWNTIME.some(o => !o.good && /Shut Wrenfold/.test(o.label)) && CN_DOWNTIME.some(o => !o.good && /Open as normal/.test(o.label))));
+    // Drill A read with one of its two `needs` sources: unsupported.
+    await A.goTo('clinic', 17, 3);
+    await A.settle([], /Investigation drill/); await A.pickLabel(/^Start investigating$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/^Query: The EDR’s file events/);
+    await A.settle([], /Which question/); await A.pickLabel(/Which PCs had their own files encrypted/);
+    await A.settle([], /^Result/); await A.pickLabel(/^Back to the investigation$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/^Query: The helpdesk queue/);
+    await A.settle([], /Which question/); await A.pickLabel(/How many people/);
+    await A.settle([], /^Result/); await A.pickLabel(/^Back to the investigation$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/I have enough|Budget spent/);
+    await A.settle([], /^Verdict/); await A.pickLabel(/^One: CL-FD-02/);
+    await A.settle([], /^Reasoning/); await A.pickLabel(/^Only CL-FD-02 renamed/);
+    await A.settle([], /Debrief/);
+    const debCA = await A.modalText();
+    check('Clinic manager drill A: the right verdict from the endpoint records alone is unsupported (the share’s audit is also needed)', /Unsupported/.test(debCA) && /two records/.test(debCA) && /T1486/.test(debCA), debCA.slice(0, 300));
+    await A.settle();
+    const srC = await A.saveReload();
+    check('save/reload mid-Clinic (manager) restores the state; the export code round-trips', srC.same && srC.roundTrip && srC.before.map === 'clinic', srC);
+    await A.follow(p => p.f.cnStaffing, []);
+    const cst = await A.page.evaluate(() => ({ C: G.cr.drills.restore, B: G.cr.drills.tethermgr, cover: G.cr.cn.cover, rack: tileDef('clinic', 14, 1).pal, gaps: metricVals().crGaps, budget: metricVals().crBudget }));
+    check('Clinic manager: drill C (the restore) and drill B (the vendor’s remote support) right and supported; the weekend plan: day shifts, 0 gaps, 26 of 30 h; night alerts routed (tick)', cst.C.verdictOk && cst.C.supported && cst.B.verdictOk && cst.B.supported && cst.cover.k === 'shifts' && cst.cover.gaps === 0 && cst.cover.overtime === 26 && cst.rack === 'cnRackOk' && cst.budget === -13, cst);
+    await A.follow(p => p.f.cnBoss, []);
+    const cboss = await A.page.evaluate(() => ({ day: G.day, boss: G.cr.cn.boss, n12: G.cr.cn.night12, lead: cnLead(12), tired: cnTired(12) }));
+    check('Clinic boss on Day 13 (Saturday): Night 12’s lead is the week-2 rota’s; first look clear unless that lead is tired; all three stages right first time', cboss.day === 13 && cboss.n12.lead === cboss.lead && cboss.boss.look === (cboss.tired ? 'thin' : cboss.lead ? 'clear' : 'none') && cboss.boss.ok, cboss);
+    await A.follow(() => false, [], /End of the Community Clinic/);
+    const cnA = await A.page.evaluate(() => ({ pulse: G.f.cnPulse, clue: qtFound('cn-folders'), tech: QT_CLUES['cn-folders'].tech, qt: !!QT_TECH.T1083, inAlerts: Object.keys(THREATS).length, evicted: Series.qt().evicted, obj: objective(), ser: crSeries(), ex: G.cr.ex, aar: G.cr.aar, cart: tileDef('clinic', 16, 6).pal, desk: tileDef('clinic', 11, 6).pal, day: G.day, exam: tileDef('clinic', 2, 1).pal }));
+    const cnSum = await A.modalText();
+    check('Clinic Board cleared: the Pulse Badge; Day 15 (Monday)', cnA.pulse === true && cnA.day === 15, cnA);
+    check('Clinic manager: the AAR adds three actions (owners arrive approved), the tabletop three more, closed at 16:00 (the cart and the front desk tick; the exam PCs don’t)', cnA.aar.total === 6 && cnA.aar.onTime === 6 && cnA.ex.run === 3 && cnA.ex.actions === 9 && cnA.ex.closed === 9 && cnA.cart === 'cnCartOk' && cnA.desk === 'cnDeskOk' && cnA.exam === 'cnExam', cnA);
+    check('Quiet Thread (manager): the firm’s status report shows svc-print listing the Facilities share (cn-folders, T1083), not in the alert mix, not evicted', cnA.clue && cnA.tech === 'T1083' && cnA.qt && cnA.inAlerts === 0 && !cnA.evicted, cnA);
+    check('Clinic summary: “Next: Fire & EMS Dispatch”; series records the Clinic; the shared exam login named as an accepted open risk; the objective done', /Next: Fire &amp; EMS Dispatch|Next: Fire & EMS Dispatch/.test(cnSum) && /Open risk/.test(cnSum) && /shared login/.test(cnSum) && cnA.obj.done && cnA.ser.clinic === true && cnA.ser.school === true, cnA.obj);
+    const brC = await A.page.evaluate(() => {
+      const keep = G.cr.cn.night12, out = {};
+      try {
+        G.cr.cn.night12 = { lead: null, tired: false }; const s = cnMgrBossStages().s1, t = cnDfirBossStages().s1;
+        out.open = cnAt('06:20') === '07:20' && /07:20/.test(s.title) && /rang Marisol/.test(s.clues[1]) && /07:40/.test(t.title);
+        G.cr.cn.night12 = { lead: 'Magda Petrov', tired: true }; const s2 = cnMgrBossStages().s1;
+        out.thin = /thin first look/.test(s2.clues[1]) && !/20 sample rows/.test(s2.clues[0] + s2.clues[1]);
+      } finally { G.cr.cn.night12 = keep; }
+      return out; });
+    check('uncovered Night 12: the boss’s first hour starts an hour later (07:20); a tired lead’s first look has no sample rows', brC.open && brC.thin, brC);
+    // The slice's rules, checked on the text: one decider per decision; containment that keeps evidence; counts include inactive records; no overclaim; HHS only in its own words.
+    const rules = await A.page.evaluate(() => {
+      const out = {}, goods = [], all = [];
+      const add = (arr) => arr.forEach(o => { all.push(o.label); if (o.good) goods.push(o.label); });
+      [CN_ACTIVATE, CN_DOWNTIME, CN_COVER, CN_OBJECTIVE, CN_DIRECTIVE.manager, CN_DIRECTIVE.dfir, CN_LETTER, CN_CONTAIN].forEach(add);
+      CN_INJECTS.forEach(i => add(i.opts)); CN_BOARD_SPECS_MGR().concat(CN_BOARD_SPECS_DFIR()).forEach(b => add(b.resp));
+      const mb = cnMgrBossStages(), db = cnDfirBossStages(); [mb.s1, mb.s2, mb.s3, db.s1, db.s2].forEach(st => add(st.resp));
+      // Patient-privacy questions: the right answers name Weller, never counsel alone or the IR manager.
+      out.privacy = goods.filter(g => /patients? (are |is )?told|script/.test(g)).every(g => /Weller/.test(g));
+      // Payment: the Board decides, with counsel and the insurer; no right answer has the player deciding it.
+      out.payment = /Board decides/.test(mb.s3.resp.find(r => r.good).label) && !goods.some(g => /I decided|IR manager’s decision/.test(g));
+      // Containment: memory before shutdown and nothing restored before preservation; an over-reaction distractor and an under-reaction one exist.
+      out.contain = /^Memory now, then shut it down/.test(CN_CONTAIN.find(o => o.good).label) && CN_CONTAIN.some(o => !o.good && /Power CL-FD-02 off/.test(o.label));
+      out.overUnder = CN_DOWNTIME.some(o => !o.good && /Shut Wrenfold/.test(o.label)) && mb.s1.resp.some(r => !r.good && /Take Wrenfold offline/.test(r.label)) && mb.s1.resp.some(r => !r.good && /cancels Saturday/.test(r.label));
+      // Counts include inactive records everywhere they are stated.
+      out.inactive = [CN_REPORT_2.claims.find(c => c.id === 'archive').text, db.s2.resp.find(r => r.good).label, CN_BOARD_SPECS_DFIR()[0].resp.find(r => r.good).label].every(t => /inactive/.test(t) && /5,210/.test(t));
+      // What left: "likely", never "confirmed"; the attacker's "full medical records" is never a right answer.
+      out.likely = CN_REPORT_1.claims.find(c => c.id === 'left').truth === 'likely' && CN_REPORT_2.claims.find(c => c.id === 'left').truth === 'likely' && !goods.some(g => /full (medical )?records/.test(g) && !/not/.test(g));
+      // HHS appears only in the Field Manual, in its own words, with the clinic's status left to counsel and the privacy officer.
+      out.hhs = /The presence of ransomware \(or any malware\) on a covered entity’s or business associate’s computer systems is a security incident under the HIPAA Security Rule\./.test(FACTS.cnhipaa.desc) && /The game says neither/.test(FACTS.cnhipaa.desc) && !/within \d+ (days|hours)/.test(JSON.stringify(CN_DRILLS) + all.join(' '));
+      // The vendor's remote-support drill tags T1219 as the explanation ruled out.
+      out.t1219 = CN_DRILLS.tethermgr.techs[0] === 'T1219' && /ruled out/.test(CN_DRILLS.tethermgr.path) && /ruled out/.test(CN_DRILLS.tetherdfir.path);
+      return out; });
+    check('Clinic rules on the text: one decider for patient privacy (Weller), payment (the Board), operations (Marisol); memory before shutdown; over- and under-reaction distractors; counts include inactive records; what left is “likely”; HHS only in its own words; T1219 ruled out', Object.values(rules).every(Boolean), rules);
     await A.pickLabel(/^Keep exploring/); await A.settle();
     // A fresh save on this browser: the other track is locked; New Game+ opens it.
     await A.page.evaluate(() => { started = false; newGame(); });
@@ -472,8 +552,55 @@ async function session(ctx, file) {
     check('DFIR drill C: our log, worded with both dates and “unknown: … held by the vendor; requested on Day 8 (Monday)”; right and supported', tdB.d.verdictOk && tdB.d.supported && /held by the vendor; requested on Day 8 \(Monday\)/.test(tdB.resp), tdB);
     await B.follow(() => false, [], /End of the School District/);
     const sdB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.sd2, slate: G.f.sdSlate, needs: G.cr.needs, obj: objective(), ser: crSeries() }));
-    check('DFIR School District: SCH-02 filed, 22 custody items (Library 10 + district 12), Slate Badge, summary “Next: Community Clinic”', sdB.cu.items === 22 && !!sdB.r2 && sdB.slate && sdB.obj.done && sdB.ser.school === true && /Next: Community Clinic/.test(await B.modalText()), sdB);
+    check('DFIR School District: SCH-02 filed, 22 custody items (Library 10 + district 12), Slate Badge, summary “Next: Community Clinic”, the objective moves to the Clinic', sdB.cu.items === 22 && !!sdB.r2 && sdB.slate && !sdB.obj.done && sdB.obj.map === 'clinic' && sdB.ser.school === true && /Next: Community Clinic/.test(await B.modalText()), sdB);
     check('SCH-02 carries the vendor-held unknown', await B.page.evaluate(() => SD_REPORT_2.claims.some(c => c.truth === 'unknown' && /held by the vendor; requested on Day 8 \(Monday\)/.test(c.why))));
+    await B.pickLabel(/^Keep exploring/); await B.settle();
+    // ---- Community Clinic (slice 3), DFIR track ----
+    await B.follow(p => p.f.cnContain, []);
+    check('Clinic DFIR: the letter first, then containment that preserves (memory, then the disk image)', await B.page.evaluate(() => G.f.cnLetter && G.f.cnContain && G.day === 12));
+    await B.follow(p => p.f.cnIntake, []);
+    const cuC = await B.page.evaluate(() => ({ cu: G.cr.custody, req: G.cr.cn.requests, clue: qtFound('cn-folders') }));
+    check('Clinic DFIR intake: five items; the firewall log’s unlogged handover recorded as a gap; the vendor request logged with its date as it went (Slate Badge)', cuC.cu.items === sdB.cu.items + 5 && cuC.cu.gaps === sdB.cu.gaps + 1 && cuC.cu.complete === sdB.cu.complete + 4 && cuC.req && cuC.req.date === 'Day 12 (Friday) 10:15', { now: cuC, school: sdB.cu });
+    check('Quiet Thread (DFIR): seen in C-04, the share audit (cn-folders, T1083)', cuC.clue && await B.page.evaluate(() => QT_CLUES['cn-folders'].tech === 'T1083' && !!QT_TECH.T1083));
+    // Drill A with one of its two needed sources and the supporting one: unsupported.
+    await B.goTo('clinic', 19, 11);
+    await B.settle([], /Investigation drill/); await B.pickLabel(/^Start investigating$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/^Query: C-03/);
+    await B.settle([], /Which question/); await B.pickLabel(/Which hosts renamed/);
+    await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/^Query: C-02/);
+    await B.settle([], /Which question/); await B.pickLabel(/What ran on CL-FD-02/);
+    await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/I have enough|Budget spent/);
+    await B.settle([], /^Verdict/); await B.pickLabel(/^CL-FD-02 and the share files/);
+    await B.settle([], /^Reasoning/); await B.pickLabel(/^C-03: only CL-FD-02/);
+    await B.settle([], /Debrief/);
+    const debCB = await B.modalText();
+    check('Clinic DFIR drill A: two decisive sources; C-03 and the supporting C-02 without C-04 is unsupported', /Unsupported/.test(debCB) && /two sources/.test(debCB), debCB.slice(0, 300));
+    await B.settle();
+    const srCB = await B.saveReload();
+    check('save/reload mid-Clinic (DFIR) restores the state; the export code round-trips', srCB.same && srCB.roundTrip && srCB.before.track === 'dfir' && srCB.before.map === 'clinic', srCB);
+    await B.follow(p => p.f.cnDrillC, []);
+    check('Clinic DFIR drills B (the vendor’s remote support) and C (412 views: staff work) right and supported', await B.page.evaluate(() => G.cr.drills.tetherdfir.verdictOk && G.cr.drills.tetherdfir.supported && G.cr.drills.views.verdictOk && G.cr.drills.views.supported));
+    // CLN-01: write "left" (likely) as confirmed: an overclaim, corrected and counted.
+    await B.goTo('clinic', 19, 11);
+    await B.settle([], /Report · /); await B.pickLabel(/^Start writing$/);
+    const nCln1 = await B.page.evaluate(() => CN_REPORT_1.claims.length);
+    for (let n = 1; n <= nCln1; n++) {
+      await B.settle([], /Finding \d of \d/);
+      const card = (await B.page.textContent('#modal .card')).trim();
+      const cl = await B.page.evaluate(t => { const c = CN_REPORT_1.claims.find(x => x.text === t); return c ? { id: c.id, truth: c.truth } : null; }, card);
+      const want = cl && cl.id === 'left' ? 'Confirmed' : { confirmed: 'Confirmed', likely: 'Likely', unknown: 'Unknown' }[cl && cl.truth];
+      await B.pickLabel(new RegExp('^' + want + '$'));
+      await B.settle([], n < nCln1 ? /Finding \d of \d/ : /Report filed/);
+    }
+    const filedC = await B.page.innerHTML('#modal');
+    await B.settle();
+    check('CLN-01: what left goes out as “Likely” (the overclaim corrected before filing and counted); the sender as “Unknown”', /Likely:<\/b> The archive of the front desk’s daily lists/.test(filedC) && /Unknown:<\/b> Who sent the email/.test(filedC) && /corrected in review/.test(filedC) && await B.page.evaluate(() => G.cr.reports.cn1.over === 1), filedC.slice(0, 400));
+    await B.follow(() => false, [], /End of the Community Clinic/);
+    const cnB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.cn2, pulse: G.f.cnPulse, needs: G.cr.needs, obj: objective(), ser: crSeries(), corrected: G.cr.corrected }));
+    check('DFIR Clinic: CLN-02 filed, 34 custody items (Library 10 + district 12 + Clinic 12), Pulse Badge, summary “Next: Fire & EMS Dispatch”', cnB.cu.items === 34 && !!cnB.r2 && cnB.pulse && cnB.obj.done && cnB.ser.clinic === true && /Next: Fire/.test(await B.modalText()), cnB);
+    check('CLN-02: the archive held 5,210 patients, 1,180 of them inactive (confirmed); what left is likely; publication and anything beyond the archive unknown', await B.page.evaluate(() => { const c = id => CN_REPORT_2.claims.find(x => x.id === id); return c('archive').truth === 'confirmed' && /1,180/.test(c('archive').text) && c('left').truth === 'likely' && c('pub').truth === 'unknown' && c('more').truth === 'unknown'; }));
     await B.pickLabel(/^Keep exploring/); await B.settle();
     await B.page.evaluate(() => storeSet(encodeSave(G)));
     const after = await B.page.evaluate(() => localStorage.getItem('uptime.slice1.save'));

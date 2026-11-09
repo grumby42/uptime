@@ -681,7 +681,7 @@ async function sdSummary() {
     '<p>Open risk (game): Inkstone issued every integration token with its default “read: all” scope. Ferrylane’s and Chimewell’s still have it. Their owners, Transportation and Communications, with Owen Marsh, have not yet accepted or fixed that risk. And Ferrylane holds student names and bus stops under a 2022 contract with no data agreement: Transportation, with Priya, to put one in place.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, the 03:00 pattern' + (qtFound('lb-rdp') ? ', a remote-desktop sign-in on the Library’s server' : '') + (qtFound('sd-probe') ? ', and now pings from FD-STAFF-11’s address to eleven of the district’s addresses' : '') + '. It continues.</p>') +
-    '<p class="big">Next: Community Clinic.</p>';
+    '<p class="big">Next: Community Clinic. Its door is on the west side of the square.</p>';
   while (true) {
     const i = await UI.openModal('End of the School District', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Credits'}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
     if (i === 1) { await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]); continue; }
