@@ -226,7 +226,7 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
       return { overlap: h.bottom > s.top + 0.5 && h.top < s.bottom, truncated: ob.scrollWidth > ob.clientWidth + 1 || ob.scrollHeight > ob.clientHeight + 1 || st.scrollWidth > st.clientWidth + 1, lines: Math.round(ob.getBoundingClientRect().height / lh), sw: document.documentElement.scrollWidth, W: innerWidth }; });
     const h0 = await hud();
     check('Crossroads ' + name + ': HUD band clear of the map, nothing truncated, no horizontal scroll', !h0.overlap && !h0.truncated && h0.sw <= h0.W, h0);
-    const lo = await p.evaluate(() => { const re = /(?:\bat\(|\btext:\s*)(['"])((?:(?!\1)[^\\]|\\.)*)\1/g, all = []; for (const f of [objective, lbObjective]) { const src = f.toString(); let m; while ((m = re.exec(src))) all.push(m[2]); } all.sort((a, b) => b.length - a.length); return all[0]; });
+    const lo = await p.evaluate(() => { const re = /(?:\bat\(|\btext:\s*)(['"])((?:(?!\1)[^\\]|\\.)*)\1/g, all = []; for (const f of [objective, lbObjective, sdObjective]) { const src = f.toString(); let m; while ((m = re.exec(src))) all.push(m[2]); } all.sort((a, b) => b.length - a.length); return all[0]; });
     await p.evaluate(t => { window.__ro = objective; objective = () => ({ text: t, map: 'cwar', x: 1, y: 1 }); }, lo); await sleep(150);
     const h1 = await hud();
     check('Crossroads ' + name + ': the longest objective (' + lo.length + ' chars) wraps in full, at most 3 lines', !h1.truncated && !h1.overlap && h1.lines <= 3, h1);
@@ -253,6 +253,59 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     check('Crossroads ' + name + ': report finding modal (claim and the four wording options) fits above the controls', fits(rp) && /Finding 1 of 6/.test(await p.textContent('#modal')), rp);
     await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-report.png' });
     check('Crossroads ' + name + ': no console errors or network requests', !errs.length, errs);
+    await c.close();
+  }
+  // Crossroads, School District (slice 2): the week-2 rota (two carried nights above seven), the inventory's modals, a drill
+  // hub and an SCH-01 finding, at phone portrait, phone landscape and desktop: each fits above the controls, nothing
+  // overflows sideways, and the body keeps at least 30% of the box (or shows whole) beside the options, so the evidence
+  // the player must read is never cut to a line or two on a landscape phone.
+  for (const [name, opt] of Object.entries({
+    phone360: { viewport: { width: 360, height: 800 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    phoneLand: { viewport: { width: 800, height: 360 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    land844: { viewport: { width: 844, height: 390 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    desktop: { viewport: { width: 1280, height: 800 } } })) {
+    const c = await b.newContext(opt);
+    if (SETTINGS_INIT) await c.addInitScript(v => { try { localStorage.setItem('uptime.settings', v); } catch (e) {} }, SETTINGS_INIT);
+    const p = await c.newPage(); const errs = [];
+    p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+    p.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) errs.push('request ' + r.url()); });
+    const touch = !!opt.hasTouch, portrait = opt.viewport.height > opt.viewport.width;
+    const fresh = async () => {
+      await p.goto(CRF); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui);
+      await p.evaluate(() => { __UPTIME.seed(5); __UPTIME.turbo(true); }); await sleep(300);
+      await p.evaluate(() => { [...document.querySelectorAll('#mopts .opt')].find(e => /New game/.test(e.textContent)).click(); });
+      for (let i = 0; i < 300; i++) { const q = await p.evaluate(() => __UPTIME.peek()); if (!q.ui && !q.busy && q.started) break; if (q.ui) await p.evaluate(() => { if (UI.mode === 'say') UI.handle('a'); else { const m = UI.modal || UI.choice; const g = m.items.findIndex(o => o.meta && o.meta.good); m.cursor = g < 0 ? 0 : g; UI.handle('a'); } }); await sleep(15); }
+      await p.evaluate(() => { __UPTIME.turbo(false); G.trackId = 'manager'; G.cr.rota = { assign: ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae'], stats: rotaStats(CR_ROTA, ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae']) }; Object.assign(G.f, { lbSummary: true, lbBookmark: true, sdMet: true, sdNotice: true }); });
+      await sleep(150);
+    };
+    const measure = () => p.evaluate(() => { const box = document.querySelector('#modal .mbox').getBoundingClientRect(), pad = document.getElementById('pad'), mb = document.getElementById('mbody'), mo = document.getElementById('mopts');
+      const padTop = pad.getBoundingClientRect().height ? pad.getBoundingClientRect().top : innerHeight;
+      const btnsOk = [...document.querySelectorAll('[data-btn]')].every(e => { const q = e.getBoundingClientRect(); if (!q.width) return true; const t = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return t && (t === e || e.contains(t)); });
+      const first = mo.querySelector('.opt'), fr = first ? first.getBoundingClientRect() : null, or = mo.getBoundingClientRect();
+      return { title: document.querySelector('#modal .mhead').textContent.slice(0, 40), top: Math.round(box.top), bottom: Math.round(box.bottom), padTop: Math.round(padTop), H: innerHeight, btnsOk, overflow: mb.scrollWidth > mb.clientWidth + 1,
+        box: Math.round(box.height), body: Math.round(mb.getBoundingClientRect().height), bodyAll: mb.scrollHeight <= mb.clientHeight + 1, firstRow: !fr || (fr.top >= or.top - 0.5 && fr.bottom <= or.bottom + 0.5) }; });
+    const ok = m => m.top >= 0 && (touch && portrait ? m.bottom <= m.padTop + 0.5 : m.bottom <= m.H + 0.5) && (!touch || m.btnsOk) && !m.overflow && (m.bodyAll || m.body >= 0.3 * m.box) && m.firstRow;
+    const shots = {};
+    await fresh();
+    await p.evaluate(() => { run(() => doRota(SD_ROTA, ['bea', 'ruth'])); }); await sleep(300);
+    shots.rota = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-rota2.png' });
+    await fresh();
+    await p.evaluate(() => { run(sdInventory); }); await sleep(250);
+    shots.invSource = await measure();
+    await p.evaluate(() => { const m = UI.modal; m.cursor = m.items.findIndex(o => o.meta && o.meta.good); UI.handle('a'); }); await sleep(250);
+    shots.invTable = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-inventory.png' });
+    await p.evaluate(() => UI.handle('a')); await sleep(250);
+    shots.invOwner = await measure();
+    await fresh();
+    await p.evaluate(() => { run(() => doDrill(SD_DRILLS.tokendate)); }); await sleep(250);
+    await p.evaluate(() => UI.handle('a')); await sleep(250);
+    shots.drillHub = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-sddrill.png' });
+    await fresh();
+    await p.evaluate(() => { run(() => doReport(SD_REPORT_1)); }); await sleep(250);
+    await p.evaluate(() => UI.closeModal(0)); await sleep(250);
+    shots.finding = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-sch01.png' });
+    for (const [k, m] of Object.entries(shots)) check('Crossroads School District ' + name + ': ' + k + ' (' + m.title.trim() + ') fits above the controls, body at least 30% of the box or whole, a full option row shown', ok(m), m);
+    check('Crossroads School District ' + name + ': no console errors or network requests', !errs.length, errs);
     await c.close();
   }
   // Modal share (review of Crossroads slice 1, B6), both editions: a long body with six long options, and a long body

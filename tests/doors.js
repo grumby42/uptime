@@ -63,14 +63,23 @@ const CR = /crossroads/.test(FILE);
     const out = {was, x: G.x, y: G.y, solid: !!tileDef('hub', G.x, G.y).solid, door: !!doorAt('hub', G.x, G.y), blocked: blocked('hub', G.x, G.y), ox: 1, oy: 10};
     G = keep; return out;
   }, CR);
+  const mig2 = CR ? await page.evaluate(() => {
+    const keep = G;
+    G = Object.assign(newState(7), {map: 'school', x: 13, y: 2, trackId: 'dfir', f: {crRota: true, crGrowth: true, lbMet: true, lbSummary: true, sdMet: true}});
+    const was = tileDef('school', 13, 2).solid;
+    G = decodeSave(encodeSave(G)); fixupState();
+    const out = {was, x: G.x, y: G.y, solid: !!tileDef('school', G.x, G.y).solid, door: !!doorAt('school', G.x, G.y), blocked: blocked('school', G.x, G.y)};
+    G = keep; return out;
+  }) : null;
   await b.close();
   const results = [
     { name: CR ? 'old save on a wall tile (library 1,1) loads onto the nearest walkable floor tile' : 'old save on a now-wall tile (hub 1,10) loads onto the nearest walkable floor tile', ok: mig.was && !mig.solid && !mig.door && !mig.blocked && Math.abs(mig.x - mig.ox) + Math.abs(mig.y - mig.oy) <= 2, info: mig },
     { name: 'every door pair: exit wall matches the arrival side, facing away from the door', ok: r.bad.length === 0, info: r.bad },
     { name: 'every exit tile is a working door', ok: r.orphans.length === 0, info: r.orphans },
-    CR ? { name: 'checked all Crossroads doors (war room, square, Library, Board room: 6 one-way links)', ok: r.pairs.length === 6 && ['cwar', 'csquare', 'library', 'lboard'].every(m => r.pairs.some(x => x.startsWith(m + ' '))), info: r.pairs }
+    CR ? { name: 'checked all Crossroads doors (war room, square, Library, Library Board, School District, School Board: 10 one-way links)', ok: r.pairs.length === 10 && ['cwar', 'csquare', 'library', 'lboard', 'school', 'sboard'].every(m => r.pairs.some(x => x.startsWith(m + ' '))), info: r.pairs }
        : { name: 'checked all doors (at least 38 one-way links, Water Plant and Council Chambers included)', ok: r.pairs.length >= 38 && r.pairs.some(x => /^water /.test(x)) && r.pairs.some(x => /^ptboard /.test(x)) && r.pairs.some(x => /^water 14,15 -> council /.test(x)) && r.pairs.some(x => /^council /.test(x)) && r.pairs.some(x => /^ccboard /.test(x)), info: r.pairs.length },
-    { name: 'no console errors or network requests', ok: errs.length === 0, info: errs }];
+    CR ? { name: 'an old save standing on a School District cabinet (13,2) loads onto the nearest walkable floor tile', ok: mig2.was && !mig2.solid && !mig2.door && !mig2.blocked && Math.abs(mig2.x - 13) + Math.abs(mig2.y - 2) <= 2, info: mig2 } : null,
+    { name: 'no console errors or network requests', ok: errs.length === 0, info: errs }].filter(Boolean);
   const failed = results.filter(x => !x.ok);
   console.log(JSON.stringify({ suite: 'doors', passed: results.length - failed.length, failed: failed.length, results: results.map(x => x.ok ? { name: x.name, ok: true } : x), doors: r.pairs }, null, 1));
   process.exit(failed.length ? 1 : 0);

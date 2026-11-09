@@ -206,7 +206,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261109-1126Z', BUILD_TS = '2026-11-09 11:26 UTC';
+const BUILD_ID = 'ARCD-20261109-1307Z', BUILD_TS = '2026-11-09 13:07 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -760,12 +760,17 @@ const UI = {
     const cur = box.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
   },
   // The options keep their own height up to 40% of the modal area (a lone Back button is never squeezed); past that
-  // they scroll. The body and the options otherwise share the shrinking, so a long body keeps most of the box.
+  // they scroll. The body likewise keeps its own height up to a third of the area, so a short question above long
+  // options is never cut on a landscape phone (Crossroads slice 2). Past those floors the two share the shrinking,
+  // so a long body keeps most of the box.
   fitModal() {
-    const mo = document.getElementById('mopts'); if (!mo || !this.modalEl) return;
+    const mo = document.getElementById('mopts'), mb = document.getElementById('mbody'); if (!mo || !this.modalEl) return;
     const cs = getComputedStyle(this.modalEl), avail = this.modalEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-    mo.style.minHeight = '';
-    if (avail > 0) mo.style.minHeight = Math.min(mo.scrollHeight, Math.round(avail * 0.4)) + 'px';
+    mo.style.minHeight = ''; if (mb) mb.style.minHeight = '';
+    if (avail > 0) {
+      mo.style.minHeight = Math.min(mo.scrollHeight, Math.round(avail * 0.4)) + 'px';
+      if (mb) mb.style.minHeight = Math.min(mb.scrollHeight, Math.round(avail * 0.33)) + 'px';
+    }
   },
   modalActivate(i) {
     const m = this.modal;
@@ -1287,6 +1292,9 @@ const QT_TECH = {
   // Crossroads (verified on attack.mitre.org, 7 Nov 2026, ATT&CK content v20.1).
   'T1021.001': {name: 'Remote Services: Remote Desktop Protocol', tactic: ['Lateral Movement'],
                 plain: 'Signing in to another computer over remote desktop with a valid account, then acting as that user. A real account’s sign-in looks like ordinary admin work.'},
+  // Crossroads, School District (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
+  'T1018':     {name: 'Remote System Discovery', tactic: ['Discovery'],
+                plain: 'Finding out which other computers are on a network and which of them answer, by name or address. Even refused attempts leave a line in a firewall’s log.'},
   // ATT&CK for ICS (verified on attack.mitre.org, 1 Nov 2026, ATT&CK v20.0).
   'T0859':     {name: 'Valid Accounts', tactic: ['Persistence', 'Lateral Movement'],
                 plain: '(ATT&CK for ICS) Using a real account on a plant system, such as a remote-access box or an engineering workstation, to get in and come back. A legitimate account raises no alarm when it is used.'}

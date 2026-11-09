@@ -11,6 +11,14 @@
 // unsupported, the report primitive (an overclaim is corrected and counted), the boss and the end summary ("Next: School
 // District"); a fresh save on the locked browser shows the other track locked, and New Game+ (test hook) opens it; a Town
 // Hall save code is refused by Crossroads' import; zero console errors and network requests.
+// School District (slice 2), both tracks: the door opens only with the Bookmark Badge; Day 8 is a Monday; the manager
+// meets the district annex's retainer criteria (15 game minutes), works the notice under §9, builds the inventory with
+// owners, runs the tabletop, absorbs the district into a week-2 rota whose in-a-row rule counts last week's nights, and
+// reviews three records drills (one read with a single `needs` source is unsupported); the DFIR consultant works the
+// amended letter, logs five items (the SSO filter as a gap), requests vendor-held evidence dated Day 8, keeps the
+// districts' stores apart (3 clients), and writes SCH-01 and SCH-02 with "unknown: held by the vendor; requested on Day
+// 8 (Monday)"; save/reload mid-district; the Slate Badge; the Quiet Thread clue sd-probe (T1018) on both tracks; the
+// end summary ("Next: Community Clinic").
 // Usage: node tests/crossroads.js   (UPTIME_FILE=file:///.../crossroads/index.html to test another build)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -219,7 +227,7 @@ async function session(ctx, file) {
     const sumTxt = await A.modalText();
     check('Quiet Thread: the firm’s status report shows svc-print over RDP on CIRC-01 (lb-rdp, T1021.001); not in the alert mix; not evicted', endA.clue && endA.qt.evicted === false && endA.threats === 0 &&
       await A.page.evaluate(() => QT_CLUES['lb-rdp'].tech === 'T1021.001' && !!QT_TECH['T1021.001']), endA);
-    check('end summary: “Next: School District”; series records the Library done on the manager track', /Next: School District/.test(sumTxt) && endA.obj.done && endA.ser.library === true && endA.ser.track === 'manager', endA);
+    check('end summary: “Next: School District”; series records the Library done on the manager track; the objective moves to the School District', /Next: School District/.test(sumTxt) && !endA.obj.done && /School District/.test(endA.obj.text) && endA.ser.library === true && endA.ser.track === 'manager', endA);
     check('end summary: the CIRC-01 directory-join risk is named as open, with where it goes', /Open risk/.test(sumTxt) && /risk committee/.test(sumTxt));
     // The rota's uncovered nights and the thin first look change the text (review S2, S15); checked on the state directly, then restored.
     const br = await A.page.evaluate(() => {
@@ -240,6 +248,68 @@ async function session(ctx, file) {
     check('uncovered Night 1: the note is the day lead’s, and the day lead is coached; covered: the on-call lead’s', br.n1 && br.n1cov, br);
     check('uncovered Night 4: the boss’s first hour starts after the Director reads the email at 07:00; a tired lead’s first look has no account or address', br.n4open && br.n4thin, br);
     check('the paste-site drills tag no ATT&CK technique (T1657 is the boss’s)', br.paste, br);
+    await A.pickLabel(/^Keep exploring/); await A.settle();
+    // ---- School District, manager track ----
+    const door = await A.page.evaluate(() => { const keep = G.f.lbBookmark; G.f.lbBookmark = false; const d = MAPS.csquare.doors['19,5'], shut = d.locked; G.f.lbBookmark = keep; return { shut, open: !d.locked, to: d.to }; });
+    check('School District: the square’s east door is locked without the Bookmark Badge and opens with it', /Bookmark Badge/.test(door.shut || '') && door.open && door.to === 'school', door);
+    await A.follow(p => p.f.sdMet && !p.ui && !p.busy, []);
+    const arr = await A.page.evaluate(() => ({ day: G.day, act: G.cr.sd.activate, act2: G.cr.activate, rank: G.rank, hud: hudStatus() }));
+    check('School District arrival: Day 8 (Monday); the annex’s criteria met and the retainer called in 15 game minutes', arr.day === 8 && arr.act === 15 && arr.act2 === 15 && /School District/.test(arr.hud), arr);
+    // Drill A read with one of its two `needs` sources: unsupported.
+    await A.goTo('school', 12, 13);
+    await A.settle([], /Investigation drill/); await A.pickLabel(/^Start investigating$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/^Query: Inkstone’s data-sharing/);
+    await A.settle([], /Which question/); await A.pickLabel(/What have we sent Lumenlark/);
+    await A.settle([], /^Result/); await A.pickLabel(/^Back to the investigation$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/^Query: Lumenlark’s notice/);
+    await A.settle([], /Which question/); await A.pickLabel(/What does it say was affected/);
+    await A.settle([], /^Result/); await A.pickLabel(/^Back to the investigation$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/I have enough|Budget spent/);
+    await A.settle([], /^Verdict/); await A.pickLabel(/^Yes: Lumenlark held six roster fields/);
+    await A.settle([], /^Reasoning/); await A.pickLabel(/^The export history shows/);
+    await A.settle([], /Debrief/);
+    const debA = await A.modalText();
+    check('manager drill A: the right verdict from the export history alone is unsupported (the contract’s data list is also needed)', /Unsupported/.test(debA) && /two records/.test(debA), debA.slice(0, 300));
+    await A.settle();
+    check('manager drill A recorded as right but unsupported', await A.page.evaluate(() => G.cr.drills.vendmgr.verdictOk && !G.cr.drills.vendmgr.supported));
+    await A.follow(p => p.f.sdTabletop, []);
+    const mid = await A.page.evaluate(() => ({ notice: G.cr.sd.notice, inv: G.cr.sd.inv, ex: G.cr.ex, list: tileDef('school', 13, 2).pal, sis: tileDef('school', 3, 2).pal }));
+    check('manager fieldwork: §9 found and the questions sent; the inventory with three owners; the tabletop adds three actions', mid.notice && mid.inv.owned === 3 && mid.ex.run === 2 && mid.ex.actions === 6 && mid.sis === 'sdSis', mid);
+    await A.follow(p => p.f.sdStaffing, []);
+    const r2 = await A.page.evaluate(() => {
+      const s = G.cr.sd.rota, out = { assign: s.assign, stats: s.stats, cover: G.cr.sd.cover };
+      // The fatigue rule holds across the week boundary: last week's Nights 6-7 count for the in-a-row rule.
+      const a = ['bea', 'bea', undefined, undefined, undefined, undefined, undefined, undefined, undefined];
+      out.fitsThird = rotaFits(SD_ROTA, a, 2, SD_ROTA.people.find(p => p.id === 'bea'));
+      out.tired = rotaStats(SD_ROTA, ['bea', 'bea', 'bea', 'ruth', 'paz', 'paz', 'odile', 'magda', 'rae']).tired;
+      out.weekOnly = rotaStats(SD_ROTA, [null, null, 'bea', 'ruth', 'paz', 'paz', 'odile', 'magda', 'rae']).gaps;
+      out.prologue = rotaStats(CR_ROTA, ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae']).overtime;
+      return out; });
+    check('week-2 rota: the district’s nights under a signed threshold; nobody past two in a row; Nights 6–7 carried for the rule', r2.cover.k === 'threshold' && r2.stats.tired.length === 0 && r2.stats.gaps === 0 && r2.assign.length === 9 && r2.assign.slice(2).every(Boolean), r2);
+    check('week-2 rota: a third night in a row across the week boundary is refused and counted as tired; carried nights count no gaps; the prologue rota scores as before', r2.fitsThird === false && JSON.stringify(r2.tired) === '[8]' && r2.weekOnly === 0 && r2.prologue === 9, r2);
+    await A.follow(p => p.f.sdDrillB, []);
+    const srA = await A.saveReload();
+    check('save/reload mid-district (manager) restores the state; the export code round-trips', srA.same && srA.roundTrip && srA.before.map === 'school', srA);
+    await A.follow(p => p.f.sdNight9, []);
+    const n9 = await A.page.evaluate(() => ({ day: G.day, sis: tileDef('school', 3, 2).pal, files: tileDef('school', 13, 2).pal, closed: G.cr.ex.closed, facts: G.cr.sd.facts, dir: G.f.sdDirective, B: G.cr.drills.signmgr }));
+    check('Day 10 (Wednesday): named accounts (tick), §9 on the contact page (tick), tabletop actions closed; facts pack without law or promises; directive done; drill B right and supported', n9.day === 10 && n9.sis === 'sdSisOk' && n9.files === 'sdFilesOk' && n9.closed === 6 && n9.facts.wrong === 0 && n9.dir && n9.B.verdictOk && n9.B.supported, n9);
+    await A.follow(() => false, [], /End of the School District/);
+    const sdA = await A.page.evaluate(() => ({ C: G.cr.drills.offer, slate: G.f.sdSlate, boss: G.cr.sd.boss, clue: qtFound('sd-probe'), tech: QT_CLUES['sd-probe'].tech, qt: !!QT_TECH.T1018, inAlerts: Object.keys(THREATS).length, evicted: Series.qt().evicted, obj: objective(), ser: crSeries(), focusMax: G.focusMax }));
+    const sdSum = await A.modalText();
+    check('manager drill C (the vendor’s offer): right and supported', sdA.C.verdictOk && sdA.C.supported, sdA.C);
+    check('School Board cleared: the Slate Badge', sdA.slate === true, sdA);
+    check('Quiet Thread (manager): the firm’s status report shows the refused connections (sd-probe, T1018), not in the alert mix, not evicted', sdA.clue && sdA.tech === 'T1018' && sdA.qt && sdA.inAlerts === 0 && !sdA.evicted, sdA);
+    check('School District summary: “Next: Community Clinic”; series records the district; the token-scope risk named as open; the objective done', /Next: Community Clinic/.test(sdSum) && /Open risk/.test(sdSum) && /read: all/.test(sdSum) && sdA.obj.done && sdA.ser.school === true, sdA.obj);
+    const brS = await A.page.evaluate(() => {
+      const keep = G.cr.sd.night10, out = {};
+      try {
+        G.cr.sd.night10 = { lead: null, tired: false }; const s = sdMgrBossStages().s1, t = sdDfirBossStages().s1;
+        out.open = sdAt('06:20') === '07:20' && /07:20/.test(s.title) && /07:00: Owen Marsh reads it/.test(s.clues[1]) && /07:40/.test(t.title);
+        G.cr.sd.night10 = { lead: 'Magda Petrov', tired: true }; const s2 = sdMgrBossStages().s1;
+        out.thin = /thin first look/.test(s2.clues[1]) && !/10 sample rows/.test(s2.clues[1]);
+      } finally { G.cr.sd.night10 = keep; }
+      return out; });
+    check('uncovered Night 10: the boss’s first hour starts after Owen Marsh at 07:00; a tired lead’s first look has no sample rows', brS.open && brS.thin, brS);
     await A.pickLabel(/^Keep exploring/); await A.settle();
     // A fresh save on this browser: the other track is locked; New Game+ opens it.
     await A.page.evaluate(() => { started = false; newGame(); });
@@ -332,7 +402,61 @@ async function session(ctx, file) {
     check('DFIR: the report’s recommendations fix the arrival problems on the map', await B.page.evaluate(() => tileDef('library', 8, 7).pal === 'lbPubOk' && tileDef('library', 12, 7).pal === 'closetOk' && tileDef('library', 8, 3).pal === 'lbCircOk'));
     await B.follow(() => false, [], /End of the Public Library/);
     const endB = await B.page.evaluate(() => ({ cr: G.cr, obj: objective(), ser: crSeries() }));
-    check('DFIR track: custody log grows with the paste claim and the boss (10 items: E-09 and E-10 added), boss report filed, end summary', endB.cr.custody.items === 10 && !!endB.cr.reports.boss && endB.obj.done && endB.ser.library && /Next: School District/.test(await B.modalText()), endB.cr.custody);
+    check('DFIR track: custody log grows with the paste claim and the boss (10 items: E-09 and E-10 added), boss report filed, end summary', endB.cr.custody.items === 10 && !!endB.cr.reports.boss && !endB.obj.done && endB.ser.library && /Next: School District/.test(await B.modalText()), endB.cr.custody);
+    await B.pickLabel(/^Keep exploring/); await B.settle();
+    // ---- School District, DFIR track ----
+    await B.follow(p => p.f.sdIntake, []);
+    const cuB = await B.page.evaluate(() => ({ cu: G.cr.custody, letter: G.f.sdLetter }));
+    check('DFIR: the amended letter first; intake logs five district items, the SSO export’s unrecorded filter as a gap', cuB.letter && cuB.cu.items === 15 && cuB.cu.gaps === endB.cr.custody.gaps + 1 && cuB.cu.complete === endB.cr.custody.complete + 4, { now: cuB.cu, library: endB.cr.custody });
+    await B.follow(p => p.f.sdRequests, []);
+    check('DFIR: requests for vendor-held evidence logged “requested Day 8 (Monday)”', await B.page.evaluate(() => G.cr.sd.requests.date === 'Day 8 (Monday)' && G.cr.sd.requests.wrong === 0));
+    // Drill A with only one of its two needed sources: unsupported.
+    await B.goTo('school', 14, 11);
+    await B.settle([], /Investigation drill/); await B.pickLabel(/^Start investigating$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/^Query: S-01/);
+    await B.settle([], /Which question/); await B.pickLabel(/Which fields went to Lumenlark/);
+    await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/^Query: S-02/);
+    await B.settle([], /Which question/); await B.pickLabel(/Which endpoints/);
+    await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/I have enough|Budget spent/);
+    await B.settle([], /^Verdict/); await B.pickLabel(/^Yes: six roster fields/);
+    await B.settle([], /^Reasoning/); await B.pickLabel(/^S-01 lists the six fields/);
+    await B.settle([], /Debrief/);
+    const debB = await B.modalText();
+    check('DFIR drill A: two decisive sources; S-01 and the supporting S-02 without S-05 is unsupported', /Unsupported/.test(debB) && /two sources/.test(debB), debB.slice(0, 300));
+    await B.settle();
+    await B.follow(p => p.f.sdStores, []);
+    check('DFIR: separate stores; clients in parallel 3', await B.page.evaluate(() => metricVals().crClients === 3));
+    await B.follow(p => p.f.sdIntake2, []);
+    check('Quiet Thread (DFIR): seen in S-07, FW-SD’s Night 8 log (sd-probe, T1018)', await B.page.evaluate(() => qtFound('sd-probe') && QT_CLUES['sd-probe'].tech === 'T1018'));
+    await B.follow(p => p.f.sdDrillB, []);
+    const srB = await B.saveReload();
+    check('save/reload mid-district (DFIR) restores the state; the export code round-trips', srB.same && srB.roundTrip && srB.before.track === 'dfir', srB);
+    // SCH-01: write "accessed" (unknown, held by the vendor) as likely: an overclaim, corrected and counted.
+    await B.goTo('school', 14, 11);
+    await B.settle([], /Report · /); await B.pickLabel(/^Start writing$/);
+    let unkWhy = '';
+    for (let n = 1; n <= 6; n++) {
+      await B.settle([], /Finding \d of 6/);
+      const card = (await B.page.textContent('#modal .card')).trim();
+      const cl = await B.page.evaluate(t => { const c = SD_REPORT_1.claims.find(x => x.text === t); return c ? { id: c.id, truth: c.truth } : null; }, card);
+      const want = cl && cl.id === 'accessed' ? 'Likely' : { confirmed: 'Confirmed', likely: 'Likely', unknown: 'Unknown' }[cl && cl.truth];
+      await B.pickLabel(new RegExp('^' + want + '$'));
+      const said = await B.settle([], /./);
+      if (cl && cl.id === 'accessed') unkWhy = said && said.ui && said.ui.text || '';
+      await B.settle([], n < 6 ? /Finding \d of 6/ : /Report filed/);
+    }
+    const filedB = await B.page.innerHTML('#modal');
+    await B.settle();
+    check('SCH-01: the vendor-held finding goes out as “Unknown: held by the vendor; requested on Day 8 (Monday)”; the overclaim is corrected and counted', /Unknown:<\/b> Our students’ records were among the data accessed/.test(filedB) && /held by the vendor; requested on Day 8 \(Monday\)/.test(unkWhy) && /corrected in review/.test(filedB) && await B.page.evaluate(() => G.cr.reports.sd1.over === 1), { unkWhy, filed: filedB.slice(0, 400) });
+    await B.follow(p => p.f.sdDrillC, []);
+    const tdB = await B.page.evaluate(() => ({ d: G.cr.drills.tokendate, resp: SD_DRILLS.tokendate.response[0] }));
+    check('DFIR drill C: our log, worded with both dates and “unknown: … held by the vendor; requested on Day 8 (Monday)”; right and supported', tdB.d.verdictOk && tdB.d.supported && /held by the vendor; requested on Day 8 \(Monday\)/.test(tdB.resp), tdB);
+    await B.follow(() => false, [], /End of the School District/);
+    const sdB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.sd2, slate: G.f.sdSlate, needs: G.cr.needs, obj: objective(), ser: crSeries() }));
+    check('DFIR School District: SCH-02 filed, 22 custody items (Library 10 + district 12), Slate Badge, summary “Next: Community Clinic”', sdB.cu.items === 22 && !!sdB.r2 && sdB.slate && sdB.obj.done && sdB.ser.school === true && /Next: Community Clinic/.test(await B.modalText()), sdB);
+    check('SCH-02 carries the vendor-held unknown', await B.page.evaluate(() => SD_REPORT_2.claims.some(c => c.truth === 'unknown' && /held by the vendor; requested on Day 8 \(Monday\)/.test(c.why))));
     await B.pickLabel(/^Keep exploring/); await B.settle();
     await B.page.evaluate(() => storeSet(encodeSave(G)));
     const after = await B.page.evaluate(() => localStorage.getItem('uptime.slice1.save'));

@@ -6,8 +6,8 @@
 // Also checks: no Quiet Thread technique ever shows up as an ordinary alert, and the series save
 // (quietThread) survives the mid-game reload.
 // Crossroads (edition 2): UPTIME_FILE=.../editions/crossroads/index.html (or UPTIME_EDITION=crossroads) plays the
-// prologue and the Public Library on one track: TRACK=manager (default) or TRACK=dfir. It checks the track lock in the
-// series save, a save/reload mid-Library and the end-of-district summary.
+// prologue, the Public Library and the School District on one track: TRACK=manager (default) or TRACK=dfir. It checks
+// the track lock in the series save, a save/reload mid-Library and mid-district, and the School District's summary.
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -191,7 +191,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheckCr = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheckCr = null, savedCheckSd = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -231,6 +231,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (p.extra && p.extra.ccSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
     if (CR && p.extra && p.extra.crSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
     if (CR && p.map === 'library' && !p.ui && !stats.shots.library && p.started && p.f.lbMet) { stats.shots.library = 1; await shot('library-' + TRACK); }
+    if (CR && p.map === 'school' && !p.ui && !stats.shots.school && p.started && p.f.sdMet) { stats.shots.school = 1; await shot('school-' + TRACK); }
+    if (CR && p.extra && p.extra.lbSummary && !stats.lbSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.lbSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-library-' + TRACK); }
     if (CR && p.ui && p.ui.type === 'modal' && !stats.shots.rota && /On-call rota ·/.test(await page.textContent('#modal'))) { stats.shots.rota = 1; await shot('rota'); }
     if (CR && p.ui && p.ui.type === 'modal' && !stats.shots.report && /^Finding /.test(await page.textContent('#modal .mhead'))) { stats.shots.report = 1; await shot('report'); }
     if (p.extra && p.extra.wtSummary && !stats.wtSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.wtSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-water'); }
@@ -291,6 +293,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (!savedCheckWater && p.map === 'water' && p.f.wtDrill1 && !p.f.wtDrill2) { savedCheckWater = await saveReload(); continue; }
     if (!savedCheckCouncil && p.map === 'council' && p.f.ccDrill1 && !p.f.ccDirective) { savedCheckCouncil = await saveReload(); continue; }
     if (CR && !savedCheckCr && p.map === 'library' && p.f.lbDrillA && !p.f.lbDirective) { savedCheckCr = await saveReload(); continue; }
+    if (CR && !savedCheckSd && p.map === 'school' && p.f.sdDrillB && !p.f.sdDirective) { savedCheckSd = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -304,12 +307,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   if (CR) {
     const ser = await page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series') || '{}'));
     const crRes = { edition: 'crossroads', track: TRACK, mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter, errors, requests,
-      saveReloadLibrary: savedCheckCr, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, quietTechInAlertMix: quietInAlerts,
+      saveReloadLibrary: savedCheckCr, saveReloadSchool: savedCheckSd, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, quietTechInAlertMix: quietInAlerts,
       seriesCrossroads: ser.editions && ser.editions.crossroads, final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, qt: fin.qt, cr: fin.extra && fin.extra.cr, objective: fin.objective }, stats };
     console.log(JSON.stringify(crRes, null, 1));
     await browser.close();
-    const lockOk = crRes.seriesCrossroads && crRes.seriesCrossroads.track === TRACK && crRes.seriesCrossroads.library === true;
-    process.exit(errors.length || requests.length || !savedCheckCr || !savedCheckCr.restored || !savedCheckCr.exportRoundTrip || !fin.objective.done || !fin.extra.crSummary || !lockOk || fin.extra.track !== TRACK || quietInAlerts.length || !crRes.noHorizontalScroll ? 1 : 0);
+    const lockOk = crRes.seriesCrossroads && crRes.seriesCrossroads.track === TRACK && crRes.seriesCrossroads.library === true && crRes.seriesCrossroads.school === true;
+    process.exit(errors.length || requests.length || !savedCheckCr || !savedCheckCr.restored || !savedCheckCr.exportRoundTrip || !savedCheckSd || !savedCheckSd.restored || !savedCheckSd.exportRoundTrip || !stats.lbSummary || !fin.objective.done || !fin.extra.crSummary || !lockOk || fin.extra.track !== TRACK || quietInAlerts.length || !crRes.noHorizontalScroll ? 1 : 0);
   }
   const result = {
     quietTechInAlertMix: quietInAlerts,

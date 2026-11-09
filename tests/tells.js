@@ -21,11 +21,12 @@
 //        node tests/tells.js --report   (full tables by district and by list type, every word; no failure)
 //        node tests/tells.js --hits=close [--d=basement] [--t=drill-verdicts]   (list the options carrying a word)
 //        UPTIME_ROOT=/path/to/tree node tests/tells.js     (scan another checkout)
-// Crossroads (editions/crossroads) is scanned as its own population (districts cr-prologue and cr-library), so the
+// Crossroads (editions/crossroads) is scanned as its own population (districts cr-prologue, cr-library and cr-school), so the
 // Town Hall tables above are unchanged by it. The same 70% rule applies to it, any warning inside 35-65% fails it
 // (Crossroads starts clean), and it is held to the band on its own word groups (CROSSROADS_BAND: rota/rest/fatigue,
 // retainer/firm, custody/hash, confirmed/likely/unknown, counsel words, hurry words; and, since the slice-1 review, the
-// "… decides" words, the absolutes and the "so/because" clause, from n >= 3).
+// "… decides" words, the absolutes and the "so/because" clause, from n >= 3; since slice 2 (the School District), the
+// vendor/contract, notify/notice and student/parent words too).
 const fs = require('fs');
 const path = require('path');
 let acorn = null;
@@ -105,13 +106,17 @@ const CR_EXTRA = [
   ['G:decide', /\bdecid(e|es|ed|ing)\b|\bher call\b|\bhis call\b/i],
   ['G:absolute', /\b(every|everything|all|never|always|nothing|whatever|at all)\b/i],
   ['G:because', /\b(because|so|since)\b/i],
+  // Slice 2 (the School District, 9 Nov 2026): third-party, notification and student-data words.
+  ['G:vendor', /\b(vendors?|vendor’s|contracts?|contract’s|Lumenlark|Lumenlark’s|clause|suppliers?|terms)\b/i],
+  ['G:notify', /\b(notif(y|ies|ied|ying|ication|ications)|notices?|tell(s|ing)? families|told)\b/i],
+  ['G:student', /\b(students?|students’|student’s|parents?|famil(y|ies)|children|children’s|pupils?)\b/i],
 ];
 
 const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
   .concat(fs.readdirSync(root + '/engine').filter(f => f.endsWith('.js')).map(f => 'engine/' + f));
 const crFiles = fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : [];
 const DISTRICTS = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water', 'council'];
-const district = f => { const b = path.basename(f); if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
+const district = f => { const b = path.basename(f); if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
 function strOf(n) {
   if (!n) return null;
   if (n.type === 'Literal' && typeof n.value === 'string') return n.value;
@@ -248,7 +253,7 @@ const waterBand = WATER_BAND.map(n => { const st = stat(inScope('water'), EXTRA.
 const COUNCIL_BAND = ['brief', 'council', 'stakeholder', 'transparent', 'accountable', 'risk', 'owner', 'budget', 'counsel', 'G:urgent'];
 const councilBand = COUNCIL_BAND.map(n => { const st = stat(inScope('council'), EXTRA.find(w => w[0] === n)[1]); return {n, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
 // ---- Crossroads: its own population, scopes and band ----
-const CR_DISTRICTS = ['cr-prologue', 'cr-library'];
+const CR_DISTRICTS = ['cr-prologue', 'cr-library', 'cr-school'];
 const crScope = s => s === 'cr-all' ? crOpts : TYPES.includes(s) ? crOpts.filter(x => x.t === s) : crOpts.filter(x => x.d === s);
 const crFails = [], crWarns = [];
 for (const [name, re] of WORDS) for (const s of CR_DISTRICTS.concat(['cr-all'], TYPES)) {
@@ -257,11 +262,14 @@ for (const [name, re] of WORDS) for (const s of CR_DISTRICTS.concat(['cr-all'], 
   if (st.lean >= THRESH || st.lean <= 1 - THRESH) crFails.push(name + ' in ' + where + ': ' + fmt(st));
   else if (st.lean > WARN || st.lean < 1 - WARN) crWarns.push(name + ' in ' + where + ': ' + fmt(st));
 }
-const CROSSROADS_BAND = ['G:rota', 'G:retainer', 'G:custody', 'G:certainty', 'counsel', 'G:urgent', 'G:decide', 'G:absolute', 'G:because'];
+const CROSSROADS_BAND = ['G:rota', 'G:retainer', 'G:custody', 'G:certainty', 'counsel', 'G:urgent', 'G:decide', 'G:absolute', 'G:because', 'G:vendor', 'G:notify', 'G:student'];
 // Crossroads' band groups are checked from n >= 3 (review S15: G:rota had fewer than 5 hits, so its band was vacuous).
 const CR_BAND_MIN_N = 3;
 const crBand = [];
-for (const n of CROSSROADS_BAND) for (const s of CR_DISTRICTS.concat(['cr-all'])) { const st = stat(crScope(s), EXTRA.concat(CR_EXTRA).find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
+// The slice-2 groups (vendor, notify, student) were introduced for the School District: checked there and across Crossroads
+// (cr-all), not inside the prologue or the Library, whose lists were written and reviewed before them.
+const CR_SD_ONLY = ['G:vendor', 'G:notify', 'G:student'];
+for (const n of CROSSROADS_BAND) for (const s of CR_DISTRICTS.concat(['cr-all']).filter(s => !CR_SD_ONLY.includes(n) || s === 'cr-school' || s === 'cr-all')) { const st = stat(crScope(s), EXTRA.concat(CR_EXTRA).find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
 if (report && crOpts.length) {
   console.log('\nCrossroads (' + crGraded.length + ' graded lists, ' + crOpts.length + ' options)\n' + 'word'.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => s.padEnd(19)).join(''));
   for (const [name, re] of WORDS.concat(EXTRA, CR_EXTRA)) console.log(name.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => fmt(stat(crScope(s), re)).padEnd(19)).join(''));
@@ -277,7 +285,7 @@ const checks = [
   ['no tracked word or group leans ' + THRESH * 100 + '% or more to right or wrong (n>=' + MIN_N + ') in any district, any list type, or overall', !fails.length],
 ];
 if (crFiles.length) checks.push(
-  ['Crossroads: source scan found graded lists in the prologue and the Library (' + crGraded.length + ' lists, ' + crOpts.length + ' options)', CR_DISTRICTS.every(d => crGraded.some(L => district(L.file) === d))],
+  ['Crossroads: source scan found graded lists in the prologue, the Library and the School District (' + crGraded.length + ' lists, ' + crOpts.length + ' options)', CR_DISTRICTS.every(d => crGraded.some(L => district(L.file) === d))],
   ['Crossroads: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ') in its districts, its list types or overall', !crFails.length],
   ['Crossroads: no tracked word or group outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !crWarns.length],
   ['Crossroads stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on its own groups, n>=' + CR_BAND_MIN_N + ' (' + crBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', crBand.every(x => x.ok)]);

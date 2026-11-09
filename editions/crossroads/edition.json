@@ -1,9 +1,9 @@
 {
   "id": "crossroads",
   "name": "Crossroads",
-  "district": "Prologue (the Town Hall war room) and the Public Library",
+  "district": "Prologue (the Town Hall war room), the Public Library and the School District",
   "slice": 2,
-  "blurb": "A week after Town Hall, two offers: run the region's incident response programme as IR manager, or join the outside firm as principal DFIR consultant. Choose once; the Public Library is first.",
+  "blurb": "A week after Town Hall, two offers: run the region's incident response programme as IR manager, or join the outside firm as principal DFIR consultant. Choose once; the Public Library is first, then the School District.",
   "files": [
     "data.js",
     "quiet.js",
@@ -11,6 +11,8 @@
     "report.js",
     "story.js",
     "library-data.js",
-    "library-story.js"
+    "library-story.js",
+    "school-data.js",
+    "school-story.js"
   ]
 }

@@ -322,12 +322,17 @@ const UI = {
     const cur = box.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
   },
   // The options keep their own height up to 40% of the modal area (a lone Back button is never squeezed); past that
-  // they scroll. The body and the options otherwise share the shrinking, so a long body keeps most of the box.
+  // they scroll. The body likewise keeps its own height up to a third of the area, so a short question above long
+  // options is never cut on a landscape phone (Crossroads slice 2). Past those floors the two share the shrinking,
+  // so a long body keeps most of the box.
   fitModal() {
-    const mo = document.getElementById('mopts'); if (!mo || !this.modalEl) return;
+    const mo = document.getElementById('mopts'), mb = document.getElementById('mbody'); if (!mo || !this.modalEl) return;
     const cs = getComputedStyle(this.modalEl), avail = this.modalEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-    mo.style.minHeight = '';
-    if (avail > 0) mo.style.minHeight = Math.min(mo.scrollHeight, Math.round(avail * 0.4)) + 'px';
+    mo.style.minHeight = ''; if (mb) mb.style.minHeight = '';
+    if (avail > 0) {
+      mo.style.minHeight = Math.min(mo.scrollHeight, Math.round(avail * 0.4)) + 'px';
+      if (mb) mb.style.minHeight = Math.min(mb.scrollHeight, Math.round(avail * 0.33)) + 'px';
+    }
   },
   modalActivate(i) {
     const m = this.modal;

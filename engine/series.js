@@ -69,6 +69,9 @@ const QT_TECH = {
   // Crossroads (verified on attack.mitre.org, 7 Nov 2026, ATT&CK content v20.1).
   'T1021.001': {name: 'Remote Services: Remote Desktop Protocol', tactic: ['Lateral Movement'],
                 plain: 'Signing in to another computer over remote desktop with a valid account, then acting as that user. A real account’s sign-in looks like ordinary admin work.'},
+  // Crossroads, School District (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
+  'T1018':     {name: 'Remote System Discovery', tactic: ['Discovery'],
+                plain: 'Finding out which other computers are on a network and which of them answer, by name or address. Even refused attempts leave a line in a firewall’s log.'},
   // ATT&CK for ICS (verified on attack.mitre.org, 1 Nov 2026, ATT&CK v20.0).
   'T0859':     {name: 'Valid Accounts', tactic: ['Persistence', 'Lateral Movement'],
                 plain: '(ATT&CK for ICS) Using a real account on a plant system, such as a remote-access box or an engineering workstation, to get in and come back. A legitimate account raises no alarm when it is used.'}

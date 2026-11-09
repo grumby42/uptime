@@ -264,7 +264,7 @@ async function lbNight(n) {
   if (n === 4) body += '<p>05:52: an email reaches the Director and the Library’s public inbox. ' + (lead ? lead.split(' ')[0] + ' takes the first call' + (tired ? ', on a third night or more in a row: a thin first look, with fewer facts in it' : ': a clear first look') + '.' : 'Nobody is on call: it waits for the Director to read it at 07:00.') + ' (game)</p>';
   await UI.openModal('Night ' + n, body, [{label: 'Morning', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.day = n + 1; G.focus = G.focusMax;
-  if (tired && lbMgr() && n >= 3) { G.focus = Math.max(10, G.focus - 10); await say('You were up at 00:40 with a tired on-call lead. Focus ' + G.focus + '/' + G.focusMax + ' this morning. (game)'); }
+  if (tired && lbMgr() && n >= 3) { G.focus = Math.max(10, G.focus - 10); await say('You were up at ' + (n === 3 ? '00:40' : '05:55') + ' with a tired on-call lead. Focus ' + G.focus + '/' + G.focusMax + ' this morning. (game)'); }
   G.f['lbNight' + n] = true;
   if (n === 2 && c.growth === 'unread') await say('Noor sent the insurer’s timeline back overnight with two corrections, the kind a read-through would have caught. (game)', 'Noor Castellanos');
   if (n === 2 && lbMgr()) {
@@ -591,7 +591,7 @@ async function lbSummary() {
     '<p>Open risk (game): CIRC-01 joined the town’s directory when the Compact took over the Library’s IT this year, so every account with admin rights on the town’s member servers has them on the patron-records server' + (qtFound('sv-nesting') || qtFound('lb-rdp') ? ', svc-print among them' : '') + '. Nobody has accepted that risk yet: it goes to Rae and the council’s risk committee for an owner.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, the 03:00 pattern' + (qtFound('lb-rdp') ? ', and now a remote-desktop sign-in on the Library’s server' : '') + '. It continues.</p>') +
-    '<p class="big">Next: School District.</p>';
+    '<p class="big">Next: School District.</p>' + (G.f.lbBookmark ? '<p class="small">Its door is on the east side of the town square, open since the Library Board (game).</p>' : '');
   while (true) {
     const i = await UI.openModal('End of the Public Library', body, [{label: 'Keep exploring the Library', meta: {good: true}}, {label: 'Credits'}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
     if (i === 1) { await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]); continue; }
