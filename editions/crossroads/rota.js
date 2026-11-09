@@ -5,10 +5,11 @@
    A rota spec R:
      {title, intro(html), nights, hours, maxRun, maxWeek, budget, callCost, tiredCost,
       people: [{id, name, skills, note, off: [night numbers], max}], calls: {night: 'what happens'},
+      waitUntil (optional: when an uncovered night's alerts are read, default '08:00'),
       first (optional: the night number of the first row, default 1), carry (optional: how many leading rows are
       last week's nights, preset and shown; they count for the in-a-row rule only, not for this week's gaps,
       overtime, weekly limits or tired nights; default 0)}
-   doRota(R, preset) asks for one person per night (shuffled; any pick is allowed, and the game
+   doRota(R, preset) asks for one person per night (shuffled, with "Leave this night uncovered" pinned last; any pick is allowed, and the game
    marks which picks keep the rules), then scores the week: rota gaps (hours nobody covers),
    tired nights (a person's third night or later in a row), nights over each person's limits,
    and overtime against the budget. Every rule and number is a game model (game).
@@ -60,7 +61,7 @@ async function doRota(R, preset) {
       return {label: p.name, note: off ? 'not available this night' + (p.note ? ' · ' + p.note : '') : n + ' of ' + maxFor(R, p.id) + ' nights so far' + (a[i - 1] === p.id ? ' · on call the night before' : '') + (p.note ? ' · ' + p.note : ''),
         disabled: off, meta: {good: rotaFits(R, a, i, p), id: p.id}};
     });
-    items.push({label: 'Leave this night uncovered', note: 'alerts wait for 08:00', meta: {good: false, id: null}});
+    items.push({label: 'Leave this night uncovered', note: 'alerts wait for ' + (R.waitUntil || '08:00'), pin: true, meta: {good: false, id: null}});
     const body = R.intro + rotaTable(R, a) + '<p class="small">Rules (game): one lead a night, ' + R.hours + ' hours on call; nobody more than ' + R.maxRun + ' nights in a row or ' + R.maxWeek + ' in the week.</p>';
     const k = await UI.openModal(R.title + ' · night ' + rotaNight(R, i), body, items, {shuffle: true, closable: false, cls: 'drill'});
     a[i] = items[k].meta.id;

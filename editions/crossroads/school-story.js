@@ -115,7 +115,7 @@ async function sdTalk(npc) {
     case 'kole':
       if (sdDfir() && !f.sdLetter) { await sdLetterTask(); break; }
       if (sdMgr() && f.sdDrillB && !f.sdFacts) { await sdFactsPack(); break; }
-      await say('Facts to me. Notification, privilege and what anyone outside sees: those are mine and Priya’s to decide.', who); break;
+      await say('Facts to me. Privilege, what notice is required and what it says: Priya and I decide those. Dr Vale sends it.', who); break;
     case 'priya':
       if (sdMgr() && f.sdDrillA && !f.sdNotice) { await sdNoticeTask(); break; }
       if (sdMgr() && f.sdNight9 && !f.sdDrillC) { await sdDrillC(); break; }
@@ -124,7 +124,7 @@ async function sdTalk(npc) {
     case 'brooks':
       if (sdMgr() && f.sdNight8 && !f.sdDrillB) { await sdDrillB(); break; }
       await say(f.sdNight8 ? 'I rang Ilse on the number in the staff directory, not the one in the email. Habit from the fire drills.' : 'Hal Brooks, Riverbend Middle. My teachers want to know if the reading app is safe. So do I.', who); break;
-    case 'ilse': await say('Grading at two in the morning through a VPN app. I’ve heard about it from three people this week. It was me.', who); break;
+    case 'ilse': await say('Grading at two in the morning through a VPN app. It was me, and I said so to Hal on the phone.', who); break;
     case 'wim': await sdDojoIntro(); break;
     case 'pike': await sdBoardScript(); break;
     case 'luciasd':
@@ -144,7 +144,7 @@ async function sdArrive() {
   const f = G.f, c = sdC();
   f.sdMet = true; G.day = Math.max(G.day, 8); G.focus = G.focusMax; touchCSF('Identify');
   if (sdDfir() && !c.rota) c.rota = sdAutoRota();
-  await say('Day 8, Monday, 08:30. The School District’s office, in the old wing of Riverbend Middle School. (The weekend passed: no call reached the on-call lead on Nights 5 to 7. The Library’s Monday deadline passed too, with nothing published that the firm has found, which is not the same as nothing published. game)');
+  await say('Day 8, Monday, 08:30. The School District’s office, in the old wing of Riverbend Middle School. (The weekend passed: no call reached the on-call lead on Nights 5 to 7. The Library’s deadline is today; the Board and the Director decided on Friday not to pay, and the firm has found nothing published so far, which is not the same as nothing published. game)');
   await say('Corinne Vale, Superintendent. On Friday at 16:40 Lumenlark, the reading app in grades 3 to 8, emailed our technology inbox: “Some customer data may have been accessed.” Nothing about whose, or what.', 'Dr Corinne Vale');
   await say('Three more things, plainly. We have no list of which vendors hold which student data. Half our science teachers sign in to Inkstone on a shared department login. And nobody here can tell me which clause of Lumenlark’s contract covers this.', 'Dr Corinne Vale');
   unlock('fact', 'sdcisak12'); unlock('fact', 'sdferpa');
@@ -159,12 +159,15 @@ async function sdArrive() {
       await say(SD_ACTIVATE[i].why + ' (+' + SD_ACT_LATE + ' game minutes)');
     }
     c.activate = mins; G.cr.activate = mins; track();
-    const ack = 8 * 60 + 40 + mins;
-    await say('08:40 retainer line called · ' + String(Math.floor(ack / 60)).padStart(2, '0') + ':' + String(ack % 60).padStart(2, '0') + ' Tallowmere acknowledges. Adaeze Kole, the district’s counsel, engages the firm at 09:00 under a letter amended for a third-party incident. (game)');
-    await say('08:45, your advice to Owen Marsh: export and hash Inkstone’s API log, the token registry and the export history before the token is revoked. He exports at 09:40; at 10:05, with Dr Vale’s agreement, he revokes the token and pauses the sync. Teachers keep the rosters Lumenlark already has. (game)');
+    // Each wrong answer is a later call (game): the call, its acknowledgement and counsel's engagement follow from it.
+    const hm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+    const call = 8 * 60 + 40 + (mins - SD_ACT_OK), ack = call + SD_ACT_OK, eng = Math.max(9 * 60, ack + 5);
+    const retainer = hm(call) + ' retainer line called · ' + hm(ack) + ' Tallowmere acknowledges. Adaeze Kole, the district’s counsel, engages the firm at ' + hm(eng) + ' under a letter amended for a third-party incident, and tells the district’s cyber insurer. (game)';
+    const revoke = '08:45, your advice to Owen Marsh: revoke LL-SYNC now and pause the sync, clearing nothing. Revoking stops new reads; it doesn’t erase the API log, the token registry or the export history. At 08:50, with Dr Vale’s agreement, he revokes it and notes the registry row as it stands; at 09:40 he exports and hashes all three. Teachers keep the rosters Lumenlark already has. (game)';
+    if (call <= 8 * 60 + 45) { await say(retainer); await say(revoke); } else { await say(revoke); await say(retainer); }
     await say('Marsh wrote me a note at eight. I’d like you to read it before we do anything else.', 'Dr Corinne Vale');
   } else {
-    await say('09:00: Adaeze Kole, the district’s counsel, engages Tallowmere under a letter amended for a third-party incident. (The district has no IR manager applying its annex: its counsel engages the firm, as Noor did for the Library. game)');
+    await say('09:00: Adaeze Kole, the district’s counsel, engages Tallowmere under a letter amended for a third-party incident, and tells the district’s cyber insurer. (The district has no IR manager applying its annex: its counsel engages the firm, as Noor did for the Library. game)');
     await say('You lead it. The technology office is ours. Kole first: nothing gets collected before the letter.', 'Lucia Ferrand');
   }
 }
@@ -211,7 +214,7 @@ async function sdDrillC() {
   await say('Lumenlark’s reply came at nine: two pages, and an offer of an 84-page report if we sign their terms. Dr Vale has her pen out.', 'Priya Lindgren');
   const r = await sdDrill('offer');
   G.f.sdDrillC = true; touchCSF('Govern');
-  await say(r.verdictOk ? 'Ask under §9.3 again, specifically, and Kole decides on the terms. I’ll send it at ten.' : '§9.3 already owes us the facts, and those terms would lock out our own firm. Kole decides; I ask again.', 'Priya Lindgren');
+  await say(r.verdictOk ? 'Ask under §9.3 again, specifically, and nothing gets signed until Kole has cleared the terms. I’ll send it at ten.' : '§9.3 already owes us the facts, and those terms would lock out our own firm. Kole clears or refuses the terms; I ask again.', 'Priya Lindgren');
   await say('10:00: Priya asks again under §9.3, in writing, dated and logged; Kole is reviewing the terms; Dr Vale signs nothing until she has. (game)');
 }
 
@@ -241,7 +244,7 @@ async function sdNoticeTask() {
   }
   c.notice = {first: first};
   G.f.sdNotice = true; unlock('act', 'sdnotice'); touchCSF('Respond'); track();
-  await say('11:30: sent under §9.3, Kole copied, answers due Wednesday at 17:00. Logged: “requested Day 8 (Monday) 11:30”. (game)', who);
+  await say('11:30: sent under §9.3, Kole copied, answers due Wednesday at 17:00, and anything urgent out of hours to the Compact’s on-call number. Logged: “requested Day 8 (Monday) 11:30”. Kole checks whether §14’s formal-notice method applies to a §9.3 request; a copy goes to §14’s address in case it does. (game)', who);
   await say('Next: which other vendors hold what? The contract file room is through the door to my right.', who);
 }
 
@@ -297,7 +300,8 @@ async function sdTabletop() {
   }
   c.ex.run += 1; c.ex.actions += SD_EX_ACTIONS; sdC().ex = SD_EX_ACTIONS; track();
   G.f.sdTabletop = true; unlock('act', 'crtabletop'); unlock('fact', 'crctep'); touchCSF('Govern'); touchCSF('Respond');
-  await say('Three gaps, three actions (game): named Inkstone accounts for every teacher, retiring the shared logins (Owen Marsh, by Wednesday 08:00); §9 and Lumenlark’s incident line on the plan’s contact page (Priya, today by 17:00); a script for the front offices, written by Priya and agreed by Kole (by Tuesday noon).' + (G.f.lbBookmark ? ' Bookmark Badge: the owners arrive already agreed.' : ''), who);
+  await say('Three gaps, three actions (game): named Inkstone accounts for every teacher, retiring the shared logins (Owen Marsh, by Wednesday 08:00); §9, Lumenlark’s incident line, and a monitored address plus the on-call number for every vendor’s security notices, on the plan’s contact page (Priya, today by 17:00); a script for the front offices, written by Priya and agreed by Kole (by Tuesday noon).' + (G.f.lbBookmark ? ' Bookmark Badge: the owners arrive already agreed.' : ''), who);
+  await say('The gap behind the second one: Lumenlark’s notice reached a general inbox at 16:40 on Friday and was read at 07:50 on Monday, with the token live and the advice to rotate it unread. The only unexplained read came on Sunday at 23:58, in between. From now on Owen Marsh acts on a vendor’s “rotate credentials” advice the same day. (game)', who);
   await say('Before you go: Owen says the district’s nights are now yours too. Talk to him about cover.', who);
 }
 
@@ -387,7 +391,7 @@ async function sdLetterTask() {
     await say(SD_LETTER[i].why);
   }
   f.sdLetter = true; unlock('act', 'crscope'); touchCSF('Govern'); track();
-  await say('09:15: at our request Owen Marsh will export and hash Inkstone’s logs before he revokes the token. Exports at 09:40, the revocation at 10:05. The evidence locker, when they come. (game)', 'Lucia Ferrand');
+  await say('09:15: at our request, and with Dr Vale’s agreement, Owen Marsh revokes LL-SYNC at 09:20 and pauses the sync, clearing nothing: revoking doesn’t erase the API log or the registry row. Then he exports and hashes them, at 09:40. The evidence locker, when they come. (game)', 'Lucia Ferrand');
 }
 
 /* ---------- DFIR D2: evidence intake ---------- */
@@ -423,7 +427,8 @@ async function sdRequests() {
   for (const i of wrong) await say(SD_REQUESTS[i].name + ': ' + (SD_REQUESTS[i].id === 'remote' ? 'its systems are out of the letter’s scope and not ours to examine. Ask for its records.' : SD_REQUESTS[i].id === 'attacker' ? 'a name isn’t evidence, and it answers none of the questions. Ask for records.' : 'other districts’ students’ records aren’t ours to hold. Ask about ours.'));
   c.requests = {wrong: wrong.length, date: 'Day 8 (Monday)'};
   G.f.sdRequests = true; unlock('act', 'sdthird'); touchCSF('Respond'); track();
-  await say('11:30: Kole sends them with Priya’s §9.3 questions, one letter. Logged R-01 to R-04: “requested Day 8 (Monday)”. Every unknown that rests on Lumenlark’s records will carry that date. (game)', 'Lucia Ferrand');
+  const nReq = SD_REQUESTS.filter(p => p.good).length - wrong.length;
+  await say('11:30: Kole sends ' + (nReq === 1 ? 'it' : 'them') + ' with Priya’s §9.3 questions, one letter, with the Compact’s on-call number for anything urgent out of hours. Logged ' + (nReq === 1 ? 'R-01' : 'R-01 to R-0' + nReq) + ': “requested Day 8 (Monday)”. Every unknown that rests on Lumenlark’s records will carry that date. (game)', 'Lucia Ferrand');
 }
 
 /* ---------- DFIR D4: one store per client ---------- */
@@ -464,7 +469,7 @@ async function sdQtEvidence() {
   if (qtFound('sd-probe')) return;
   const i = await choose('S-07, FW-SD’s log for Night 8. Question 4 needs 203.0.113.140: it reached only SIS-01’s web front. The log runs on through the night.', [{label: 'Read the rest of the night’s log too'}, {label: 'Leave it: question 4 has its answer'}], {cursor: 1});
   if (i !== 0) return;
-  await say('03:21–03:22, Night 8: FW-SD denies connections from FD-STAFF-11’s address, arriving over the Compact’s link, to SIS-01’s database port and to two other district servers’ remote-administration ports. The link lets only logs out of the district, so every attempt is refused. Nothing alerted. What ran them is unknown.');
+  await say('03:21–03:22, Night 8: FW-SD drops echo requests (pings) from FD-STAFF-11’s address, arriving over the Compact’s link, to eleven district addresses in turn, one each, SIS-01’s among them: a check of which hosts are there, not of any service. The link lets only logs out of the district, so none got through. Nothing alerted. What sent them is unknown.');
   await say('Not one of the letter’s questions. It goes to Kole first; with her agreement, to Lucia and Rae’s suspicion-file team. Nothing changes on svc-print without a plan.');
   await crQtAfterNote(qtNote('sd-probe'));
 }
@@ -477,7 +482,7 @@ async function sdReport1() {
   c.corrected += r.over; track();
   G.f.sdReport = true; touchCSF('Respond');
   unlock('act', 'sdscope'); unlock('fact', 'sdptac');
-  await say('To Kole at 12:00. With her agreement the recommendations went to Dr Vale, who accepted them: named Inkstone accounts for every teacher (Marsh, by Wednesday 08:00), §9 and Lumenlark’s incident line on the plan’s contact page (Priya, done by 17:00), and any new token scoped to the contract’s data list. (game)', 'Lucia Ferrand');
+  await say('To Kole at 12:00. With her agreement the recommendations went to Dr Vale, who accepted them: named Inkstone accounts for every teacher (Marsh, by Wednesday 08:00), §9, Lumenlark’s incident line and a monitored address for every vendor’s security notices on the plan’s contact page (Priya, done by 17:00), a vendor’s “rotate credentials” advice acted on the same day (Marsh), and any new token scoped to the contract’s data list. (game)', 'Lucia Ferrand');
   await say('Dr Vale wants a word about a new app. Her office.', 'Lucia Ferrand');
 }
 
@@ -500,20 +505,20 @@ async function sdNight(n) {
   let body = '<p>Night ' + n + ' (' + SD_DAY[n] + ' to ' + SD_DAY[n + 1] + '). On call: <b>' + esc(lead || 'nobody') + '</b>' + (tired ? ' (night ' + run + ' in a row)' : '') + '.</p>';
   if (n === 8) body += '<p>02:04: a staff sign-in from another country lands in the technology office’s queue. Under the district’s threshold, one sign-in with no bulk read waits for 07:00. (game)</p>';
   if (n === 9) body += '<p>02:15: a bulk-export alert on Inkstone, which the district’s threshold pages. ' + (first ? first + ' checks the job: the registrar’s report-card export, scheduled for the wrong night; it wrote to SIS-01’s own disk and nothing left the district' + (tired ? '. Slowly: a thin first look, and at 02:40 a call to you' : '') + '.' : 'Nobody is on call: it waits for Owen Marsh at 07:00, who finds the registrar’s report-card export, scheduled for the wrong night.') + ' Marsh also moves 41 teachers onto their own Inkstone accounts. (game)</p>';
-  if (n === 10) body += '<p>05:10: Lumenlark emails Owen Marsh. 05:40: a post names the district. ' + (first ? first + ' takes the page' + (tired ? ', on a third night or more in a row: a thin first look, with fewer facts in it' : ': a clear first look, and the post captured') + '.' : 'Nobody is on call: both wait for Owen Marsh at 07:00.') + ' (game)</p>';
+  if (n === 10) body += '<p>05:10: Lumenlark emails Owen Marsh, and at 05:30 its incident team rings the after-hours number the district gave it on Monday. 05:40: a post names the district. ' + (first ? first + ' takes the page' + (tired ? ', on a third night or more in a row: a thin first look, with fewer facts in it' : ': a clear first look, and the post captured') + '.' : 'Nobody is on call: the call goes unanswered, and both wait for Owen Marsh at 07:00.') + ' (game)</p>';
   await UI.openModal('Night ' + n, body, [{label: 'Morning', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.day = n + 1; G.focus = G.focusMax;
   if (tired && sdMgr() && SD_ROTA.calls[n]) { G.focus = Math.max(10, G.focus - 10); await say('You were up at ' + (n === 9 ? '02:40' : '05:45') + ' with a tired on-call lead. Focus ' + G.focus + '/' + G.focusMax + ' this morning. (game)'); }
   G.f['sdNight' + n] = true;
   if (n === 8 && sdMgr()) G.f.sdFixClause = true;   // Priya's tabletop action, done by 17:00 on Day 8
-  if (n === 8) await say(sdMgr() ? 'Day 9, Tuesday, 07:05. Owen Marsh has an alert: i.brandt signed in at 02:04 from another country. By 08:25 Principal Brooks has called her on the number in the staff directory, and written it down. He’s in the hall.' : 'Day 9, Tuesday, 07:45. Kole adds a question to the letter, in writing: was i.brandt’s 02:04 sign-in a compromise? Three new items are at the evidence locker.');
+  if (n === 8) await say((sdMgr() ? 'Day 9, Tuesday, 07:05. Owen Marsh has an alert: i.brandt signed in at 02:04 from another country. By 08:25 Principal Brooks has called her on the number in the staff directory, and written it down. He’s in the hall.' : 'Day 9, Tuesday, 07:45. Kole adds a question to the letter, in writing: was i.brandt’s 02:04 sign-in a compromise? Three new items are at the evidence locker.') + ' (Monday passed with nothing of the Library’s published that the firm has found. game)');
   if (n === 9) {
     G.f.sdFixNamed = true; G.f.sdFixClause = true; unlock('act', 'sdnamed');   // DFIR: the report's recommendations, done Day 9 17:00 (the clause) and Day 10 08:00
     if (sdMgr()) { G.cr.ex.closed += c.ex || 0; touchCSF('Protect'); }
     await say('Day 10, Wednesday, 09:00. Every teacher signs in to Inkstone as themselves now. Lumenlark’s reply has arrived: two pages, and an offer. (game)');
     if (sdDfir()) { const cu = G.cr.custody; cu.items++; cu.complete++; await say('Lumenlark’s summary is logged on receipt as S-09, hashed. Theo has it side by side with our API log. (game)', 'Lucia Ferrand'); }
   }
-  if (n === 10) { c.night10 = {lead: lead, tired: tired}; await say(sdMgr() ? 'Day 11, Thursday, ' + (lead ? '06:15' : '07:10') + '. Dr Vale is in her office with Lumenlark’s email open.' : 'Day 11, Thursday, ' + sdAt('06:20') + '. Kole has engaged the firm again. Lucia is in the technology office.'); }
+  if (n === 10) { c.night10 = {lead: lead, tired: tired}; await say(sdMgr() ? (!lead ? 'Day 11, Thursday, 07:10. Dr Vale is in her office with Lumenlark’s email open.' : tired ? 'Day 11, Thursday, 06:15. Dr Vale is in her office with the on-call lead’s thin note: a post names the district, something about Lumenlark.' : 'Day 11, Thursday, 06:15. Dr Vale is in her office with Lumenlark’s email, forwarded by Owen Marsh at 05:50.') : 'Day 11, Thursday, ' + sdAt('06:20') + '. Kole has engaged the firm again. Lucia is in the technology office.'); }
   track();
 }
 
@@ -549,7 +554,7 @@ async function sdBoardScript() {
   const who = 'Lorna Pike', f = G.f, c = sdC();
   if (f.sdBoard) { await say('The Slate Badge says the district trusts how you work. Keep earning it.', who); return; }
   if (!f.sdDrillC) { await say('The Board sits once your week’s cases are done.', who); return; }
-  await say('The School Board. Three questions, the way parents put them to us at the gate. We grade the answer we can act on.', who);
+  await say('The School Board. Three questions, the way parents will put them to us. We grade the answer we can act on.', who);
   const specs = sdMgr() ? SD_BOARD_SPECS_MGR() : SD_BOARD_SPECS_DFIR();
   c.board = {first: []};
   for (const s of specs) {
@@ -566,7 +571,7 @@ async function sdBoardScript() {
   f.sdBoard = true; f.sdSlate = true;
   G.focusMax += 4; G.focus = G.focusMax; track();
   await say('You cleared the School Board. This is the Slate Badge (game).', who);
-  await say(sdMgr() ? 'Its power: every vendor in an incident from now on arrives with its contract’s incident clause already on the plan’s contact page, and you carry a little more: Focus +4.' : 'Its power: every request you make for vendor-held evidence is logged with its date the moment it goes, so each unknown carries its next step, and you carry a little more: Focus +4.', who);
+  await say(sdMgr() ? 'Its power, from the next district on: every vendor in an incident arrives with its contract’s incident clause already on the plan’s contact page. And you carry a little more now: Focus +4.' : 'Its power, from the next district on: every request you make for vendor-held evidence is logged with its date the moment it goes, so each unknown carries its next step. And you carry a little more now: Focus +4.', who);
   touchCSF('Govern');
   await say('End the day when you’re ready.');
 }
@@ -591,11 +596,11 @@ async function sdBoss() {
   const c = sdC(), n10 = c.night10 || {lead: sdLead(10), tired: sdTired(10)};
   c.boss = {first: [], look: n10.tired ? 'thin' : n10.lead ? 'clear' : 'none'};
   if (sdMgr()) {
-    await say('“Files copied from our environment included roster data from your district’s integration.” That’s all it says. And Owen says there’s a post. Tell me what we do, and in what order.', 'Dr Corinne Vale');
+    await say(c.boss.look === 'thin' ? 'A post names us, “something about Lumenlark”: that’s all the note says. Owen brings Lumenlark’s email at 07:10. Tell me what we do, and in what order.' : '“Files copied from our environment included roster data from your district’s integration.” That’s all it says. And Owen says there’s a post. Tell me what we do, and in what order.', 'Dr Corinne Vale');
     await say((c.boss.look === 'none' ? 'No first look: Night 10 had nobody on call, so both waited for Owen Marsh at 07:00.' : c.boss.look === 'thin' ? 'The night’s on-call lead, on a third night running, sent a thin first look: the email and the sample rows come later, from Marsh.' : 'The night’s on-call lead sent a clear first look: the post captured, the district named, ten sample rows.') + ' The firm has been on this since Monday. (game)');
     const S = sdMgrBossStages();
     await sdStages(S, ['s1']);
-    await say(sdAt('06:40') + ': Kole and Priya are on their way. The firm has the email and the capture. Lorna Pike is told. Priya asks Lumenlark under §9.3 for the list of files that held our district’s data. (game)');
+    await say(sdAt('06:40') + ': Kole and Priya are on their way. The firm has the email and the capture. Lorna Pike is told, and Kole updates the district’s cyber insurer. Priya asks Lumenlark under §9.3 for the list of files that held our district’s data. (game)');
     await sdStages(S, ['s2']);
     await say('09:00: the Board heard what we know, what we don’t, who decides what families hear, and 13:00 for the next update. Principals have Priya’s script, agreed by Kole. (game)');
     await sdStages(S, ['s3']);
@@ -612,7 +617,7 @@ async function sdBoss() {
     const r = await doReport(SD_REPORT_2);
     G.cr.reports.sd2 = {score: r.score, over: r.over, under: r.under};
     G.cr.corrected += r.over;
-    await say('14:00: to Kole. The sync stays paused. Kole and Priya have the field list and decide who must be told; Dr Vale decides about the contract; with Kole’s agreement, the FBI has the post. (game)');
+    await say('14:00: to Kole. The sync stays paused. Kole and Priya have the field list and decide who must be told; Dr Vale decides about the contract; Kole has updated the district’s cyber insurer; with her agreement, the FBI has the post. (game)');
   }
   c.boss.ok = c.boss.first.every(Boolean);
   G.f.sdBoss = true; unlock('tech', 'T1657'); unlock('tech', 'T1550.001'); touchCSF('Respond'); touchCSF('Recover'); track();
@@ -625,8 +630,8 @@ async function sdStatusReport() {
   const who = 'Lucia Ferrand';
   const body = '<pre class="art">Tallowmere · status · SCH-02 · Day 11 15:00 (game)\n' +
     'Found       the 10 sample rows match our students’ records;\n' +
-    '            six roster fields shared, 3,140 students;\n' +
-    '            roster reads only in 90 days; none after Monday 10:05\n' +
+    '            six roster fields shared, 4,410 students since 2023;\n' +
+    '            roster reads only in 90 days; none after Monday 08:50\n' +
     'Not found   when our data was copied, by whom, how much;\n' +
     '            held by the vendor, requested Day 8 (Monday)\n' +
     'Evidence    S-01 to S-12: hashed, sealed\n' +
@@ -639,7 +644,7 @@ async function sdStatusReport() {
   if (!qtFound('sd-probe')) {
     const i = await choose('The appendix: an observation not yet explained.', [{label: 'Read the appendix'}, {label: 'Leave it: it’s with Kole'}], {cursor: 1});
     if (i === 0) {
-      await say('Appendix: reading FW-SD’s log for Night 8, for counsel’s question about a teacher’s sign-in, the firm saw connections from FD-STAFF-11’s address, over the Compact’s link, to SIS-01’s database port and two other servers’ admin ports at 03:21–03:22. All denied: the link lets only logs out. Passed to counsel; with her agreement, to Rae’s suspicion-file team. Not acted on.');
+      await say('Appendix: reading FW-SD’s log for Night 8, for counsel’s question about a teacher’s sign-in, the firm saw pings from FD-STAFF-11’s address, over the Compact’s link, to eleven district addresses in turn, SIS-01’s among them, at 03:21–03:22. All dropped: the link lets only logs out. Passed to counsel; with her agreement, to Rae’s suspicion-file team. Not acted on.');
       await say('Nothing changes on svc-print without a plan. You pass it to Rae, through Kole.');
       await crQtAfterNote(qtNote('sd-probe'));
     }
@@ -653,7 +658,7 @@ function sdScoreHtml() {
   if (!G.trackId || !G.f.sdMet) return '';
   const c = G.cr, s = c.sd || {};
   if (sdMgr()) return '<p>School District: retainer ' + (s.activate !== null && s.activate !== undefined ? '<b>' + s.activate + ' min</b>' : 'not called') + ' · inventory ' + (s.inv ? '<b>' + s.inv.owned + ' of 3</b> owners first time' : 'not yet') + ' · district nights ' + (s.cover ? '<b>' + esc(s.cover.k) + '</b>' : 'not set') + ' (game)</p>';
-  return '<p>School District: requests logged <b>' + (s.requests ? 4 : 0) + '</b> (requested Day 8) · reports filed <b>' + ['sd1', 'sd2'].filter(k => c.reports[k]).length + '</b> · clients in parallel <b>' + (G.f.sdStores ? 3 : 2) + '</b> (game)</p>';
+  return '<p>School District: requests logged <b>' + (s.requests ? SD_REQUESTS.filter(p => p.good).length - s.requests.wrong : 0) + '</b> (requested Day 8) · reports filed <b>' + ['sd1', 'sd2'].filter(k => c.reports[k]).length + '</b> · clients in parallel <b>' + (G.f.sdStores ? 3 : 2) + '</b> (game)</p>';
 }
 function sdDrillRows() {
   const keys = sdMgr() ? ['vendmgr', 'signmgr', 'offer'] : ['venddfir', 'signdfir', 'tokendate'];
@@ -670,11 +675,12 @@ async function sdSummary() {
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b> · Day <b>' + G.day + '</b> (' + (SD_DAY[G.day] || '') + ')</p>' +
     '<h3>Drills (game)</h3><table class="sc"><tr><th>Drill</th><th>Score</th><th>Supported</th></tr>' + sdDrillRows() + '</table>' +
     (t === 'dfir' ? '<p>Reports filed: SCH-01 <b>' + (G.cr.reports.sd1 ? G.cr.reports.sd1.score : '—') + '</b> · SCH-02 <b>' + (G.cr.reports.sd2 ? G.cr.reports.sd2.score : '—') + '</b> (game)</p>' : '') +
-    '<p>The vendor’s breach: ' + (c.boss && c.boss.ok ? 'handled at the first try from your seat' : 'handled, with false starts the debriefs named') + '. ' + (t === 'manager' ? 'Coordinated: Dr Vale decided, Kole and Priya decide what families hear, the firm had the evidence, nobody promised what nobody knew.' : 'What could have left: six roster fields for 3,140 students; the rest written as unknown, held by the vendor, requested on Day 8.') + '</p>' +
+    '<p>The vendor’s breach: ' + (c.boss && c.boss.ok ? 'handled at the first try from your seat' : 'handled, with false starts the debriefs named') + '. ' + (t === 'manager' ? 'Coordinated: Dr Vale decided, Kole and Priya decide what families hear, the insurer was told early, the firm had the evidence, nobody promised what nobody knew.' : 'What could have left: six roster fields for 4,410 students, former students included; the rest written as unknown, held by the vendor, requested on Day 8.') + '</p>' +
+    '<p>Lesson (game): Lumenlark’s notice waited in a general inbox from Friday 16:40 to Monday 07:50, with the token live; its only unexplained read came on Sunday at 23:58. Vendors’ notices now go to a monitored address and the on-call number, and “rotate credentials” is acted on the same day.</p>' +
     (t === 'manager' && f.lbBookmark ? '<p>Bookmark Badge: the tabletop’s three actions arrived with their owners agreed.</p>' : '') +
-    '<p>Open risk (game): Inkstone issued every integration token with its default “read: all” scope. Ferrylane’s and Chimewell’s still have it. Their owners, Transportation and Communications, with Owen Marsh, have not yet accepted or fixed that risk.</p>' +
+    '<p>Open risk (game): Inkstone issued every integration token with its default “read: all” scope. Ferrylane’s and Chimewell’s still have it. Their owners, Transportation and Communications, with Owen Marsh, have not yet accepted or fixed that risk. And Ferrylane holds student names and bus stops under a 2022 contract with no data agreement: Transportation, with Priya, to put one in place.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
-    (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, the 03:00 pattern' + (qtFound('lb-rdp') ? ', a remote-desktop sign-in on the Library’s server' : '') + (qtFound('sd-probe') ? ', and now refused connections from FD-STAFF-11’s address to the district’s servers' : '') + '. It continues.</p>') +
+    (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, the 03:00 pattern' + (qtFound('lb-rdp') ? ', a remote-desktop sign-in on the Library’s server' : '') + (qtFound('sd-probe') ? ', and now pings from FD-STAFF-11’s address to eleven of the district’s addresses' : '') + '. It continues.</p>') +
     '<p class="big">Next: Community Clinic.</p>';
   while (true) {
     const i = await UI.openModal('End of the School District', body, [{label: 'Keep exploring the district', meta: {good: true}}, {label: 'Credits'}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});

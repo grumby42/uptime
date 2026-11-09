@@ -90,7 +90,7 @@ const NPCS = [
 /* ---------- ATT&CK techniques met in this edition (checked on attack.mitre.org, 7 Nov 2026, ATT&CK content v20.1) ---------- */
 const TECH = {
   'T1056.001': {name: 'Input Capture: Keylogging', tactic: ['Collection', 'Credential Access'], desc: 'Recording what a person types, often to catch passwords as they are entered.'},
-  'T1078': {name: 'Valid Accounts', tactic: ['Initial Access', 'Persistence', 'Privilege Escalation', 'Stealth'], desc: 'Signing in with real credentials that were stolen or guessed, so the activity looks legitimate. Here: a vendor’s support account.'},
+  'T1078': {name: 'Valid Accounts', tactic: ['Initial Access', 'Persistence', 'Privilege Escalation', 'Stealth'], desc: 'Signing in with real credentials that were stolen or guessed, so the activity looks legitimate. Here: a vendor’s support account in the Library; in the School District, the explanation a teacher’s sign-in drill rules out.'},
   'T1657': {name: 'Financial Theft', tactic: ['Impact'], desc: 'Stealing money or demanding it, for example by threatening to publish stolen data unless a payment is made.'}
 };
 

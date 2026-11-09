@@ -289,6 +289,10 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     await fresh();
     await p.evaluate(() => { run(() => doRota(SD_ROTA, ['bea', 'ruth'])); }); await sleep(300);
     shots.rota = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-rota2.png' });
+    // Review of slice 2, N2: "Leave this night uncovered" is pinned last (the cursor never opens on it) and its note
+    // follows the district's threshold (07:00).
+    const unc = await p.evaluate(() => { const m = UI.modal, o = [...document.querySelectorAll('#mopts .opt')]; return { last: /Leave this night uncovered/.test(o[o.length - 1].textContent) && /07:00/.test(o[o.length - 1].textContent), cursorOff: !/uncovered/.test(o[m.cursor] ? o[m.cursor].textContent : '') }; });
+    check('Crossroads School District ' + name + ': the week-2 rota pins “Leave this night uncovered” last, with the district’s 07:00, and the cursor doesn’t open on it', unc.last && unc.cursorOff, unc);
     await fresh();
     await p.evaluate(() => { run(sdInventory); }); await sleep(250);
     shots.invSource = await measure();

@@ -16,7 +16,7 @@
 // owners, runs the tabletop, absorbs the district into a week-2 rota whose in-a-row rule counts last week's nights, and
 // reviews three records drills (one read with a single `needs` source is unsupported); the DFIR consultant works the
 // amended letter, logs five items (the SSO filter as a gap), requests vendor-held evidence dated Day 8, keeps the
-// districts' stores apart (3 clients), and writes SCH-01 and SCH-02 with "unknown: held by the vendor; requested on Day
+// districts' stores apart (3 clients), and writes SCH-01 (seven findings) and SCH-02 with "unknown: held by the vendor; requested on Day
 // 8 (Monday)"; save/reload mid-district; the Slate Badge; the Quiet Thread clue sd-probe (T1018) on both tracks; the
 // end summary ("Next: Community Clinic").
 // Usage: node tests/crossroads.js   (UPTIME_FILE=file:///.../crossroads/index.html to test another build)
@@ -298,7 +298,7 @@ async function session(ctx, file) {
     const sdSum = await A.modalText();
     check('manager drill C (the vendor’s offer): right and supported', sdA.C.verdictOk && sdA.C.supported, sdA.C);
     check('School Board cleared: the Slate Badge', sdA.slate === true, sdA);
-    check('Quiet Thread (manager): the firm’s status report shows the refused connections (sd-probe, T1018), not in the alert mix, not evicted', sdA.clue && sdA.tech === 'T1018' && sdA.qt && sdA.inAlerts === 0 && !sdA.evicted, sdA);
+    check('Quiet Thread (manager): the firm’s status report shows the pings (sd-probe, T1018), not in the alert mix, not evicted', sdA.clue && sdA.tech === 'T1018' && sdA.qt && sdA.inAlerts === 0 && !sdA.evicted, sdA);
     check('School District summary: “Next: Community Clinic”; series records the district; the token-scope risk named as open; the objective done', /Next: Community Clinic/.test(sdSum) && /Open risk/.test(sdSum) && /read: all/.test(sdSum) && sdA.obj.done && sdA.ser.school === true, sdA.obj);
     const brS = await A.page.evaluate(() => {
       const keep = G.cr.sd.night10, out = {};
@@ -310,6 +310,22 @@ async function session(ctx, file) {
       } finally { G.cr.sd.night10 = keep; }
       return out; });
     check('uncovered Night 10: the boss’s first hour starts after Owen Marsh at 07:00; a tired lead’s first look has no sample rows', brS.open && brS.thin, brS);
+    // Review of slice 2 (9 Nov 2026): B2, B3, B4, S2, S3, S11, S12, N1, N2 checked on the text and state directly.
+    const rv = await A.page.evaluate(() => {
+      const out = {}, arrive = sdArrive.toString(), letter = sdLetterTask.toString(), night = sdNight.toString(), all = JSON.stringify(SD_DRILLS) + arrive + letter;
+      out.b3 = /revoke LL-SYNC now and pause the sync, clearing nothing/.test(arrive) && /At 08:50[^']*revokes it[^']*at 09:40 he exports/.test(arrive) &&
+        /revokes LL-SYNC at 09:20[^']*clearing nothing[^']*09:40/.test(letter) && !/before the token is revoked|before he revokes|10:05/.test(all);
+      const inj = SD_INJECTS[1].opts.find(o => o.good).label, why = SD_BOARD_SPECS_MGR()[0].resp.map(r => r.why || '').join(' '), s2 = sdMgrBossStages().s2.clues.join(' ');
+      out.b2 = !/never shared/.test(inj + why + s2) && /roster reads only/.test(inj);
+      const txt = s => s.ask + ' ' + s.resp.map(r => r.label + ' ' + (r.why || '')).join(' ');
+      out.b4 = SD_BOARD_SPECS_DFIR().concat(SD_BOARD_SPECS_MGR()).every(s => !/\bpost\b|post’s|sample|school gate/.test(txt(s)));
+      out.s2 = /4,410/.test(SD_REPORT_1.claims[0].text) && /former/.test(sdMgrBossStages().s3.clues[1]);
+      out.s3 = /in her office/.test(sdMgrBossStages().s1.clues[2]) && !/on her way in/.test(sdMgrBossStages().s1.clues[2]) && /thin note/.test(night);
+      out.s11 = /pings/.test(QT_CLUES['sd-probe'].seen) && !/\bports?\b/.test(QT_CLUES['sd-probe'].seen);
+      out.s12 = SD_REPORT_1.claims.length === 7 && SD_REPORT_1.claims.some(c => c.id === 'brandt' && c.truth === 'confirmed') && SD_REPORT_1.claims.some(c => /no writes/.test(c.text));
+      out.n1 = /Math\.max\(9 \* 60, ack \+ 5\)/.test(arrive) && SD_ROTA.waitUntil === '07:00';
+      return out; });
+    check('review fixes (slice 2): revoke first, clearing nothing, then export, on both tracks (B3); no “grades were never shared” to a parent (B2); no Day 10 Board line mentions the post or its sample (B4); 4,410 students, former ones included (S2); Dr Vale in her office on Day 11 (S3); the clue is pings, T1018 (S11); SCH-01 answers all four questions (S12); the retainer clock and the district’s 07:00 (N1, N2)', Object.values(rv).every(Boolean), rv);
     await A.pickLabel(/^Keep exploring/); await A.settle();
     // A fresh save on this browser: the other track is locked; New Game+ opens it.
     await A.page.evaluate(() => { started = false; newGame(); });
@@ -437,15 +453,16 @@ async function session(ctx, file) {
     await B.goTo('school', 14, 11);
     await B.settle([], /Report · /); await B.pickLabel(/^Start writing$/);
     let unkWhy = '';
-    for (let n = 1; n <= 6; n++) {
-      await B.settle([], /Finding \d of 6/);
+    const nSch1 = await B.page.evaluate(() => SD_REPORT_1.claims.length);   // 7 since the slice-2 review (S12)
+    for (let n = 1; n <= nSch1; n++) {
+      await B.settle([], /Finding \d of \d/);
       const card = (await B.page.textContent('#modal .card')).trim();
       const cl = await B.page.evaluate(t => { const c = SD_REPORT_1.claims.find(x => x.text === t); return c ? { id: c.id, truth: c.truth } : null; }, card);
       const want = cl && cl.id === 'accessed' ? 'Likely' : { confirmed: 'Confirmed', likely: 'Likely', unknown: 'Unknown' }[cl && cl.truth];
       await B.pickLabel(new RegExp('^' + want + '$'));
       const said = await B.settle([], /./);
       if (cl && cl.id === 'accessed') unkWhy = said && said.ui && said.ui.text || '';
-      await B.settle([], n < 6 ? /Finding \d of 6/ : /Report filed/);
+      await B.settle([], n < nSch1 ? /Finding \d of \d/ : /Report filed/);
     }
     const filedB = await B.page.innerHTML('#modal');
     await B.settle();

@@ -8,8 +8,8 @@
    Security log); the IR manager sees it in the firm's status report. Either
    way it goes to counsel first, then to Rae's suspicion-file team: nothing
    changes on svc-print without a plan.
-   The School District: refused connections from FD-STAFF-11's address to the
-   district's servers at 03:21 (ATT&CK T1018), seen in FW-SD's log (DFIR, S-07)
+   The School District: pings from FD-STAFF-11's address to eleven district
+   addresses at 03:21, all dropped (ATT&CK T1018), seen in FW-SD's log (DFIR, S-07)
    or in the firm's status report (manager); counsel first, then Rae.
    The clue situations are invented (game); the technique IDs are real (QT_TECH).
    ============================================================ */
@@ -20,7 +20,7 @@ const QT_CLUES = {
              seen: 'svc-print signed in to CIRC-01, the Library’s Shelfwright server, over remote desktop (logon type 10) from FD-STAFF-11’s address at 03:12 on Day 2, and signed out at 03:16. CIRC-01 audits sign-ins, not process starts, so what it did is unknown.'},
   // The School District (slice 2): T1018 Remote System Discovery (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
   'sd-probe': {tech: 'T1018', where: 'FW-SD’s log, Night 8 (the School District)',
-             seen: 'At 03:21–03:22 on Night 8 the district firewall refused connections from FD-STAFF-11’s address, arriving over the Compact’s link, to SIS-01’s database port and to two other district servers’ remote-administration ports. The link lets only logs out of the district. What ran the attempts is unknown.'}
+             seen: 'At 03:21–03:22 on Night 8 the district firewall dropped pings from FD-STAFF-11’s address, arriving over the Compact’s link, to eleven district addresses in turn, SIS-01’s among them: which hosts answer, not which services. The link lets only logs out of the district. What sent them is unknown.'}
 };
 
 // One line per Town Hall clue, for the suspicion file you carry (written from the Town Hall clue text; game).

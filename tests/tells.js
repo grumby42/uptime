@@ -276,6 +276,78 @@ if (report && crOpts.length) {
   if (crFails.length) console.log('Crossroads tells:\n  ' + crFails.join('\n  '));
   if (crWarns.length) console.log('Crossroads warnings:\n  ' + crWarns.join('\n  '));
 }
+// ---- Punctuation and names (review of Crossroads slice 2, 9 Nov 2026, B1 and S7) ----
+// B1: right answers listed several actions joined by ";" and wrong ones argued one, so "pick the only option with a
+// semicolon" beat 24 of 57 School District lists (and the Library had the same lean). Words can't see that, so each
+// mark is counted like a word: the share of right options carrying it against the share of wrong ones. Tabletop cards
+// are read without the " — " the scanner puts between a card's name and its text. Crossroads is held to the 35–65% band
+// from n >= PUNCT_BAND_N and, below that, to chance (the right options carrying the mark may exceed the count chance gives
+// by at most one); Town Hall is measured in --report only, after its other tables, which are unchanged.
+// It also counts the "lone mark" strategy (pick, or rule out, the only option in a list that carries the mark) against
+// chance, both ways.
+// S7: options naming a character are held to the same rule in Crossroads (any named character, by district), and the
+// School District's four deciders and doers (Kole, Priya, Dr Vale, Marsh) one by one and together.
+const PUNCT = [
+  ['P:semicolon', /;/],
+  ['P:colon', /:/],
+  ['P:dash', /[–—]|\s-\s/],
+  ['P:parentheses', /[()]/],
+];
+const CR_NAMES = [
+  ['N:named', /\b(Adaeze|Kole|Priya|Lindgren|Corinne|Vale|Owen|Marsh|Hal Brooks|Brooks|Ilse|Brandt|Nell|Sato|Wim|Haddad|Lorna|Pike|Lucia|Ferrand|Theo|Marchetti|Noor|Castellanos|Mina|Strand|Cyrus|Hallowell|Agnes|Pell|Dot Ferreira|Ferreira|Juno|Barros|Kemal|Osterhout|Merrin|Rae|Okafor|Paz|Delgado|Magda|Petrov|Ruth|Avila|Bea|Lindqvist|Odile|Brennan|Beatriz|Solano)\b/],
+  ['N:Kole', /\bKole\b/], ['N:Priya', /\bPriya\b/], ['N:Vale', /\bVale\b/], ['N:Marsh', /\bMarsh\b/],
+  ['N:sd-deciders', /\b(Kole|Priya|Vale)\b/],
+];
+const PUNCT_BAND_N = 6;
+const markText = x => x.key === 'cards' ? x.label.replace(' — ', ' ') : x.label;
+function pstat(set, re) {
+  const G = set.filter(x => x.good), B = set.filter(x => !x.good);
+  const g = G.filter(x => re.test(markText(x))).length, b = B.filter(x => re.test(markText(x))).length;
+  const rg = G.length ? g / G.length : 0, rb = B.length ? b / B.length : 0;
+  return {g, G: G.length, b, B: B.length, n: g + b, lean: rg + rb ? rb / (rg + rb) : 0.5, expG: (g + b) * G.length / Math.max(1, G.length + B.length)};
+}
+const pOk = st => st.n >= PUNCT_BAND_N ? (st.lean >= 1 - WARN && st.lean <= WARN) : st.n < 2 || st.g - st.expG <= 1;
+const pFmt = st => st.n ? fmt(st) + (st.n < PUNCT_BAND_N ? ' (chance ' + st.expG.toFixed(1) + ')' : '') : '-';
+// The lone-mark strategy over graded single-pick lists (cards are multi-pick, so left out): lists where exactly one option
+// carries the mark, how often that option is right, and what chance gives (the share of right options in each such list).
+function lone(Ls, re) {
+  let n = 0, hit = 0, exp = 0, v = 0;
+  for (const L of Ls) {
+    if (L.key === 'cards') continue;
+    const m = L.items.filter(x => re.test(x.label)); if (m.length !== 1) continue;
+    const p = L.items.filter(x => x.good).length / L.items.length;
+    n++; exp += p; v += p * (1 - p); if (m[0].good) hit++;
+  }
+  // Two-sided: a lone mark that is never right is a tell too (it rules an option out).
+  return {n, hit, exp, v, ok: Math.abs(hit - exp) <= 2 * Math.sqrt(v) + 1};
+}
+const loneFmt = s => s.n ? s.hit + '/' + s.n + ' (chance ' + s.exp.toFixed(1) + ')' : '-';
+const crListsIn = s => s === 'cr-all' ? crGraded : crGraded.filter(L => district(L.file) === s);
+const punctRows = [];
+for (const [name, re] of PUNCT) for (const s of CR_DISTRICTS.concat(['cr-all'])) {
+  const st = pstat(crScope(s), re), ln = lone(crListsIn(s), re);
+  punctRows.push({n: name + '@' + s, st, ln, ok: pOk(st) && ln.ok});
+}
+const nameRows = [];
+for (const [name, re] of CR_NAMES) for (const s of (name === 'N:named' ? CR_DISTRICTS.concat(['cr-all']) : ['cr-school'])) {
+  const st = pstat(crScope(s), re);
+  nameRows.push({n: name + '@' + s, st, ok: pOk(st)});
+}
+if (report) {
+  console.log('\nPunctuation (report only in Town Hall; cell = g/G b/B lean-to-wrong%; lone = lists where only one option has the mark: right/lists)\n' + 'mark'.padEnd(16) + scopes.map(s => s.padEnd(19)).join(''));
+  for (const [name, re] of PUNCT) {
+    console.log(name.padEnd(16) + scopes.map(s => fmt(pstat(inScope(s), re)).padEnd(19)).join(''));
+    console.log('  lone'.padEnd(16) + scopes.map(s => loneFmt(lone(s === 'all' ? graded : graded.filter(L => district(L.file) === s), re)).padEnd(19)).join(''));
+  }
+  if (crOpts.length) {
+    console.log('\nCrossroads punctuation and names (enforced)\n' + 'mark'.padEnd(16) + CR_DISTRICTS.concat(['cr-all']).map(s => s.padEnd(26)).join(''));
+    for (const [name, re] of PUNCT) {
+      console.log(name.padEnd(16) + CR_DISTRICTS.concat(['cr-all']).map(s => pFmt(pstat(crScope(s), re)).padEnd(26)).join(''));
+      console.log('  lone'.padEnd(16) + CR_DISTRICTS.concat(['cr-all']).map(s => loneFmt(lone(crListsIn(s), re)).padEnd(26)).join(''));
+    }
+    for (const r of nameRows) console.log(r.n.padEnd(26) + pFmt(r.st) + (r.ok ? '' : '  OUT'));
+  }
+}
 if (report) process.exit(0);  // --report prints both populations' tables and never fails
 const checks = [
   ['source scan found graded lists in every district', DISTRICTS.every(d => graded.some(L => district(L.file) === d))],
@@ -288,10 +360,13 @@ if (crFiles.length) checks.push(
   ['Crossroads: source scan found graded lists in the prologue, the Library and the School District (' + crGraded.length + ' lists, ' + crOpts.length + ' options)', CR_DISTRICTS.every(d => crGraded.some(L => district(L.file) === d))],
   ['Crossroads: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ') in its districts, its list types or overall', !crFails.length],
   ['Crossroads: no tracked word or group outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !crWarns.length],
-  ['Crossroads stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on its own groups, n>=' + CR_BAND_MIN_N + ' (' + crBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', crBand.every(x => x.ok)]);
+  ['Crossroads stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on its own groups, n>=' + CR_BAND_MIN_N + ' (' + crBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', crBand.every(x => x.ok)],
+  ['Crossroads: no punctuation tell (; : dash parentheses) — within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it, and the lone-mark pick no better than chance (' + punctRows.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln)).join(', ') + ')', punctRows.every(x => x.ok)],
+  ['Crossroads: no name tell — options naming a character, and Kole, Priya, Dr Vale and Marsh in the School District, within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it (' + nameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', nameRows.every(x => x.ok)]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);
 if (fails.length) console.log('  ' + fails.join('\n  '));
 if (crFails.length || crWarns.length) console.log('  Crossroads: ' + crFails.concat(crWarns).join('\n  Crossroads: '));
 const crBad = crBand.filter(x => !x.ok); if (crBad.length) console.log('  Crossroads band: ' + crBad.map(x => x.n + ' ' + fmt(x.st)).join(', '));
+const pBad = punctRows.concat(nameRows).filter(x => !x.ok); if (pBad.length) console.log('  Crossroads punctuation/names: ' + pBad.map(x => x.n + ' ' + pFmt(x.st) + (x.ln ? ' lone ' + loneFmt(x.ln) : '')).join(', '));
 process.exit(checks.every(c => c[1]) ? 0 : 1);

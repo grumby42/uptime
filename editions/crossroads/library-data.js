@@ -216,7 +216,7 @@ const LB_INTAKE = {
            {label: 'Hash it, but skip the form: matching hashes are the custody record that counts', why: 'The hash shows the file hasn’t changed; the form shows who had it, and when. Custody is both.'},
            {label: 'Seal a copy on the firm’s shared drive beside Oxlow’s files, where Theo can reach it', why: 'One store per client. The Library’s evidence stays in the Library’s store.'}]},
   e01gap: {id: 'E-01', what: 'PUB-PC-04 memory capture and disk image', form: 'Memory captured, then the disk imaged {IMG} by Juno with a write blocker; collection form signed by the acting team lead; the SHA-256 boxes are empty.',
-    opts: [{label: 'Hash it now and log the gap: the form has no collection hash; seal it, use a copy', good: true, gap: true},
+    opts: [{label: 'Hash it now and log the gap, since the form has no collection hash, then seal it and use a copy', good: true, gap: true},
            {label: 'Write your receipt hash into the empty box on the collection form: then the record is complete', why: 'That makes the form say something nobody recorded at collection. A gap is written down as a gap.'},
            {label: 'Refuse the image: without a collection hash it is worthless as evidence', why: 'It is still evidence. Record the gap, hash it on receipt, and say plainly in the report what the gap means.'},
            {label: 'Carry on without mentioning it: nobody reads collection forms, and the image looks fine', why: 'A gap found later, unrecorded, undermines everything built on the image. Record it now.'}]},
@@ -228,7 +228,7 @@ const LB_INTAKE = {
   e03: {id: 'E-03', what: 'Patron-network flow records', form: 'Exported by Magda’s team; the form says 15:00 Day 1 to 08:00 Day 2; the file covers 14:00 to 08:00; the hash on receipt doesn’t match the form.',
     opts: [{label: 'Log the mismatch and ask for the export they hashed; keep both records', good: true, gap: true},
            {label: 'Use it as it is: an extra hour of flows can only help, and the form is paperwork', why: 'The form and the file disagree, so the record doesn’t say what you have. Record it and get the export they hashed.'},
-           {label: 'Trim the file back to 15:00 and hash it again, to match the form', why: 'Editing evidence to fit the paperwork is the one thing custody exists to prevent.'},
+           {label: 'Trim the file back to 15:00; hash it again, to match the form', why: 'Editing evidence to fit the paperwork is the one thing custody exists to prevent.'},
            {label: 'Throw it out and work the case without any flow records', why: 'The flows answer question 2. Fix the record; don’t lose the evidence.'}]},
   e04: {id: 'E-04', what: 'CIRC-01 Security log export', form: 'Day 1 00:00 to Day 2 08:00, exported 08:50 Day 2 by Juno; SHA-256 at export recorded.',
     opts: [{label: 'Hash it: compare with the export hash, log the handover, seal it, use a copy', good: true},
@@ -239,7 +239,7 @@ const LB_INTAKE = {
 
 /* ---------- DFIR F3: one evidence store per client ---------- */
 const LB_STORES = [
-  {label: 'Separate stores, so the evidence can’t mix; Lucia and both clients’ counsel decide what is shared', good: true},
+  {label: 'Separate stores, so the evidence can’t mix, with Lucia and both clients’ counsel deciding what is shared', good: true},
   {label: 'Put E-01 in Oxlow’s folder: the same family on two clients is one case, and one evidence folder is faster', why: 'Two clients, two stores. Mixing them can expose one client’s evidence to the other and taint both.'},
   {label: 'Lucia decides alone, as engagement lead: Oxlow gets a copy of E-01, as the same family may be there', why: 'Not Lucia alone: what one client’s evidence may be shared with another needs both clients’ counsel too.'},
   {label: 'Keep them apart, and never mention the match, even to either client’s counsel: then nobody can complain', why: 'A match that might matter goes to the people who can decide what to share: Lucia and both clients’ counsel.'}];
@@ -275,7 +275,7 @@ const LB_DRILLS = {
                       reveal: 'Tally added up the severity, the vendor’s label and the note’s guess. It never read which account wrote the file, or whose session was open.'},
          specific: {q: 'Which account wrote kbhelper.exe on PUB-PC-04?', text: 'The shared patron account, through the browser, at 15:12 on Day 1.'}},
     verdicts: [
-      {label: 'A leftover from a patron session: the patron account wrote it at 15:12, in B-2231’s hour; no staff sign-in', good: true, needs: 'edr',
+      {label: 'A leftover from a patron session: the patron account wrote it at 15:12, in B-2231’s hour', good: true, needs: 'edr',
        needsWhy: 'the booking log says whose session was open; only the endpoint record shows which account wrote the file, and when.',
        why: 'The endpoint record and the booking log tell one story.'},
       {label: 'Staff-side: a high-rated keylogger from a known fraud crew means someone targeted the staff', why: 'Severity and a family name don’t say how it got there. The record shows the patron account, and no staff sign-in.'},
@@ -321,7 +321,7 @@ const LB_DRILLS = {
          res: ['No connection from PUB-PC-04 to CIRC-01, the circulation PCs or any staff address all day', 'Three small HTTPS uploads to 203.0.113.88: 2 KB at 16:58, 6 KB at 17:57, 4 KB at 18:38']}]}
     ],
     verdicts: [
-      {label: 'A leftover from B-2231’s session: a download into the patron profile at 15:12; no staff profile or sign-in', good: true, needs: ['image', 'booking'],
+      {label: 'A leftover from B-2231’s session: a download into the patron profile at 15:12, and no staff profile or sign-in', good: true, needs: ['image', 'booking'],
        needsWhy: 'the finding rests on two sources: E-01 dates the file and names the profile, and E-02 says whose session that was. You read only one of them.',
        why: 'E-01 and E-02 each decide their half.'},
       {label: 'Staff-side: a high-rated keylogger from a known fraud crew, on a network the staff share with the patrons', why: 'The image shows the patron profile and no staff sign-in; the flows show no staff connection.'},
@@ -332,7 +332,7 @@ const LB_DRILLS = {
       {label: 'The vendor names a crew that goes after organisations through their staff, not their visitors', why: 'A crew’s habits say nothing about this copy.'}],
     alts: [
       {label: 'It came over the network from a staff PC', good: true, why: 'Ruled out: a browser download in the patron session, and no staff connection in E-03.'},
-      {label: 'The next patron (B-2232) installed it', good: true, why: 'Ruled out: it was created at 15:12, in B-2231’s hour.'},
+      {label: 'The next patron, B-2232, installed it', good: true, why: 'Ruled out: it was created at 15:12, in B-2231’s hour.'},
       {label: 'A grudge against the Library from someone who was banned', why: 'Nothing points to a motive; the report doesn’t guess one.'},
       {label: 'The alert rule misfiring', why: 'The file and its Run entry are on the image.'}],
     path: '<p>Two decisive sources: <b>E-01</b> (when the file was created and in which profile) and <b>E-02</b> (whose session that was). E-03 rules out the network route. Severity and family names decide nothing.</p>',
@@ -500,9 +500,9 @@ const LB_DRILLS = {
        needsWhy: 'the finding rests on two sources: the header (which clock the times are in) and Theo’s notes (what he converted). You read only one.',
        why: 'One clock in Timeline 1; two in Timeline 2.'},
       {label: 'Timeline 2: more entries, Theo is surer of it, and the Director prefers it', why: 'None of those is a clock. The header says UTC, and Timeline 2 read it as local.'},
-      {label: 'Neither: two timelines that disagree by five hours mean the evidence can’t date the file at all', why: 'The disagreement has a cause, written in the header and the notes. Once found, the file is dated.'}],
+      {label: 'Neither: the two timelines disagree by five hours; the evidence can’t date the file at all', why: 'The disagreement has a cause, written in the header and the notes. Once found, the file is dated.'}],
     reasons: [
-      {label: 'The header says UTC, so 20:12 is 15:12 local; Theo’s notes show Timeline 2 read it as local', good: true, why: 'The clock from the header, the mistake from the notes.'},
+      {label: 'The header says UTC, so 20:12 is 15:12 local, and Theo’s notes show Timeline 2 read it as local', good: true, why: 'The clock from the header, the mistake from the notes.'},
       {label: 'Timeline 2 puts the drop after closing, which keeps the patrons out of it', why: 'What the client would like is not a source.'},
       {label: 'A longer timeline draws on more sources: its times are more likely to be the right ones', why: 'Rows don’t fix a clock.'}],
     alts: [
@@ -583,7 +583,7 @@ const LB_DOJO_DFIR = [
           'Likely: no data left, because uploads usually leave a record'], good: 0,
    explain: 'Absence of evidence is evidence only where something would have been recorded. No log, no inference: write unknown, and the next step.'},
   {q: 'One finding, three readers. Which line is the one for the Library Board?',
-   opts: ['6,212 patrons’ names, emails and held titles were taken; Noor is working out who must be told',
+   opts: ['6,212 patrons’ names, emails and held titles were taken, and Noor is working out who must be told',
           'SHA-256 of E-06: the export record is intact, and its hash matches at collection and on receipt',
           'The Library must notify every affected patron within the legal deadline'], good: 0,
    explain: 'The Board needs the impact in plain words and who is deciding what. The hash is for the technical record; what the law requires is counsel’s to say, not the report’s.'}];
@@ -608,8 +608,8 @@ const LB_BOARD_SPECS_MGR = () => [
 const LB_BOARD_SPECS_DFIR = () => [
   {title: 'Round 1: was anyone’s data taken?', who: 'Cyrus Hallowell',
    ask: '“In the keylogger case: was anyone’s data taken?”',
-   resp: [{label: 'From the evidence: three sessions recorded, the data likely sent; what each held is unknown', good: true},
-          {label: 'No: the keylogger has been removed, so nothing can have been taken', why: 'Removing it now says nothing about what it sent before.'},
+   resp: [{label: 'From the evidence: three sessions recorded, data likely sent, what each held unknown', good: true},
+          {label: 'No: the keylogger has been removed; nothing can have been taken', why: 'Removing it now says nothing about what it sent before.'},
           {label: 'Yes: the patrons who have used the public PCs this year are affected, and must be told', why: 'The evidence covers three sessions, not a year of patrons, and who is told is Noor’s decision.'}]},
   {title: 'Round 2: who did it?', who: 'Cyrus Hallowell',
    ask: '“Can you tell us who did it? Name the patron.”',
@@ -633,8 +633,8 @@ function lbMgrBossStages() {
         : '06:10: the on-call lead finds sw-support signed in to Shelfwright at 02:38 from 192.0.2.77, outside the vendor’s documented range, and a manual export at 02:41.',
         (open ? 'The Director is here' : 'The Director is on her way in') + '; Noor, the vendor, the firm and the Board chair don’t know yet.'],
       ask: 'You are the IR manager. Who does what, first?',
-      resp: [{label: 'The Director owns the service; Noor now; vendor blocks its support login, logs kept; firm called', good: true},
-             {label: 'Do it yourself: you know the Library now, and five calls at six would slow it', why: 'One person becomes the bottleneck, and the people who decide don’t know. Coordinate; don’t do it all.'},
+      resp: [{label: 'The Director and Noor now, the vendor blocks its login with logs kept, and the firm called', good: true},
+             {label: 'Do it yourself; you know the Library now, and five calls at six would slow it', why: 'One person becomes the bottleneck, and the people who decide don’t know. Coordinate; don’t do it all.'},
              {label: 'Unplug CIRC-01 and the Library network at once, then wake everyone at eight', why: 'Unplugging first loses the logs the vendor holds and stops lending; the owners are not told.'},
              {label: 'Reply to the email to buy time, and wait until the Director confirms the data is real', why: 'Nobody talks to the extortionist without the Director and Noor, and waiting is not a plan.'}]},
     s2: {title: 'Stage 2 (09:00): brief the Board',
@@ -643,12 +643,12 @@ function lbMgrBossStages() {
       resp: [{label: 'What we know: one export, 6,212 rows; what we don’t; what’s being done; next at 13:00', good: true},
              {label: 'Only 6,212 rows and no reading history: the email exaggerates, so there is little to worry about', why: 'Minimising before the fields are confirmed is a guess, and the rows include the titles on hold.'},
              {label: 'All 26,500 patrons and their reading history are out, as the email says, so prepare for the worst', why: 'Repeating the criminal’s claim as fact; the evidence says one export of 6,212 rows.'},
-             {label: 'Nothing until the firm and Noor have finished: a partial picture would only confuse the Board', why: 'The Board hears it from you first, with the gaps named and a time for the next update.'}]},
+             {label: 'Nothing until the firm and Noor have finished; a partial picture would only confuse the Board', why: 'The Board hears it from you first, with the gaps named and a time for the next update.'}]},
     s3: {title: 'Stage 3 (13:00): the deadline and the way back',
       clues: ['12:30, the firm’s fields: name, email, card number, pickup branch and the title on hold. No addresses, no borrowing history.', 'Shelfwright Systems: sw-support’s password was shared across its customers and last changed in 2022 (game).', 'Monday is the extortionist’s deadline. The Board asks you whether to pay.'],
       ask: 'Which plan do you take to the Director, the Board and Noor?',
-      resp: [{label: 'Payment is for the Board and the Director, on Noor’s advice, FBI told; vendor access on demand', good: true},
-             {label: 'Pay quietly before Monday through the insurance policy, and tell Noor once the file is deleted', why: 'A payment buys a promise from the people who took the rows; it is the Board’s decision, on Noor’s advice, never a quiet one.'},
+      resp: [{label: 'Board and Director decide payment on Noor’s advice, FBI told, vendor access on demand', good: true},
+             {label: 'Pay quietly before Monday through the insurance policy; tell Noor once the file is deleted', why: 'A payment buys a promise from the people who took the rows; it is the Board’s decision, on Noor’s advice, never a quiet one.'},
              {label: 'Announce this afternoon that 6,212 patrons were affected, then send Noor the list', why: 'Noor decides who must be told and how; an announcement before that can be wrong or premature.'},
              {label: 'Give sw-support back to the vendor with a new password, and reopen as before', why: 'The same shared, always-on account is how they got in. Access on demand, from the vendor’s range, with MFA and a password of the Library’s own.'}]}
   };
@@ -659,15 +659,15 @@ function lbDfirBossStages() {
       clues: ['05:52: the extortion email reaches the Director and the public inbox, with 20 sample rows.', lbAt('06:30') + ': Shelfwright Systems wants to reset sw-support straight away and clear its sessions.', 'Noor has engaged the firm under a second letter: what was taken, and how (game).'],
       ask: 'What do you do first?',
       resp: [{label: 'Block sw-support now, clearing nothing; keep the logs and the email, hashed; then the vendor’s reset', good: true},
-             {label: 'Let the vendor reset sw-support and clear its sessions now: every minute it stays live is a minute the attacker keeps', why: 'Disable it now, yes; but a reset that clears sessions can take the night’s records with it. Block, keep the logs, then reset.'},
+             {label: 'Let the vendor reset sw-support and clear its sessions now; every minute it stays live is a minute the attacker keeps', why: 'Disable it now, yes; but a reset that clears sessions can take the night’s records with it. Block, keep the logs, then reset.'},
              {label: 'Image the Library’s public PCs before anything else, in case the attacker came through one', why: 'The way in so far is the vendor’s account on CIRC-01. Scope follows the evidence.'},
              {label: 'Reply to the email asking for proof of the full 26,500 before collecting anything', why: 'Nobody talks to the extortionist without the Director and Noor; your proof is in the logs.'}]},
     s2: {title: 'Stage 2 (11:00): what was taken',
       clues: ['E-06, Shelfwright’s audit log: sw-support signed in 02:38 from 192.0.2.77, manual holds-notice export 02:41–02:44, 6,212 rows, sign-out 02:47.', 'The export’s field list: name, email, card number, pickup branch, title on hold. Shelfwright has no borrowing-history field to export.', 'All 20 sample rows are among the 6,212.', 'E-10, the Library firewall’s log: 192.0.2.77 reached CIRC-01’s remote-support port at 02:37. The port has been open to any address since 2019 (game).'],
       ask: 'What does the evidence say was taken?',
-      resp: [{label: '6,212 holds rows, five fields, one export; no borrowing history: none is kept', good: true},
+      resp: [{label: '6,212 holds rows, five fields, one export: no borrowing history is kept', good: true},
              {label: 'All 26,500 patrons and their reading history, as the email says: assume the worst', why: 'The audit log records one export of 6,212 rows. Assuming the claim is overclaiming.'},
-             {label: 'Nothing proven: the sample could be made up, so wait for the attacker to show more', why: 'The 20 rows are in the export the log records. That is shown.'},
+             {label: 'Nothing proven: the sample could be made up; wait for the attacker to show more', why: 'The 20 rows are in the export the log records. That is shown.'},
              {label: '6,212 rows, and nothing else of the Library’s has left anywhere at all', why: 'That this export is all the logs show is not that nothing else left. Say what is shown.'}]}
   };
 }
