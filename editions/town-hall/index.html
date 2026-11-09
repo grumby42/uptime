@@ -124,7 +124,9 @@ body.landscape.touch #modal{padding:8px 150px 8px 168px}
 .mbox{background:var(--paper);color:var(--paper-ink);width:min(760px,100%);max-height:100%;display:flex;flex-direction:column;border:3px solid var(--line);box-shadow:0 0 0 3px var(--paper)}
 .mhead{font-weight:700;padding:10px 14px 0;font-size:17px;letter-spacing:1px}
 .mhead:empty{display:none}
-.mbody{overflow:auto;flex:1 6 auto;min-height:48px;padding:6px 14px;font-size:15px;line-height:1.45;-webkit-user-select:text;user-select:text;overscroll-behavior:contain}
+/* Body and options share the shrinking in proportion (as before a2d0962); UI.fitModal gives the options a floor of
+   their own height up to 40% of the modal area, so a lone Back button is never squeezed and a long body keeps its share. */
+.mbody{overflow:auto;flex:1 1 auto;min-height:0;padding:6px 14px;font-size:15px;line-height:1.45;-webkit-user-select:text;user-select:text;overscroll-behavior:contain}
 .mbody p{margin:.5em 0}
 .mbody h3{font-size:14px;margin:1em 0 .3em;color:var(--accent);letter-spacing:1px;text-transform:uppercase}
 .mopts{padding:6px 10px 10px;display:flex;flex-direction:column;gap:3px;overflow:auto;flex:0 1 auto;min-height:0}
@@ -204,7 +206,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261107-1809Z', BUILD_TS = '2026-11-07 18:09 UTC';
+const BUILD_ID = 'ARCD-20261109-1126Z', BUILD_TS = '2026-11-09 11:26 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -583,6 +585,7 @@ const Screen = {
     document.documentElement.style.setProperty('--hudW', (VW * this.s) + 'px');
     const pad = document.getElementById('pad');
     document.documentElement.style.setProperty('--padZone', portrait && pad ? Math.max(0, Math.ceil(H - pad.getBoundingClientRect().top)) + 'px' : '0px');
+    if (typeof UI !== 'undefined' && UI.fitModal) UI.fitModal();
     this.ctx.setTransform(k, 0, 0, k, 0, 0);
     this.ctx.imageSmoothingEnabled = false;
   }
@@ -753,7 +756,16 @@ const UI = {
       const i = +b.dataset.i; if (m.items[i].disabled) return;
       m.cursor = i; sfx(m.items[i].meta && m.items[i].meta.back ? 'back' : 'select'); this.modalActivate(i);
     }));
+    this.fitModal();
     const cur = box.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
+  },
+  // The options keep their own height up to 40% of the modal area (a lone Back button is never squeezed); past that
+  // they scroll. The body and the options otherwise share the shrinking, so a long body keeps most of the box.
+  fitModal() {
+    const mo = document.getElementById('mopts'); if (!mo || !this.modalEl) return;
+    const cs = getComputedStyle(this.modalEl), avail = this.modalEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    mo.style.minHeight = '';
+    if (avail > 0) mo.style.minHeight = Math.min(mo.scrollHeight, Math.round(avail * 0.4)) + 'px';
   },
   modalActivate(i) {
     const m = this.modal;
@@ -12354,7 +12366,7 @@ async function doDrill(D) {
   h += '<h3>The focused path</h3>' + D.path;
   if (st.aiMode) h += '<h3>About Tally</h3><p>' + esc(st.aiMode === 'everything' ? D.ai.everything.reveal : (st.keys ? 'You asked a specific question and checked it against the evidence. That is how an assistant helps.' : 'You asked a specific question, which is how an assistant helps. Tally was right this time, but you never confirmed its answer in the evidence yourself.')) + '</p>';
   h += '<h3>Response</h3><ul>' + D.response.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
-  h += '<p class="small">ATT&amp;CK: ' + D.techs.map(t => esc(t + ' ' + TECH[t].name)).join(' · ') + '</p>';
+  if (D.techs.length) h += '<p class="small">ATT&amp;CK: ' + D.techs.map(t => esc(t + ' ' + TECH[t].name)).join(' · ') + '</p>';
   D.techs.forEach(t => unlock('tech', t));
   (D.acts || []).forEach(a => unlock('act', a));
   unlock('act', 'drill');

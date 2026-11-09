@@ -17,7 +17,15 @@ function lbTired(n) { return !!(G.cr.rota && G.cr.rota.stats.tired.includes(n));
 function lbLead(n) { const a = G.cr.rota ? G.cr.rota.assign[n - 1] : null; return a ? rotaName(CR_ROTA, a) : null; }
 function lbImg() { return G.cr.nightOneUncovered ? '08:20 Day 2' : '21:30 Night 1'; }
 function lbDone() { return G.cr.nightOneUncovered ? '203.0.113.88 blocked 08:05 · out of service 08:10' : '203.0.113.88 blocked 18:50 · out of service 19:05'; }
-function lbFill(o) { return JSON.parse(JSON.stringify(o).replace(/\{IMG\}/g, lbImg()).replace(/\{DONE\}/g, lbDone())); }
+// Night 1 uncovered: the day lead handled the alert in the morning, so the note is the day lead's (review S2).
+function lbNoteBy() { return G.cr.nightOneUncovered ? 'With Night 1 uncovered, the day lead' : 'Night 1’s on-call lead'; }
+function lbFill(o) {
+  return JSON.parse(JSON.stringify(o).replace(/\{IMG\}/g, lbImg()).replace(/\{DONE\}/g, lbDone()).replace(/\{NOTEBY\}/g, lbNoteBy())
+    .replace(/\{NOTE\}/g, G.cr.nightOneUncovered ? 'Day lead’s note' : 'On-call note').replace(/\{THELEAD\}/g, G.cr.nightOneUncovered ? 'the day lead' : 'the on-call lead'));
+}
+// Night 4 uncovered: the email waits for the Director at 07:00, so the boss's first hour runs an hour later (game).
+function lbN4Open() { return !!(G.cr.night4 && !G.cr.night4.lead); }
+function lbAt(t) { if (!lbN4Open()) return t; const m = +t.slice(0, 2) * 60 + +t.slice(3) + 60; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
 
 /* ---------- Map tiles that change as the arrival problems are fixed ---------- */
 function lbTile(d, ch) {
@@ -37,7 +45,7 @@ function lbObjective() {
     if (!f.lbRetainer) return at('Retainer drill: who calls the firm, and what it needs on arrival. The study-room table.', 13, 12);
     if (!f.lbAar) return at('After-action review: owners and dates. The study-room table.', 13, 12);
     if (!f.lbNight2) return at('End the day at the workroom desk.', 25, 13);
-    if (!f.lbDrillA) return at('Review the on-call note on PUB-PC-04: Juno, by the public PCs.', 10, 8);
+    if (!f.lbDrillA) return at('Review the keylogger note on PUB-PC-04: Juno, by the public PCs.', 10, 8);
     if (!f.lbCover) return at('After-hours cover for the Library: Director Strand, in her office.', 3, 13);
     if (!f.lbDirective) return at('The Board’s chair is with the Director about the overnight restore.', 6, 13);
     if (!f.lbNight3) return at('End the day at the workroom desk.', 25, 13);
@@ -79,7 +87,7 @@ function lbInteract(ch, tx, ty) {
   if (ch === '§') { run(lbStudyTable); return true; }
   if (ch === '£') { run(async () => { if (lbDfir() && f.lbLetter && !f.lbIntake) await lbIntake(); else await say(lbDfir() ? 'The Library’s evidence store: a locked case, a seal log, and nothing of Oxlow’s in it.' : 'The exercise kit: CISA’s tabletop templates, printed, and a box of index cards.'); }); return true; }
   if (ch === 'Y') { run(lbDesk); return true; }
-  if (ch === 'ø') { run(async () => { const id = LB_PCS[tx + ',' + ty]; await say(id + (f.lbFixPcs ? ': restores to a clean image when a patron logs off, and again overnight.' : id === 'PUB-PC-04' ? ': out of service, unplugged from the network, still powered. A note: “Do not use. Do not restart.”' : ': a patron’s files from this morning are still on the desktop.')); }); return true; }
+  if (ch === 'ø') { run(async () => { const id = LB_PCS[tx + ',' + ty]; await say(id + (f.lbFixPcs ? ': restores to a clean image when a patron logs off, and again overnight.' : id === 'PUB-PC-04' ? ': out of service, powered off and sealed. A label: “Evidence: do not use.”' : ': a patron’s files from this morning are still on the desktop.')); }); return true; }
   if (ch === 'n') { run(async () => { await say(f.lbFixWifi ? 'The patron Wi-Fi closet: LIB-GUEST now has its own network, internet only.' : 'The patron Wi-Fi closet: one switch, one flat network: LIB-GUEST, the circulation PCs and CIRC-01 together.'); }); return true; }
   if (ch === 'Ç') { run(async () => { await say(f.lbFixVendor ? 'The circulation desk. Taped to the Shelfwright terminal: the vendor’s escalation line and its support addresses.' : 'The circulation desk: three Shelfwright terminals, and a binder labelled “Shelfwright contract (2019)”.'); }); return true; }
   if (ch === '¤') { run(() => lbDojoPuzzle([23, 25, 27].indexOf(tx))); return true; }
@@ -104,7 +112,7 @@ async function lbTalk(npc) {
       await say(f.lbDrillB ? 'Two more calls about that post. I told them what you told me: our records don’t match it.' : 'Dot Ferreira, circulation. If Shelfwright stops, I lend on paper slips and type them in later.', who); break;
     case 'juno':
       if (lbMgr() && f.lbNight2 && !f.lbDrillA) { await lbDrillA(); break; }
-      await say(f.lbFixPcs ? 'Restore at logoff and overnight, and LIB-GUEST on its own network. The PCs come back clean every time now.' : 'Juno Barros, the Compact’s technician here. PUB-PC-04 is unplugged and powered. I’ve touched nothing since.', who); break;
+      await say(f.lbFixPcs ? 'Restore at logoff and overnight, and LIB-GUEST on its own network. The PCs come back clean every time now.' : 'Juno Barros, the Compact’s technician here. PUB-PC-04 has been powered off and sealed since I imaged it. Nobody has touched it.', who); break;
     case 'kemal': await lbDojoIntro(); break;
     case 'agnes': await say(f.lbFixPcs ? 'The PCs wipe themselves when I log off now. I keep my CV on my own stick. Sensible.' : 'Somebody’s holiday photos were on PC-2 when I sat down this morning. Not mine.', who); break;
     case 'cyrusb': await lbBoardScript(); break;
@@ -134,7 +142,8 @@ async function lbArrive() {
   await say('Our patrons’ records are the thing we protect. We keep no borrowing history: a book comes back and the link to the patron is gone. Whatever you do here, do it like that.', 'Director Mina Strand');
   unlock('fact', 'crala');
   if (lbMgr()) {
-    await say('Juno sent the Director and Noor the list of PUB-PC-04’s bookings since 15:00 yesterday; Noor will decide about telling those patrons. Night 1’s on-call note gets its review tomorrow. First, the tabletop: Director Strand has an hour at the study-room table. (game)');
+    await say('08:30, with Noor and Director Strand: the keylogger against the plan’s retainer criteria. It has been contained, and nothing so far shows it reached Shelfwright or the patron records it holds, so the firm is not called; if that changes, it is. Juno’s image is sealed and held for Noor; Juno is sending her and the Director the list of PUB-PC-04’s bookings since 15:00 yesterday, and Noor will decide about telling those patrons. (game)');
+    await say('The keylogger note gets its review tomorrow. First, the tabletop: Director Strand has an hour at the study-room table.');
   } else {
     await say('Lucia is in the study room with Noor. The scoping letter first: nothing gets collected before it. (game)');
   }
@@ -187,7 +196,7 @@ async function lbRetainer() {
   let mins = LB_ACT_OK;
   while (true) {
     const items = LB_CALLER.map(o => ({label: o.label, meta: {good: !!o.good}}));
-    const i = await UI.openModal('Retainer · who makes the call', '<p>The Compact holds the retainer with Tallowmere Forensics (game). The plan says the retainer is called when patron data may have been taken.</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+    const i = await UI.openModal('Retainer · who makes the call', '<p>The Compact holds the retainer with Tallowmere Forensics (game). The plan says the retainer is called when Shelfwright or the patron records it holds may have been reached, or when the on-call lead can’t contain an incident.</p>', items, {shuffle: true, closable: false, cls: 'drill'});
     if (items[i].meta.good) break;
     mins += LB_ACT_LATE;
     await say(LB_CALLER[i].why + ' (+' + LB_ACT_LATE + ' game minutes)');
@@ -197,10 +206,11 @@ async function lbRetainer() {
   const sel = await UI.openModal('Retainer · the arrival pack', body, items, {shuffle: true, multi: 4, closable: false, cls: 'tabletop'});
   const wrong = sel.filter(i => !LB_PACK[i].good);
   mins += wrong.length * LB_ACT_CARD;
-  for (const i of wrong) await say(LB_PACK[i].name + ': ' + (LB_PACK[i].id === 'diagrams' ? 'scope by worry. The firm works to the written scope.' : LB_PACK[i].id === 'press' ? 'words before facts. Ada, Noor and the Director decide what is said, when it is known.' : 'one shared login for a whole team means nobody can tell who did what. Named accounts, switched off afterwards.') + ' (+' + LB_ACT_CARD + ' game minutes)');
+  for (const i of wrong) await say(LB_PACK[i].name + ': ' + (LB_PACK[i].id === 'diagrams' ? 'scope by worry. The firm works to the written scope.' : LB_PACK[i].id === 'press' ? 'words before facts. Noor and the Director decide what is said, when it is known.' : 'one shared login for a whole team means nobody can tell who did what. Named accounts, switched off afterwards.') + ' (+' + LB_ACT_CARD + ' game minutes)');
   c.activate = mins; track();
   G.f.lbRetainer = true; unlock('act', 'crretainer'); touchCSF('Respond');
-  await say('11:04 retainer line called · 11:19 the firm acknowledges · pack complete: time to activate outside help ' + mins + ' game minutes. (game)');
+  const ack = 11 * 60 + 4 + mins;
+  await say('11:04 retainer line called · ' + String(Math.floor(ack / 60)).padStart(2, '0') + ':' + String(ack % 60).padStart(2, '0') + ' the firm acknowledges · pack complete: time to activate outside help ' + mins + ' game minutes. (game)');
   await say('Now the after-action review. Three actions, three owners, three dates.', 'Director Mina Strand');
 }
 
@@ -215,14 +225,14 @@ async function lbAarTask() {
       const i = await UI.openModal('AAR · owner', '<div class="card"><b>' + esc(a.issue) + '</b><br>Corrective action: ' + esc(a.action) + '</div><p>Primary responsible organisation: who owns it?</p>', owners, {shuffle: true, closable: false, cls: 'drill'});
       if (owners[i].meta.good) break;
       first = false;
-      await say(a.id === 'split' ? 'The Compact runs the Library’s network, so the Compact’s network team owns the fix; the Director is told it’s done.' : 'The owner is whoever runs the service and holds the contract: the Director. Others do the work, or help.');
+      await say(a.id === 'split' ? 'The Compact runs the Library’s network and nothing has to be bought, so the Compact’s network team owns the fix; the Director is told it’s done.' : a.id === 'restore' ? 'The restore needs the licence renewed: the Director’s budget and contract, and the PCs are her service, so she owns it. Juno does the work.' : 'The Shelfwright contract is the Director’s, so getting the escalation line under it is hers. Others help.');
     }
     const dates = a.dates.map(o => ({label: o.label, meta: {good: !!o.good}}));
     while (true) {
       const i = await UI.openModal('AAR · completion date', '<div class="card"><b>' + esc(a.action) + '</b></div><p>Completion date?</p>', dates, {shuffle: true, closable: false, cls: 'drill'});
       if (dates[i].meta.good) break;
       first = false;
-      await say('“' + a.dates[i].label + '” is not a date, and an action without one slips. One day, in the plan.');
+      await say(a.dates[i].why || '“' + a.dates[i].label + '” is not a date, and an action without one slips. One day, in the plan.');
     }
     if (first) onTime++;
   }
@@ -250,20 +260,19 @@ async function lbNight(n) {
   const c = G.cr, lead = lbLead(n), tired = lbTired(n);
   let body = '<p>Night ' + n + '. On call: <b>' + esc(lead || 'nobody') + '</b>' + (tired ? ' (night ' + rotaRunAt(c.rota.assign, n - 1) + ' in a row)' : '') + '.</p>';
   if (n === 2) body += '<p>A quiet night. (game)</p>';
-  if (n === 3) body += '<p>23:20: LIB-GUEST drops for ten minutes; ' + (lead ? lead.split(' ')[0] + ' takes the call' + (tired ? ', slowly: a thin first look (Evidence 5, not 15), and at 00:40 a call to you' : '') + '.' : 'nobody is on call, and patrons in the reading room lose Wi-Fi until somebody notices in the morning.') + ' (game)</p>';
-  if (n === 4) body += '<p>05:52: an email reaches the Director and the Library’s public inbox. ' + (lead ? lead.split(' ')[0] + ' takes the first call' + (tired ? ', on a third night or more in a row: a thin first look (Evidence 5, not 15)' : ': a clear first look (Evidence 15)') + '.' : 'Nobody is on call: it waits for the Director to read it at 07:00.') + ' (game)</p>';
+  if (n === 3) body += '<p>23:20: LIB-GUEST drops for ten minutes; ' + (lead ? lead.split(' ')[0] + ' takes the call' + (tired ? ', slowly: a thin first look, and at 00:40 a call to you' : '') + '.' : 'nobody is on call, and patrons in the reading room lose Wi-Fi until somebody notices in the morning.') + ' (game)</p>';
+  if (n === 4) body += '<p>05:52: an email reaches the Director and the Library’s public inbox. ' + (lead ? lead.split(' ')[0] + ' takes the first call' + (tired ? ', on a third night or more in a row: a thin first look, with fewer facts in it' : ': a clear first look') + '.' : 'Nobody is on call: it waits for the Director to read it at 07:00.') + ' (game)</p>';
   await UI.openModal('Night ' + n, body, [{label: 'Morning', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.day = n + 1; G.focus = G.focusMax;
   if (tired && lbMgr() && n >= 3) { G.focus = Math.max(10, G.focus - 10); await say('You were up at 00:40 with a tired on-call lead. Focus ' + G.focus + '/' + G.focusMax + ' this morning. (game)'); }
   G.f['lbNight' + n] = true;
+  if (n === 2 && c.growth === 'unread') await say('Noor sent the insurer’s timeline back overnight with two corrections, the kind a read-through would have caught. (game)', 'Noor Castellanos');
   if (n === 2 && lbMgr()) {
     G.f.lbFixPcs = true; G.f.lbFixWifi = true; c.ex.closed += LB_EX_ACTIONS; unlock('act', 'crrestore'); unlock('act', 'crsplit'); touchCSF('Protect');
-    if (c.growth === 'unread') await say('Noor sent the insurer’s timeline back overnight with two corrections, the kind a read-through would have caught. (game)', 'Noor Castellanos');
-    await say('Day 3, 09:00. Juno set it up last night: the public PCs restore at logoff and overnight (the overnight run is set for 07:30), and LIB-GUEST is on its own network. Juno has the on-call note on PUB-PC-04 for your review.');
+    await say('Day 3, 09:00. Juno set it up last night: the public PCs restore at logoff and overnight (the overnight run is set for 07:30), and LIB-GUEST is on its own network. Juno has the keylogger note on PUB-PC-04 for your review.');
   }
   if (n === 3) await say('Day 4, 07:40. Dot is waving from the circulation desk: “A website says it has all our patrons.”');
-  if (n === 4) await say(lbMgr() ? 'Day 5, 06:15. Director Strand is in her office with the email open.' : 'Day 5, 06:20. Noor has engaged the firm again. Lucia is in the study room.');
-  if (n === 4) c.night4 = {lead: lead, tired: tired};
+  if (n === 4) { c.night4 = {lead: lead, tired: tired}; await say(lbMgr() ? 'Day 5, ' + (lead ? '06:15' : '07:05') + '. Director Strand is in her office with the email open.' : 'Day 5, ' + lbAt('06:20') + '. Noor has engaged the firm again. Lucia is in the study room.'); }
   track();
 }
 
@@ -277,7 +286,7 @@ async function lbDrill(key) {
   return r;
 }
 async function lbDrillA() {
-  await say('Night 1’s note on PUB-PC-04. Read it the way you’d read anyone’s close: what does it rest on?', 'Juno Barros');
+  await say('The keylogger note on PUB-PC-04. Read it the way you’d read anyone’s close: what does it rest on?', 'Juno Barros');
   const r = await lbDrill('pcmgr');
   G.f.lbDrillA = true; touchCSF('Detect');
   await say(r.verdictOk ? 'A patron’s session left it there. I’ll keep the image and the hash, then restore it. Noor has the three bookings after it.' : 'The records say a patron’s session, B-2231. Image kept, hash kept; Noor has the three bookings after it.', 'Juno Barros');
@@ -317,9 +326,9 @@ async function lbCover() {
 /* ---------- The directive (both tracks) ---------- */
 async function lbDirective() {
   const who = 'Cyrus Hallowell', t = G.trackId;
-  if (G.f.lbDirective) { await say('Done by 02:40, and my staff log in at nine to clean PCs. I should have asked that first.', who); return; }
-  await say('The Board voted last night (game). The overnight restore ran from 07:30 to 08:40 this morning, and staff couldn’t set the PCs up for nine. We want it dropped.', who);
-  if (t === 'dfir') await say('Your report says the restore would have cleared that program. Should we drop it?', who);
+  if (G.f.lbDirective) { await say('Done by 02:40, and the staff come in at nine to clean PCs. I should have asked that first.', who); return; }
+  await say('I’ve had Board members on the phone all morning (game). The overnight restore ran from 07:30 to 08:40 today, and staff couldn’t set the PCs up for nine. The Board wants it dropped, and I’m to take your answer back to them.', who);
+  if (t === 'dfir') await say('Director Strand tells us your recommendation was the restore. Should we drop it?', who);
   const L = LB_DIRECTIVE[t];
   while (true) {
     const items = L.map(o => ({label: o.label, meta: {good: !!o.good}}));
@@ -329,8 +338,8 @@ async function lbDirective() {
   }
   await say(t === 'dfir' ? 'The facts from the case: kbhelper.exe ran through three patron sessions because nothing restored the PC. Options: move the overnight run to 01:30, so it’s done by 02:40; keep only the logoff restore; or drop it, with the Director’s signature on the risk. Noor agreed I could say that much.' :
     'What it does: clears whatever one patron leaves for the next, which is how the keylogger lasted three sessions. What it costs: an hour a night. Options: move it to 01:30, done by 02:40; logoff restore only; or drop it, with Director Strand’s signature on the risk.');
-  await say('Move it to 01:30 and keep the logoff restore. Review in three months. That’s my decision. (game)', 'Director Mina Strand');
-  await say('Fine. Nobody asked us what time it ran. (game)', who);
+  await say('Move it to 01:30 and keep the logoff restore; review in three months. I’ll take that to the Board as my decision on the service. (game)', 'Director Mina Strand');
+  await say('Fine. I’ll tell the Board. Nobody asked us what time it ran. (game)', who);
   G.f.lbDirective = true; unlock('act', 'crrestore'); touchCSF('Govern');
   await say(lbMgr() ? '(Present the trade-off; the owner decides.) End the day when you’re ready.' : '(Give the facts; the owner decides.) Theo is waiting in the study room.');
 }
@@ -339,17 +348,14 @@ async function lbDirective() {
 async function lbLetterTask() {
   const who = 'Noor Castellanos', f = G.f;
   if (f.lbLetter) { await say('Facts to me first. Privilege, notification, what the Board sees: those are mine to decide, not yours.', who); return; }
-  const letter = '<pre class="art">Scoping letter · Tallowmere Forensics · case LIB-01 (game)\n' +
-    'Engaged by   Noor Castellanos, town attorney, for the Public Library\n' +
-    'Questions    1. What is the program on PUB-PC-04, and how did it get there?\n' +
-    '             2. Did it reach any staff system or Shelfwright?\n' +
-    '             3. Whose sessions could it have recorded?\n' +
-    'In scope     public PCs, LIB-GUEST, circulation PCs, CIRC-01\n' +
-    'Out of scope other Compact members; Shelfwright Systems’ own systems\n' +
-    'Report to    Noor Castellanos; she decides distribution\n' +
-    'Counsel      privilege, notification and disclosure are counsel’s;\n' +
-    '             the firm reports facts. Anything outside the questions\n' +
-    '             goes to counsel first.</pre>';
+  const row = (k, v) => '<tr><th style="vertical-align:top;white-space:nowrap">' + k + '</th><td>' + v + '</td></tr>';
+  const letter = '<p><b>Scoping letter · Tallowmere Forensics · case LIB-01 (game)</b></p><table class="sc letter">' +
+    row('Engaged by', 'Noor Castellanos, town attorney, for the Public Library') +
+    row('Questions', '1. What is the program on PUB-PC-04, and how did it get there?<br>2. Did it reach any staff system or Shelfwright?<br>3. Whose sessions could it have recorded?') +
+    row('In scope', 'public PCs, LIB-GUEST, circulation PCs, CIRC-01') +
+    row('Out of scope', 'other Compact members; Shelfwright Systems’ own systems') +
+    row('Report to', 'Noor Castellanos; she decides distribution') +
+    row('Counsel', 'privilege, notification and disclosure are counsel’s; the firm reports facts. Anything outside the questions goes to counsel first.') + '</table>';
   await say('I engaged the firm for the Library this morning. Read it before you touch anything. I don’t give you legal conclusions, and I don’t want them from you.', who);
   while (true) {
     const items = LB_LETTER.map(o => ({label: o.label, meta: {good: !!o.good}}));
@@ -390,7 +396,7 @@ async function lbIntake() {
 // The Quiet Thread clue, seen in E-04 (DFIR). Noticing is the mechanic: the prompt opens on "Leave it".
 async function lbQtEvidence() {
   if (qtFound('lb-rdp')) return;
-  const i = await choose('E-04, CIRC-01’s Security log. Question 2 needs the sign-ins from PUB-PC-04: there are none. The log runs on through the night.', [{label: 'Read the 03:00–04:00 sign-ins too'}, {label: 'Leave it: question 2 is answered'}], {cursor: 1});
+  const i = await choose('E-04, CIRC-01’s Security log. Question 2 needs the sign-ins from PUB-PC-04: there are none. The log runs on through the night.', [{label: 'Read the rest of the night’s sign-ins too'}, {label: 'Leave it: question 2 is answered'}], {cursor: 1});
   if (i !== 0) return;
   await say('03:12, Day 2: svc-print, the printer’s service account, signs in to CIRC-01 over remote desktop (logon type 10) from FD-STAFF-11’s address. 03:16: signed out. CIRC-01 audits sign-ins, not process starts: what it did in four minutes is unknown.');
   await say('Not one of the letter’s three questions. It goes to Noor first; with her agreement, to Lucia and Rae’s suspicion-file team. Nothing changes on svc-print without a plan.');
@@ -420,7 +426,7 @@ async function lbReportPc() {
   c.corrected += r.over; c.first = 26 + 3 * r.over; track();
   G.f.lbReport = true; touchCSF('Respond');
   G.f.lbFixPcs = true; G.f.lbFixWifi = true; G.f.lbFixVendor = true; unlock('act', 'crrestore'); unlock('act', 'crsplit'); unlock('act', 'crvendor'); touchCSF('Protect');
-  await say('To Noor at 12:00. She accepted the recommendations for the Library: restore at logoff and overnight, LIB-GUEST on its own network, and the vendor’s escalation line on the contact page. Juno has them done by 17:00; the overnight run is set for 07:30. (game)', 'Lucia Ferrand');
+  await say('To Noor at 12:00. With her agreement, the recommendations went to Director Strand, who accepted them for the Library: restore at logoff and overnight, LIB-GUEST on its own network, and the vendor’s escalation line on the contact page. Juno has them done by 17:00; the overnight run is set for 07:30. (game)', 'Lucia Ferrand');
   await say('End the day when you’re ready. Tomorrow, Theo’s timelines.', 'Lucia Ferrand');
 }
 
@@ -496,25 +502,25 @@ async function lbStages(S, keys) {
 }
 async function lbBoss() {
   const c = G.cr, n4 = c.night4 || {lead: lbLead(4), tired: lbTired(4)};
-  c.boss = {day: G.day, first: [], ev: n4.tired ? 5 : n4.lead ? 15 : 0};
+  c.boss = {day: G.day, first: [], look: n4.tired ? 'thin' : n4.lead ? 'clear' : 'none'};
   if (lbMgr()) {
-    await say('05:52. “We have all 26,500 of your patrons: names, addresses, reading history. Pay by Friday or we publish.” Twenty rows attached. Tell me what we do, and in what order.', 'Director Mina Strand');
-    await say('First look from the night’s on-call: Evidence ' + c.boss.ev + (n4.tired ? ' (tired: a thin look)' : '') + '. Nothing so far ties the night to svc-print; that question stays open. (game)');
+    await say('05:52. “We have all 26,500 of your patrons: names, addresses, reading history. Pay by Monday or we publish.” Twenty rows attached. Tell me what we do, and in what order.', 'Director Mina Strand');
+    await say((c.boss.look === 'none' ? 'No first look: Night 4 had nobody on call, so the email waited for the Director at 07:00.' : c.boss.look === 'thin' ? 'The night’s on-call lead, on a third night running, sent a thin first look: the account and the address come later, from the day lead.' : 'The night’s on-call lead sent a clear first look: the account, the address and the export.') + ' Nothing so far ties the night to svc-print; that question stays open. (game)');
     const S = lbMgrBossStages();
     await lbStages(S, ['s1']);
-    await say('06:40: Noor is on her way. The vendor’s escalation line answers: sw-support’s records are kept, then the account is disabled. The retainer is called with the arrival pack; the firm acknowledges at 06:55. Cyrus is told. (game)');
+    await say(lbAt('06:40') + ': Noor is on her way. The vendor’s escalation line answers: sw-support is blocked at once, nothing cleared, and its records are kept. Shelfwright was reached, which meets the plan’s criteria: the retainer is called with the arrival pack, and the firm acknowledges at ' + lbAt('06:55') + '. Cyrus is told. (game)');
     await lbStages(S, ['s2']);
     await say('09:00: the Board heard what we know, what we don’t, and 13:00 for the next update. (game)');
     await lbStages(S, ['s3']);
     await say('13:00, on time. The Board and the Director decide: no payment, on Noor’s advice; the FBI has the email, as the plan’s contact page says. Shelfwright gives the Library its own support password, on demand from its documented range, with MFA. Noor has the field list, titles on hold included, and decides who must be told. (game)');
   } else {
-    await say('Noor engaged us again at 06:20: what was taken, and how. Your case. The vendor wants to reset its support account right now.', 'Lucia Ferrand');
-    const handover = n4.tired && !G.f.lbBookmark;
-    c.custody.items += 3; c.custody.complete += handover ? 2 : 3; if (handover) c.custody.gaps++;
-    await say(handover ? 'The town’s on-call lead forwarded the email at 06:05, on a third night or more in a row: no hash recorded when it was saved. You log the gap and hash your copy on receipt. (game)' : 'The town’s on-call lead forwarded the email at 06:05 with its hash recorded' + (G.f.lbBookmark ? ' (Bookmark Badge)' : '') + '. Logged as E-08. (game)');
+    await say('Noor engaged us again at ' + lbAt('06:20') + ': what was taken, and how. Your case. The vendor wants to reset its support account right now.', 'Lucia Ferrand');
+    const open = lbN4Open(), handover = open || (n4.tired && !G.f.lbBookmark);
+    c.custody.items += 5; c.custody.complete += handover ? 4 : 5; if (handover) c.custody.gaps++;   // E-06 to E-10
+    await say(open ? 'With Night 4 uncovered, Director Strand forwarded the email herself at 07:05: no hash recorded when it was saved. You log the gap and hash your copy on receipt. Logged as E-08. (game)' : handover ? 'The town’s on-call lead forwarded the email at 06:05, on a third night or more in a row: no hash recorded when it was saved. You log the gap and hash your copy on receipt. Logged as E-08. (game)' : 'The town’s on-call lead forwarded the email at 06:05 with its hash recorded' + (G.f.lbBookmark ? ' (Bookmark Badge)' : '') + '. Logged as E-08. (game)');
     const S = lbDfirBossStages();
     await lbStages(S, ['s1']);
-    await say('07:10: E-06 (Shelfwright’s audit log) and E-07 (its query log) are exported, hashed and sealed; the vendor keeps its own records of sw-support at Noor’s request; then the vendor disables sw-support. (game)');
+    await say(lbAt('06:45') + ': the vendor blocks sw-support, clearing nothing. ' + lbAt('07:10') + ': E-06 (Shelfwright’s audit log), E-07 (its query log), E-09 (CIRC-01’s Security log for Night 4) and E-10 (the Library firewall’s log for Night 4) are exported, hashed and sealed; the vendor keeps its own records of sw-support at Noor’s request; then it resets the account. (game)');
     await lbStages(S, ['s2']);
     const r = await doReport(LB_REPORT_BOSS);
     c.reports.boss = {score: r.score, over: r.over, under: r.under};
@@ -535,15 +541,18 @@ async function lbStatusReport() {
     '            (name, email, card number, pickup branch, title on hold)\n' +
     'Not found   where the rows went after 02:44; how the password\n' +
     '            was obtained (the vendor’s shared password is likely)\n' +
-    'Evidence    audit log, query log and the email: hashed, sealed\n' +
+    'Way in      192.0.2.77, through CIRC-01’s remote-support port,\n' +
+    '            open to any address since 2019\n' +
+    'Evidence    audit, query, firewall and CIRC-01 Security logs\n' +
+    '            and the email: hashed, sealed\n' +
     'Report      to Noor Castellanos\n' +
-    'Appendix    one observation outside this engagement’s questions,\n' +
-    '            passed to counsel</pre>';
+    'Appendix    one observation relevant to “how”, not yet explained,\n' +
+    '            passed to counsel first: it touches the suspicion file</pre>';
   await say('The status, as promised. The report itself goes to Noor; this is yours.', who);
   await UI.openModal('The firm’s status report', body, [{label: 'Back', meta: {good: true}}], {closable: false, cls: 'drill'});
   c.status = {read: true};
   if (!qtFound('lb-rdp')) {
-    const i = await choose('The appendix: an observation outside the questions.', [{label: 'Read the appendix'}, {label: 'Leave it: it’s with Noor'}], {cursor: 1});
+    const i = await choose('The appendix: an observation not yet explained.', [{label: 'Read the appendix'}, {label: 'Leave it: it’s with Noor'}], {cursor: 1});
     if (i === 0) {
       await say('Appendix: reviewing CIRC-01’s Security log back to Day 1, the firm saw svc-print sign in over remote desktop (logon type 10) at 03:12 on Day 2, from FD-STAFF-11’s address, and sign out at 03:16. CIRC-01 audits no process starts. Passed to counsel; with her agreement, to Rae’s suspicion-file team. Not acted on.');
       await say('Nothing changes on svc-print without a plan. You pass it to Rae, through Noor.');
@@ -579,6 +588,7 @@ async function lbSummary() {
     (t === 'dfir' ? '<p>Reports filed: keylogger <b>' + (c.reports.pc ? c.reports.pc.score : '—') + '</b> · holds export <b>' + (c.reports.boss ? c.reports.boss.score : '—') + '</b> (game)</p>' : '') +
     '<p>The extortion claim: ' + (c.boss && c.boss.ok ? 'handled at the first try from your seat' : 'handled, with false starts the debriefs named') + '. ' + (t === 'manager' ? 'Coordinated: the Director decided, Noor advised, the vendor and the firm were called in order.' : 'What was taken: 6,212 holds rows, five fields; the rest written as likely or unknown.') + '</p>' +
     (t === 'manager' && c.bossActions ? '<p>Bookmark Badge: the extortion’s three new actions arrived with the owners the Board approved.</p>' : '') +
+    '<p>Open risk (game): CIRC-01 joined the town’s directory when the Compact took over the Library’s IT this year, so every account with admin rights on the town’s member servers has them on the patron-records server' + (qtFound('sv-nesting') || qtFound('lb-rdp') ? ', svc-print among them' : '') + '. Nobody has accepted that risk yet: it goes to Rae and the council’s risk committee for an owner.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, the 03:00 pattern' + (qtFound('lb-rdp') ? ', and now a remote-desktop sign-in on the Library’s server' : '') + '. It continues.</p>') +
     '<p class="big">Next: School District.</p>';

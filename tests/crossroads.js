@@ -169,7 +169,7 @@ async function session(ctx, file) {
     await A.settle([/^Take her up on Nights 1 to 5/], /Rota · the week/);
     const rota = await A.page.evaluate(() => G.cr.rota);
     const fc = await A.modalText();
-    check('rota: Magda on Nights 1–5 means tired nights 3, 4 and 5, shown in the forecast as Evidence and Focus', JSON.stringify(rota.stats.tired) === '[3,4,5]' && rota.assign.slice(0, 5).every(x => x === 'magda') && /Evidence 5 instead of 15/.test(fc) && /Focus −10/.test(fc), rota);
+    check('rota: Magda on Nights 1–5 means tired nights 3, 4 and 5, shown in the forecast as a thinner first look and Focus', JSON.stringify(rota.stats.tired) === '[3,4,5]' && rota.assign.slice(0, 5).every(x => x === 'magda') && /thinner first look/.test(fc) && !/Evidence 5/.test(fc) && /Focus −10/.test(fc), rota);
     check('rota: the other nights keep the rules (no gaps; overtime counted against the 30-hour budget)', rota.stats.gaps === 0 && rota.assign[5] && rota.assign[6] && rota.assign[5] !== 'magda' && rota.stats.overtime === 13, rota.stats);
     await A.settle();
     // Analyst growth: do it yourself.
@@ -184,6 +184,7 @@ async function session(ctx, file) {
     await A.pickLabel(/^The Mayor: IR manager/);
     await A.settle([], /Are you sure\?/);
     check('two-step confirmation: the second screen says it can’t be changed on this save and names New Game+', /can’t be changed on this save/.test(await A.modalText()) && /New Game\+/.test(await A.modalText()));
+    { const u = (await A.peek()).ui; check('two-step confirmation opens on “Go back”, so A twice from the offers does not lock the save', /^Go back/.test(u.options[u.cursor].label), u.options[u.cursor]); }
     await A.pickLabel(/^Go back to the two offers$/);
     await sleep(60);
     check('Go back returns to the offers without choosing', /Two offers/.test(await A.modalText()) && (await A.page.evaluate(() => G.trackId)) === null);
@@ -211,14 +212,34 @@ async function session(ctx, file) {
     const n3 = await A.page.evaluate(() => ({ focus: G.focus, fmax: G.focusMax, cover: G.cr.cover, dir: G.f.lbDirective }));
     check('cover and directive done; the morning after a tired night: Focus −10 (game)', n3.focus === n3.fmax - 10 && n3.cover.k === 'threshold' && n3.cover.variance === -10 && n3.dir, n3);
     await A.follow(p => p.f.lbBoss, []);
-    const boss = await A.page.evaluate(() => ({ ev: G.cr.boss.ev, ok: G.cr.boss.ok, badge: G.f.lbBookmark, n4: G.cr.night4 }));
-    check('the boss after a tired Night 4: a thin first look (Evidence 5); Board cleared (Bookmark Badge)', boss.ev === 5 && boss.badge && boss.n4.tired, boss);
+    const boss = await A.page.evaluate(() => ({ look: G.cr.boss.look, ok: G.cr.boss.ok, badge: G.f.lbBookmark, n4: G.cr.night4 }));
+    check('the boss after a tired Night 4: a thin first look; Board cleared (Bookmark Badge)', boss.look === 'thin' && boss.badge && boss.n4.tired, boss);
     await A.follow(() => false, [], /End of the Public Library/);
     const endA = await A.page.evaluate(() => ({ qt: Series.qt(), clue: qtFound('lb-rdp'), threats: Object.keys(THREATS).length, obj: objective(), ser: JSON.parse(localStorage.getItem('uptime.series')).editions.crossroads }));
     const sumTxt = await A.modalText();
     check('Quiet Thread: the firm’s status report shows svc-print over RDP on CIRC-01 (lb-rdp, T1021.001); not in the alert mix; not evicted', endA.clue && endA.qt.evicted === false && endA.threats === 0 &&
       await A.page.evaluate(() => QT_CLUES['lb-rdp'].tech === 'T1021.001' && !!QT_TECH['T1021.001']), endA);
     check('end summary: “Next: School District”; series records the Library done on the manager track', /Next: School District/.test(sumTxt) && endA.obj.done && endA.ser.library === true && endA.ser.track === 'manager', endA);
+    check('end summary: the CIRC-01 directory-join risk is named as open, with where it goes', /Open risk/.test(sumTxt) && /risk committee/.test(sumTxt));
+    // The rota's uncovered nights and the thin first look change the text (review S2, S15); checked on the state directly, then restored.
+    const br = await A.page.evaluate(() => {
+      const keep = [G.cr.nightOneUncovered, G.cr.night4], out = {};
+      try {
+        G.cr.nightOneUncovered = true; const d = lbFill(LB_DRILLS.pcmgr);
+        out.n1 = /the day lead/.test(d.intro) && /Day lead’s note/.test(d.artefact) && d.response.some(x => /Tell the day lead in private/.test(x));
+        G.cr.nightOneUncovered = false; const d2 = lbFill(LB_DRILLS.pcmgr);
+        out.n1cov = /Night 1’s on-call lead/.test(d2.intro) && d2.response.some(x => /Tell the on-call lead in private/.test(x));
+        G.cr.night4 = { lead: null, tired: false }; const s = lbMgrBossStages().s1, t = lbDfirBossStages().s1;
+        out.n4open = lbAt('06:20') === '07:20' && /07:20/.test(s.title) && /07:00: Director Strand reads it/.test(s.clues[1]) && /07:40/.test(t.title);
+        G.cr.night4 = { lead: 'Magda Petrov', tired: true }; const s2 = lbMgrBossStages().s1;
+        out.n4thin = lbAt('06:20') === '06:20' && /thin first look/.test(s2.clues[1]) && !/192\.0\.2\.77/.test(s2.clues[1]);
+        out.paste = LB_DRILLS.pastemgr.techs.length === 0 && LB_DRILLS.pastedfir.techs.length === 0;
+      } finally { G.cr.nightOneUncovered = keep[0]; G.cr.night4 = keep[1]; }
+      return out;
+    });
+    check('uncovered Night 1: the note is the day lead’s, and the day lead is coached; covered: the on-call lead’s', br.n1 && br.n1cov, br);
+    check('uncovered Night 4: the boss’s first hour starts after the Director reads the email at 07:00; a tired lead’s first look has no account or address', br.n4open && br.n4thin, br);
+    check('the paste-site drills tag no ATT&CK technique (T1657 is the boss’s)', br.paste, br);
     await A.pickLabel(/^Keep exploring/); await A.settle();
     // A fresh save on this browser: the other track is locked; New Game+ opens it.
     await A.page.evaluate(() => { started = false; newGame(); });
@@ -292,13 +313,18 @@ async function session(ctx, file) {
     // The report: overclaim finding 3 (likely written as confirmed).
     await B.goTo('library', 13, 12);
     await B.settle([], /Report · /); await B.pickLabel(/^Start writing$/);
+    // The findings come in a shuffled order (review S9): read the shown claim and look it up.
+    const shownOrder = [];
     for (let n = 1; n <= 6; n++) {
       await B.settle([], /Finding \d of 6/);
-      const truth = await B.page.evaluate(k => LB_REPORT_PC.claims[k].truth, n - 1);
-      const want = n === 3 ? 'Confirmed' : { confirmed: 'Confirmed', likely: 'Likely', unknown: 'Unknown' }[truth];
+      const card = (await B.page.textContent('#modal .card')).trim();
+      const cl = await B.page.evaluate(t => { const c = LB_REPORT_PC.claims.find(x => x.text === t); return c ? { id: c.id, truth: c.truth } : null; }, card);
+      shownOrder.push(cl && cl.id);
+      const want = cl && cl.id === 'sent' ? 'Confirmed' : { confirmed: 'Confirmed', likely: 'Likely', unknown: 'Unknown' }[cl && cl.truth];
       await B.pickLabel(new RegExp('^' + want + '$'));
       await B.settle([], n < 6 ? /Finding \d of 6/ : /Report filed/);
     }
+    check('report primitive: the findings are written in a shuffled order (not the spec order), each one found by its text', shownOrder.every(Boolean) && shownOrder.join() !== 'when,record,sent,who,staff,reuse', shownOrder);
     const filed = await B.modalText(), filedHtml = await B.page.innerHTML('#modal');
     await B.settle();
     const rep = await B.page.evaluate(() => ({ r: G.cr.reports.pc, corr: G.cr.corrected, first: G.cr.first }));
@@ -306,7 +332,7 @@ async function session(ctx, file) {
     check('DFIR: the report’s recommendations fix the arrival problems on the map', await B.page.evaluate(() => tileDef('library', 8, 7).pal === 'lbPubOk' && tileDef('library', 12, 7).pal === 'closetOk' && tileDef('library', 8, 3).pal === 'lbCircOk'));
     await B.follow(() => false, [], /End of the Public Library/);
     const endB = await B.page.evaluate(() => ({ cr: G.cr, obj: objective(), ser: crSeries() }));
-    check('DFIR track: custody log grows with the paste claim and the boss (8 items), boss report filed, end summary', endB.cr.custody.items === 8 && !!endB.cr.reports.boss && endB.obj.done && endB.ser.library && /Next: School District/.test(await B.modalText()), endB.cr.custody);
+    check('DFIR track: custody log grows with the paste claim and the boss (10 items: E-09 and E-10 added), boss report filed, end summary', endB.cr.custody.items === 10 && !!endB.cr.reports.boss && endB.obj.done && endB.ser.library && /Next: School District/.test(await B.modalText()), endB.cr.custody);
     await B.pickLabel(/^Keep exploring/); await B.settle();
     await B.page.evaluate(() => storeSet(encodeSave(G)));
     const after = await B.page.evaluate(() => localStorage.getItem('uptime.slice1.save'));

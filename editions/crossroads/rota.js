@@ -68,7 +68,7 @@ function rotaForecast(R, a) {
   for (let i = 0; i < R.nights; i++) {
     const run = rotaRunAt(a, i), who = a[i] ? rotaName(R, a[i]).split(' ')[0] : null;
     if (!who) { L.push('Night ' + (i + 1) + ': nobody on call. Anything that fires waits ' + R.hours + ' hours for the morning.'); continue; }
-    if (run >= 3) L.push('Night ' + (i + 1) + ': ' + who + ', night ' + run + ' in a row: a slower, thinner first look (Evidence 5 instead of 15)' + (R.calls[i + 1] ? ', a ' + R.tiredCost + '-hour call-out, and a call to you: Focus −10 the next morning' : '') + '.');
+    if (run >= 3) L.push('Night ' + (i + 1) + ': ' + who + ', night ' + run + ' in a row: a slower, thinner first look, with fewer facts in it' + (R.calls[i + 1] ? ', a ' + R.tiredCost + '-hour call-out, and a call to you: Focus −10 the next morning' : '') + '.');
     else if (R.calls[i + 1]) L.push('Night ' + (i + 1) + ': ' + who + ' takes ' + R.calls[i + 1] + ' (' + R.callCost + ' overtime hours).');
   }
   return L;

@@ -19,7 +19,7 @@ const EDITION = {
   title: 'Crossroads edition',
   blurb: 'A week after Town Hall, two offers: run the region’s incident response programme, or join the outside firm working the hardest cases. Choose once; the Public Library is first.',
   creditsName: 'Crossroads edition',
-  creditsFacts: 'Crossroads: MITRE ATT&CK content v20.1 (T1056.001, T1078, T1657; Quiet Thread T1021.001). NIST SP 800-86 (August 2006): collection, examination, analysis, reporting; chain of custody; message digests of original and copy. NIST FIPS 180-4, Secure Hash Standard (SHA-256). CISA Tabletop Exercise Packages and the CTEP After-Action Report / Improvement Plan template. NICE Framework (CISA NICCS task pages T1450, T1510, T1617; v2.2.0 summary of changes). American Library Association: State Privacy Laws Regarding Library Records; ALA Code of Ethics. Joint Cybersecurity Advisory AA24-038A (Volt Typhoon), the basis of the Quiet Thread.'
+  creditsFacts: 'Crossroads: MITRE ATT&CK content v20.1 (T1056.001, T1078, T1657; Quiet Thread T1021.001). NIST SP 800-86 (August 2006): collection, examination, analysis, reporting; chain of custody; message digests of original and copy. NIST FIPS 180-4, Secure Hash Standard (SHA-256). Microsoft Learn, event 4624 (logon type 10, RemoteInteractive). CISA Tabletop Exercise Packages and the CTEP After-Action Report / Improvement Plan template. NICE Framework (CISA NICCS task pages T1450, T1510, T1617; v2.2.0 summary of changes). American Library Association: State Privacy Laws Regarding Library Records; ALA Code of Ethics. Joint Cybersecurity Advisory AA24-038A (Volt Typhoon), the basis of the Quiet Thread.'
 };
 const TH_SAVE_KEY = 'uptime.slice1.save';   // Town Hall's save: read for the carry-over, never written
 const CR_TRACK = {manager: {rank: 'IR manager', offer: 'the Mayor’s offer'}, dfir: {rank: 'Principal DFIR consultant', offer: 'Tallowmere’s offer'}};
@@ -148,7 +148,7 @@ async function introScript() {
   if (c.name) G.name = c.name;
   if (c.charter) { G.focusMax = 52; G.focus = 52; }
   qtMirror();
-  await say('Day 1, 09:00. Town Hall, the war room. A week after the night of the portal export.');
+  await say('Day 1, Monday, 09:00. Town Hall, the war room. Nine days after the night of the portal export.');
   await UI.openModal('What you carry from Town Hall', crCarryHtml(c), [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
   const i = await UI.openModal('The nameplate on the war room door', '<p>What should it say? Type it, then tap or click your choice. (Leave it blank to keep “' + esc(G.name) + '”.)</p><textarea id="codebox" rows="1" maxlength="24" placeholder="' + esc(G.name) + '"></textarea>',
     [{label: 'Keep “' + G.name + '”', meta: {good: true, k: 'keep'}}, {label: 'Use the name I typed', meta: {k: 'use'}}], {closable: false, nav: 'name-plate'});
@@ -193,7 +193,7 @@ async function talk(npc) {
   switch (npc.id) {
     case 'raecr':
       if (!f.crRota) { await crRotaScript(); return; }
-      if (!G.trackId) { await say('Tallowmere and I are three days into the file. Nothing has changed on svc-print, and nothing will without a plan.', who); return; }
+      if (!G.trackId) { await say('Tallowmere and I have been a week in the file. Nothing has changed on svc-print, and nothing will without a plan.', who); return; }
       await say(G.trackId === 'dfir' ? 'You’ll see the file from the other side now. Same rule: nothing changes on svc-print without a plan.' : 'You’ll get the firm’s reports. I’ll get your rota. Fair trade.', who);
       return;
     case 'pazcr':
@@ -226,7 +226,7 @@ const CR_ROTA = {
 };
 async function crRotaScript() {
   const who = 'Rae Okafor', c = G.cr;
-  await say('Morning. Tallowmere has been in the file with me since Monday. Nothing has changed on svc-print, and nothing will without a plan.', who);
+  await say('Morning. Tallowmere has been in the file with me since last Monday. Nothing has changed on svc-print, and nothing will without a plan.', who);
   await say('Your problem is closer to home. The council kept one night post, and it’s still advertised. Until somebody fills it, the leads take the nights. Next week’s rota is blank.', who);
   await say('Seven nights, one lead on call each. Joss is on the plant’s own rota, Beatriz is buried in the insurer’s access review until Night 3, Odile has a restore test in the lab on Night 3, and I can give you one night, not two.', who);
   await say('Put me on Nights 1 to 5. I’m up at night anyway, and nobody reads the SIEM faster.', 'Magda Petrov');
@@ -236,7 +236,7 @@ async function crRotaScript() {
       {label: 'Thank her, and spread the nights: two in a row is the most anyone takes this week', meta: {good: true, k: 'spread'}},
       {label: 'Take her up on Nights 1 to 5: she knows the SIEM best of anyone, and she offered', meta: {k: 'five'}},
       {label: 'Give her Nights 1 to 3 now, then see how she feels before the weekend', meta: {k: 'three'}},
-      {label: 'Put her on every night: one name on call is simpler for the members to remember', meta: {k: 'all'}}], {shuffle: true});
+      {label: 'Put her on the whole week: one name on call is simpler for the members to remember', meta: {k: 'all'}}], {shuffle: true});
     const k = ['spread', 'five', 'three', 'all'][i];
     G.f.crMagda = k;
     if (k === 'spread') break;
@@ -263,7 +263,7 @@ async function crGrowthScript() {
   const who = 'Paz Delgado', c = G.cr;
   await say('The insurer wants a timeline of the portal export night by Friday: every step, every source. It’s the hardest write-up we’ve had. Who takes it?', who);
   const opts = [
-    {label: 'Paz takes it: you read her timeline before it goes to Noor', meta: {good: true, k: 'paz'}},
+    {label: 'Paz takes it: you read her timeline the way Noor will, before it goes to her', meta: {good: true, k: 'paz'}},
     {label: 'Do it yourself tonight: you know the night of the export better than anyone', meta: {k: 'self'}},
     {label: 'Paz takes it and sends it straight to Noor: reading it first would undercut her', meta: {k: 'unread'}},
     {label: 'Beatriz takes it: the most senior lead writes the best version for the insurer', meta: {k: 'beatriz'}}];
@@ -285,23 +285,23 @@ async function crCommandTable() {
   if (G.trackId) { await say('The command table. Someone else’s now, or still yours: you chose.'); return; }
   f.crOffers = true;
   await say('16:00. The Mayor, and beside her someone from the firm that has been in the suspicion file all week.');
-  await say('The council and the members of the Riverbend Shared Services Compact voted last night (game). One incident response programme for all of them: the town, the Public Library, the School District, the Community Clinic, Fire & EMS Dispatch and the Regional Airport. Run from here, permanent, with a budget and a rota. I want you to run it: IR manager.', 'Mayor Dalia Merrin');
-  await say('Lucia Ferrand, Tallowmere Forensics. We worked the portal export with you and we’ve had the file since Monday. We want you on the team: the hardest cases, several clients at once, reports that stand up. Principal DFIR consultant.', 'Lucia Ferrand');
+  await say('The council and the members of the Riverbend Shared Services Compact voted on Friday (game). One incident response programme for all of them: the town, the Public Library, the School District, the Community Clinic, Fire & EMS Dispatch and the Regional Airport. Run from here, permanent, with a budget and a rota. I want you to run it: IR manager.', 'Mayor Dalia Merrin');
+  await say('Lucia Ferrand, Tallowmere Forensics. We worked the portal export with you and we’ve had the file since last Monday. We want you on the team: the hardest cases, several clients at once, reports that stand up. Principal DFIR consultant.', 'Lucia Ferrand');
   await say('The Mayor’s seat is people, money, exercises and the calls nobody else wants to make. Tallowmere’s is evidence, custody and reports. Both stay with the file. You can’t take both.', 'Rae Okafor');
   const locked = crLockedTrack();
   while (true) {
     const items = ['manager', 'dfir'].map(t => ({label: t === 'manager' ? 'The Mayor: IR manager for the Compact' : 'Tallowmere: principal DFIR consultant',
-      note: locked && locked !== t ? 'locked: chosen on another save in this browser; New Game+ opens it after the edition ending' : t === 'manager' ? 'people, rota, exercises, retainers, AARs' : 'evidence, custody, reports, several clients',
+      note: locked && locked !== t ? 'locked: chosen on another save in this browser; New Game+ comes with the edition’s ending, in a later slice' : t === 'manager' ? 'people, rota, exercises, retainers, AARs' : 'evidence, custody, reports, several clients',
       disabled: !!(locked && locked !== t), meta: {track: t, good: !(locked && locked !== t)}}));
     const i = await UI.openModal('Two offers', '<p>Choose the seat you take for the rest of this edition. Both tracks visit the same districts; the work differs.</p>', items, {closable: false, nav: 'track-pick'});
     const t = items[i].meta.track;
-    const j = await UI.openModal('Are you sure?', '<p>You are taking <b>' + esc(CR_TRACK[t].rank) + '</b>.</p><p>This can’t be changed on this save. New Game+, after the edition ending, opens the other track on a fresh save.</p>',
-      [{label: 'Take it: ' + CR_TRACK[t].rank, meta: {good: true, k: 'yes'}}, {label: 'Go back to the two offers', meta: {k: 'no'}}], {closable: false, nav: 'track-confirm'});
+    const j = await UI.openModal('Are you sure?', '<p>You are taking <b>' + esc(CR_TRACK[t].rank) + '</b>.</p><p>This can’t be changed on this save. New Game+ comes with the edition’s ending (a later slice) and opens the other track on a fresh save; until then this browser keeps the track you take.</p>',
+      [{label: 'Take it: ' + CR_TRACK[t].rank, meta: {good: true, k: 'yes'}}, {label: 'Go back to the two offers', meta: {k: 'no'}}], {closable: false, nav: 'track-confirm', cursor: 1});
     if (j !== 0) continue;
     crSetTrack(t);
     break;
   }
-  const t = G.trackId, lead = G.cr.growth === 'paz' ? 'Paz' : 'Beatriz';
+  const t = G.trackId, lead = G.cr.growth === 'paz' ? 'Paz' : G.cr.growth === 'beatriz' ? 'Ruth' : 'Beatriz';
   if (t === 'manager') await say('Good. The Library asked for help this morning; it’s your first member. ' + lead + ' takes the town team’s board, acting. (game)', 'Mayor Dalia Merrin');
   else await say('Welcome aboard. Start tomorrow. If the Library calls us, Noor will engage us for it, and you’ll lead. ' + lead + ' takes your board here, acting. (game)', 'Lucia Ferrand');
   await crNightOne();
@@ -317,14 +317,12 @@ async function crNightOne() {
   const a = G.cr.rota.assign, lead = a[0] ? rotaName(CR_ROTA, a[0]) : null;
   await UI.openModal('Night 1', '<p>On call: <b>' + esc(lead || 'nobody') + '</b>.</p>' +
     '<p>18:41: the Compact’s endpoint tool flags PUB-PC-04, a public PC in the Library: “Keylogger.Generic (high): keyboard hook by an unsigned program”. ' +
-    (lead ? lead.split(' ')[0] + ' blocks the address it talks to at 18:50 and has Juno, the Compact’s technician at the Library, take the PC out of service at 19:05: unplugged from the network, still powered. At 21:30 Juno images its disk with a write blocker.' : 'Nobody is on call: the alert waits until 08:00, and the PC stays in use overnight.') +
+    (lead ? lead.split(' ')[0] + ' blocks the address it talks to at 18:50 and has Juno, the Compact’s technician at the Library, take the PC out of service at 19:05, unplugged from the network. At 21:30 Juno captures its memory, shuts it down and images the disk with a write blocker.' : 'Nobody is on call: the alert waits until 08:00. The Library closes at 20:00, so nobody uses the PC overnight.') +
     ' (game)</p>', [{label: 'Morning', meta: {good: true}}], {closable: false, cls: 'summary'});
   if (!lead) G.cr.nightOneUncovered = true;
   G.day = 2; G.focus = G.focusMax;
-  if (G.trackId === 'manager') {
-    if (G.cr.growth === 'paz') { G.focusMax += 4; G.focus = G.focusMax; }
-    if (G.cr.growth === 'self') G.focus = Math.max(10, G.focus - 6);
-  }
+  if (G.trackId === 'manager' && G.cr.growth === 'paz') { G.focusMax += 4; G.focus = G.focusMax; }
+  if (G.cr.growth === 'self') G.focus = Math.max(10, G.focus - 6);   // up late with the insurer's timeline, on either track
   track();
   await say(G.trackId === 'manager' ? 'Day 2, 08:00. Director Strand of the Public Library has asked the Compact for help with PUB-PC-04. The Library is across the square.' : 'Day 2, 08:00. Noor engaged Tallowmere for the Public Library at 08:00. Lucia: “You lead it. The study room is ours.” The Library is across the square.');
 }

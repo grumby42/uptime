@@ -8,6 +8,8 @@
 //    never covers any of them, and every option and note in it is fully visible or reachable by scrolling it
 //  - scorecard / summary table: numbers and targets never wrap, the table never overflows its page
 //  - the current objective's door carries a marker
+//  - modal share, both editions (portrait, landscape 800x360 and 844x390, desktop): a long body keeps at least 30% of the box
+//    beside six long options, and a lone Back button under a long body is never squeezed or scrolled away
 // Usage: node layout.js   (UPTIME_FILE=file:///... to test another build; UPTIME_PALETTE=contrast|light|... and UPTIME_TEXT=large)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -252,6 +254,40 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-report.png' });
     check('Crossroads ' + name + ': no console errors or network requests', !errs.length, errs);
     await c.close();
+  }
+  // Modal share (review of Crossroads slice 1, B6), both editions: a long body with six long options, and a long body
+  // with a lone Back button, at phone portrait, phone landscape (two sizes) and desktop. The body keeps at least 30% of
+  // the box (or shows whole); the options show at least one full row (or show whole); a lone Back button is never
+  // squeezed or scrolled away.
+  for (const [ed, file] of [['Town Hall', FILE], ['Crossroads', 'file://' + path.resolve(__dirname, '../editions/crossroads/index.html')]]) {
+    for (const [name, opt] of Object.entries({
+      phone360x640: { viewport: { width: 360, height: 640 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+      phone390x844: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+      land800x360: { viewport: { width: 800, height: 360 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+      land844x390: { viewport: { width: 844, height: 390 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+      desktop: { viewport: { width: 1280, height: 800 } } })) {
+      const c = await b.newContext(opt); const p = await c.newPage(); const errs = [];
+      p.on('pageerror', e => errs.push(e.message)); p.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) errs.push('request ' + r.url()); });
+      await p.goto(file); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui);
+      const probe = (nOpts) => p.evaluate(async (nOpts) => {
+        UI.modal = null;   // set the title menu aside without answering it (its handler would read the answer)
+        const body = '<pre class="art">' + Array.from({ length: 14 }, (_, i) => 'line ' + i + ' of an artefact with some width').join('\n') + '</pre><p>' + 'A paragraph of context the player has to read. '.repeat(10) + '</p>';
+        const items = nOpts === 1 ? [{ label: 'Back', meta: { back: true } }] : Array.from({ length: nOpts }, (_, i) => ({ label: 'Option ' + i + ': a reasonably long answer label that wraps onto a second line on a phone', meta: {} }));
+        UI.openModal('Probe', body, items, { closable: false, cls: 'drill' });
+        await new Promise(r => setTimeout(r, 150));
+        const r = e => e.getBoundingClientRect(), box = r(document.querySelector('#modal .mbox')), mb = document.getElementById('mbody'), mo = document.getElementById('mopts');
+        const first = mo.querySelector('.opt'), fr = r(first), or = r(mo);
+        const out = { box: Math.round(box.height), body: Math.round(r(mb).height), bodyAll: mb.scrollHeight <= mb.clientHeight + 1, opts: Math.round(or.height), optsAll: mo.scrollHeight <= mo.clientHeight + 1,
+          firstRowShown: fr.top >= or.top - 0.5 && fr.bottom <= or.bottom + 0.5, inView: box.top >= -0.5 && box.bottom <= innerHeight + 0.5 };
+        UI.closeModal(-1);
+        return out;
+      }, nOpts);
+      const many = await probe(6), lone = await probe(1);
+      check(ed + ' ' + name + ': a long body keeps at least 30% of the modal next to six long options, and a full option row shows', (many.bodyAll || many.body >= 0.3 * many.box) && (many.optsAll || many.firstRowShown) && many.inView, many);
+      check(ed + ' ' + name + ': a lone Back button under a long body is shown whole, not squeezed or scrolled', lone.optsAll && lone.firstRowShown && lone.inView, lone);
+      check(ed + ' ' + name + ': modal probes raise no errors or requests', !errs.length, errs);
+      await c.close();
+    }
   }
   // Series menu (repo root index.html): fits a phone, no network, and its link opens the built edition.
   {

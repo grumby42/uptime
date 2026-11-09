@@ -134,7 +134,7 @@ async function doDrill(D) {
   h += '<h3>The focused path</h3>' + D.path;
   if (st.aiMode) h += '<h3>About Tally</h3><p>' + esc(st.aiMode === 'everything' ? D.ai.everything.reveal : (st.keys ? 'You asked a specific question and checked it against the evidence. That is how an assistant helps.' : 'You asked a specific question, which is how an assistant helps. Tally was right this time, but you never confirmed its answer in the evidence yourself.')) + '</p>';
   h += '<h3>Response</h3><ul>' + D.response.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
-  h += '<p class="small">ATT&amp;CK: ' + D.techs.map(t => esc(t + ' ' + TECH[t].name)).join(' · ') + '</p>';
+  if (D.techs.length) h += '<p class="small">ATT&amp;CK: ' + D.techs.map(t => esc(t + ' ' + TECH[t].name)).join(' · ') + '</p>';
   D.techs.forEach(t => unlock('tech', t));
   (D.acts || []).forEach(a => unlock('act', a));
   unlock('act', 'drill');

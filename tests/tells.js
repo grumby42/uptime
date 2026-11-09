@@ -24,7 +24,8 @@
 // Crossroads (editions/crossroads) is scanned as its own population (districts cr-prologue and cr-library), so the
 // Town Hall tables above are unchanged by it. The same 70% rule applies to it, any warning inside 35-65% fails it
 // (Crossroads starts clean), and it is held to the band on its own word groups (CROSSROADS_BAND: rota/rest/fatigue,
-// retainer/firm, custody/hash, confirmed/likely/unknown, counsel words, hurry words).
+// retainer/firm, custody/hash, confirmed/likely/unknown, counsel words, hurry words; and, since the slice-1 review, the
+// "… decides" words, the absolutes and the "so/because" clause, from n >= 3).
 const fs = require('fs');
 const path = require('path');
 let acorn = null;
@@ -95,6 +96,15 @@ const EXTRA = [
   ['G:retainer', /\b(retainer|firm|firm’s|Tallowmere)\b/i],
   ['G:custody', /\b(custody|hash(es|ed|ing)?|SHA-256|seal(ed|s)?)\b/i],
   ['G:certainty', /\b(confirmed|likely|unknown|certain(ty)?|sure)\b/i],
+];
+
+// Crossroads-only groups (review of slice 1, 7 Nov 2026, B5): "… decides" was a right-answer word, the absolutes and the
+// causal "so/because" clause wrong-answer words. Kept out of EXTRA so the Town Hall tables (and --report) are unchanged;
+// measured and enforced inside Crossroads only.
+const CR_EXTRA = [
+  ['G:decide', /\bdecid(e|es|ed|ing)\b|\bher call\b|\bhis call\b/i],
+  ['G:absolute', /\b(every|everything|all|never|always|nothing|whatever|at all)\b/i],
+  ['G:because', /\b(because|so|since)\b/i],
 ];
 
 const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
@@ -195,7 +205,7 @@ const args = process.argv.slice(2);
 const argOf = k => (args.find(a => a.startsWith('--' + k + '=')) || '').slice(k.length + 3);
 const hitsArg = argOf('hits'), dArg = argOf('d'), tArg = argOf('t');
 if (hitsArg) {
-  const w = WORDS.concat(EXTRA).find(x => x[0] === hitsArg); if (!w) { console.error('unknown word ' + hitsArg); process.exit(2); }
+  const w = WORDS.concat(EXTRA, CR_EXTRA).find(x => x[0] === hitsArg); if (!w) { console.error('unknown word ' + hitsArg); process.exit(2); }
   for (const x of opts.concat(crOpts)) if ((!dArg || x.d === dArg) && (!tArg || x.t === tArg) && w[1].test(x.label)) console.log((x.good ? 'GOOD ' : 'bad  ') + x.file.split('/').pop() + ':' + x.line + ' [' + x.t + ']', x.label);
   process.exit(0);
 }
@@ -247,12 +257,14 @@ for (const [name, re] of WORDS) for (const s of CR_DISTRICTS.concat(['cr-all'], 
   if (st.lean >= THRESH || st.lean <= 1 - THRESH) crFails.push(name + ' in ' + where + ': ' + fmt(st));
   else if (st.lean > WARN || st.lean < 1 - WARN) crWarns.push(name + ' in ' + where + ': ' + fmt(st));
 }
-const CROSSROADS_BAND = ['G:rota', 'G:retainer', 'G:custody', 'G:certainty', 'counsel', 'G:urgent'];
+const CROSSROADS_BAND = ['G:rota', 'G:retainer', 'G:custody', 'G:certainty', 'counsel', 'G:urgent', 'G:decide', 'G:absolute', 'G:because'];
+// Crossroads' band groups are checked from n >= 3 (review S15: G:rota had fewer than 5 hits, so its band was vacuous).
+const CR_BAND_MIN_N = 3;
 const crBand = [];
-for (const n of CROSSROADS_BAND) for (const s of CR_DISTRICTS.concat(['cr-all'])) { const st = stat(crScope(s), EXTRA.find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
+for (const n of CROSSROADS_BAND) for (const s of CR_DISTRICTS.concat(['cr-all'])) { const st = stat(crScope(s), EXTRA.concat(CR_EXTRA).find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
 if (report && crOpts.length) {
   console.log('\nCrossroads (' + crGraded.length + ' graded lists, ' + crOpts.length + ' options)\n' + 'word'.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => s.padEnd(19)).join(''));
-  for (const [name, re] of WORDS.concat(EXTRA)) console.log(name.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => fmt(stat(crScope(s), re)).padEnd(19)).join(''));
+  for (const [name, re] of WORDS.concat(EXTRA, CR_EXTRA)) console.log(name.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => fmt(stat(crScope(s), re)).padEnd(19)).join(''));
   if (crFails.length) console.log('Crossroads tells:\n  ' + crFails.join('\n  '));
   if (crWarns.length) console.log('Crossroads warnings:\n  ' + crWarns.join('\n  '));
 }
@@ -268,7 +280,7 @@ if (crFiles.length) checks.push(
   ['Crossroads: source scan found graded lists in the prologue and the Library (' + crGraded.length + ' lists, ' + crOpts.length + ' options)', CR_DISTRICTS.every(d => crGraded.some(L => district(L.file) === d))],
   ['Crossroads: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ') in its districts, its list types or overall', !crFails.length],
   ['Crossroads: no tracked word or group outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !crWarns.length],
-  ['Crossroads stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on its own groups (' + crBand.filter(x => x.st.n >= MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', crBand.every(x => x.ok)]);
+  ['Crossroads stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on its own groups, n>=' + CR_BAND_MIN_N + ' (' + crBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', crBand.every(x => x.ok)]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);
 if (fails.length) console.log('  ' + fails.join('\n  '));

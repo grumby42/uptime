@@ -147,6 +147,7 @@ const Screen = {
     document.documentElement.style.setProperty('--hudW', (VW * this.s) + 'px');
     const pad = document.getElementById('pad');
     document.documentElement.style.setProperty('--padZone', portrait && pad ? Math.max(0, Math.ceil(H - pad.getBoundingClientRect().top)) + 'px' : '0px');
+    if (typeof UI !== 'undefined' && UI.fitModal) UI.fitModal();
     this.ctx.setTransform(k, 0, 0, k, 0, 0);
     this.ctx.imageSmoothingEnabled = false;
   }
@@ -317,7 +318,16 @@ const UI = {
       const i = +b.dataset.i; if (m.items[i].disabled) return;
       m.cursor = i; sfx(m.items[i].meta && m.items[i].meta.back ? 'back' : 'select'); this.modalActivate(i);
     }));
+    this.fitModal();
     const cur = box.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
+  },
+  // The options keep their own height up to 40% of the modal area (a lone Back button is never squeezed); past that
+  // they scroll. The body and the options otherwise share the shrinking, so a long body keeps most of the box.
+  fitModal() {
+    const mo = document.getElementById('mopts'); if (!mo || !this.modalEl) return;
+    const cs = getComputedStyle(this.modalEl), avail = this.modalEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    mo.style.minHeight = '';
+    if (avail > 0) mo.style.minHeight = Math.min(mo.scrollHeight, Math.round(avail * 0.4)) + 'px';
   },
   modalActivate(i) {
     const m = this.modal;
