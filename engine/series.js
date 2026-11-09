@@ -75,6 +75,9 @@ const QT_TECH = {
   // Crossroads, Community Clinic (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
   'T1083':     {name: 'File and Directory Discovery', tactic: ['Discovery'],
                 plain: 'Listing the files and folders on a computer or a network share to see what is there worth taking. A listing opens no file, so file-change alerts don’t see it.'},
+  // Crossroads, Fire & EMS Dispatch (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
+  'T1049':     {name: 'System Network Connections Discovery', tactic: ['Discovery'],
+                plain: 'Listing the network connections to and from a computer, to learn which other systems it talks to. Run on a log collector, it shows which systems are sending it logs at that moment.'},
   // ATT&CK for ICS (verified on attack.mitre.org, 1 Nov 2026, ATT&CK v20.0).
   'T0859':     {name: 'Valid Accounts', tactic: ['Persistence', 'Lateral Movement'],
                 plain: '(ATT&CK for ICS) Using a real account on a plant system, such as a remote-access box or an engineering workstation, to get in and come back. A legitimate account raises no alarm when it is used.'}

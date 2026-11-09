@@ -6,7 +6,8 @@
    locked per save; New Game+ after the edition ending opens the other one), the
    engine hooks, the objective chain, and the prologue in the Town Hall war room
    (the on-call rota, analyst growth, the two offers). The Public Library is in
-   library-*.js. Timeline: scratchpad crossroads-timeline.md.
+   library-*.js, the School District in school-*.js, the Community Clinic in clinic-*.js and Fire & EMS Dispatch in
+   dispatch-*.js. Timeline: scratchpad crossroads-timeline.md.
    ============================================================ */
 'use strict';
 
@@ -15,11 +16,11 @@ const EDITION = {
   saveKey: 'uptime.crossroads.save',
   ownMetrics: true,           // the analyst scorecard is replaced by each track's own (EDITION_METRICS)
   noTools: true,              // no tool console: you lead, or you investigate evidence
-  badgeFlags: ['lbBookmark', 'sdSlate', 'cnPulse'],
+  badgeFlags: ['lbBookmark', 'sdSlate', 'cnPulse', 'dpRelay'],
   title: 'Crossroads edition',
-  blurb: 'A week after Town Hall, two offers: run the region’s incident response programme, or join the outside firm working the hardest cases. Choose once; the Public Library is first, then the School District and the Community Clinic.',
+  blurb: 'A week after Town Hall, two offers: run the region’s incident response programme, or join the outside firm working the hardest cases. Choose once; the Public Library is first, then the School District, the Community Clinic and Fire & EMS Dispatch.',
   creditsName: 'Crossroads edition',
-  creditsFacts: 'Crossroads: MITRE ATT&CK content v20.1 (T1056.001, T1078, T1657; Quiet Thread T1021.001). NIST SP 800-86 (August 2006): collection, examination, analysis, reporting; chain of custody; message digests of original and copy. NIST FIPS 180-4, Secure Hash Standard (SHA-256). Microsoft Learn, event 4624 (logon type 10, RemoteInteractive). CISA Tabletop Exercise Packages and the CTEP After-Action Report / Improvement Plan template. NICE Framework (CISA NICCS task pages T1450, T1510, T1617; v2.2.0 summary of changes). American Library Association: State Privacy Laws Regarding Library Records; ALA Code of Ethics. Joint Cybersecurity Advisory AA24-038A (Volt Typhoon), the basis of the Quiet Thread. School District: ATT&CK v20.1 T1078, T1550.001 and T1657; Quiet Thread T1018; US Department of Education, Student Privacy Policy Office, “What is FERPA?”, and PTAC, Protecting Student Privacy While Using Online Educational Services (February 2014); CISA, Protecting Our Future: Partnering to Safeguard K–12 Organizations from Cybersecurity Threats (January 2023). Community Clinic: ATT&CK v20.1 T1486, T1566.001, T1219 and T1657; Quiet Thread T1083; HHS, Fact Sheet: Ransomware and HIPAA; HHS 405(d), Health Industry Cybersecurity Practices (HICP, 2023 edition).'
+  creditsFacts: 'Crossroads: MITRE ATT&CK content v20.1 (T1056.001, T1078, T1657; Quiet Thread T1021.001). NIST SP 800-86 (August 2006): collection, examination, analysis, reporting; chain of custody; message digests of original and copy. NIST FIPS 180-4, Secure Hash Standard (SHA-256). Microsoft Learn, event 4624 (logon type 10, RemoteInteractive). CISA Tabletop Exercise Packages and the CTEP After-Action Report / Improvement Plan template. NICE Framework (CISA NICCS task pages T1450, T1510, T1617; v2.2.0 summary of changes). American Library Association: State Privacy Laws Regarding Library Records; ALA Code of Ethics. Joint Cybersecurity Advisory AA24-038A (Volt Typhoon), the basis of the Quiet Thread. School District: ATT&CK v20.1 T1078, T1550.001 and T1657; Quiet Thread T1018; US Department of Education, Student Privacy Policy Office, “What is FERPA?”, and PTAC, Protecting Student Privacy While Using Online Educational Services (February 2014); CISA, Protecting Our Future: Partnering to Safeguard K–12 Organizations from Cybersecurity Threats (January 2023). Community Clinic: ATT&CK v20.1 T1486, T1566.001, T1219 and T1657; Quiet Thread T1083; HHS, Fact Sheet: Ransomware and HIPAA; HHS 405(d), Health Industry Cybersecurity Practices (HICP, 2023 edition). Fire & EMS Dispatch: ATT&CK v20.1 T1078, T1133 and T1486; Quiet Thread T1049; CISA, 911 Cybersecurity Best Practices Package (July 2023); 911.gov, Next Generation 911 and About; FCC, 911 outages reporting page.'
 };
 const TH_SAVE_KEY = 'uptime.slice1.save';   // Town Hall's save: read for the carry-over, never written
 const CR_TRACK = {manager: {rank: 'IR manager', offer: 'the Mayor’s offer'}, dfir: {rank: 'Principal DFIR consultant', offer: 'Tallowmere’s offer'}};
@@ -34,11 +35,11 @@ function newState(seed) {
     focus: 50, focusMax: 50, rep: 50, uptime: 99.95,
     health: {}, rank: 'Security team lead', badge: false, track: {}, trackId: null, name: 'Lead',
     m: {closed: 0, judged: 0, correctShown: 0, evOk: 0, ttaSum: 0, ttaN: 0, esc: 0, escOk: 0, missed: 0, surfaced: 0, overreact: 0, autoClosed: 0, events: 0, today: 0},
-    targets: {crExAct: 100, crActivate: 30, crGaps: 0, crTired: 0, crAar: 100, crBudget: 0, crNeeds: 100, crCorrected: 0, crCustody: 100, crCGaps: 0, crFirst: 30, crClients: 2},
+    targets: {crExAct: 100, crActivate: 30, crGaps: 0, crTired: 0, crAar: 100, crBudget: 0, crNeeds: 100, crCorrected: 0, crCustody: 100, crCGaps: 0, crFirst: 30, crClients: 2, crDispatch: 90, crAnswered: 100},
     mfaSet: [], fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
     fpWeight: 50, queue: 0, steps: 0, auto: false, autoReview: false, playMs: 0,
     cr: {carry: null, rota: null, growth: null, ex: {run: 0, actions: 0, closed: 0}, activate: null, aar: null, cover: null,
-      needs: {met: 0, total: 0}, corrected: 0, custody: null, first: null, drills: {}, reports: {}, board: null, boss: null, dojo: [false, false, false], status: null, sd: null, cn: null}
+      needs: {met: 0, total: 0}, corrected: 0, custody: null, first: null, drills: {}, reports: {}, board: null, boss: null, dojo: [false, false, false], status: null, sd: null, cn: null, dp: null}
   };
 }
 // The engine owns G.track (best/worst per metric), so the career track lives in G.trackId (and G.f.crTrack).
@@ -78,34 +79,37 @@ function crLockedTrack() { const s = crSeries(); return s.track && !s.ngPlus ? s
 function crGrantNgPlus() { Series.markEdition('crossroads', {ngPlus: true}); return crSeries(); }
 
 /* ---------- Engine hooks ---------- */
-function hudStatus() { return 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + (G.map === 'library' || G.map === 'lboard' ? ' · Library' : G.map === 'school' || G.map === 'sboard' ? ' · School District' : G.map === 'clinic' || G.map === 'cnboard' ? ' · Clinic' : ''); }
+function hudStatus() { return 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + (G.map === 'library' || G.map === 'lboard' ? ' · Library' : G.map === 'school' || G.map === 'sboard' ? ' · School District' : G.map === 'clinic' || G.map === 'cnboard' ? ' · Clinic' : G.map === 'dispatch' || G.map === 'dpboard' ? ' · Dispatch' : ''); }
 async function editionQueue() {
   const t = crTrack();
   await say(t === 'dfir' ? 'No alert queue on a consultant’s desk: your cases come to you through scoping letters. The Compact’s on-call leads work its queue.'
     : t === 'manager' ? 'The on-call queue: the Compact’s leads work it, and anything that needs you reaches you by phone. Your job is the rota, the exercises and the records.'
     : 'The team’s queue: the leads have it. Today is the rota and the people.');
 }
-function editionTile(d, ch, x, y) { if (typeof lbTile === 'function') d = lbTile(d, ch, x, y); if (typeof sdTile === 'function') d = sdTile(d, ch, x, y); if (typeof cnTile === 'function') d = cnTile(d, ch, x, y); return d; }
+function editionTile(d, ch, x, y) { if (typeof lbTile === 'function') d = lbTile(d, ch, x, y); if (typeof sdTile === 'function') d = sdTile(d, ch, x, y); if (typeof cnTile === 'function') d = cnTile(d, ch, x, y); if (typeof dpTile === 'function') d = dpTile(d, ch, x, y); return d; }
 function surfaceMissed() { return Promise.resolve(); }   // no wild alerts here, so nothing can be missed
 async function evolveCheck() {}
 const crPct = (a, b) => b ? Math.round(a / b * 100) : null;
 function editionMetricVals() {
-  const c = G.cr || {}, r = c.rota ? c.rota.stats : null, sd = c.sd || {}, r2 = sd.rota ? sd.rota.stats : null, cn = c.cn || {};
+  const c = G.cr || {}, r = c.rota ? c.rota.stats : null, sd = c.sd || {}, r2 = sd.rota ? sd.rota.stats : null, cn = c.cn || {}, dp = c.dp || {}, r3 = dp.rota ? dp.rota.stats : null, mgr = crTrack() === 'manager';
   // Week 2 (the School District) adds its rota and the district's cover to the gaps and tired nights; the Clinic adds its
-  // weekend plan's gaps. The budget line shows the latest cover forecast (the Clinic's weekend once it is set, game).
+  // weekend plan's gaps; Dispatch adds the week-3 rota and the 24-hour plan's gaps. The budget line shows the latest cover
+  // forecast (Dispatch's 24-hour plan once it is set, game). The two dispatch measures come from Thursday's floor (game).
   return {
     crExAct: c.ex && c.ex.actions ? crPct(c.ex.closed, c.ex.actions) : null,
     crActivate: c.activate === null || c.activate === undefined ? null : c.activate,
-    crGaps: r ? r.gaps + (c.cover && c.cover.gaps ? c.cover.gaps : 0) + (crTrack() === 'manager' && r2 ? r2.gaps + (sd.cover && sd.cover.gaps ? sd.cover.gaps : 0) : 0) + (crTrack() === 'manager' && cn.cover && cn.cover.gaps ? cn.cover.gaps : 0) : null,
-    crTired: r ? r.tired.length + (crTrack() === 'manager' && r2 ? r2.tired.length : 0) : null,
+    crGaps: r ? r.gaps + (c.cover && c.cover.gaps ? c.cover.gaps : 0) + (crTrack() === 'manager' && r2 ? r2.gaps + (sd.cover && sd.cover.gaps ? sd.cover.gaps : 0) : 0) + (crTrack() === 'manager' && cn.cover && cn.cover.gaps ? cn.cover.gaps : 0) + (mgr && r3 ? r3.gaps + (dp.cover && dp.cover.gaps ? dp.cover.gaps : 0) : 0) : null,
+    crTired: r ? r.tired.length + (crTrack() === 'manager' && r2 ? r2.tired.length : 0) + (mgr && r3 ? r3.tired.length : 0) : null,
     crAar: c.aar ? crPct(c.aar.onTime, c.aar.total) : null,
-    crBudget: r ? (cn.cover && cn.cover.variance !== undefined ? cn.cover.variance : sd.cover && sd.cover.variance !== undefined ? sd.cover.variance : c.cover && c.cover.variance !== undefined ? c.cover.variance : r.variance) : null,
+    crBudget: r ? (dp.cover && dp.cover.variance !== undefined ? dp.cover.variance : cn.cover && cn.cover.variance !== undefined ? cn.cover.variance : sd.cover && sd.cover.variance !== undefined ? sd.cover.variance : c.cover && c.cover.variance !== undefined ? c.cover.variance : r.variance) : null,
     crNeeds: c.needs && c.needs.total ? crPct(c.needs.met, c.needs.total) : null,
     crCorrected: crTrack() === 'dfir' ? c.corrected : null,
     crCustody: c.custody ? crPct(c.custody.complete, c.custody.items) : null,
     crCGaps: c.custody ? c.custody.gaps : null,
     crFirst: c.first === null || c.first === undefined ? null : c.first,
-    crClients: crTrack() === 'dfir' && G.f.sdStores ? 3 : crTrack() === 'dfir' && G.f.lbStores ? 2 : null
+    crClients: crTrack() === 'dfir' && G.f.sdStores ? 3 : crTrack() === 'dfir' && G.f.lbStores ? 2 : null,
+    crDispatch: dp.boss && dp.boss.done && typeof dpCardsMedian === 'function' ? dpCardsMedian() : null,
+    crAnswered: dp.boss && dp.boss.done ? 100 : null
   };
 }
 const crMgr = () => !!G && (crTrack() === 'manager' || !crTrack());
@@ -122,7 +126,9 @@ const EDITION_METRICS = [
   {k: 'crCustody', label: 'Evidence items with full custody', unit: '%', higher: true, when: crDfir},
   {k: 'crCGaps', label: 'Custody gaps', unit: '', higher: false, lower: true, when: crDfir},
   {k: 'crFirst', label: 'Time to first defensible finding (game h)', unit: ' h', higher: false, lower: true, when: crDfir},
-  {k: 'crClients', label: 'Clients in parallel', unit: '', higher: true, when: crDfir}
+  {k: 'crClients', label: 'Clients in parallel', unit: '', higher: true, when: crDfir},
+  {k: 'crDispatch', label: 'Answer to dispatch on cards, median (game s)', unit: ' s', higher: false, lower: true, when: () => !!crTrack()},
+  {k: 'crAnswered', label: '911 calls answered, here or at the backup center', unit: '%', higher: true, when: () => !!crTrack()}
 ];
 function editionScorecard() {
   const v = metricVals();
@@ -133,16 +139,16 @@ function editionScorecard() {
   }).join('');
   const t = crTrack(), c = G.cr;
   return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
-    (typeof lbScoreHtml === 'function' ? lbScoreHtml() : '') + (typeof sdScoreHtml === 'function' ? sdScoreHtml() : '') + (typeof cnScoreHtml === 'function' ? cnScoreHtml() : '') +
+    (typeof lbScoreHtml === 'function' ? lbScoreHtml() : '') + (typeof sdScoreHtml === 'function' ? sdScoreHtml() : '') + (typeof cnScoreHtml === 'function' ? cnScoreHtml() : '') + (typeof dpScoreHtml === 'function' ? dpScoreHtml() : '') +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (t ? ' · track: ' + (t === 'manager' ? 'IR manager (the Compact)' : 'principal DFIR consultant (Tallowmere)') : ' · the offers come at 16:00') +
-    ' · Bookmark Badge: ' + (G.f.lbBookmark ? 'yes' : 'not yet') + (G.f.sdMet ? ' · Slate Badge: ' + (G.f.sdSlate ? 'yes' : 'not yet') : '') + (G.f.cnMet ? ' · Pulse Badge: ' + (G.f.cnPulse ? 'yes' : 'not yet') : '') + '</p>' +
+    ' · Bookmark Badge: ' + (G.f.lbBookmark ? 'yes' : 'not yet') + (G.f.sdMet ? ' · Slate Badge: ' + (G.f.sdSlate ? 'yes' : 'not yet') : '') + (G.f.cnMet ? ' · Pulse Badge: ' + (G.f.cnPulse ? 'yes' : 'not yet') : '') + (G.f.dpMet ? ' · Relay Badge: ' + (G.f.dpRelay ? 'yes' : 'not yet') : '') + '</p>' +
     (c && c.carry ? '<p class="small">Carried from Town Hall: ' + (c.carry.rank ? esc(c.carry.rank) : 'no save') + (c.carry.badges.length ? ' · badges ' + c.carry.badges.join(', ') : '') + ' · suspicion file ' + qtCount() + ' notes.</p>' : '') +
     '<p class="small">Every number here is a game model (game). Objective: ' + esc(objective().text) + '</p>';
 }
 function peekExtra() {
-  // crSummary: the end of the edition so far (the Community Clinic's summary, slice 3); sdSummary and lbSummary: the
-  // School District's and the Library's.
-  return {track: crTrack(), crSummary: !!(G.f && G.f.cnSummary), sdSummary: !!(G.f && G.f.sdSummary), lbSummary: !!(G.f && G.f.lbSummary), cr: G.cr ? JSON.parse(JSON.stringify(G.cr)) : null, series: crSeries()};
+  // crSummary: the end of the edition so far (Fire & EMS Dispatch's summary, slice 4); cnSummary, sdSummary and lbSummary:
+  // the Community Clinic's, the School District's and the Library's.
+  return {track: crTrack(), crSummary: !!(G.f && G.f.dpSummary), cnSummary: !!(G.f && G.f.cnSummary), sdSummary: !!(G.f && G.f.sdSummary), lbSummary: !!(G.f && G.f.lbSummary), cr: G.cr ? JSON.parse(JSON.stringify(G.cr)) : null, series: crSeries()};
 }
 
 /* ---------- Intro (new game) ---------- */
@@ -172,12 +178,13 @@ function objective() {
   if (!G.trackId) return at('16:00: the Mayor is on her way to the war room. The command table.', 'cwar', 7, 3);
   if (typeof lbObjective === 'function') { const o = lbObjective(); if (o && !o.done) return o; }
   if (typeof sdObjective === 'function') { const o = sdObjective(); if (o && !o.done) return o; }
-  if (typeof cnObjective === 'function') { const o = cnObjective(); if (o) return o; }
-  return {text: 'Community Clinic done. Next: Fire & EMS Dispatch.', done: true};
+  if (typeof cnObjective === 'function') { const o = cnObjective(); if (o && !o.done) return o; }
+  if (typeof dpObjective === 'function') { const o = dpObjective(); if (o) return o; }
+  return {text: 'Fire & EMS Dispatch done. Next: Regional Airport.', done: true};
 }
 
 /* ---------- Triggers and interactions ---------- */
-function triggers() { return (typeof lbTriggers === 'function' && lbTriggers()) || (typeof sdTriggers === 'function' && sdTriggers()) || (typeof cnTriggers === 'function' && cnTriggers()); }
+function triggers() { return (typeof lbTriggers === 'function' && lbTriggers()) || (typeof sdTriggers === 'function' && sdTriggers()) || (typeof cnTriggers === 'function' && cnTriggers()) || (typeof dpTriggers === 'function' && dpTriggers()); }
 function interact() {
   const [dx, dy] = DIRS[G.dir];
   const tx = G.x + dx, ty = G.y + dy;
@@ -189,16 +196,18 @@ function interact() {
   if (typeof lbInteract === 'function' && lbInteract(ch, tx, ty)) return;
   if (typeof sdInteract === 'function' && sdInteract(ch, tx, ty)) return;
   if (typeof cnInteract === 'function' && cnInteract(ch, tx, ty)) return;
+  if (typeof dpInteract === 'function' && dpInteract(ch, tx, ty)) return;
   if (G.map !== 'cwar' && G.map !== 'csquare') return;
   if (ch === 'µ') run(async () => { await say(G.cr.rota ? 'The team board: next week’s nights, a name on each, and the night post still advertised.' : 'The team board: next week’s nights, every one of them blank.'); });
   else if (ch === '¥') run(crCommandTable);
   else if (ch === 'Y') run(async () => { await say(G.trackId ? 'Your desk, cleared for whoever sits here next.' : 'Your desk: the team board on a screen, the plan on the wall behind it.'); });
-  else if (ch === 'S') run(async () => { await say('THE TOWN SQUARE. North: Town Hall. South: the Public Library. East: the School District. West: the Community Clinic.'); });
+  else if (ch === 'S') run(async () => { await say('THE TOWN SQUARE. North: Town Hall, and beside it Fire & EMS Dispatch. South: the Public Library. East: the School District. West: the Community Clinic.'); });
 }
 async function talk(npc) {
   if (typeof lbTalk === 'function' && await lbTalk(npc)) return;
   if (typeof sdTalk === 'function' && await sdTalk(npc)) return;
   if (typeof cnTalk === 'function' && await cnTalk(npc)) return;
+  if (typeof dpTalk === 'function' && await dpTalk(npc)) return;
   const who = npc.name, f = G.f;
   switch (npc.id) {
     case 'raecr':

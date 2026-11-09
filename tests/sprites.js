@@ -310,7 +310,7 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
       return NPCS.map(n => { const v = V[n.dir] || [0, 0], t = tileDef(n.map, n.x + v[0], n.y + v[1]); return { id: n.id, map: n.map, solid: !t || !!t.solid, chars: CHAR_SPRITES.includes(n.spr || 'player') }; }); });
     check('Crossroads (f): no NPC faces into an adjacent solid tile; every NPC uses a four-facing character sprite', cf.length >= 15 && cf.every(f => !f.solid && f.chars), cf.filter(f => f.solid || !f.chars));
     const arr = await cp.evaluate(async () => {
-      const out = []; G.trackId = 'manager'; G.f.lbMet = true; G.f.lbBookmark = true; G.f.lbSummary = true; G.f.sdMet = true; G.f.sdSlate = true; G.f.sdSummary = true; G.f.cnMet = true;
+      const out = []; G.trackId = 'manager'; G.f.lbMet = true; G.f.lbBookmark = true; G.f.lbSummary = true; G.f.sdMet = true; G.f.sdSlate = true; G.f.sdSummary = true; G.f.cnMet = true; G.f.cnPulse = true; G.f.cnSummary = true; G.f.dpMet = true;
       for (const m in MAPS) for (const k in MAPS[m].doors || {}) {
         const d = MAPS[m].doors[k]; if (!d.to || d.locked) continue;
         G.dir = {up: 'down', down: 'up', left: 'right', right: 'left'}[d.dir];
@@ -318,7 +318,7 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
       }
       return out;
     });
-    check('Crossroads (c): every door’s warp turns the player to face away from it (all 14 links, the School District’s and the Clinic’s included)', arr.length === 14 && arr.every(a => a.got === a.want && a.map) && arr.some(a => /^school /.test(a.door)) && arr.some(a => /^sboard /.test(a.door)) && arr.some(a => /^clinic /.test(a.door)) && arr.some(a => /^cnboard /.test(a.door)), arr);
+    check('Crossroads (c): every door’s warp turns the player to face away from it (all 18 links, the School District’s, the Clinic’s and Dispatch’s included)', arr.length === 18 && arr.every(a => a.got === a.want && a.map) && arr.some(a => /^school /.test(a.door)) && arr.some(a => /^sboard /.test(a.door)) && arr.some(a => /^clinic /.test(a.door)) && arr.some(a => /^cnboard /.test(a.door)) && arr.some(a => /^dispatch /.test(a.door)) && arr.some(a => /^dpboard /.test(a.door)), arr);
     const turn = await cp.evaluate(async () => {
       G.map = 'library'; G.x = 12; G.y = 4; G.dir = 'right'; G.f.lbMet = true; G.trackId = 'manager';
       interact(); await new Promise(r => setTimeout(r, 120));
@@ -349,6 +349,16 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
       return { during: dir, after: e2 && e2.dir };
     });
     check('Crossroads (d): in the Clinic, Joy Okonjo turns to the player while talking (faces right), then back (down)', turn3.during === 'right' && turn3.after === 'down', turn3);
+    const turn4 = await cp.evaluate(async () => {
+      G.map = 'dispatch'; G.x = 9; G.y = 2; G.dir = 'left'; G.f.dpMet = true; G.f.cnSummary = true; G.trackId = 'manager';
+      interact(); await new Promise(r => setTimeout(r, 120));
+      const e = __UPTIME.drawn().find(x => x.id === 'reyes'); const dir = e && e.dir;
+      for (let i = 0; i < 20 && (UI.mode || UI.modal); i++) { UI.handle('a'); await new Promise(r => setTimeout(r, 30)); }
+      await new Promise(r => setTimeout(r, 80));
+      const e2 = __UPTIME.drawn().find(x => x.id === 'reyes');
+      return { during: dir, after: e2 && e2.dir };
+    });
+    check('Crossroads (d): at Dispatch, Tamsin Reyes turns to the player while talking (faces right), then back (left)', turn4.during === 'right' && turn4.after === 'left', turn4);
     await cp.close();
   }
 

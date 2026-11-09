@@ -25,6 +25,14 @@
 // the DFIR consultant works the letter, containment that preserves, intake (an unlogged handover as a gap; the vendor
 // request dated as it went), three two-source drills and CLN-01/CLN-02 (an overclaim corrected; inactive records counted);
 // save/reload mid-Clinic; the Pulse Badge; the Quiet Thread clue cn-folders (T1083); the summary ("Next: Fire & EMS Dispatch").
+// Fire & EMS Dispatch (slice 4), both tracks: the door opens only with the Pulse Badge; Day 16 is a Tuesday; the manager meets
+// the Dispatch annex (an admin sign-in nobody can explain), reviews three records drills (one read with a single `needs`
+// source is unsupported), builds the week-3 rota with Nights 14 and 15 carried, runs the cards drill with the supervisor and
+// the backup center's pack, coordinates the boss with a 24-hour plan, and runs the AAR measured in response time; the DFIR
+// consultant works the letter, collects without slowing the floor (from the standby), logs intake (an export by the account
+// owner in question gets a second export, compared), three two-source drills and DSP-01/DSP-02 (an overclaim corrected; the
+// vendor's account written as unknown; the response impact as measured); save/reload mid-Dispatch; the Relay Badge; the
+// Quiet Thread clue dp-conns (T1049); the dispatch measures on the scorecard; the summary ("Next: Regional Airport").
 // Usage: node tests/crossroads.js   (UPTIME_FILE=file:///.../crossroads/index.html to test another build)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -373,7 +381,7 @@ async function session(ctx, file) {
     check('Clinic Board cleared: the Pulse Badge; Day 15 (Monday)', cnA.pulse === true && cnA.day === 15, cnA);
     check('Clinic manager: the AAR adds three actions (owners arrive approved), the tabletop three more, closed at 16:00 (the cart and the front desk tick; the exam PCs don’t)', cnA.aar.total === 6 && cnA.aar.onTime === 6 && cnA.ex.run === 3 && cnA.ex.actions === 9 && cnA.ex.closed === 9 && cnA.cart === 'cnCartOk' && cnA.desk === 'cnDeskOk' && cnA.exam === 'cnExam', cnA);
     check('Quiet Thread (manager): the firm’s status report shows svc-print listing the Facilities share (cn-folders, T1083), not in the alert mix, not evicted', cnA.clue && cnA.tech === 'T1083' && cnA.qt && cnA.inAlerts === 0 && !cnA.evicted, cnA);
-    check('Clinic summary: “Next: Fire & EMS Dispatch”; series records the Clinic; the shared exam login named as an accepted open risk; the objective done', /Next: Fire &amp; EMS Dispatch|Next: Fire & EMS Dispatch/.test(cnSum) && /Open risk/.test(cnSum) && /shared login/.test(cnSum) && cnA.obj.done && cnA.ser.clinic === true && cnA.ser.school === true, cnA.obj);
+    check('Clinic summary: “Next: Fire & EMS Dispatch”, with its door; series records the Clinic; the shared exam login named as an accepted open risk; the objective moves to Dispatch', /Next: Fire (&amp;|&) EMS Dispatch\. Its door is on the north side of the square/.test(cnSum) && /Open risk/.test(cnSum) && /shared login/.test(cnSum) && !cnA.obj.done && cnA.obj.map === 'dispatch' && /Fire & EMS Dispatch/.test(cnA.obj.text) && cnA.ser.clinic === true && cnA.ser.school === true, cnA.obj);
     const brC = await A.page.evaluate(() => {
       const keep = G.cr.cn.night12, out = {};
       try {
@@ -413,6 +421,80 @@ async function session(ctx, file) {
       out.t1219 = CN_DRILLS.tethermgr.techs[0] === 'T1219' && /ruled out/.test(CN_DRILLS.tethermgr.path) && /ruled out/.test(CN_DRILLS.tetherdfir.path);
       return out; });
     check('Clinic rules on the text: one decider for patient privacy (Weller), payment (the Board), operations (Marisol); memory before shutdown; over- and under-reaction distractors; counts include inactive records; what left is “likely”; HHS only in its own words; T1219 ruled out', Object.values(rules).every(Boolean), rules);
+    await A.pickLabel(/^Keep exploring/); await A.settle();
+    // ---- Fire & EMS Dispatch (slice 4), manager track ----
+    const ddoor = await A.page.evaluate(() => { const keep = G.f.cnPulse; G.f.cnPulse = false; const d = MAPS.csquare.doors['15,0'], shut = d.locked; G.f.cnPulse = keep; return { shut, open: !d.locked, to: d.to }; });
+    check('Dispatch: the square’s north door is locked without the Pulse Badge and opens with it', /Pulse Badge/.test(ddoor.shut || '') && ddoor.open && ddoor.to === 'dispatch', ddoor);
+    await A.follow(p => p.f.dpMet && !p.ui && !p.busy, []);
+    const darr = await A.page.evaluate(() => ({ day: G.day, act: G.cr.dp.activate, act2: G.cr.activate, hud: hudStatus(), obj: objective().text, n15: G.cr.dp.n15 }));
+    check('Dispatch arrival: Day 16 (Tuesday); an admin sign-in nobody can explain meets the Dispatch annex; the retainer called in 15 game minutes; Night 15 filled between rotas; next, the night’s handover with Petra', darr.day === 16 && darr.act === 15 && darr.act2 === 15 && /Dispatch/.test(darr.hud) && /Petra/.test(darr.obj) && darr.n15 && 'n15' in darr.n15, darr);
+    // Drill A read with one of its two `needs` sources: unsupported.
+    await A.goTo('dispatch', 26, 3);
+    await A.settle([], /Investigation drill/); await A.pickLabel(/^Start investigating$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/^Query: MQ-01’s own metrics/);
+    await A.settle([], /Which question/); await A.pickLabel(/Where is the time lost/);
+    await A.settle([], /^Result/); await A.pickLabel(/^Back to the investigation$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/^Query: The crews’ complaints/);
+    await A.settle([], /Which question/); await A.pickLabel(/How many, and how angry/);
+    await A.settle([], /^Result/); await A.pickLabel(/^Back to the investigation$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/I have enough|Budget spent/);
+    await A.settle([], /^Verdict/); await A.pickLabel(/^Not an attack: a failing building link/);
+    await A.settle([], /^Reasoning/); await A.pickLabel(/^MDG-01’s messages arrive late/);
+    await A.settle([], /Debrief/);
+    const debDA = await A.modalText();
+    check('Dispatch manager drill A: the right verdict from the queue’s records alone is unsupported (the link’s counters are also needed)', /Unsupported/.test(debDA) && /two records/.test(debDA), debDA.slice(0, 300));
+    await A.settle();
+    const srD = await A.saveReload();
+    check('save/reload mid-Dispatch (manager) restores the state; the export code round-trips', srD.same && srD.roundTrip && srD.before.map === 'dispatch', srD);
+    await A.follow(p => p.f.dpRota, []);
+    const drt = await A.page.evaluate(() => ({ B: G.cr.drills.adminmgr, rota: G.cr.dp.rota, n15: G.cr.dp.n15, rack: tileDef('dispatch', 21, 1).pal, link: tileDef('dispatch', 27, 1).pal, carry: DP_ROTA.carry, first: DP_ROTA.first, calls: Object.keys(DP_ROTA.calls).length }));
+    check('Dispatch manager: drill B (the 03:20 sign-in: staff) right and supported; the vendor account blocked (tick) and the link fixed (tick); the week-3 rota carries Nights 14 and 15 and shows no forecast calls', drt.B.verdictOk && drt.B.supported && drt.rack === 'dpRackOk' && drt.link === 'dpLinkOk' && drt.first === 14 && drt.carry === 2 && drt.calls === 0 && drt.rota.assign[0] === drt.n15.n14 && drt.rota.assign[1] === drt.n15.n15 && drt.rota.assign.length === 9, drt);
+    await A.follow(p => p.f.dpBackup, []);
+    const dcd = await A.page.evaluate(() => ({ ex: G.cr.ex, pack: G.cr.dp.pack, day: G.day }));
+    check('Dispatch manager: the cards drill on Wednesday (Day 17) adds an exercise and three actions; the backup center gets four right things', dcd.day === 17 && dcd.ex.run === 4 && dcd.ex.actions === 12 && dcd.pack.wrong === 0, dcd);
+    await A.follow(p => p.f.dpBoss, []);
+    const dboss = await A.page.evaluate(() => ({ day: G.day, boss: G.cr.dp.boss, cover: G.cr.dp.cover, m: metricVals(), lead: dpLead(18), tired: dpTired(18), cards: tileDef('dispatch', 19, 6).pal, ex: G.cr.ex }));
+    check('Dispatch boss on Day 18 (Thursday): all three stages right first time; the floor’s measures (84 s on cards, 100% answered) on the scorecard; the 24-hour plan: shifts, 0 gaps, 22 of 30 h (25 if a weak Night 18 was swapped); the cards actions closed Wednesday 17:00 (tick)', dboss.day === 18 && dboss.boss.ok && dboss.boss.w1 === 0 && dboss.m.crDispatch === 84 && dboss.m.crAnswered === 100 && dboss.cover.k === 'shifts' && dboss.cover.gaps === 0 && dboss.cover.overtime === (dboss.cover.n18 === 'swap' ? 25 : 22) && dboss.cards === 'dpCardsOk' && dboss.ex.closed === 12, dboss);
+    await A.follow(() => false, [], /End of Fire & EMS Dispatch/);
+    const dpA = await A.page.evaluate(() => ({ relay: G.f.dpRelay, clue: qtFound('dp-conns'), tech: QT_CLUES['dp-conns'].tech, qt: !!QT_TECH.T1049, inAlerts: Object.keys(THREATS).length, evicted: Series.qt().evicted, obj: objective(), ser: crSeries(), aar: G.cr.aar, day: G.day, drillC: G.cr.drills.switchmgr, impact: G.cr.dp.aar, m: metricVals(), n18: G.cr.dp.night18, cover: G.cr.dp.cover }));
+    const dpSum = await A.modalText();
+    check('Dispatch Board cleared: the Relay Badge; Day 19 (Friday); drill C (the chief wants CAD back) right and supported', dpA.relay === true && dpA.day === 19 && dpA.drillC.verdictOk && dpA.drillC.supported, dpA);
+    check('Dispatch manager: the AAR adds three actions (owners arrive approved), the impact as measured, first time; Night 18’s call-out added to the plan’s overtime', dpA.aar.total === 9 && dpA.aar.onTime === 9 && dpA.impact.impactFirst === true && dpA.cover.overtime === (dpA.cover.n18 === 'swap' ? 25 : 22) + dpA.n18.overtime, dpA);
+    check('Quiet Thread (manager): the firm’s status report shows svc-print listing the dispatch collector’s connections (dp-conns, T1049), not in the alert mix, not evicted', dpA.clue && dpA.tech === 'T1049' && dpA.qt && dpA.inAlerts === 0 && !dpA.evicted, dpA);
+    check('Dispatch summary: “Next: Regional Airport”; the measured times; series records Dispatch; the collector named as an open risk; the objective done', /Next: Regional Airport/.test(dpSum) && /84 s/.test(dpSum) && /Open risk/.test(dpSum) && /DP-LOG-01/.test(dpSum) && dpA.obj.done && dpA.ser.dispatch === true && dpA.ser.clinic === true, dpA.obj);
+    const dbr = await A.page.evaluate(() => {
+      const keep = G.cr.dp.boss, out = {};
+      try { G.cr.dp.boss = { first: [], w1: 2, done: true }; out.w1 = dpCardsMedian() === 96 && metricVals().crDispatch === 96 && /96 s/.test(dpReport2().claims.find(c => c.id === 'time').text); } finally { G.cr.dp.boss = keep; }
+      return out; });
+    check('Dispatch: each false start in the boss’s first stage costs the floor 6 s on cards, and the measured numbers follow it (game)', dbr.w1, dbr);
+    // The slice's rules, checked on the text: life safety, one decider per decision, preservation that never slows the floor, honest wording.
+    const drules = await A.page.evaluate(() => {
+      const out = {}, goods = [], all = [];
+      const add = (arr) => arr.forEach(o => { all.push(o.label); if (o.good) goods.push(o.label); });
+      [DP_ACTIVATE, DP_DRILL_OBJ, DP_COVER, DP_DIRECTIVE.manager, DP_DIRECTIVE.dfir, DP_LETTER, DP_PRESERVE, DP_STORES, DP_SWITCH_DFIR].forEach(add);
+      DP_DRILL_INJECTS.forEach(i => add(i.opts)); DP_BOARD_SPECS_MGR().concat(DP_BOARD_SPECS_DFIR()).forEach(b => add(b.resp));
+      const mb = dpMgrBossStages(), db = dpDfirBossStages(); [mb.s1, mb.s2, db.s1, db.s2].forEach(st => add(st.resp));
+      // Life safety: over-reaction (CAD offline mid-shift, CAD-01 shut down) and under-reaction (keep running a failing CAD) both graded wrong.
+      out.overUnder = DP_ACTIVATE.some(o => !o.good && /take CAD offline/.test(o.label)) && mb.s1.resp.some(r => !r.good && /Shut CAD-01 down/.test(r.label)) && mb.s1.resp.some(r => !r.good && /Keep the floor on CAD/.test(r.label)) && DP_DRILL_OBJ.some(o => !o.good && /whole floor goes off CAD/.test(o.label));
+      // The floor's switch to cards and back is the supervisor's; the chief decides response policy, not the switch.
+      out.floor = /Imogen/.test(DP_DRILL_INJECTS[0].opts.find(o => o.good).label) && /Imogen/.test(DP_DRILL_INJECTS[2].opts.find(o => o.good).label) && /Imogen decides the time, not the chief/.test(DP_DRILLS.switchmgr.verdicts.find(v => v.good).label) && DP_DRILL_INJECTS[2].opts.some(o => !o.good && /The chief decides/.test(o.label));
+      // Patient care: the medical protocol is unchanged on paper; changing it is medical direction's.
+      out.care = /medical protocol/.test(DP_DRILL_INJECTS[1].opts.find(o => o.good).label) && DP_DRILL_INJECTS[1].opts.some(o => !o.good && /Skip the instructions/.test(o.label));
+      // Preservation never slows the floor: collection from the standby, never CAD-01 offline for a copy.
+      out.preserve = /doesn’t serve the positions/.test(DP_PRESERVE.find(o => o.good).label) && DP_PRESERVE.some(o => !o.good && /offline/.test(o.label)) && db.s1.resp.some(r => !r.good && /Shut CAD-01 down/.test(r.label));
+      // The vendor's account: our records as confirmed, who used it unknown, never "the vendor lied".
+      const r1 = id => DP_REPORT_1.claims.find(c => c.id === id) || {};
+      out.vendor = r1('session').truth === 'confirmed' && r1('who').truth === 'unknown' && r1('network').truth === 'likely' && r1('what').truth === 'unknown' && !goods.some(g => /statement is false/.test(g));
+      // Response impact stated only as measured; harm unknown.
+      const r2 = id => dpReport2().claims.find(c => c.id === id) || {};
+      out.measured = r2('time').truth === 'confirmed' && /against 64 s/.test(r2('time').text) && r2('harm').truth === 'unknown' && r1('time').truth === 'confirmed' && !goods.some(g => /doubled/.test(g));
+      // Reporting is the 911 authority's with counsel; the FCC page only in its own words; nothing about NFPA.
+      out.reporting = /The game says neither/.test(FACTS.dpfcc.desc) && /must swiftly notify the Commission/.test(FACTS.dpfcc.desc) && !/NFPA/.test(JSON.stringify(FACTS) + JSON.stringify(EXTRA_ACTIONS) + all.join(' '));
+      // Containment never waits for evidence: the vendor account is blocked as soon as the session is seen.
+      out.block = /block it at once, clearing nothing/.test(EXTRA_ACTIONS.dpvendor.desc);
+      out.t1078 = DP_DRILLS.adminmgr.techs[0] === 'T1078' && /ruled out/.test(DP_DRILLS.adminmgr.path) && DP_DRILLS.vendordfir.techs[0] === 'T1133' && /can’t yet answer/.test(DP_DRILLS.vendordfir.path);
+      return out; });
+    check('Dispatch rules on the text: over- and under-reaction both wrong; the supervisor decides the floor, the chief response policy, medical direction the protocol; collection never slows the floor; the vendor account written honestly; impact only as measured; reporting left to the 911 authority with counsel; no NFPA text; T1078 ruled out, T1133 open', Object.values(drules).every(Boolean), drules);
     await A.pickLabel(/^Keep exploring/); await A.settle();
     // A fresh save on this browser: the other track is locked; New Game+ opens it.
     await A.page.evaluate(() => { started = false; newGame(); });
@@ -606,8 +688,56 @@ async function session(ctx, file) {
     check('CLN-01: what left goes out as “Likely” (the overclaim corrected before filing and counted); the sender as “Unknown”', /Likely:<\/b> The archive of the front desk’s daily lists/.test(filedC) && /Unknown:<\/b> Who sent the email/.test(filedC) && /corrected in review/.test(filedC) && await B.page.evaluate(() => G.cr.reports.cn1.over === 1), filedC.slice(0, 400));
     await B.follow(() => false, [], /End of the Community Clinic/);
     const cnB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.cn2, pulse: G.f.cnPulse, needs: G.cr.needs, obj: objective(), ser: crSeries(), corrected: G.cr.corrected }));
-    check('DFIR Clinic: CLN-02 filed, 35 custody items (Library 10 + district 12 + Clinic 13, the original email included), Pulse Badge, summary “Next: Fire & EMS Dispatch”', cnB.cu.items === 35 && !!cnB.r2 && cnB.pulse && cnB.obj.done && cnB.ser.clinic === true && /Next: Fire/.test(await B.modalText()), cnB);
+    check('DFIR Clinic: CLN-02 filed, 35 custody items (Library 10 + district 12 + Clinic 13, the original email included), Pulse Badge, summary “Next: Fire & EMS Dispatch”', cnB.cu.items === 35 && !!cnB.r2 && cnB.pulse && !cnB.obj.done && cnB.obj.map === 'dispatch' && cnB.ser.clinic === true && /Next: Fire/.test(await B.modalText()), cnB);
     check('CLN-02: the archive held 5,210 patients, 1,180 of them inactive (confirmed); what left is likely; publication and anything beyond the archive unknown', await B.page.evaluate(() => { const c = id => CN_REPORT_2.claims.find(x => x.id === id); return c('archive').truth === 'confirmed' && /1,180/.test(c('archive').text) && c('left').truth === 'likely' && c('pub').truth === 'unknown' && c('more').truth === 'unknown'; }));
+    await B.pickLabel(/^Keep exploring/); await B.settle();
+    // ---- Fire & EMS Dispatch (slice 4), DFIR track ----
+    await B.follow(p => p.f.dpPreserve, []);
+    check('Dispatch DFIR: the letter first, then collection that doesn’t touch a position (Day 16, Tuesday)', await B.page.evaluate(() => G.f.dpLetter && G.f.dpPreserve && G.day === 16 && /doesn’t serve the positions/.test(DP_PRESERVE.find(o => o.good).label)));
+    const cu0 = await B.page.evaluate(() => JSON.parse(JSON.stringify(G.cr.custody)));
+    await B.follow(p => p.f.dpIntake, []);
+    const cuD = await B.page.evaluate(() => ({ cu: G.cr.custody, req: G.cr.dp.requests, clue: qtFound('dp-conns'), rack: tileDef('dispatch', 21, 1).pal }));
+    check('Dispatch DFIR intake: six items, all complete (the export by the account owner in question gets a second export, compared); the vendor request logged with its date as it went; the vendor account blocked', cuD.cu.items === cu0.items + 6 && cuD.cu.complete === cu0.complete + 6 && cuD.cu.gaps === cu0.gaps && cuD.req && cuD.req.date === 'Day 16 (Tuesday) 10:30' && cuD.rack === 'dpRackOk', { now: cuD, before: cu0 });
+    check('Quiet Thread (DFIR): seen in D-06, the collector’s own log (dp-conns, T1049)', cuD.clue && await B.page.evaluate(() => QT_CLUES['dp-conns'].tech === 'T1049' && !!QT_TECH.T1049));
+    // Drill A with one of its two needed sources and the supporting one: unsupported.
+    await B.goTo('dispatch', 20, 11);
+    await B.settle([], /Investigation drill/); await B.pickLabel(/^Start investigating$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/^Query: D-04/);
+    await B.settle([], /Which question/); await B.pickLabel(/Where is the time lost/);
+    await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/^Query: D-02/);
+    await B.settle([], /Which question/); await B.pickLabel(/Anything new talking to MQ-01/);
+    await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/I have enough|Budget spent/);
+    await B.settle([], /^Verdict/); await B.pickLabel(/^Not an attack: the link is failing/);
+    await B.settle([], /^Reasoning/); await B.pickLabel(/^D-04: the delay before the queue/);
+    await B.settle([], /Debrief/);
+    const debDB = await B.modalText();
+    check('Dispatch DFIR drill A: two decisive sources; D-04 and the supporting D-02 without D-05 is unsupported', /Unsupported/.test(debDB) && /two sources/.test(debDB), debDB.slice(0, 300));
+    await B.settle();
+    const srDB = await B.saveReload();
+    check('save/reload mid-Dispatch (DFIR) restores the state; the export code round-trips', srDB.same && srDB.roundTrip && srDB.before.track === 'dfir' && srDB.before.map === 'dispatch', srDB);
+    await B.follow(p => p.f.dpDrillC, []);
+    check('Dispatch DFIR drills B (the 03:20 sign-in) and C (the vendor’s account, worded honestly) right and supported', await B.page.evaluate(() => G.cr.drills.admindfir.verdictOk && G.cr.drills.admindfir.supported && G.cr.drills.vendordfir.verdictOk && G.cr.drills.vendordfir.supported));
+    // DSP-01: write "network" (likely) as confirmed: an overclaim, corrected and counted.
+    await B.goTo('dispatch', 20, 11);
+    await B.settle([], /Report · /); await B.pickLabel(/^Start writing$/);
+    const nDsp1 = await B.page.evaluate(() => DP_REPORT_1.claims.length);
+    for (let n = 1; n <= nDsp1; n++) {
+      await B.settle([], /Finding \d+ of \d+/);
+      const card = (await B.page.textContent('#modal .card')).trim();
+      const cl = await B.page.evaluate(t => { const c = DP_REPORT_1.claims.find(x => x.text === t); return c ? { id: c.id, truth: c.truth } : null; }, card);
+      const want = cl && cl.id === 'network' ? 'Confirmed' : { confirmed: 'Confirmed', likely: 'Likely', unknown: 'Unknown' }[cl && cl.truth];
+      await B.pickLabel(new RegExp('^' + want + '$'));
+      await B.settle([], n < nDsp1 ? /Finding \d+ of \d+/ : /Report filed/);
+    }
+    const filedD = await B.page.innerHTML('#modal');
+    await B.settle();
+    check('DSP-01: the session through Stillmark’s network goes out as “Likely” (the overclaim corrected and counted); who used the account as “Unknown”; the lag’s measured times as “Confirmed”', /Likely:<\/b> That session came through Stillmark’s own support network/.test(filedD) && /Unknown:<\/b> Who used sm-support that night/.test(filedD) && /Confirmed:<\/b> During the lag, answer-to-dispatch/.test(filedD) && /corrected in review/.test(filedD) && await B.page.evaluate(() => G.cr.reports.dp1.over === 1), filedD.slice(0, 400));
+    await B.follow(() => false, [], /End of Fire & EMS Dispatch/);
+    const dpB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.dp2, relay: G.f.dpRelay, obj: objective(), ser: crSeries(), corrected: G.cr.corrected, sw: G.f.dpSwitch, stores: G.f.dpStores, m: metricVals(), day: G.day }));
+    check('DFIR Dispatch: DSP-02 filed, 50 custody items (35 + Dispatch 15), the chief’s question answered, separate stores, Relay Badge, the dispatch measures on the scorecard, summary “Next: Regional Airport”', dpB.cu.items === 50 && !!dpB.r2 && dpB.sw && dpB.stores && dpB.relay && dpB.obj.done && dpB.ser.dispatch === true && dpB.day === 19 && dpB.m.crDispatch === 84 && dpB.m.crAnswered === 100 && /Next: Regional Airport/.test(await B.modalText()), dpB);
+    check('DSP-02: no file on CAD encrypted (confirmed); cut off from the county’s directory (confirmed); nothing left on CAD-01 (likely); the response impact as measured; harm unknown', await B.page.evaluate(() => { const c = id => dpReport2().claims.find(x => x.id === id); return c('enc').truth === 'confirmed' && c('cut').truth === 'confirmed' && c('clean').truth === 'likely' && c('time').truth === 'confirmed' && /84 s/.test(c('time').text) && c('harm').truth === 'unknown' && c('link').truth === 'unknown'; }));
     await B.pickLabel(/^Keep exploring/); await B.settle();
     await B.page.evaluate(() => storeSet(encodeSave(G)));
     const after = await B.page.evaluate(() => localStorage.getItem('uptime.slice1.save'));

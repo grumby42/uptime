@@ -659,7 +659,7 @@ async function cnSummary() {
     '<p>Open risk (game): the exam rooms keep their shared login until Marisol’s trial ends (Day 45), a privacy risk Weller has accepted in writing, with counsel. Until then Wrenfold’s audit can’t say which clinician viewed what in the exam rooms.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, the 03:00 pattern' + (qtFound('lb-rdp') ? ', a remote-desktop sign-in on the Library’s server' : '') + (qtFound('sd-probe') ? ', pings to eleven of the district’s addresses' : '') + (qtFound('cn-folders') ? ', and now a listing of the clinic’s Facilities share' : '') + '. It continues.</p>') +
-    '<p class="big">Next: Fire &amp; EMS Dispatch.</p>';
+    '<p class="big">Next: Fire &amp; EMS Dispatch. Its door is on the north side of the square, beside Town Hall’s.</p>';
   while (true) {
     const i = await UI.openModal('End of the Community Clinic', body, [{label: 'Keep exploring the clinic', meta: {good: true}}, {label: 'Credits'}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
     if (i === 1) { await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]); continue; }
