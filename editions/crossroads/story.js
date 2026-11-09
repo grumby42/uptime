@@ -128,7 +128,7 @@ const EDITION_METRICS = [
   {k: 'crFirst', label: 'Time to first defensible finding (game h)', unit: ' h', higher: false, lower: true, when: crDfir},
   {k: 'crClients', label: 'Clients in parallel', unit: '', higher: true, when: crDfir},
   {k: 'crDispatch', label: 'Answer to dispatch on cards, median (game s)', unit: ' s', higher: false, lower: true, when: () => !!crTrack()},
-  {k: 'crAnswered', label: '911 calls answered, here or at the backup center', unit: '%', higher: true, when: () => !!crTrack()}
+  {k: 'crAnswered', label: '911 calls answered, here or at the backup center (the floor’s, fixed: not your score)', unit: '%', higher: true, when: () => !!crTrack()}
 ];
 function editionScorecard() {
   const v = metricVals();

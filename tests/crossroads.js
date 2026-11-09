@@ -454,19 +454,21 @@ async function session(ctx, file) {
     check('Dispatch manager: the cards drill on Wednesday (Day 17) adds an exercise and three actions; the backup center gets four right things', dcd.day === 17 && dcd.ex.run === 4 && dcd.ex.actions === 12 && dcd.pack.wrong === 0, dcd);
     await A.follow(p => p.f.dpBoss, []);
     const dboss = await A.page.evaluate(() => ({ day: G.day, boss: G.cr.dp.boss, cover: G.cr.dp.cover, m: metricVals(), lead: dpLead(18), tired: dpTired(18), cards: tileDef('dispatch', 19, 6).pal, ex: G.cr.ex }));
-    check('Dispatch boss on Day 18 (Thursday): all three stages right first time; the floor’s measures (84 s on cards, 100% answered) on the scorecard; the 24-hour plan: shifts, 0 gaps, 22 of 30 h (25 if a weak Night 18 was swapped); the cards actions closed Wednesday 17:00 (tick)', dboss.day === 18 && dboss.boss.ok && dboss.boss.w1 === 0 && dboss.m.crDispatch === 84 && dboss.m.crAnswered === 100 && dboss.cover.k === 'shifts' && dboss.cover.gaps === 0 && dboss.cover.overtime === (dboss.cover.n18 === 'swap' ? 25 : 22) && dboss.cards === 'dpCardsOk' && dboss.ex.closed === 12, dboss);
+    check('Dispatch boss on Day 18 (Thursday): all three stages right first time; the floor’s measures (87 s on cards, 100% answered) on the scorecard; the 24-hour plan: shifts, 0 gaps, 22 of 30 h (25 if a weak Night 18 was swapped); the cards actions closed Wednesday 17:00 (tick)', dboss.day === 18 && dboss.boss.ok && dboss.boss.w1 === 0 && dboss.m.crDispatch === 87 && dboss.m.crAnswered === 100 && dboss.cover.k === 'shifts' && dboss.cover.gaps === 0 && dboss.cover.overtime === (dboss.cover.n18 === 'swap' ? 25 : 22) && dboss.cards === 'dpCardsOk' && dboss.ex.closed === 12, dboss);
     await A.follow(() => false, [], /End of Fire & EMS Dispatch/);
     const dpA = await A.page.evaluate(() => ({ relay: G.f.dpRelay, clue: qtFound('dp-conns'), tech: QT_CLUES['dp-conns'].tech, qt: !!QT_TECH.T1049, inAlerts: Object.keys(THREATS).length, evicted: Series.qt().evicted, obj: objective(), ser: crSeries(), aar: G.cr.aar, day: G.day, drillC: G.cr.drills.switchmgr, impact: G.cr.dp.aar, m: metricVals(), n18: G.cr.dp.night18, cover: G.cr.dp.cover }));
     const dpSum = await A.modalText();
     check('Dispatch Board cleared: the Relay Badge; Day 19 (Friday); drill C (the chief wants CAD back) right and supported', dpA.relay === true && dpA.day === 19 && dpA.drillC.verdictOk && dpA.drillC.supported, dpA);
     check('Dispatch manager: the AAR adds three actions (owners arrive approved), the impact as measured, first time; Night 18’s call-out added to the plan’s overtime', dpA.aar.total === 9 && dpA.aar.onTime === 9 && dpA.impact.impactFirst === true && dpA.cover.overtime === (dpA.cover.n18 === 'swap' ? 25 : 22) + dpA.n18.overtime, dpA);
     check('Quiet Thread (manager): the firm’s status report shows svc-print listing the dispatch collector’s connections (dp-conns, T1049), not in the alert mix, not evicted', dpA.clue && dpA.tech === 'T1049' && dpA.qt && dpA.inAlerts === 0 && !dpA.evicted, dpA);
-    check('Dispatch summary: “Next: Regional Airport”; the measured times; series records Dispatch; the collector named as an open risk; the objective done', /Next: Regional Airport/.test(dpSum) && /84 s/.test(dpSum) && /Open risk/.test(dpSum) && /DP-LOG-01/.test(dpSum) && dpA.obj.done && dpA.ser.dispatch === true && dpA.ser.clinic === true, dpA.obj);
+    check('Dispatch summary: “Next: Regional Airport”; the measured times; series records Dispatch; the collector named as an open risk; the objective done', /Next: Regional Airport/.test(dpSum) && /87 s/.test(dpSum) && /Open risk/.test(dpSum) && /DP-LOG-01/.test(dpSum) && dpA.obj.done && dpA.ser.dispatch === true && dpA.ser.clinic === true, dpA.obj);
     const dbr = await A.page.evaluate(() => {
       const keep = G.cr.dp.boss, out = {};
-      try { G.cr.dp.boss = { first: [], w1: 2, done: true }; out.w1 = dpCardsMedian() === 96 && metricVals().crDispatch === 96 && /96 s/.test(dpReport2().claims.find(c => c.id === 'time').text); } finally { G.cr.dp.boss = keep; }
+      const tk = G.trackId;
+      try { G.cr.dp.boss = { first: [], w1: 2, done: true }; out.w1 = dpCardsMedian() === 99 && metricVals().crDispatch === 99 && /99 s/.test(dpReport2().claims.find(c => c.id === 'time').text);
+        G.trackId = 'dfir'; out.dfirFixed = dpCardsMedian() === 87; } finally { G.cr.dp.boss = keep; G.trackId = tk; }
       return out; });
-    check('Dispatch: each false start in the boss’s first stage costs the floor 6 s on cards, and the measured numbers follow it (game)', dbr.w1, dbr);
+    check('Dispatch: each false start in the manager’s first boss stage costs the floor 6 s on cards, and the measured numbers follow it; the DFIR seat’s choices don’t move it (game)', dbr.w1 && dbr.dfirFixed, dbr);
     // The slice's rules, checked on the text: life safety, one decider per decision, preservation that never slows the floor, honest wording.
     const drules = await A.page.evaluate(() => {
       const out = {}, goods = [], all = [];
@@ -479,7 +481,7 @@ async function session(ctx, file) {
       // The floor's switch to cards and back is the supervisor's; the chief decides response policy, not the switch.
       out.floor = /Imogen/.test(DP_DRILL_INJECTS[0].opts.find(o => o.good).label) && /Imogen/.test(DP_DRILL_INJECTS[2].opts.find(o => o.good).label) && /Imogen decides the time, not the chief/.test(DP_DRILLS.switchmgr.verdicts.find(v => v.good).label) && DP_DRILL_INJECTS[2].opts.some(o => !o.good && /The chief decides/.test(o.label));
       // Patient care: the medical protocol is unchanged on paper; changing it is medical direction's.
-      out.care = /medical protocol/.test(DP_DRILL_INJECTS[1].opts.find(o => o.good).label) && DP_DRILL_INJECTS[1].opts.some(o => !o.good && /Skip the instructions/.test(o.label));
+      out.care = /ambulance from the run card at once, then the same protocol/.test(DP_DRILL_INJECTS[1].opts.find(o => o.good).label) && DP_DRILL_INJECTS[1].opts.some(o => !o.good && /only then send the ambulance/.test(o.label)) && DP_DRILL_INJECTS[1].opts.some(o => !o.good && /Skip the instructions/.test(o.label));
       // Preservation never slows the floor: collection from the standby, never CAD-01 offline for a copy.
       out.preserve = /doesn’t serve the positions/.test(DP_PRESERVE.find(o => o.good).label) && DP_PRESERVE.some(o => !o.good && /offline/.test(o.label)) && db.s1.resp.some(r => !r.good && /Shut CAD-01 down/.test(r.label));
       // The vendor's account: our records as confirmed, who used it unknown, never "the vendor lied".
@@ -492,6 +494,11 @@ async function session(ctx, file) {
       out.reporting = /The game says neither/.test(FACTS.dpfcc.desc) && /must swiftly notify the Commission/.test(FACTS.dpfcc.desc) && !/NFPA/.test(JSON.stringify(FACTS) + JSON.stringify(EXTRA_ACTIONS) + all.join(' '));
       // Containment never waits for evidence: the vendor account is blocked as soon as the session is seen.
       out.block = /block it at once, clearing nothing/.test(EXTRA_ACTIONS.dpvendor.desc);
+      // The way back never re-enables the blocked vendor account, and the check rests on evidence taken after its session (B3).
+      const n18 = dpNight18.toString(), firm = DP_DRILLS.switchmgr.sources.find(s => s.id === 'firm').qs[0].res.join(' ');
+      out.wayBack = /one-time account/.test(n18) && /sm-support stays blocked/.test(n18) && !/sm-support enabled/.test(n18) && /23:50/.test(n18) && /after the vendor session/.test(firm) && /23:50/.test(firm) && /night supervisor keeps the floor/.test(n18);
+      // The drill is a shadow position, and its times are drill times (B2); the link cut waits for the supervisor (S6).
+      out.shadow = /shadows every live call/.test(DP_DRILL_OBJ.find(o => o.good).label) && !/never slows a caller/.test(JSON.stringify(EXTRA_ACTIONS) + all.join(' ')) && /when she agrees/.test(mb.s1.resp.find(r => r.good).label);
       out.t1078 = DP_DRILLS.adminmgr.techs[0] === 'T1078' && /ruled out/.test(DP_DRILLS.adminmgr.path) && DP_DRILLS.vendordfir.techs[0] === 'T1133' && /can’t yet answer/.test(DP_DRILLS.vendordfir.path);
       return out; });
     check('Dispatch rules on the text: over- and under-reaction both wrong; the supervisor decides the floor, the chief response policy, medical direction the protocol; collection never slows the floor; the vendor account written honestly; impact only as measured; reporting left to the 911 authority with counsel; no NFPA text; T1078 ruled out, T1133 open', Object.values(drules).every(Boolean), drules);
@@ -697,7 +704,7 @@ async function session(ctx, file) {
     const cu0 = await B.page.evaluate(() => JSON.parse(JSON.stringify(G.cr.custody)));
     await B.follow(p => p.f.dpIntake, []);
     const cuD = await B.page.evaluate(() => ({ cu: G.cr.custody, req: G.cr.dp.requests, clue: qtFound('dp-conns'), rack: tileDef('dispatch', 21, 1).pal }));
-    check('Dispatch DFIR intake: six items, all complete (the export by the account owner in question gets a second export, compared); the vendor request logged with its date as it went; the vendor account blocked', cuD.cu.items === cu0.items + 6 && cuD.cu.complete === cu0.complete + 6 && cuD.cu.gaps === cu0.gaps && cuD.req && cuD.req.date === 'Day 16 (Tuesday) 10:30' && cuD.rack === 'dpRackOk', { now: cuD, before: cu0 });
+    check('Dispatch DFIR intake: six items and CAD-01’s EDR for Night 14 (D-07), all complete (the export by the account owner in question gets a second export, compared); the vendor request logged with its date as it went; the vendor account blocked', cuD.cu.items === cu0.items + 7 && cuD.cu.complete === cu0.complete + 7 && cuD.cu.gaps === cu0.gaps && cuD.req && cuD.req.date === 'Day 16 (Tuesday) 10:30' && cuD.rack === 'dpRackOk', { now: cuD, before: cu0 });
     check('Quiet Thread (DFIR): seen in D-06, the collector’s own log (dp-conns, T1049)', cuD.clue && await B.page.evaluate(() => QT_CLUES['dp-conns'].tech === 'T1049' && !!QT_TECH.T1049));
     // Drill A with one of its two needed sources and the supporting one: unsupported.
     await B.goTo('dispatch', 20, 11);
@@ -709,7 +716,7 @@ async function session(ctx, file) {
     await B.settle([], /Which question/); await B.pickLabel(/Anything new talking to MQ-01/);
     await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
     await B.settle([], /Budget left/); await B.pickLabel(/I have enough|Budget spent/);
-    await B.settle([], /^Verdict/); await B.pickLabel(/^Not an attack: the link is failing/);
+    await B.settle([], /^Verdict/); await B.pickLabel(/^Not an attack: a failing link, as D-04/);
     await B.settle([], /^Reasoning/); await B.pickLabel(/^D-04: the delay before the queue/);
     await B.settle([], /Debrief/);
     const debDB = await B.modalText();
@@ -736,8 +743,8 @@ async function session(ctx, file) {
     check('DSP-01: the session through Stillmark’s network goes out as “Likely” (the overclaim corrected and counted); who used the account as “Unknown”; the lag’s measured times as “Confirmed”', /Likely:<\/b> That session came through Stillmark’s own support network/.test(filedD) && /Unknown:<\/b> Who used sm-support that night/.test(filedD) && /Confirmed:<\/b> During the lag, answer-to-dispatch/.test(filedD) && /corrected in review/.test(filedD) && await B.page.evaluate(() => G.cr.reports.dp1.over === 1), filedD.slice(0, 400));
     await B.follow(() => false, [], /End of Fire & EMS Dispatch/);
     const dpB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.dp2, relay: G.f.dpRelay, obj: objective(), ser: crSeries(), corrected: G.cr.corrected, sw: G.f.dpSwitch, stores: G.f.dpStores, m: metricVals(), day: G.day }));
-    check('DFIR Dispatch: DSP-02 filed, 50 custody items (35 + Dispatch 15), the chief’s question answered, separate stores, Relay Badge, the dispatch measures on the scorecard, summary “Next: Regional Airport”', dpB.cu.items === 50 && !!dpB.r2 && dpB.sw && dpB.stores && dpB.relay && dpB.obj.done && dpB.ser.dispatch === true && dpB.day === 19 && dpB.m.crDispatch === 84 && dpB.m.crAnswered === 100 && /Next: Regional Airport/.test(await B.modalText()), dpB);
-    check('DSP-02: no file on CAD encrypted (confirmed); cut off from the county’s directory (confirmed); nothing left on CAD-01 (likely); the response impact as measured; harm unknown', await B.page.evaluate(() => { const c = id => dpReport2().claims.find(x => x.id === id); return c('enc').truth === 'confirmed' && c('cut').truth === 'confirmed' && c('clean').truth === 'likely' && c('time').truth === 'confirmed' && /84 s/.test(c('time').text) && c('harm').truth === 'unknown' && c('link').truth === 'unknown'; }));
+    check('DFIR Dispatch: DSP-02 filed, 53 custody items (35 + Dispatch 18), the chief’s question answered, separate stores, Relay Badge, the dispatch measures on the scorecard, summary “Next: Regional Airport”', dpB.cu.items === 53 && !!dpB.r2 && dpB.sw && dpB.stores && dpB.relay && dpB.obj.done && dpB.ser.dispatch === true && dpB.day === 19 && dpB.m.crDispatch === 87 && dpB.m.crAnswered === 100 && /Next: Regional Airport/.test(await B.modalText()), dpB);
+    check('DSP-02: no file on CAD encrypted (confirmed); cut off from the county’s directory (confirmed); nothing left on CAD-01 (likely); the response impact as measured; harm unknown', await B.page.evaluate(() => { const c = id => dpReport2().claims.find(x => x.id === id); return c('enc').truth === 'confirmed' && /between 13:00 and 15:00/.test(c('enc').text) && c('enc').evidence.length === 3 && c('cut').truth === 'confirmed' && c('clean').truth === 'likely' && c('time').truth === 'confirmed' && /87 s/.test(c('time').text) && /Oxlow’s answer times/.test(c('time').evidence[0]) && c('harm').truth === 'unknown' && c('link').truth === 'unknown'; }));
     await B.pickLabel(/^Keep exploring/); await B.settle();
     await B.page.evaluate(() => storeSet(encodeSave(G)));
     const after = await B.page.evaluate(() => localStorage.getItem('uptime.slice1.save'));

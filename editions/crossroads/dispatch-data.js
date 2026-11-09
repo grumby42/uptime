@@ -8,8 +8,8 @@
    separate stores), three drills per track, two reports, the directive, the
    Dispatch Board, the two dojos, the boss's stages for each seat, and Field
    Manual text.
-   One decider per decision (game): Imogen Hale, the supervisor on the floor,
-   decides dispatch operations (cards or CAD, when to go and when to return,
+   One decider per decision (game): the supervisor on duty on the floor (Imogen
+   Hale by day; the night supervisor from 19:00) decides dispatch operations (cards or CAD, when to go and when to return,
    rolling overflow calls to the backup center, the timing of any change that
    touches the floor); Chief Gideon Sayre decides response policy; Dr Anselm
    Oduya, the EMS medical director, decides patient-care protocol; Celia Marrow,
@@ -129,9 +129,9 @@ const DP_NPC_IDS = ['hale', 'reyes', 'sayre', 'teague', 'orrin', 'vasko', 'moll'
 
 /* ---------- Manager: the Dispatch annex's retainer test (Day 16 08:10) ---------- */
 const DP_ACTIVATE = [
-  {label: 'Met: an admin sign-in on CAD nobody here can explain. Call the firm now, tell counsel', good: true},
+  {label: 'Ring Felix’s directory line now. Unless he can confirm, the annex is met: firm, counsel told', good: true},
   {label: 'Not met: the account belongs to county staff, and county staff answer to Petra, not the firm', why: 'The annex says may have been reached by someone not authorised. Nobody can yet say who signed in at 03:20.'},
-  {label: 'Not yet: ring the account’s owner first, then decide with counsel whether the annex applies', why: 'Ring him, yes, on a known number. But the annex says may, and that is met now. The firm can be stood down if it turns out to be him.'},
+  {label: 'Not yet: hold off until Felix’s next shift, then decide with counsel whether the annex applies', why: 'He is off until the afternoon, and the sign-in is unexplained now. Ring him now on a known number; if he can’t confirm it, the annex’s may is met.'},
   {label: 'Met, and more: take CAD offline and put the floor on cards until the firm has checked it', why: 'Nothing shows CAD is failing, and taking it down slows every dispatch. The floor is Imogen’s to run. Call the firm.'},
   {label: 'Imogen decides whether the firm comes in, once the morning’s calls have eased off', why: 'The retainer is the Compact’s and its annex says when it is called. You make the call, and Imogen and counsel are told at once.'}];
 const DP_ACT_OK = 15, DP_ACT_LATE = 20;   // game minutes
@@ -153,22 +153,23 @@ const DP_ROTA = {
 
 /* ---------- Manager: the cards drill with the supervisor (Day 17 09:00) ---------- */
 const DP_DRILL_OBJ = [
-  {label: 'One position takes each call on cards beside CAD, so a drill never slows a caller', good: true},
-  {label: 'The whole floor goes off CAD for an hour, to make it real for each telecommunicator', why: 'Every caller’s dispatch would slow for a drill. One position in parallel tests the cards without costing anyone time.'},
+  {label: 'A trainee shadows every live call on cards while the live position dispatches it on CAD', good: true},
+  {label: 'The whole floor goes off CAD for an hour, to make it real for each telecommunicator on shift', why: 'Every caller’s dispatch would slow for a drill. A shadow position on paper tests the cards while CAD dispatches every call.'},
   {label: 'Talk it through at the table: the cards are in the cabinet, and Imogen knows where', why: 'Talking tests nothing. The cards have to be used at a position, against real calls, to show what is missing.'},
   {label: 'Run it at 03:00 when it is quiet, without telling the supervisor, and measure it in seconds', why: 'It is her floor, and every change on it is her decision. A drill nobody agreed to is a surprise, not a test.'}];
 const DP_DRILL_INJECTS = [
-  {t: 'Exercise, 09:20: CAD freezes at two positions for half a minute. Who calls cards, and when?',
+  {t: 'Exercise, 09:20 (simulated): CAD freezes at two positions for half a minute. Who calls cards, and when?',
    opts: [{label: 'Imogen calls it on her floor: a position CAD can’t serve goes to cards at once', good: true},
           {label: 'Wait until county IT confirms CAD is down, and keep the floor on CAD until then', why: 'Callers wait while IT checks. The supervisor decides on what the floor sees.'},
           {label: 'You call it: an outage during an incident is the IR manager’s, so it is yours to run', why: 'You advise. The floor is Imogen’s, and so is the switch to cards.'},
           {label: 'Go to cards at the first slowness, even a second, and stay there until Petra checks', why: 'Switching for every pause costs more time than it saves. Her criteria, applied as written.'}]},
-  {t: 'Exercise, 09:40: the cards position takes a call. A person isn’t breathing. What does the call-taker do?',
-   opts: [{label: 'The same medical protocol, read from the paper copy, as medical direction set it', good: true},
-          {label: 'Skip the instructions to get the ambulance out faster: the cards are slow enough', why: 'The instructions are care. Changing them is Dr Oduya’s decision as medical director, and he hasn’t.'},
+  {t: 'Exercise, 09:40 (simulated): on cards, a caller says a person isn’t breathing. What does the call-taker do?',
+   opts: [{label: 'Send the ambulance from the run card at once, then the same protocol’s instructions on paper', good: true},
+          {label: 'Skip the instructions to get the ambulance out faster: the cards are slow enough', why: 'Instructions don’t hold up the dispatch: the ambulance goes first, then the instructions. They are care, and changing them is Dr Oduya’s decision as medical director.'},
+          {label: 'Work through the whole protocol on paper first, and only then send the ambulance from the card', why: 'The ambulance goes as soon as the address and the problem are known. The questions and instructions follow while it is on its way.'},
           {label: 'Imogen shortens the protocol for cards, and each call-taker keeps up', why: 'The medical protocol is medical direction’s to change. The supervisor runs the floor, not the care.'},
           {label: 'Transfer each medical call to Oxlow’s center while the position is on cards', why: 'A transfer is a delay for a caller who needs help now, and Oxlow takes overflow, not our protocol.'}]},
-  {t: 'Exercise, 10:00: CAD is back for the drill position. How does it go back?',
+  {t: 'Exercise, 10:00 (simulated): CAD is back. How does the floor go back to it?',
    opts: [{label: 'Imogen’s time: the floor waits for a test incident, open calls checked twice', good: true},
           {label: 'At once, the moment the sign-in screen shows again: the sign-in is the test', why: 'A screen isn’t a working system. A test incident end to end first.'},
           {label: 'Enter the open cards into CAD later in the week, when the floor is quieter', why: 'Open calls belong in CAD before it is trusted, and the rest within the shift, checked.'},
@@ -177,7 +178,7 @@ const DP_EX_ACTIONS = 3;
 
 /* ---------- Manager: what the backup center needs (Day 17 11:00; pick four) ---------- */
 const DP_PACK = [
-  {id: 'cards', name: 'Our run cards', csf: 'Recover', text: 'A copy of our current run cards, with this morning’s two corrections.', good: true},
+  {id: 'map', name: 'Our map and response areas', csf: 'Recover', text: 'Our street map, address points and response-area boundaries, so each call is placed in our area and passed back right.', good: true},
   {id: 'roster', name: 'Units and a line back', csf: 'Respond', text: 'Our unit roster, and the supervisor-to-supervisor line for passing a call back to us.', good: true},
   {id: 'contact', name: 'Named contacts', csf: 'Govern', text: 'A named contact each way, day and night, with direct numbers.', good: true},
   {id: 'test', name: 'A test, on a date', csf: 'Recover', text: 'A rollover test call at 11:30 today, one tonight with the night shift, then monthly.', good: true},
@@ -207,13 +208,13 @@ const DP_AAR = [
    dates: [{label: 'Day 22, Monday, after the test window', good: true},
            {label: 'As soon as possible', why: 'A date nobody can check. Day 22, after the test window.'},
            {label: 'When the budget allows', why: 'Local sign-in exists already: it was used on Thursday night. Nothing to buy. Day 22.'},
-           {label: 'Day 20, Saturday: tomorrow, with no test first', why: 'An untested change to CAD on a weekend is a new risk to the floor. Day 22.'}]},
+           {label: 'Day 20, Saturday: tomorrow, on the weekend shift', why: 'An untested change to CAD on a weekend is a new risk to the floor. Day 22.'}]},
   {id: 'alerts', name: 'County alerts that touch the shared network page the floor and the Compact’s on-call', owner: 'Petra Vasko',
    dates: [{label: 'Day 19, today', good: true},
            {label: 'As soon as possible', why: 'An action without a date doesn’t close. Today at 17:00.'},
            {label: 'When the budget allows', why: 'It is a routing rule, not a purchase. Today.'},
            {label: 'Day 40, once a new alerting tool has been bought', why: 'The routing works with the tool the county has. Today.'}]},
-  {id: 'roll', name: 'The rollover to Oxlow tested monthly, with Oxlow holding our current run cards', owner: 'Imogen Hale',
+  {id: 'roll', name: 'The rollover to Oxlow tested monthly, with Oxlow holding our current map and response areas', owner: 'Imogen Hale',
    dates: [{label: 'Day 26, the first monthly test', good: true},
            {label: 'As soon as possible', why: 'A test needs a date both centers can keep. Day 26.'},
            {label: 'When the budget allows', why: 'A test call costs nothing. Day 26.'},
@@ -224,7 +225,7 @@ const DP_DIRECTIVE = {
   manager: [
     {label: 'The savings, the cost of Thursday, and the choices, so Celia decides knowing them', good: true},
     {label: 'Refuse it outright: the center never shares anything with the county again', why: 'An absolute with a price nobody has counted. Lay out the options, and the owner decides.'},
-    {label: 'Fold it in this month, since it saves money and the floor coped on cards on Thursday', why: 'The floor coped because it had drilled. CAD failed because it leaned on the county. The decision is Celia’s.'},
+    {label: 'Fold it in this month, since it saves money and the floor coped on cards on Thursday', why: 'The floor coped, helped by its drill. CAD failed because it leaned on the county. The decision is Celia’s.'},
     {label: 'You decide it now, as the IR manager, and tell the county administrator what you decided', why: 'You advise. The center’s systems are the 911 authority’s, and Celia decides.'},
     {label: 'Petra decides: she runs both networks, and the design of each is hers to choose', why: 'Petra runs them. Who owns the 911 decision is the 911 authority, and that is Celia.'}],
   dfir: [
@@ -245,7 +246,7 @@ const DP_PRESERVE = [
   {label: 'From what doesn’t serve the positions: copy the logs off the standby and the gateway', good: true},
   {label: 'Take CAD-01 offline at 10:00 and image it: an hour on cards is a fair price for a clean copy', why: 'The floor would dispatch slower for evidence CAD-02 already holds. Collect from the standby.'},
   {label: 'A full database export from CAD-01 now, during the morning peak, while the evidence is fresh', why: 'That loads the live server the positions use. The standby has the same audit tables.'},
-  {label: 'Wait until tonight, and collect what is left once Imogen’s floor is quiet', why: 'The gateway keeps 48 hours: Sunday night’s lines go at 02:10 tomorrow. And the standby and the gateway can be read now without touching a position.'}];
+  {label: 'Wait until tonight, and collect what is left once Imogen’s floor is quiet', why: 'The gateway keeps 48 hours: Sunday night’s lines start rolling off tonight. And the standby and the gateway can be read now without touching a position.'}];
 
 /* ---------- DFIR D3: evidence intake (the county's store, case DSP) ---------- */
 const DP_INTAKE = {
@@ -361,7 +362,7 @@ const DP_DRILLS = {
          wall: ['{t}  MDG-01 → MQ-01:5671  retrans {i}', '{t}  CO-PC-{n} → CO-FS-01:445', '{t}  CAD-01 → CO-DC-01:53']}]}
     ],
     verdicts: [
-      {label: 'Not an attack: the link is failing. D-04 and D-05 decide it, D-02 agrees', good: true, needs: ['queue', 'link'],
+      {label: 'Not an attack: a failing link, as D-04 and D-05 show, with D-02 in support', good: true, needs: ['queue', 'link'],
        needsWhy: 'the finding rests on two sources: D-04 (where the time is lost) and D-05 (whether the link is failing). You read only one.',
        why: 'Each decides its half.'},
       {label: 'Yes: an attack timed for the festival weekend. D-02’s retransmits are its trace', why: 'The calendar and the complaints fit a fault too. The counters show the link failing.'},
@@ -425,13 +426,13 @@ const DP_DRILLS = {
   },
   admindfir: {
     id: 'admindfir', title: 'Question 1: the 03:20 sign-in', budget: 3,
-    intro: '<p>The letter’s first question: who signed in to CAD-01 as f.orrin-adm at 03:20, and what was done? D-01, D-03 and D-07 are on the bench. The finding needs two sources.</p>',
+    intro: '<p>The letter’s first question: who signed in to CAD-01 as f.orrin-adm at 03:20, and what was done? D-01, D-03 and D-08 are on the bench. The finding needs two sources.</p>',
     artefact: '<pre class="art">Case DSP-01 · question 1 (game data)\n' +
       'D-01  CAD audit log, two exports, hashes match\n' +
       'D-03  DP-VPN log, its 48 hours\n' +
-      'D-07  county on-call ticket, Imogen’s signed note\n' +
+      'D-08  county on-call ticket, Imogen’s signed note\n' +
       'Alert 03:21 “admin sign-in outside hours”</pre>' +
-      '<p class="small">D-03 says whether the vendor was connected; D-07 is the ticket and the owner’s word on a known number.</p>',
+      '<p class="small">D-03 says whether the vendor was connected; D-08 is the ticket and the owner’s word on a known number.</p>',
     question: 'Who signed in at 03:20, and what was done?',
     sources: [
       {id: 'hour', name: 'The alert’s hour', qs: [
@@ -441,7 +442,7 @@ const DP_DRILLS = {
       {id: 'gateway', name: 'D-03: the vendor gateway', qs: [
         {q: 'Any vendor session at 03:20?', kind: 'focus', key: true,
          res: ['None. The last sm-support session ended at 02:40 on Night 14']}]},
-      {id: 'ticket', name: 'D-07: the ticket and the call', qs: [
+      {id: 'ticket', name: 'D-08: the ticket and the call', qs: [
         {q: 'What does the ticket say, and what did the owner say, on which number?', kind: 'focus', key: true,
          res: ['On-call ticket: the night supervisor’s call at 03:02, Felix Orrin on call, closed 03:45 “restarted CAD status receiver”', 'Imogen’s signed note: her 08:40 call on the county staff directory number, “That was me”']}]},
       {id: 'audit', name: 'D-01: CAD’s audit log', qs: [
@@ -451,21 +452,21 @@ const DP_DRILLS = {
          wall: ['{t}  signin  pos{i}  CAD-01', '{t}  incident  create  pos{i}', '{t}  unit  status  M{n}  AVL']}]}
     ],
     verdicts: [
-      {label: 'Felix, on call, restarting the receiver: D-03 and D-07, with D-01 agreeing', good: true, needs: ['gateway', 'ticket'],
-       needsWhy: 'the finding rests on two sources: D-03 (no vendor session) and D-07 (the ticket and the owner’s word). You read only one.',
+      {label: 'Felix, on call, restarting the receiver: D-03 and D-08, with D-01 agreeing', good: true, needs: ['gateway', 'ticket'],
+       needsWhy: 'the finding rests on two sources: D-03 (no vendor session) and D-08 (the ticket and the owner’s word). You read only one.',
        why: 'Each decides its part.'},
-      {label: 'Likely an intruder: an admin account, at night, from outside the center, during a lag', why: 'Each of those fits on-call work. D-03 and D-07 say what it was.'},
+      {label: 'Likely an intruder: an admin account, at night, from outside the center, during a lag', why: 'Each of those fits on-call work. D-03 and D-08 say what it was.'},
       {label: 'Unknown until Felix has been interviewed formally by counsel, with the firm present', why: 'The owner’s word on a known number, the ticket and the audit already agree. Question 1 has its answer.'}],
     reasons: [
-      {label: 'D-03: no vendor then. D-07: a ticket naming Felix, and his word on the directory number', good: true, why: 'The gateway, and the ticket with the owner’s word.'},
+      {label: 'D-03: no vendor then. D-08: a ticket naming Felix, and his word on the directory number', good: true, why: 'The gateway, and the ticket with the owner’s word.'},
       {label: 'D-01: an admin account at 03:20 is unusual, and unusual means someone other than its owner', why: 'Unusual isn’t unknown.'},
       {label: 'The alert fired: the sign-in was a threat by definition', why: 'An alert is a reason to look.'}],
     alts: [
       {label: 'A vendor session at 03:20', good: true, why: 'Ruled out: D-03 shows none.'},
       {label: 'A change to CAD’s configuration in that session', good: true, why: 'Ruled out: D-01 shows one restart and no change.'},
       {label: 'A second person in the county office that night', why: 'Nothing points to it.'},
-      {label: 'CAD-01’s clock being wrong', why: 'Beside the point: D-01 and D-07 agree on the times.'}],
-    path: '<p>Two decisive sources: <b>D-03</b> (no vendor session) and <b>D-07</b> (the ticket and the owner’s word on a known number). D-01 agrees. T1078 (Valid Accounts) is the explanation this evidence ruled out.</p>',
+      {label: 'CAD-01’s clock being wrong', why: 'Beside the point: D-01 and D-08 agree on the times.'}],
+    path: '<p>Two decisive sources: <b>D-03</b> (no vendor session) and <b>D-08</b> (the ticket and the owner’s word on a known number). D-01 agrees. T1078 (Valid Accounts) is the explanation this evidence ruled out.</p>',
     response: ['Report to Lionel: Felix, on call, one restart, no change', 'Recommend: the county’s on-call tells the floor supervisor whenever it works on CAD at night', 'Name the account and the desk, as the evidence does', 'Keep D-01’s two exports and their matching hashes together'],
     techs: ['T1078'], acts: ['dpadmin']
   },
@@ -485,7 +486,7 @@ const DP_DRILLS = {
         {q: 'How slow is the floor on cards?', kind: 'trap', res: ['Slower than CAD, every call.', '(A real cost, and a reason to return well, not to return blind.)']}]},
       {id: 'firm', name: 'The firm’s check of CAD', qs: [
         {q: 'What did the firm find on CAD-01 and CAD-02?', kind: 'focus', key: true,
-         res: ['Complete at 02:00: no file encrypted on either, no foreign process in the 14:40 memory capture, nothing set to persist', 'No sign-in from a county office host since 14:00. The building link stays cut']}]},
+         res: ['Complete at 02:00, after the vendor session: no file encrypted on either; no foreign process in a fresh capture of CAD-01’s memory at 23:50, or in its EDR since 21:00; nothing set to persist', 'The session’s record: the sign-in change only. No sign-in from a county office host since 14:00. The building link stays cut']}]},
       {id: 'list', name: 'Imogen’s return checklist', qs: [
         {q: 'What has to be done on the floor first?', kind: 'focus', key: true,
          res: ['A test incident end to end through CAD', 'Open incidents entered from the cards, each checked by a second telecommunicator', 'Unit statuses matched to the cards, and by radio until the link is back', 'The shift briefed, the cards left at the positions. Not started yet']}]}
@@ -504,7 +505,7 @@ const DP_DRILLS = {
       {label: 'Seven hours up without an error is the test: CAD is ready for the floor', why: 'Nobody was using it.'},
       {label: 'The chief commands the units, and the open incidents are his to order', why: 'He decides response policy, not the floor.'}],
     alts: [
-      {label: 'CAD-01 still carrying the attack', good: true, why: 'Not supported: the firm’s check found nothing encrypted, foreign or set to persist.'},
+      {label: 'CAD-01 still carrying the attack', good: true, why: 'Not supported: the firm’s check after the vendor session found nothing encrypted, foreign or set to persist.'},
       {label: 'Open incidents lost in the switch', good: true, why: 'Prevented by the checklist: each is entered and checked by a second person.'},
       {label: 'The county’s directory coming back and confusing CAD', why: 'Nothing points to it: CAD now signs in locally and the link is cut.'},
       {label: 'The chief and Imogen disagreeing', why: 'Beside the point: the decision is hers.'}],
@@ -518,9 +519,9 @@ const DP_DRILLS = {
     artefact: '<pre class="art">Case DSP-01 · question 3 (game data)\n' +
       'D-02  flows, edge firewall and core switch\n' +
       'D-03  DP-VPN log\n' +
-      'D-08  Stillmark’s statement, 13:30\n' +
+      'D-09  Stillmark’s statement, 13:30\n' +
       'R-01  requested Day 16 (Tuesday) 10:30</pre>' +
-      '<p class="small">D-02 says what connected from where; D-03 says which account signed in. D-08 is the vendor’s account of its own side.</p>',
+      '<p class="small">D-02 says what connected from where; D-03 says which account signed in. D-09 is the vendor’s account of its own side.</p>',
     question: 'How should the finding about the vendor’s account read?',
     sources: [
       {id: 'certain', name: 'The statement’s tone', qs: [
@@ -545,15 +546,15 @@ const DP_DRILLS = {
       {label: 'An intruder from outside Stillmark’s range used the vendor’s account', why: 'Possible, not shown. Write it as unknown, with the request for Stillmark’s records.'},
       {label: 'No access occurred: the vendor says who used it, and it says nobody did', why: 'Our own gateway shows the account signed in. That is in the record whatever the vendor says.'}],
     reasons: [
-      {label: 'D-02, D-03: the account and the range. D-08: Stillmark’s word. R-01 is open', good: true, why: 'Each record for what it shows, the vendor’s word as the vendor’s.'},
-      {label: 'D-08 is signed by a manager, and it outweighs what D-02 and D-03 show', why: 'A signature is not a record of the night.'},
+      {label: 'D-02, D-03: the account and the range. D-09: Stillmark’s word. R-01 is open', good: true, why: 'Each record for what it shows, the vendor’s word as the vendor’s.'},
+      {label: 'D-09 is signed by a manager, and it outweighs what D-02 and D-03 show', why: 'A signature is not a record of the night.'},
       {label: 'D-01 shows no sign-in: nothing happened that night, and R-01 is open only for form', why: 'The audit doesn’t record support-port connections.'}],
     alts: [
       {label: 'The flows being misread', good: true, why: 'Not supported: D-02 and D-03 agree on the times and the account.'},
       {label: 'A Stillmark ticket for that night', good: true, why: 'Not supported: none on record. R-01 asks for its own.'},
-      {label: 'The session changing CAD’s configuration', why: 'Unknown: the support port’s use isn’t in D-01.'},
+      {label: 'The session changing CAD’s configuration', why: 'Unknown: D-01 doesn’t record the support port, and D-07 shows only that its service took the connections.'},
       {label: 'Stillmark’s size making it careful', why: 'Beside the point.'}],
-    path: '<p>Two decisive sources: <b>D-02</b> (the address and the connections) and <b>D-03</b> (the account). D-08 is the vendor’s account, written as such. T1133 (External Remote Services) is the question this evidence can’t yet answer: whether someone outside Stillmark’s support used its remote access.</p>',
+    path: '<p>Two decisive sources: <b>D-02</b> (the address and the connections) and <b>D-03</b> (the account). D-09 is the vendor’s account, written as such. T1133 (External Remote Services) is the question this evidence can’t yet answer: whether someone outside Stillmark’s support used its remote access.</p>',
     response: ['Write it as it reads: our records, Stillmark’s statement, and who used it as unknown', 'R-01 stays open and dated: Day 16 (Tuesday) 10:30', 'sm-support stays blocked, its logs kept. Vendor support on demand by ticket', 'Recommend MFA and on-demand access in Stillmark’s contract: Celia’s decision'],
     techs: ['T1133'], acts: ['dpvendor']
   }
@@ -565,21 +566,21 @@ const DP_REPORT_1 = {
   intro: '<p>Eight findings for Lionel, covering his three questions, each from the evidence in the custody log.</p>',
   claims: [
     {id: 'felix', text: 'The 03:20 sign-in as f.orrin-adm was Felix Orrin, the county’s on-call CAD administrator, at his desk PC.', truth: 'confirmed',
-     evidence: ['D-07: the on-call ticket names him; Imogen’s note of his own word on the staff directory number', 'D-03: no vendor session at 03:20', 'D-01: the sign-in from CO-IT-07, his desk PC'], why: 'The ticket, the owner’s word and the logs agree.'},
+     evidence: ['D-08: the on-call ticket names him; the county office’s door log has his badge in at 03:15; Imogen’s note of his own word on the staff directory number', 'D-03: no vendor session at 03:20', 'D-01: the sign-in from CO-IT-07, his desk PC'], why: 'The ticket, the owner’s word and the logs agree.'},
     {id: 'restart', text: 'That session restarted CAD’s status receiver at 03:24 and changed nothing else.', truth: 'confirmed',
-     evidence: ['D-01: one action, the restart; no configuration change'], why: 'The audit log records every admin action.'},
+     evidence: ['D-01: one action, the restart; no configuration change', 'D-08: the ticket records the same restart'], why: 'The audit log records every admin action. D-01 is CAD-02’s replicated copy, so a gap on CAD-01 would copy too: the ticket agrees.'},
     {id: 'lag', text: 'The unit-status lag came from errors on the building link, not from an attack.', truth: 'confirmed',
      evidence: ['D-04: the delay before the queue; MDG-01 the only producer', 'D-05: CRC errors from Sunday 08:00'], why: 'Where the time went, and why.'},
     {id: 'session', text: 'sm-support signed in from an address in Stillmark’s documented range, 02:10 to 02:40 on Night 14.', truth: 'confirmed',
      evidence: ['D-02: 198.51.100.183 to DP-VPN', 'D-03: sm-support, password only, 02:10 to 02:40'], why: 'The flows and the gateway agree.'},
     {id: 'network', text: 'That session came through Stillmark’s own support network.', truth: 'likely',
-     evidence: ['D-02: the address is inside the range Stillmark documents for its support', 'D-08: Stillmark says no technician used its access'], why: 'The address points to it; an address in a range isn’t proof of who was behind it.'},
+     evidence: ['D-02: the address is inside the range Stillmark documents for its support', 'D-09: Stillmark says no technician used its access'], why: 'The address points to it; an address in a range isn’t proof of who was behind it.'},
     {id: 'who', text: 'Who used sm-support that night.', truth: 'unknown',
-     evidence: ['D-08: Stillmark says none of its technicians', 'R-01: Stillmark’s own access records, requested on Day 16 (Tuesday) 10:30'], why: 'Nothing in scope can say. The request is dated.'},
+     evidence: ['D-09: Stillmark says none of its technicians', 'R-01: Stillmark’s own access records, requested on Day 16 (Tuesday) 10:30'], why: 'Nothing in scope can say. The request is dated.'},
     {id: 'what', text: 'What that session did on CAD-01.', truth: 'unknown',
-     evidence: ['D-01: no CAD sign-in in the window; the audit doesn’t record support-port connections', 'D-02: small connections to the support port, 02:12 to 02:38'], why: 'Nothing in scope records what a support-port connection did.'},
+     evidence: ['D-01: no CAD sign-in in the window; the audit doesn’t record support-port connections', 'D-02: small connections to the support port, 02:12 to 02:38', 'D-07: CAD-01’s EDR: the support service took those connections; no new process, file or account'], why: 'The EDR shows what ran and what changed, not what the support service showed or was asked. Nothing in scope records that.'},
     {id: 'time', text: 'During the lag, answer-to-dispatch ran at a median of 65 s, against 64 s the week before.', truth: 'confirmed',
-     evidence: ['D-09: CAD’s answer-to-dispatch report, Days 7 to 16, from CAD-02’s copy'], why: 'Measured, from CAD’s own report.'}]
+     evidence: ['D-10: CAD’s answer-to-dispatch report, Days 7 to 16, from CAD-02’s copy'], why: 'Measured, from CAD’s own report.'}]
 };
 
 /* ---------- DFIR report 2 (the boss, stage 3): DSP-02, encrypted or cut off; built at run time for the measured numbers ---------- */
@@ -589,20 +590,20 @@ function dpReport2() {
     title: 'DSP-02: CAD on Thursday', audience: 'Lionel Ashdown, county attorney',
     intro: '<p>Seven findings on the second letter’s three questions, from the evidence logged since 14:20.</p>',
     claims: [
-      {id: 'enc', text: 'No file on CAD-01 or CAD-02 was encrypted.', truth: 'confirmed',
-       evidence: ['D-12: no file renamed on CAD-01, CAD-02, MQ-01 or RMS-01', 'D-11: CAD-02’s snapshot whole and readable'], why: 'Each server’s own file events.'},
+      {id: 'enc', text: 'No file on CAD-01 or CAD-02 was encrypted between 13:00 and 15:00.', truth: 'confirmed',
+       evidence: ['D-13: 13:00 to 15:00, no file renamed and no burst of writes on CAD-01, CAD-02, MQ-01 or RMS-01', 'D-12: CAD-02’s 14:50 snapshot: its database files open and read normally', 'D-14: CAD-01’s database service ran without error'], why: 'Each server’s own file events, and its data still opening, over the window they cover.'},
       {id: 'cut', text: 'CAD failed at the positions because it lost the county’s directory and name service at 14:05.', truth: 'confirmed',
-       evidence: ['D-13: from 14:05 every sign-in check and name look-up to CO-DC-01 timed out', 'D-14: CO-DC-01 stopped answering at 14:05'], why: 'CAD’s own log and the flows agree.'},
+       evidence: ['D-14: from 14:05 every sign-in check and name look-up to CO-DC-01 timed out', 'D-15: CO-DC-01 stopped answering at 14:05'], why: 'CAD’s own log and the flows agree.'},
       {id: 'refused', text: 'The encrypting county PC’s connection to CAD-01 was refused.', truth: 'confirmed',
-       evidence: ['D-14: CO-PC-31 to CAD-01’s file-sharing port at 14:03, refused', 'CAD-01 shares nothing'], why: 'The flows record it.'},
+       evidence: ['D-15: CO-PC-31 to CAD-01’s file-sharing port at 14:03, refused', 'CAD-01 shares nothing'], why: 'The flows record it.'},
       {id: 'clean', text: 'Nothing from the attack is on CAD-01.', truth: 'likely',
-       evidence: ['D-10: nothing foreign in the memory capture so far', 'D-12: no file events from the attack'], why: 'Everything read points to it; the memory analysis finishes overnight.'},
+       evidence: ['D-11: nothing foreign in the memory capture so far', 'D-13: no file events from the attack'], why: 'Everything read points to it; the memory analysis finishes overnight.'},
       {id: 'link', text: 'Night 14’s session on sm-support is linked to Thursday’s attack.', truth: 'unknown',
        evidence: ['DSP-01: who used sm-support is unknown', 'Nothing in scope connects the two'], why: 'Nothing in scope can say.'},
-      {id: 'time', text: 'On cards, 14:07 to 18:00, answer-to-dispatch ran at a median of ' + m + ' s, against 64 s on CAD the week before, and all 38 calls were answered, 4 at Oxlow.', truth: 'confirmed',
-       evidence: ['D-15: the phone system’s answer times and the radio logger’s dispatch times', 'D-09: CAD’s report for the week before'], why: 'Measured, from the phones and the radio logger.'},
+      {id: 'time', text: 'On cards, 14:07 to 18:00, answer-to-dispatch ran at a median of ' + m + ' s, against 64 s on CAD the week before; 38 calls were answered, 4 at Oxlow, and 2 hang-ups were each called back.', truth: 'confirmed',
+       evidence: ['D-16: the phone system’s answer, rollover and call-back times, the radio logger’s dispatch times, and Oxlow’s answer times for the 4 rolled calls', 'D-10: CAD’s report for the week before'], why: 'Measured, from the phones, the radio logger and Oxlow’s own times.'},
       {id: 'harm', text: 'Whether any patient or firefighter came to harm because dispatch was slower.', truth: 'unknown',
-       evidence: ['D-15: timings only', 'Each call is reviewed by the chief’s office and medical direction'], why: 'Timing records can’t show it.'}]
+       evidence: ['D-16: timings only', 'Each call is reviewed by the chief’s office and medical direction'], why: 'Timing records can’t show it.'}]
   };
 }
 
@@ -635,10 +636,10 @@ const DP_DOJO_DFIR = [
           'That nothing happened: the vendor has confirmed who it was, in writing'], good: 0,
    explain: 'Each source for what it shows. An address and an account aren’t a person, and a statement isn’t a record.'},
   {q: 'A server stopped serving when a neighbouring network was hit. Encrypted, or cut off?',
-   opts: ['Its own file events, and its service log: what it could no longer reach',
+   opts: ['Its own records: file events, whether its data opens, what it can’t reach',
           'What the ransom note lists: its systems list says everything was encrypted',
-          'How long it was down, since longer outages mean encryption'], good: 0,
-   explain: 'A server’s own files say whether it was encrypted; its own log says what it lost.'}];
+          'How long it was down for, since a longer outage means the files were encrypted'], good: 0,
+   explain: 'A server’s own file events, and whether its data still opens, say whether it was encrypted over the window they cover; its own log says what it lost.'}];
 
 /* ---------- The Dispatch Board (original; Delphine Okoro; three rounds per track) ---------- */
 const DP_BOARD_SPECS_MGR = () => {
@@ -646,8 +647,8 @@ const DP_BOARD_SPECS_MGR = () => {
   return [
     {title: 'Round 1: were response times hurt?', who: 'Delphine Okoro',
      ask: '“Were response times hurt on Thursday?”',
-     resp: [{label: 'Measured: ' + m + ' s on cards against 64 s, and every call answered', good: true},
-            {label: 'No impact: every call was answered, and answering is what was measured', why: 'Answering isn’t dispatching. The time from answer to dispatch rose, and it was measured.'},
+     resp: [{label: 'On cards: ' + m + ' s against 64 s, as measured, every call answered or called back', good: true},
+            {label: 'No impact to report: every call was answered, and answering is what was measured', why: 'Answering isn’t dispatching. The time from answer to dispatch rose, and it was measured.'},
             {label: 'Response times doubled to 128 seconds while the floor was on cards', why: 'That isn’t what was measured. Give the numbers the phones and the radio logger recorded.'}]},
     {title: 'Round 2: who calls it next time?', who: 'Delphine Okoro',
      ask: '“Should the Board approve the switch to cards next time?”',
@@ -673,7 +674,7 @@ const DP_BOARD_SPECS_DFIR = () => [
           {label: 'Felix Orrin: his 03:20 sign-in on call is where it started', why: 'His sign-in was on-call work, and the reports say so.'}]},
   {title: 'Round 3: the numbers', who: 'Delphine Okoro',
    ask: '“Can the Board publish Thursday’s response numbers?”',
-   resp: [{label: 'The 911 authority decides, with counsel: the firm reports to counsel', good: true},
+   resp: [{label: 'The director decides with counsel: the Board may ask', good: true},
           {label: 'Yes: the firm will publish what it measured on Monday', why: 'The firm reports to Lionel. What is published is Celia’s decision.'},
           {label: 'Never: response times stay confidential, and Celia can’t change that', why: 'An absolute nobody asked for. Celia decides, with counsel.'}]}];
 
@@ -683,20 +684,20 @@ function dpMgrBossStages() {
     s1: {title: 'Stage 1 (14:12): coordinate',
       clues: ['13:52: a house fire on the east side, dispatched on CAD at 13:53. 13:59: a working fire, the incident commander on scene.', '14:02: ransomware at the county office. 14:05: CAD sign-ins and address look-ups hang, two positions freeze. 14:06: the incident commander asks for a second alarm.', '14:07: Imogen calls cards. 14:08: the second alarm dispatched from the run card. 14:10: overflow 911 calls roll to Oxlow.'],
       ask: 'You are the IR manager. Who does what, first?',
-      resp: [{label: 'The floor on cards, Imogen’s call already. The link cut now. The firm and chief told', good: true},
+      resp: [{label: 'Floor on cards, Imogen’s call already. The link cut when she agrees. Firm and chief told', good: true},
              {label: 'Shut CAD-01 down now, before the ransomware can reach it from the county office', why: 'It is the way back, its memory is evidence, and nothing yet shows it encrypted. The floor is already on cards.'},
              {label: 'Keep the floor on CAD for now, and wait for county IT to say what is wrong with it first', why: 'Positions are frozen during a working fire. The floor went to cards at 14:07, on Imogen’s call.'},
              {label: 'You tell the telecommunicators to go to cards: Imogen is busy with the fire', why: 'Imogen called it at 14:07. The floor is hers. You coordinate everyone else.'},
-             {label: 'Roll every 911 call to Oxlow and send the floor home until CAD is fixed', why: 'Oxlow has four positions and doesn’t know our area. Callers would wait. The floor works on cards.'}]},
+             {label: 'Roll every 911 call to Oxlow and send the floor home until CAD is fixed', why: 'Oxlow has four positions and its own area’s calls. Callers would wait. The floor works on cards.'}]},
     s2: {title: 'Stage 2 (16:30): the chief, Celia and the county administrator',
-      clues: ['Measured on the floor: every 911 call answered since 14:07, 4 at Oxlow. Answer-to-dispatch on cards, median ' + dpCardsMedian() + ' s, against 64 s on CAD last week.', '16:10, the firm, through Lionel: no file on CAD-01 or CAD-02 encrypted. CAD cut off since 14:05, when the county’s directory server stopped answering.', 'Not known: how it got into the county office, when CAD returns, whether Sunday night’s session is linked.'],
+      clues: ['Measured on the floor so far: every 911 call since 14:07 answered, 4 at Oxlow, one hang-up called back. Answer-to-dispatch on cards, median ' + dpCardsMedian() + ' s, against 64 s on CAD last week.', '16:10, the firm, through Lionel: no file on CAD-01 or CAD-02 encrypted from 13:00 to 15:00, and their data opens. CAD cut off since 14:05, when the county’s directory server stopped answering.', 'Not known: how it got into the county office, when CAD returns, whether Sunday night’s session is linked.'],
       ask: 'What do you give them?',
-      resp: [{label: 'Measured numbers, every call answered, what’s still open, 18:30 next, no promises', good: true},
+      resp: [{label: 'Measured numbers, every call handled, what’s open, 18:30 next, no promises', good: true},
              {label: 'Tell them CAD will be back by six o’clock, so the chief can plan the evening', why: 'A promise nobody can keep yet. The next update at 18:30, with what is known.'},
              {label: 'Tell them the median has doubled, to show how serious it is', why: 'That isn’t what was measured. Give the measured numbers.'},
              {label: 'Nothing until the firm’s report is complete: Celia wants it right first', why: 'Silence leaves the chief planning blind. Say what is known, and when more comes.'}]},
     s3: {title: 'Stage 3 (17:30): the next 24 hours',
-      clues: ['The floor stays on cards. CAD’s way back runs overnight: county IT, with Stillmark on a ticket.', 'The Compact’s people have been at it since the morning. Night 18 is in the week-3 rota.', 'The floor’s staffing is Imogen’s, county IT’s is Petra’s. Yours is the Compact’s.'],
+      clues: ['The floor stays on cards. CAD’s way back runs overnight: county IT, with Stillmark’s support on a one-time account. sm-support stays blocked.', 'The Compact’s people have been at it since the morning. Night 18 is in the week-3 rota.', 'The floor’s staffing is Imogen’s, county IT’s is Petra’s. Yours is the Compact’s.'],
       ask: 'How does the Compact cover the next 24 hours?',
       resp: DP_COVER.map(o => ({label: o.label, good: !!o.good, why: o.why}))}
   };
@@ -712,29 +713,31 @@ function dpDfirBossStages() {
              {label: 'Wait until the fire is out and Imogen decides the floor can spare it', why: 'Nothing is gained by waiting, and the attack may still move. Collecting from CAD-01 doesn’t touch a position now.'},
              {label: 'Collect from CO-DC-01 ourselves: it is where the trouble started', why: 'The county office’s systems are county IT’s to preserve, and outside the letter.'}]},
     s2: {title: 'Stage 2 (16:00): encrypted, or cut off?',
-      clues: ['D-12: no file renamed on CAD-01, CAD-02, MQ-01 or RMS-01.', 'D-13: from 14:05, every sign-in check and name look-up CAD-01 sent to CO-DC-01 timed out.', 'D-14: CO-PC-31 tried CAD-01’s file-sharing port at 14:03 and was refused. County IT: CO-DC-01 stopped answering at 14:05.'],
+      clues: ['D-13: 13:00 to 15:00, no file renamed and no burst of writes on CAD-01, CAD-02, MQ-01 or RMS-01. D-12: CAD-02’s 14:50 snapshot opens normally.', 'D-14: from 14:05, every sign-in check and name look-up CAD-01 sent to CO-DC-01 timed out.', 'D-15: CO-PC-31 tried CAD-01’s file-sharing port at 14:03 and was refused. County IT: CO-DC-01 stopped answering at 14:05.'],
       ask: 'From the evidence, what happened to CAD?',
       resp: [{label: 'Cut off, not encrypted: CAD had already lost the county’s directory at 14:05', good: true},
-             {label: 'Encrypted: the positions froze, and the county’s note says all its systems', why: 'CAD’s own file events show nothing renamed. The note is the attacker’s claim.'},
+             {label: 'Encrypted: the positions froze, and the ransom note says all systems', why: 'CAD’s own file events show nothing renamed. The note is the attacker’s claim.'},
              {label: 'Unknown until CAD-01 is cut off and imaged offline, then read in full', why: 'The evidence answers it now, and imaging offline would slow CAD’s return.'},
              {label: 'Only CO-DC-01, the county’s directory, matters: CAD is the county’s problem', why: 'Beside the question. The letter asks about CAD.'}]}
   };
 }
-// The floor's measured median on cards (game): 84 s from the Wednesday drill's second run, +6 s for each false start in
-// the first coordination stage (either seat), which cost the floor time in the first hour.
-function dpCardsMedian() { const b = G && G.cr && G.cr.dp && G.cr.dp.boss; return 84 + 6 * (b && b.w1 ? b.w1 : 0); }
+// The floor's measured median on cards, Thursday 14:07 to 18:00 (game): 87 s, measured on Thursday by the phones and the
+// radio logger. It is not taken from Wednesday's shadow drill, whose times are drill times, not dispatch times. On the
+// manager seat only, +6 s for each false start in the first coordination stage (game: coordination at 14:12 cost the floor
+// time in its first hour). The DFIR seat's first stage comes at 14:30, after the floor settled on cards: it moves nothing.
+function dpCardsMedian() { const b = G && G.cr && G.cr.dp && G.cr.dp.boss; return 87 + (G.trackId === 'manager' && b && b.w1 ? 6 * b.w1 : 0); }
 
 /* ---------- Field Manual additions ---------- */
 Object.assign(EXTRA_ACTIONS, {
   dplag: {name: 'A lag: attack, or a failing link?', desc: 'Find where the time is lost from the queue’s own timings, and whether the link is failing from its error counters. Complaints and the calendar fit any cause.'},
   dpadmin: {name: 'An unexplained admin sign-in', desc: 'Read the gateway and the on-call ticket, and ask the account’s owner on a number you already had. An hour and an address fit on-call work and an intruder alike.'},
-  dpvendor: {name: 'Vendor access: block first, word it honestly', desc: 'When a vendor’s account shows a session nobody can explain, block it at once, clearing nothing. Then write what your records show, what the vendor says, and who used it as unknown, with the request dated. Make vendor access on demand, from its range, with MFA.'},
-  dpcards: {name: 'Cards: the supervisor calls it', desc: 'When CAD can’t serve a position, that position goes to the cards, on the supervisor’s call. The medical protocol is the same on paper. Drill it at one position beside CAD, so a drill never slows a caller.'},
+  dpvendor: {name: 'Vendor access: block first, word it honestly', desc: 'When a vendor’s account shows a session nobody can explain, block it at once, clearing nothing. Then write what your records show, what the vendor says, and who used it as unknown, with the request dated. Make vendor access on demand, from its range, with MFA. Never re-enable the blocked account for a session: a one-time account with MFA, watched, and the system checked again afterwards.'},
+  dpcards: {name: 'Cards: the supervisor calls it', desc: 'When CAD can’t serve a position, that position goes to the cards, on the supervisor’s call. On a medical call the ambulance goes from the run card at once, and the same protocol’s instructions follow on paper. Drill it with a shadow position: a trainee works live calls on paper while the live position dispatches them on CAD. A shadow time is a drill time, not a dispatch time.'},
   dpreturn: {name: 'Back to CAD with a checklist', desc: 'A system that is up isn’t a system the floor can trust. A test incident end to end, the open incidents entered and checked by a second person, statuses matched, the shift briefed. The supervisor decides the time.'},
-  dpbackup: {name: 'A backup center that can take the calls', desc: 'Give the backup center what a call needs: current run cards, a line back to your floor, named contacts, and a tested rollover. Never your system’s logins.'},
+  dpbackup: {name: 'A backup center that can take the calls', desc: 'Give the backup center what a call needs: your map and response areas, a line back to your floor, named contacts, and a tested rollover. Never your system’s logins.'},
   dpstandby: {name: 'Collect without slowing the floor', desc: 'Take evidence from what doesn’t serve the positions: a standby’s copy, a gateway, a queue’s metrics, flow records. Never take a live dispatch system down for a copy.'},
-  dpcutoff: {name: 'Encrypted, or cut off?', desc: 'A server’s own file events say whether it was encrypted. Its own service log says what it could no longer reach.'},
-  dpmeasure: {name: 'Measure what callers feel', desc: 'Report an outage’s impact as the service’s own measure, measured: here, the time from call answer to dispatch, and the calls answered. Uptime describes the system, not the callers.'},
+  dpcutoff: {name: 'Encrypted, or cut off?', desc: 'A server’s own file events, and whether its data still opens, say whether it was encrypted, over the window they cover. Its own service log says what it could no longer reach.'},
+  dpmeasure: {name: 'Measure what callers feel', desc: 'Report an outage’s impact as the service’s own measure, measured: here, the time from call answer to dispatch, and the calls answered or called back. Uptime describes the system, not the callers.'},
   dpshifts: {name: 'A 24-hour incident with rest', desc: 'Twelve-hour shifts with written handovers, the night from the rota, outside help for the specialist work, and nobody on the day after their night.'},
   dpaar: {name: 'An AAR in response time', desc: 'Blameless: what made the county’s outage reach the floor, and what kept the floor working. Each action with one owner and a date. The impact as measured.'},
   dpsegment: {name: 'Keep emergency communications apart', desc: 'Give the center its own network segment and its own sign-in, so an outage on the general network doesn’t reach the floor. The system owner decides, knowing the cost.'},
@@ -742,11 +745,11 @@ Object.assign(EXTRA_ACTIONS, {
 });
 Object.assign(FACTS, {
   dpcisa: {name: 'CISA on 911 centers: manual mode and separation', desc: 'CISA’s 911 Cybersecurity Best Practices Package (July 2023) includes advice from public safety colleagues (“First 48”: What to Expect When a Cyber Incident Occurs). It says: “Regularly train all staff to practice good cyber hygiene and frequently exercise operating under manual mode to help prevent, discover, and respond to cyber incidents better.” And: “Consider network segmentation as a physical and virtual architectural approach as emergency communications should operate separately from the municipality administrative network.” It also recommends deploying “the cyber incident response plan as soon as they observe signs of compromise.” Which of these the center adopts, and how, is the 911 authority’s decision.', src: 'CISA, 911 Cybersecurity Best Practices Package (July 2023)'},
-  dpng911: {name: 'NG911, in 911.gov’s words', desc: 'The National 911 Program’s site says: “Next Generation 911 (commonly referred to as NG911) is a digital, internet protocol (IP)-based system”. The program is housed within the National Highway Traffic Safety Administration at the U.S. Department of Transportation. The game says nothing about the center’s own phone system beyond that it doesn’t depend on CAD (game).', src: '911.gov, Next Generation 911; About'},
+  dpng911: {name: 'NG911, in 911.gov’s words', desc: 'The National 911 Program’s site says: “Next Generation 911 (commonly referred to as NG911) is a digital, internet protocol (IP)-based system”. The program is housed within the National Highway Traffic Safety Administration at the U.S. Department of Transportation. The game says nothing about the center’s own phone system beyond that it depends neither on CAD nor on the building link (game).', src: '911.gov, Next Generation 911; About'},
   dpfcc: {name: '911 outages: the FCC’s page, in its own words', desc: 'The FCC’s page on 911 outages reporting says that under 47 CFR § 4.9, “communications providers, as defined in § 4.3, must swiftly notify the Commission and all applicable designated public safety officials regarding reportable network outages”, and that “providers quickly notify PSAPs with pertinent information about 911 outages that potentially impact the PSAP.” Whether any rule applies to the center’s own CAD failure, and what the center or the county reports to anyone, is for the 911 authority and counsel. The game says neither.', src: 'FCC, 911 outages reporting page'}
 });
 TECH['T1133'] = {name: 'External Remote Services', tactic: ['Persistence', 'Initial Access'], desc: 'Using remote services that face the internet, such as a VPN, to get in or come back. Here it is the open question: whether someone outside the vendor’s support used its always-on remote access on Sunday night.'};
 GAME_NOTES.push(
-  'Fire & EMS Dispatch, its positions, staffing and call counts, Stillmark and Stillmark CAD, every host (CAD-01, CAD-02, MQ-01, MDG-01, DP-VPN, DP-LOG-01, CO-DC-01 …), the building link, the lag, the sign-ins, the vendor-account session, the ransomware, the house fire on the east side, Oxlow Township’s center as the backup and every log line are invented. The 911 phones and the radio not depending on CAD, CAD’s local sign-in mode and CAD-02’s copy of CAD-01 are game models. No real CAD or radio vendor and no real dispatch center’s incident appear. (game)',
-  'The Dispatch annex to the Compact’s plan, the week-3 rota, the cards drill and its timings, the 24-hour plan and its forecasts, the AAR, the answer-to-dispatch numbers (64 s on CAD, 84 s on the drilled cards, +6 s per false start in the first stage), the Relay Badge’s effects and every score are invented. The game never says what any rule requires of the center: the 911 authority decides reporting, with counsel. (game)'
+  'Fire & EMS Dispatch, its positions, staffing and call counts, Stillmark and Stillmark CAD, every host (CAD-01, CAD-02, MQ-01, MDG-01, DP-VPN, DP-LOG-01, CO-DC-01 …), the building link, the lag, the sign-ins, the vendor-account session, the ransomware, the house fire on the east side, Oxlow Township’s center as the backup and every log line are invented. The 911 phones and the radio depending neither on CAD nor on the building link, CAD’s local sign-in mode and CAD-02’s copy of CAD-01 are game models. No real CAD or radio vendor and no real dispatch center’s incident appear. (game)',
+  'The Dispatch annex to the Compact’s plan, the week-3 rota, the cards drill and its timings, the 24-hour plan and its forecasts, the AAR, the answer-to-dispatch numbers (64 s on CAD; the Wednesday shadow drill’s 101 s and 84 s to a paper run-card pick, drill times; 87 s on cards on Thursday, +6 s per false start in the manager’s first stage), the hang-ups and call-backs, the one-time vendor account, the Relay Badge’s effects and every score are invented. The game never says what any rule requires of the center: the 911 authority decides reporting, with counsel. (game)'
 );

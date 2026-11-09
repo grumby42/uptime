@@ -104,7 +104,7 @@ function dpInteract(ch, tx) {
   if (ch === '£') { run(async () => { if (dpDfir() && f.dpPreserve && !f.dpIntake) await dpIntake(); else await say(dpDfir() ? 'The county’s evidence store, case DSP: a locked case and a seal log, apart from the Clinic’s and Oxlow’s.' : 'The exercise kit: CISA’s tabletop templates, a box of index cards, and a stopwatch.'); }); return true; }
   if (ch === 'Y') { run(dpDesk); return true; }
   if (ch === 'Ř') { run(async () => { await say(f.dpBoss && !f.dpDrillC && !f.dpSwitch ? 'A console position on cards: a run card clipped to the screen, a paper incident log, a pen on a string.' : 'A console position: CAD on two screens, the phone on the left, the radio on the right. Nobody touches a position but the person working it.'); }); return true; }
-  if (ch === 'Ŗ') { run(async () => { await say('The radio room: consoles, the logging recorder, a rack of equipment. You look; you don’t touch.'); }); return true; }
+  if (ch === 'Ŗ') { run(async () => { await say('The radio room: the console electronics, the logging recorder, a rack of equipment. The radio consoles themselves sit at the positions. You look; you don’t touch.'); }); return true; }
   if (ch === 'Ŝ') { run(async () => { await say('The CAD server room: CAD-01, CAD-02 the standby, MQ-01 the unit-status queue, and the Compact’s collector, DP-LOG-01. ' + (f.dpFixVendor ? 'A label on CAD-01: “Vendor access on demand: county IT ticket.”' : 'A sticky note on CAD-01: “Stillmark remote access: always on.”')); }); return true; }
   if (ch === 'Ź') { run(async () => { await say(f.dpFixLink ? 'The building link’s patch panel. A new optic, and a tag with Tuesday’s date.' : 'The building link’s patch panel: the one cable between the center and the county office. Its port light flickers amber.'); }); return true; }
   if (ch === 'Ŵ') { run(async () => { await say('The supervisor’s desk: the floor on one screen, the phones on another, and a printed contact page under the glass.'); }); return true; }
@@ -178,16 +178,18 @@ async function dpArrive() {
     let mins = DP_ACT_OK;
     while (true) {
       const items = DP_ACTIVATE.map(o => ({label: o.label, meta: {good: !!o.good}}));
-      const i = await UI.openModal('The annex’s test', '<p>An admin sign-in on CAD-01 at 03:20 that nobody here can explain yet. The floor is working normally, apart from the lag. Are the annex’s criteria met?</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+      const i = await UI.openModal('The annex’s test', '<p>An admin sign-in on CAD-01 at 03:20 that nobody here can explain yet. The night supervisor rang county IT’s on-call about the lag at 03:02. The floor is working normally, apart from the lag. Are the annex’s criteria met?</p>', items, {shuffle: true, closable: false, cls: 'drill'});
       if (items[i].meta.good) break;
       mins += DP_ACT_LATE;
       await say(DP_ACTIVATE[i].why + ' (+' + DP_ACT_LATE + ' game minutes)');
     }
     c.activate = mins; G.cr.activate = mins; track();
-    // Each wrong answer is a later call (game): the call, its acknowledgement and counsel's engagement follow from it.
-    const call = 8 * 60 + 10 + (mins - DP_ACT_OK), ack = call + DP_ACT_OK, eng = Math.max(8 * 60 + 30, ack + 5);
+    // You ring Felix at 08:10 and get no answer (he is off after his on-call night), so the sign-in stays unexplained and
+    // the annex is met. Each wrong answer is a later call (game): the call, its acknowledgement and counsel's engagement follow.
+    const call = 8 * 60 + 13 + (mins - DP_ACT_OK), ack = call + DP_ACT_OK, eng = Math.max(8 * 60 + 30, ack + 5);
+    await say('08:10: you ring Felix Orrin on the county staff directory number. No answer: he is off after his on-call night. Nobody can confirm the 03:20 sign-in, so the annex’s may is met. (game)');
     await say(dpHm(call) + ' retainer line called · ' + dpHm(ack) + ' Tallowmere acknowledges. Lionel Ashdown, the county attorney, engages the firm at ' + dpHm(eng) + ' under a letter, and tells the county’s cyber insurer. Stillmark’s incident clause, §7, and its escalation line are already on the plan’s contact page (Slate Badge). (game)');
-    await say('08:40: Imogen rings Felix Orrin, the CAD administrator, on the county staff directory number. 08:50: she writes and signs a note of the call. Petra Vasko has the queue’s records and the link’s counters in the CAD server room. (game)');
+    await say('08:40: Imogen rings Felix Orrin, the CAD administrator, on the county staff directory number again, and reaches him. 08:50: she writes and signs a note of the call. Petra Vasko has the queue’s records and the link’s counters in the CAD server room. (game)');
   } else {
     const lead = G.cr.growth === 'paz' ? 'Paz' : G.cr.growth === 'beatriz' ? 'Ruth' : 'Beatriz';
     await say('07:20: ' + lead + ', the town’s acting team lead, rang Imogen and Lionel Ashdown, the county attorney, on the plan’s contact page. 08:30: Lionel engages Tallowmere under a letter. (The county has no IR manager applying its annex: counsel engages the firm, as before. game)');
@@ -205,8 +207,8 @@ async function dpTable() {
     return say(f.dpAar ? 'The table: three index cards, each with an owner and a date, and the measured numbers on a fourth.' : 'The incident room table. A whiteboard with the center’s floor plan.');
   }
   if (!f.dpLetter) return say('The bench. Lionel has the letter; read it with him first.');
-  if (f.dpIntake && !f.dpDrillA) { await dpDrill('lagdfir'); f.dpDrillA = true; touchCSF('Detect'); await say(G.cr.drills.lagdfir.supported ? 'The link, from D-04 and D-05.' : 'Question 2 has its answer, but write it only from what you’ve read.', 'Lucia Ferrand'); await say('11:15: D-07 is in, logged and sealed: county IT’s on-call ticket, exported by Petra at 11:00, and Imogen’s signed note of her 08:40 call, scanned at 11:05 and hashed on receipt, the paper sealed. Question 1 is on the bench. (game)', 'Lucia Ferrand'); const cu = dpCustody(); cu.items++; cu.complete++; track(); return; }
-  if (f.dpDrillA && !f.dpDrillB) { await dpDrill('admindfir'); f.dpDrillB = true; touchCSF('Detect'); await say('Felix, on call, from D-03 and D-07. 13:30: Stillmark’s support manager wrote, on the §7 contact: no technician used its access on Sunday night. Logged as D-08 with its headers, hashed. Theo has it. (game)', 'Lucia Ferrand'); const cu = dpCustody(); cu.items++; cu.complete++; track(); return; }
+  if (f.dpIntake && !f.dpDrillA) { await dpDrill('lagdfir'); f.dpDrillA = true; touchCSF('Detect'); await say(G.cr.drills.lagdfir.supported ? 'The link, from D-04 and D-05.' : 'Question 2 has its answer, but write it only from what you’ve read.', 'Lucia Ferrand'); await say('11:15: D-08 is in, logged and sealed: county IT’s on-call ticket and the county office’s door log for Night 15, exported by Petra at 11:00, and Imogen’s signed note of her 08:40 call, scanned at 11:05 and hashed on receipt, the paper sealed. Question 1 is on the bench. (game)', 'Lucia Ferrand'); const cu = dpCustody(); cu.items++; cu.complete++; track(); return; }
+  if (f.dpDrillA && !f.dpDrillB) { await dpDrill('admindfir'); f.dpDrillB = true; touchCSF('Detect'); await say('Felix, on call, from D-03 and D-08. 13:30: Stillmark’s support manager wrote, on the §7 contact: no technician used its access on Sunday night. Logged as D-09 with its headers, hashed. Theo has it. (game)', 'Lucia Ferrand'); const cu = dpCustody(); cu.items++; cu.complete++; track(); return; }
   if (f.dpDrillC && !f.dpReport) return dpReport1();
   return say('Your bench: working copies only. The originals are sealed in the store.');
 }
@@ -246,7 +248,7 @@ async function dpDrillCDfir() {
   const r = await dpDrill('vendordfir');
   G.f.dpDrillC = true; touchCSF('Detect');
   await say(r.verdictOk ? 'Our records, their word, and an honest unknown with the date. I’d have written “false”.' : 'What each record shows, and who used it as unknown, with R-01 dated. A statement isn’t a log line, either way.', 'Theo Marchetti');
-  await say('14:00–14:06: Petra’s team replaced the building link’s optic at the time Imogen agreed; CAD up throughout. 15:00: D-09, CAD’s answer-to-dispatch report for Days 7 to 16, from CAD-02’s copy, exported by Petra, hashed, sealed. DSP-01 for Lionel at the bench. (game)', 'Lucia Ferrand');
+  await say('14:00–14:06: Petra’s team replaced the building link’s optic at the time Imogen agreed; CAD up throughout. 15:00: D-10, CAD’s answer-to-dispatch report for Days 7 to 16, from CAD-02’s copy, exported by Petra, hashed, sealed. DSP-01 for Lionel at the bench. (game)', 'Lucia Ferrand');
   G.f.dpFixLink = true; const cu = dpCustody(); cu.items++; cu.complete++; track();
 }
 async function dpDrillC() {
@@ -279,7 +281,7 @@ async function dpCardsDrill() {
   await say('Two years since anyone here worked a call on cards. I want to know what breaks before it matters. My floor, my decision. Help me plan it.', who);
   while (true) {
     const items = DP_DRILL_OBJ.map(o => ({label: o.label, meta: {good: !!o.good}}));
-    const i = await UI.openModal('The cards drill · the plan', '<p>CISA’s 911 package advises exercising “operating under manual mode” (Field Manual). How does the center drill it without slowing a single caller?</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+    const i = await UI.openModal('The cards drill · the plan', '<p>The First 48 advice in CISA’s 911 package, from public safety colleagues, urges exercising “operating under manual mode” (Field Manual). How does the center drill it without slowing a single caller?</p>', items, {shuffle: true, closable: false, cls: 'drill'});
     if (items[i].meta.good) break;
     await say(DP_DRILL_OBJ[i].why);
   }
@@ -293,15 +295,15 @@ async function dpCardsDrill() {
   }
   c.ex.run += 1; c.ex.actions += DP_EX_ACTIONS; dpC().drill = {actions: DP_EX_ACTIONS}; track();
   G.f.dpCardsDrill = true; unlock('act', 'dpcards'); unlock('act', 'crtabletop'); touchCSF('Recover'); touchCSF('Govern');
-  await say('Measured at the drill position: 101 seconds from answer to dispatch on the first run, 84 on the second. Against 64 on CAD. (game)', who);
-  await say('Two run cards were out of date: two engines moved stations last year. Three actions (game): the run cards corrected, with the chief’s office for the content (me, by 17:00 today); a cards drill on every shift each quarter, this week’s rounds by 17:00 today (me); a back-entry checklist with a second-person check (me, by 17:00 today).', who);
+  await say('Measured at the shadow position: 101 seconds from answer to a complete run-card pick on paper on the first run, 84 on the second. The live positions dispatched every one of those calls on CAD as usual. Drill times, not dispatch times. (game)', who);
+  await say('Two run cards were out of date: two engines moved stations last year. Three actions (game): the run cards corrected, with the chief’s office for the content (me, by 17:00 today); a shadow cards drill on every shift each quarter: the day shift’s done this morning, the night shift’s tonight at 20:00 (me); a back-entry checklist with a second-person check (me, by 17:00 today).', who);
   await say('And one more thing: if this floor can’t take calls, Oxlow’s center takes our overflow. Nobody has ever tested that. At my desk.', who);
 }
 
 /* ---------- Manager: the backup center (Wednesday 11:00) ---------- */
 async function dpBackup() {
   const c = dpC(), who = 'Imogen Hale';
-  await say('Oxlow’s supervisor is on the line. If I roll our overflow to them, what do they need to take a call for our area and get it to our units?', who);
+  await say('Oxlow’s supervisor is on the line. If I roll our overflow to them, what do they need to take a call for our area and pass it back to us?', who);
   const items = DP_PACK.map(p => ({label: p.name, meta: {good: !!p.good}})).concat([{label: 'These are the four', done: true, meta: {done: true}}]);
   const body = '<p>Pick the <b>four</b> things Oxlow’s center needs.</p>' + shownOrder(DP_PACK, items).map(p => '<div class="card"><b>' + esc(p.name) + '</b><br>' + esc(p.text) + '</div>').join('');
   const sel = await UI.openModal('The backup center · what Oxlow needs', body, items, {shuffle: true, multi: 4, closable: false, cls: 'tabletop'});
@@ -317,9 +319,9 @@ async function dpBackup() {
 function dpImpactOpts() {
   const m = dpCardsMedian();
   return [
-    {label: 'Measured: ' + m + ' s on cards against 64 s on CAD, all 151 calls answered', good: true},
+    {label: 'Measured: ' + m + ' s on cards against 64 s, 151 calls answered, all 3 hang-ups called back', good: true},
     {label: 'No impact to report: each call was answered, and calls are what count', why: 'Answering isn’t dispatching. The time from answer to dispatch rose, and it was measured.'},
-    {label: 'Response times doubled across the county, to over 120 seconds, on paper', why: 'That isn’t what was measured. The phones and the radio logger give the numbers.'},
+    {label: 'Response times doubled across the county, to well over 120 seconds, while it was on paper', why: 'That isn’t what was measured. The phones and the radio logger give the numbers.'},
     {label: 'Unknown: CAD’s own report has to be rebuilt before anyone can say', why: 'The phone system and the radio logger measured it while CAD was down.'}];
 }
 async function dpAar() {
@@ -368,8 +370,8 @@ async function dpDirective() {
     if (items[i].meta.good) break;
     await say(L[i].why);
   }
-  await say(t === 'dfir' ? 'The facts from the case: CAD wasn’t encrypted. It failed because it signed in and looked up names through the county’s directory, across a network it shared with the county office, and the floor’s measured times rose while it was down. CISA’s 911 package says emergency communications “should operate separately from the municipality administrative network”. The decision is Celia’s. Lionel agreed I could say that much.' :
-    'The trade-off: what folding it in saves (one network to run, fewer contracts: the county’s estimate); what Thursday showed it costs (CAD failed when the county’s directory went down); CISA’s line that emergency communications “should operate separately from the municipality administrative network”; and the options: the center’s own segment and sign-in sharing county IT’s people and hardware, one network with a firewall and CAD’s own sign-in, or fold it in with the risk accepted in writing. Celia decides, with the chief’s view on response risk on record.');
+  await say(t === 'dfir' ? 'The facts from the case: CAD wasn’t encrypted. It failed because it signed in and looked up names through the county’s directory, across a network it shared with the county office, and the floor’s measured times rose while it was down. The First 48 advice in CISA’s 911 package says emergency communications “should operate separately from the municipality administrative network”. The decision is Celia’s. Lionel agreed I could say that much.' :
+    'The trade-off: what folding it in saves (one network to run, fewer contracts: the county’s estimate); what Thursday showed it costs (CAD failed when the county’s directory went down); the First 48 advice’s line, in CISA’s 911 package, that emergency communications “should operate separately from the municipality administrative network”; and the options: the center’s own segment and sign-in sharing county IT’s people and hardware, one network with a firewall and CAD’s own sign-in, or fold it in with the risk accepted in writing. Celia decides, with the chief’s view on response risk on record.');
   await say('The center keeps its own segment and its own sign-in, and shares county IT’s people and hardware where that doesn’t put CAD behind the county’s servers. My decision, with the chief’s view on record. Review at the next budget. (game)', 'Celia Marrow');
   G.f.dpDirective = true; unlock('act', 'dpsegment'); touchCSF('Protect');
   await say(dpMgr() ? '(Present the trade-off; the owner decides.)' : '(Give the facts; the owner decides.)');
@@ -425,13 +427,13 @@ async function dpIntake() {
       await say(it.opts[i].why);
     }
     cu.items++; if (first) cu.complete++;
-    if (it.id === 'D-01') await say('09:50: Petra’s second export of the same range from CAD-02. The hashes match. Both records kept, each with who made it. (game)');
+    if (it.id === 'D-01') await say('Asked at 10:00: Petra will export the same range from CAD-02 herself, for comparison. (game)');
     if (it.id === 'D-06') await dpQtEvidence();
   }
   cu.items += 2; cu.complete += 2;   // D-04 and D-05: hashed on receipt against Petra's export record, sealed
   G.f.dpIntake = true; unlock('act', 'crcustody'); touchCSF('Respond'); track();
-  await say('10:05: Theo, reading D-03 on a copy, finds a session on sm-support, Stillmark’s account, on Night 14 from 02:10 to 02:40, from 198.51.100.183, inside Stillmark’s documented range. No Stillmark ticket for it. 10:10: at our request Petra blocks sm-support on the gateway, clearing nothing; its logs stay. Imogen is told: no floor impact, and Stillmark’s support is on demand from now. (game)', 'Lucia Ferrand');
-  G.f.dpFixVendor = true;
+  await say('10:05: Theo, reading D-03 on a copy, finds a session on sm-support, Stillmark’s account, on Night 14 from 02:10 to 02:40, from 198.51.100.183, inside Stillmark’s documented range. No Stillmark ticket for it. 10:10: at our request Petra blocks sm-support on the gateway, clearing nothing; its logs stay. Imogen is told: no floor impact, and Stillmark’s support is on demand from now. 10:15: Petra’s second export of D-01’s range from CAD-02: the hashes match; both records kept, each with who made it. 10:20: for question 3, Petra exports CAD-01’s EDR telemetry for Night 14, 02:00 to 03:00, from the EDR console: processes, files and connections. Hashed, logged and sealed as D-07. (game)', 'Lucia Ferrand');
+  G.f.dpFixVendor = true; cu.items++; cu.complete++;
   const d = dpC(); d.requests = {date: 'Day 16 (Tuesday) 10:30'};
   await say('10:30, through Lionel: R-01 to Stillmark for its own access records for sm-support, Days 13 to 16, and a commitment to keep them. Logged as it went: “requested Day 16 (Tuesday) 10:30” (Slate Badge). Question 2 is on the bench. (game)', 'Lucia Ferrand');
   track();
@@ -441,7 +443,7 @@ async function dpQtEvidence() {
   if (qtFound('dp-conns')) return;
   const i = await choose('D-06, the collector’s own log. The letter’s questions don’t need it beyond the copies of CAD’s logs it holds. Its process log runs back to Saturday.', [{label: 'Read the rest of the collector’s log too'}, {label: 'Leave it: the questions have what they need'}], {cursor: 1});
   if (i !== 0) return;
-  await say('03:11, Night 13, Saturday to Sunday: svc-print signs in to DP-LOG-01 from FD-STAFF-11’s address, over the Compact’s link, and lists the collector’s network connections: which of the center’s hosts send it logs. CAD-01, CAD-02, MQ-01, RMS-01, the gateway, the switch. Under a minute, nothing else run, signed out at 03:12. Nothing alerted. What it did with the list is unknown.');
+  await say('03:11, Night 13, Saturday to Sunday: svc-print signs in to DP-LOG-01 from FD-STAFF-11’s address (Town Hall’s front-desk PC), over the Compact’s link, and lists the collector’s network connections: which of the center’s hosts send it logs. CAD-01, CAD-02, MQ-01, RMS-01, the gateway, the switch. Under a minute, nothing else run, signed out at 03:12. Nothing alerted. What it did with the list is unknown.');
   await say('Not one of the letter’s questions. It goes to Lionel first; with his agreement, to Lucia and Rae’s suspicion-file team. Nothing changes on svc-print without a plan.');
   await crQtAfterNote(qtNote('dp-conns'));
 }
@@ -453,7 +455,7 @@ async function dpReport1() {
   c.reports.dp1 = {score: r.score, over: r.over, under: r.under};
   c.corrected += r.over; track();
   G.f.dpReport = true; touchCSF('Respond');
-  await say('To Lionel at 15:30. 16:30: with his agreement the recommendations went to Celia and Imogen, who accepted them: Stillmark’s access on demand from its range with MFA, in its contract (Celia); county IT’s on-call tells the floor whenever it works on CAD at night (Petra); a cards drill on every shift, and a rollover test with Oxlow (Imogen); and the center’s network apart from the county office’s, which is Celia’s question to decide. Whether a stale status sent a farther unit to any call is for the chief’s office to review, call by call. (game)', 'Lucia Ferrand');
+  await say('To Lionel at 15:30. 16:30: with his agreement the recommendations went to Celia and Imogen, who accepted them: Stillmark’s access on demand from its range with MFA, in its contract (Celia); county IT’s on-call tells the floor whenever it works on CAD at night (Petra); a shadow cards drill on every shift, and a rollover test with Oxlow (Imogen); and the center’s network apart from the county office’s, which is Celia’s question to decide. Whether a stale status sent a farther unit to any call is for the chief’s office to review, call by call. (game)', 'Lucia Ferrand');
   await say('End the day when you’re ready.', 'Lucia Ferrand');
 }
 
@@ -467,7 +469,8 @@ async function dpStores() {
     await say(DP_STORES[i].why);
   }
   G.f.dpStores = true; unlock('act', 'crstores'); touchCSF('Govern'); track();
-  await say('One store each. If the address matters to Oxlow, Lucia asks Lionel and Oxlow’s counsel. Meanwhile: Imogen ran the cards drill on each shift this morning, from our recommendation. 101 seconds on the first run, 84 on the second, two run cards corrected. 11:30: the rollover test to Oxlow, answered in six seconds. (game)', 'Theo Marchetti');
+  await say('One store each. If the address matters to Oxlow, Lucia asks Lionel and Oxlow’s counsel.', 'Theo Marchetti');
+  await say('Wednesday, from the firm’s recommendation: 09:00–10:00, Imogen’s shadow cards drill with the day shift. A trainee worked live calls on paper while CAD dispatched them: 101 seconds to a paper run-card pick on the first run, 84 on the second (drill times, not dispatch times). Two run cards corrected. The night shift’s drill is at 20:00. 11:30: the rollover test to Oxlow, answered in six seconds. (game)');
 }
 
 /* ---------- DFIR, Friday 07:30: the chief asks the consultant ---------- */
@@ -481,7 +484,7 @@ async function dpSwitchDfir() {
     await say(DP_SWITCH_DFIR[i].why);
   }
   G.f.dpSwitch = true; unlock('act', 'dpreturn'); touchCSF('Recover'); track();
-  await say('The firm’s check finished at 02:00: no file encrypted on CAD-01 or CAD-02, nothing foreign in the memory capture, nothing set to persist, no sign-in from a county office host since 14:00 on Thursday. Whether the floor is ready is Imogen’s checklist, and the time is hers.');
+  await say('The firm’s check finished at 02:00, after the vendor session: no file encrypted on CAD-01 or CAD-02, nothing foreign in a fresh capture of CAD-01’s memory at 23:50 or in its EDR since 21:00, nothing set to persist, no sign-in from a county office host since 14:00 on Thursday. Whether the floor is ready is Imogen’s checklist, and the time is hers.');
   await say('08:10–09:05: Imogen’s checklist. 09:10: back on CAD, her decision. Unit statuses by radio until the county office is clean and the link is back. By 11:00 the closed incidents from the cards are back-entered, each checked. (game)');
 }
 
@@ -498,15 +501,15 @@ async function dpDesk() {
 async function dpNightQuiet(n) {
   const lead = dpLead(n);
   if (n === 17 && !G.f.dpFixCards) {
-    G.f.dpFixCards = true; if (dpMgr()) G.cr.ex.closed += DP_EX_ACTIONS; touchCSF('Recover');
-    await say('Wednesday, 17:00: the run cards corrected, this week’s cards drills done on each shift, the back-entry checklist written. (game)');
+    G.f.dpFixCards = true; if (dpMgr()) G.cr.ex.closed += DP_EX_ACTIONS - 1; touchCSF('Recover');
+    await say('Wednesday, 17:00: the run cards corrected, the back-entry checklist written, the day shift’s shadow drill done. The night shift’s is at 20:00. (game)');
   }
   await UI.openModal('Night ' + n, '<p>Night ' + n + ' (' + DP_DAY[n] + ' to ' + DP_DAY[n + 1] + '). On call: <b>' + esc(lead || 'nobody') + '</b>' + (dpTired(n) ? ', a third night or more in a row' : '') + '. No page. (game)</p>', [{label: 'Morning', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.day = n + 1; G.focus = G.focusMax;
   if (n === 16) { G.f.dpNight16 = true; await say('Day 17, Wednesday. ' + (dpMgr() ? '09:00: Imogen has the cards cabinet open for the drill.' : 'Theo is in the incident room with a question about Oxlow.')); }
   else {
-    G.f.dpNight17 = true;
-    await say('Day 18, Thursday. A quiet morning: the link holds and the statuses are on time. ' + (dpMgr() ? '14:09: Imogen is calling you from her desk.' : '14:20: Lucia is in the incident room. Lionel has just rung her.'));
+    G.f.dpNight17 = true; if (dpMgr()) G.cr.ex.closed += 1;
+    await say('Day 18, Thursday. 07:00: the night shift ran its shadow drill at 20:00, so this week’s drills are done on both shifts. A quiet morning: the link holds and the statuses are on time. ' + (dpMgr() ? '14:09: Imogen is calling you from her desk.' : '14:20: Lucia is in the incident room. Lionel has just rung her.'));
   }
   track();
 }
@@ -514,11 +517,12 @@ async function dpNight18() {
   const c = dpC(), lead = dpLead(18), tired = dpTired(18);
   const cost = lead ? (tired ? DP_ROTA.tiredCost : DP_ROTA.callCost) : 0;
   const body = '<p>Night 18 (Thursday to Friday). On call: <b>' + esc(lead || 'nobody') + '</b>' + (tired ? ', a third night or more in a row' : '') + (dpMgr() ? ', on site at the center under the plan' : '') + '.</p>' +
-    '<p>The floor stays on cards overnight, Imogen’s decision. 21:00–23:40: county IT, with Stillmark on a ticket (sm-support enabled for that session only, from its range, the firm watching), sets CAD-01 to its local sign-in mode. CAD is up at 23:40 without the county’s directory. 02:00: the firm’s check of CAD-01 and CAD-02 is complete. (game)</p>' +
+    '<p>The night supervisor keeps the floor on cards overnight, as Imogen handed over at 19:00. 21:00–23:40: county IT sets CAD-01 to its local sign-in mode. Stillmark’s support works through a one-time account Petra made for the session, with MFA, on Celia’s decision; sm-support stays blocked. The firm watches, and the session’s record is kept (D-17). CAD is up at 23:40 without the county’s directory. 23:50: the firm captures CAD-01’s memory again and reviews its EDR processes, connections and file events since 15:00 (D-18). 02:00: the firm’s check of CAD-01 and CAD-02, after the session, is complete. (game)</p>' +
     (lead ? '<p>The call-out: ' + cost + ' overtime hours.</p>' : '<p>Nobody on call for the Compact: the firm worked the night on its retainer hours.</p>');
   await UI.openModal('Night 18', body, [{label: 'Morning', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.day = 19; G.focus = G.focusMax;
   c.night18 = {lead: lead, tired: tired, overtime: cost};
+  if (dpDfir()) { const cu = dpCustody(); cu.items += 2; cu.complete += 2; }   // D-17 the session's record, D-18 the fresh capture and EDR review
   if (cost && c.cover) { c.cover.overtime += cost; c.cover.variance = Math.round((c.cover.overtime - DP_ROTA.budget) / DP_ROTA.budget * 100); }
   if (tired && dpMgr()) { G.focus = Math.max(10, G.focus - 10); await say('You were rung at 01:30 by a tired on-call lead. Focus ' + G.focus + '/' + G.focusMax + ' this morning. (game)'); }
   G.f.dpNight18 = true;
@@ -606,7 +610,7 @@ async function dpPlan24() {
   const rested = weak ? DP_ROTA.people.find(p => { const a = r.assign.slice(); a[i18] = null; return p.id !== r.assign[i18] && a[i18 - 1] !== p.id && rotaFits(DP_ROTA, a, i18, p); }) : null;
   const signOpts = rested ? [{label: 'Swap Night 18 to ' + rested.name.split(' ')[0] + ': rested, for 3 more overtime hours', meta: {good: true, k: 'swap'}}, {label: 'Sign it as it stands: Night 18 is in the rota', meta: {good: false, k: 'keep'}}] : [{label: 'Sign it', meta: {good: true, k: 'sign'}}];
   const night = 'Night 18 (Thursday to Friday): ' + (dpLead(18) || 'nobody') + (dpTired(18) ? ', a third night or more in a row: a thin first look on any call' : '');
-  const k = await UI.openModal('The next 24 hours · the plan', '<ul><li>' + esc(night) + '</li></ul><ul>' + DP_COVER.map(fc).join('') + '</ul>' + (r ? rotaTable(DP_ROTA, r.assign) : '') + '<p class="small">Thursday 19:00–07:00: Night 18’s lead on site as the on-call. Friday 07:00–19:00: Ezra and a lead who wasn’t on call Thursday night. Written handovers at 19:00 and 07:00. The firm’s retainer hours for the forensic work. County IT’s shifts are Petra’s; the floor’s are Imogen’s. (game)</p>',
+  const k = await UI.openModal('The next 24 hours · the plan', '<ul><li>' + esc(night) + '</li></ul><ul>' + DP_COVER.map(fc).join('') + '</ul>' + (r ? rotaTable(DP_ROTA, r.assign) : '') + '<p class="small">Thursday 19:00–07:00: Night 18’s lead on site as the on-call (on call from 18:00 under the rota; the rota costs that night as its call-out when it happens, so it isn’t in this forecast). Friday 07:00–19:00: Ezra and a lead who wasn’t on call Thursday night. Written handovers at 19:00 and 07:00: the forecast covers Friday’s day shift and the handovers. The firm’s retainer hours for the forensic work. County IT’s shifts are Petra’s; the floor’s are Imogen’s. (game)</p>',
     signOpts, {shuffle: !!rested, closable: false, cls: 'drill'});
   c.cover.n18 = signOpts[k].meta.k;
   if (c.cover.n18 === 'swap') {
@@ -626,8 +630,8 @@ async function dpBoss() {
     const S = dpMgrBossStages();
     await dpStages(S, ['s1']);
     await say('The Dispatch annex is met again, as written: ransomware found on a system that shares the center’s network. The firm, engaged since Tuesday, is told at 14:12. (game)');
-    await say('14:15: Petra cuts the building link; the county office’s containment is hers. 14:20: Lionel extends the firm’s engagement under a second letter and updates the county’s cyber insurer. 14:25: Imogen takes the rollover off: the floor has settled on cards, 4 calls answered at Oxlow. 14:30: with Lionel’s agreement, you tell the FBI contact on the plan’s page. Chief Sayre holds two engines back to cover the rest of the district; that is his call. (game)');
-    await say('14:40: the firm captures CAD-01’s memory with it running. 16:10, the firm, through Lionel: no file on CAD-01 or CAD-02 encrypted. CAD has been cut off since 14:05, when the county’s directory server stopped answering. (game)');
+    await say('14:15: Petra cuts the building link, with Imogen’s OK on the time: the floor is on cards, and unit statuses go to the radio. The 911 phones and the radio don’t cross that link (game). The county office’s containment is Petra’s. 14:20: Lionel extends the firm’s engagement under a second letter and updates the county’s cyber insurer. 14:25: Imogen takes the rollover off: the floor has settled on cards, 4 calls answered at Oxlow. 14:30: with Lionel’s agreement, you tell the FBI contact on the plan’s page. Chief Sayre arranges cover for the rest of the district while two alarms are committed (move-ups or mutual aid): his call. (game)');
+    await say('14:40: the firm captures CAD-01’s memory with it running. 16:10, the firm, through Lionel: no file on CAD-01 or CAD-02 encrypted from 13:00 to 15:00, and their data opens. CAD has been cut off since 14:05, when the county’s directory server stopped answering. (game)');
     await dpStages(S, ['s2']);
     await say('16:30: the chief, Celia and the county administrator heard what is known, what isn’t, the measured numbers, and 18:30 for the next update. What the 911 authority reports, and to whom, is Celia’s decision, with Lionel. (game)');
     await dpStages(S, ['s3']);
@@ -636,22 +640,22 @@ async function dpBoss() {
   } else {
     const cu = dpCustody();
     await say('Lionel extended our engagement at 14:20 under a second letter, DSP-02: is CAD encrypted, or only cut off? Did the attack reach the center’s systems? And the floor’s measured response impact since 14:07. Your case.', 'Lucia Ferrand');
-    await say('What we know: 13:52, a house fire on the east side, dispatched on CAD at 13:53, a working fire at 13:59. 14:02: ransomware at the county office. 14:05: CAD hangs, two positions freeze. 14:07: Imogen called cards; 14:08 the second alarm went out from the run card; 14:10 overflow rolled to Oxlow. 14:15: Petra cut the building link. With Lionel’s agreement, the acting team lead has told the FBI contact on the plan’s page. (game)', 'Lucia Ferrand');
+    await say('What we know: 13:52, a house fire on the east side, dispatched on CAD at 13:53, a working fire at 13:59. 14:02: ransomware at the county office. 14:05: CAD hangs, two positions freeze. 14:07: Imogen called cards; 14:08 the second alarm went out from the run card; 14:10 overflow rolled to Oxlow. 14:15: Petra cut the building link, with Imogen’s OK on the time; the 911 phones and the radio don’t cross it (game). With Lionel’s agreement, the acting team lead tells the FBI contact on the plan’s page at 14:30. (game)', 'Lucia Ferrand');
     const S = dpDfirBossStages();
     await dpStages(S, ['s1']);
-    await say('14:40: Felix captures CAD-01’s memory under our instruction, CAD-01 running, hashed at collection (D-10; Pulse Badge: captured before anyone considered a restart). 14:50: CAD-02’s snapshot (D-11). 15:05: the center’s EDR file events (D-12). 15:10: CAD-01’s service log (D-13). 15:15: the flows since 13:00 (D-14). All hashed, sealed. No position touched. (game)');
+    await say('14:40: Felix captures CAD-01’s memory under our instruction, CAD-01 running, hashed at collection (D-11; Pulse Badge: captured before anyone considered a restart). 14:50: CAD-02’s snapshot (D-12). 15:05: the center’s EDR file events (D-13). 15:10: CAD-01’s service log (D-14). 15:15: the flows since 13:00 (D-15). All hashed, sealed. No position touched. (game)');
     cu.items += 5; cu.complete += 5;
     await dpStages(S, ['s2']);
-    await say('16:10: the finding to Lionel; with his agreement, to Imogen, Petra and Celia. 18:05: D-15, the phone system’s answer times and the radio logger’s dispatch times since 14:07, exported by Petra and the center’s radio technician, hashed. Nobody from the firm touched the radio room. (game)');
+    await say('16:10: the finding to Lionel; with his agreement, to Imogen, Petra and Celia. 17:50: Oxlow’s supervisor sends Imogen its answer times for the 4 rolled calls. 18:05: D-16, the phone system’s answer, rollover and call-back times and the radio logger’s dispatch times, 14:07 to 18:00, with Oxlow’s times, exported by Petra and the center’s radio technician, hashed. Nobody from the firm touched the radio room. (game)');
     cu.items += 1; cu.complete += 1;
     const r = await doReport(dpReport2());
     G.cr.reports.dp2 = {score: r.score, over: r.over, under: r.under};
     G.cr.corrected += r.over;
-    await say('18:00: DSP-02 to Lionel. 18:30: with his agreement, the FBI contact has the findings. CAD’s way back runs tonight: county IT with Stillmark on a ticket, and us watching. (game)');
+    await say('18:20: DSP-02 to Lionel. 18:30: with his agreement, the FBI contact has the findings. CAD’s way back runs tonight: county IT, with Stillmark’s support on a one-time account with MFA, us watching, and a fresh check of CAD-01 after it. (game)');
   }
   c.boss.ok = c.boss.first.every(Boolean); c.boss.done = true;
   G.f.dpBoss = true; unlock('tech', 'T1486'); unlock('act', 'dpcutoff'); unlock('act', 'dpcards'); unlock('act', 'dpmeasure'); touchCSF('Respond'); touchCSF('Recover'); track();
-  await UI.openModal('The floor, Thursday 14:07 to 18:00', '<p>911 calls answered: <b>38 of 38</b>, 4 of them at Oxlow on overflow. Median answer-to-dispatch on cards: <b>' + dpCardsMedian() + ' s</b>, against 64 s on CAD the week before. The second alarm: requested 14:06, dispatched 14:08. (game: ' + (c.boss.w1 ? c.boss.w1 + ' false start' + (c.boss.w1 === 1 ? '' : 's') + ' in the first stage cost the floor time in the first hour' : 'no false start in the first stage') + ')</p>', [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
+  await UI.openModal('The floor, Thursday 14:07 to 18:00', '<p>911 calls answered: <b>38</b>, 4 of them at Oxlow on overflow; 2 hang-ups before answer, each called back. Median answer-to-dispatch on cards: <b>' + dpCardsMedian() + ' s</b>, against 64 s on CAD the week before. The second alarm: requested 14:06, dispatched 14:08. (game' + (dpMgr() ? ': ' + (c.boss.w1 ? c.boss.w1 + ' false start' + (c.boss.w1 === 1 ? '' : 's') + ' in the first stage cost the floor time in the first hour' : 'no false start in the first stage') : '') + ')</p>', [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
   if (dpMgr()) await say('Lucia has the firm’s status report for you in the incident room.', 'Imogen Hale');
   else await say('End the day when you’re ready. Tomorrow, the chief will want CAD back.', 'Lucia Ferrand');
 }
@@ -660,15 +664,17 @@ async function dpBoss() {
 async function dpStatusReport() {
   const who = 'Lucia Ferrand';
   const body = '<pre class="art">Tallowmere · status · DSP-02 · Day 18 19:00 (game)\n' +
-    'Found       no file encrypted on CAD-01 or CAD-02;\n' +
+    'Found       no file encrypted on CAD-01 or CAD-02,\n' +
+    '            13:00 to 15:00, and their data opens;\n' +
     '            CAD cut off at 14:05 when the county’s\n' +
     '            directory stopped answering; the county\n' +
     '            PC’s attempt on CAD-01 refused\n' +
     'Measured    answer-to-dispatch on cards since 14:07:\n' +
-    '            ' + dpCardsMedian() + ' s, against 64 s on CAD; 38 calls answered\n' +
+    '            ' + dpCardsMedian() + ' s, against 64 s on CAD; 38 answered,\n' +
+    '            2 hang-ups called back\n' +
     'Open        who used sm-support on Night 14;\n' +
     '            whether it is linked to today\n' +
-    'Evidence    D-01 to D-15: hashed, sealed\n' +
+    'Evidence    D-01 to D-16: hashed, sealed\n' +
     'Report      to Lionel Ashdown\n' +
     'Appendix    one observation outside the county’s\n' +
     '            questions, not yet explained, passed to\n' +
@@ -678,7 +684,7 @@ async function dpStatusReport() {
   if (!qtFound('dp-conns')) {
     const i = await choose('The appendix: an observation not yet explained.', [{label: 'Read the appendix'}, {label: 'Leave it: it’s with Lionel'}], {cursor: 1});
     if (i === 0) {
-      await say('Appendix: reading DP-LOG-01’s own log on Tuesday, for the copies of CAD’s logs it holds, the firm saw svc-print, from FD-STAFF-11’s address over the Compact’s link, sign in to the collector at 03:11 on Sunday and list its network connections, which of the center’s hosts send it logs, for under a minute. Nothing links it to the lag, Sunday night’s session or today. Passed to counsel; with his agreement, to Rae’s suspicion-file team. Not acted on.');
+      await say('Appendix: reading DP-LOG-01’s own log on Tuesday, for the copies of CAD’s logs it holds, the firm saw svc-print, from FD-STAFF-11’s address (Town Hall’s front-desk PC) over the Compact’s link, sign in to the collector at 03:11 on Sunday and list its network connections, which of the center’s hosts send it logs, for under a minute. Nothing links it to the lag, Sunday night’s session or today. Passed to counsel; with his agreement, to Rae’s suspicion-file team. Not acted on.');
       await say('Nothing changes on svc-print without a plan. You pass it to Rae, through Lionel.');
       await crQtAfterNote(qtNote('dp-conns'));
     }
@@ -691,7 +697,7 @@ async function dpStatusReport() {
 function dpScoreHtml() {
   if (!G.trackId || !G.f.dpMet) return '';
   const c = G.cr, s = c.dp || {};
-  const floor = s.boss && s.boss.done ? ' · the floor on cards <b>' + dpCardsMedian() + ' s</b>, calls answered <b>100%</b>' : '';
+  const floor = s.boss && s.boss.done ? ' · the floor on cards <b>' + dpCardsMedian() + ' s</b>, calls answered <b>100%</b> (the floor’s, fixed)' : '';
   if (dpMgr()) return '<p>Fire &amp; EMS Dispatch: retainer ' + (s.activate !== null && s.activate !== undefined ? '<b>' + s.activate + ' min</b>' : 'not called') + ' · cards drill ' + (G.f.dpCardsDrill ? '<b>run</b>' : 'not yet') + ' · 24-hour plan ' + (s.cover ? '<b>' + esc(s.cover.k) + '</b>' : 'not set') + floor + ' (game)</p>';
   return '<p>Fire &amp; EMS Dispatch: request logged <b>' + (s.requests ? esc(s.requests.date) : 'not yet') + '</b> · reports filed <b>' + ['dp1', 'dp2'].filter(k => c.reports[k]).length + '</b>' + floor + ' (game)</p>';
 }
@@ -704,14 +710,14 @@ async function dpSummary() {
   if (!f.dpSummary) {
     f.dpSummary = true; touchCSF('Govern');
     Series.markEdition('crossroads', {track: t, dispatch: true});
-    await say((t === 'manager' ? 'We answered every call and dispatched every one on paper, and we know how long it took. ' : 'I know what happened to CAD and what didn’t, and I can say it to a crew without guessing. ') + 'And I know who decides what on my floor. Thank you.', 'Imogen Hale');
+    await say((t === 'manager' ? 'We answered every call, called back every hang-up, and dispatched every one that needed it, and we know how long it took. ' : 'I know what happened to CAD and what didn’t, and I can say it to a crew without guessing. ') + 'And I know who decides what on my floor. Thank you.', 'Imogen Hale');
   }
   const body = '<p class="big">Fire &amp; EMS Dispatch: done.</p>' +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b> · Day <b>' + G.day + '</b> (' + (DP_DAY[G.day] || '') + ')</p>' +
     '<h3>Drills (game)</h3><table class="sc"><tr><th>Drill</th><th>Score</th><th>Supported</th></tr>' + dpDrillRows() + '</table>' +
     (t === 'dfir' ? '<p>Reports filed: DSP-01 <b>' + (G.cr.reports.dp1 ? G.cr.reports.dp1.score : '—') + '</b> · DSP-02 <b>' + (G.cr.reports.dp2 ? G.cr.reports.dp2.score : '—') + '</b> (game)</p>' : '') +
-    '<p>Thursday: ' + (c.boss && c.boss.ok ? 'handled at the first try from your seat' : 'handled, with false starts the debriefs named') + '. Every 911 call answered, 4 at Oxlow on overflow; median answer-to-dispatch on cards <b>' + m + ' s</b> against 64 s on CAD (game). ' + (t === 'manager' ? 'Coordinated: Imogen ran the floor, the chief kept the district covered, Petra contained the county office, Celia decides what the 911 authority reports, and nobody promised what nobody knew.' : 'Found: CAD cut off, not encrypted; the vendor-account session written as unknown, with the request dated.') + '</p>' +
-    '<p>Lesson (game): CAD wasn’t encrypted. It failed because it signed in and looked up names through the county’s directory, across a network it shared with the county office. The floor kept answering every call and dispatching on cards because it had drilled them on Wednesday: ' + m + ' seconds against 64, measured.</p>' +
+    '<p>Thursday: ' + (c.boss && c.boss.ok ? 'handled at the first try from your seat' : 'handled, with false starts the debriefs named') + '. Every 911 call answered, 4 at Oxlow on overflow, every hang-up called back; median answer-to-dispatch on cards <b>' + m + ' s</b> against 64 s on CAD (game). ' + (t === 'manager' ? 'Coordinated: Imogen ran the floor, the chief kept the district covered, Petra contained the county office, Celia decides what the 911 authority reports, and nobody promised what nobody knew.' : 'Found: CAD cut off, not encrypted; the vendor-account session written as unknown, with the request dated.') + '</p>' +
+    '<p>Lesson (game): CAD wasn’t encrypted. It failed because it signed in and looked up names through the county’s directory, across a network it shared with the county office. The floor kept answering every call and dispatching on cards, helped by Wednesday’s drill: ' + m + ' seconds against 64, measured.</p>' +
     (t === 'manager' ? '<p>Bookmark Badge: the AAR’s actions arrived with their owners agreed. Slate Badge: Stillmark’s incident clause was on the plan’s contact page before you needed it. Pulse Badge: the cards and their owner were named before Thursday.</p>' : '') +
     '<p>Open risk (game): the Compact’s own collector at the center, DP-LOG-01, is joined to the town’s directory and reachable from the whole town network over the Compact’s link, so every account with admin rights on the town’s member servers' + (qtFound('dp-conns') ? ' (svc-print among them)' : '') + ' has them on a server on the center’s network. Nobody has accepted that risk; it goes to Rae and the council’s risk committee for an owner.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
