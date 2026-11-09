@@ -27,7 +27,8 @@
 // retainer/firm, custody/hash, confirmed/likely/unknown, counsel words, hurry words; and, since the slice-1 review, the
 // "… decides" words, the absolutes and the "so/because" clause, from n >= 3; since slice 2 (the School District), the
 // vendor/contract, notify/notice and student/parent words too; since slice 3 (the Community Clinic), the patient/care,
-// privacy-officer, downtime/paper and HHS/OCR words, and the slice-2 groups are held in the Clinic as well).
+// privacy-officer, downtime/paper and HHS/OCR words, and the slice-2 groups are held in the Clinic as well; since the
+// slice-3 review, the "now/today" and "safe" words in the Clinic, and the lone-feature check below in every district).
 const fs = require('fs');
 const path = require('path');
 let acorn = null;
@@ -116,6 +117,9 @@ const CR_EXTRA = [
   ['G:privacy', /\b(privacy officer|privacy officer’s|Weller|Weller’s)\b/i],
   ['G:downtime', /\b(downtime|paper|forms?|cart|cart’s)\b/i],
   ['G:hhs', /\b(HHS|HHS’s|OCR|HIPAA)\b/],
+  // Slice-3 review (S1): "now/today/tonight/at once" and "safe" marked wrong answers in the Clinic.
+  ['G:now', /\b(now|today|tonight|at once)\b/i],
+  ['G:safe', /\bsafe(ly|r|st)?\b/i],
 ];
 
 const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
@@ -268,7 +272,7 @@ for (const [name, re] of WORDS) for (const s of CR_DISTRICTS.concat(['cr-all'], 
   if (st.lean >= THRESH || st.lean <= 1 - THRESH) crFails.push(name + ' in ' + where + ': ' + fmt(st));
   else if (st.lean > WARN || st.lean < 1 - WARN) crWarns.push(name + ' in ' + where + ': ' + fmt(st));
 }
-const CROSSROADS_BAND = ['G:rota', 'G:retainer', 'G:custody', 'G:certainty', 'counsel', 'G:urgent', 'G:decide', 'G:absolute', 'G:because', 'G:vendor', 'G:notify', 'G:student', 'G:patient', 'G:privacy', 'G:downtime', 'G:hhs'];
+const CROSSROADS_BAND = ['G:rota', 'G:retainer', 'G:custody', 'G:certainty', 'counsel', 'G:urgent', 'G:decide', 'G:absolute', 'G:because', 'G:vendor', 'G:notify', 'G:student', 'G:patient', 'G:privacy', 'G:downtime', 'G:hhs', 'G:now', 'G:safe'];
 // Crossroads' band groups are checked from n >= 3 (review S15: G:rota had fewer than 5 hits, so its band was vacuous).
 const CR_BAND_MIN_N = 3;
 const crBand = [];
@@ -276,7 +280,7 @@ const crBand = [];
 // (cr-all), not inside the prologue or the Library, whose lists were written and reviewed before them.
 // The slice-3 groups (patient, privacy officer, downtime, HHS) were introduced for the Clinic: checked there and across
 // Crossroads. The slice-2 groups are held in the Clinic too.
-const CR_SD_ONLY = ['G:vendor', 'G:notify', 'G:student'], CR_CN_ONLY = ['G:patient', 'G:privacy', 'G:downtime', 'G:hhs'];
+const CR_SD_ONLY = ['G:vendor', 'G:notify', 'G:student'], CR_CN_ONLY = ['G:patient', 'G:privacy', 'G:downtime', 'G:hhs', 'G:now', 'G:safe'];
 const crBandScopes = n => CR_DISTRICTS.concat(['cr-all']).filter(s => CR_CN_ONLY.includes(n) ? (s === 'cr-clinic' || s === 'cr-all') : CR_SD_ONLY.includes(n) ? (s === 'cr-school' || s === 'cr-clinic' || s === 'cr-all') : true);
 for (const n of CROSSROADS_BAND) for (const s of crBandScopes(n)) { const st = stat(crScope(s), EXTRA.concat(CR_EXTRA).find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
 if (report && crOpts.length) {
@@ -346,6 +350,54 @@ for (const [name, re] of CR_NAMES) for (const s of (name === 'N:named' ? CR_DIST
   const st = pstat(crScope(s), re);
   nameRows.push({n: name + '@' + s, st, ok: pOk(st)});
 }
+// ---- Lone features (review of Crossroads slice 3, 9 Nov 2026, B1) ----
+// The slice-3 tells were marks no word list held: the only option naming a weekday, citing an evidence number ("C-03"),
+// saying "script" or ending "her call" was right, and the only one saying "now" or "patients" was wrong. So every option
+// is broken into features: each lower-cased word, and normalised patterns (a weekday name, a clock time, an ID like C-03,
+// CL-FD-02 or R-01, any digit, quoted text, a "n’t" contraction). For each feature, take the graded single-pick lists in
+// which exactly one option carries it, and count how often that option is the right one, against chance (the share of
+// right options in each such list). A feature is flagged when it is right in 70% or more of n >= 4 such lists, or wrong
+// in 90% or more of n >= 6. Because a few hundred features are tested at once, chance alone flags some: with the right
+// answers shuffled at random inside each list, the bare thresholds flag about 10 features per district and 28 across
+// Crossroads (median of 200 shuffles). So a flagged feature fails only when it is also beyond chance by
+// LF_K standard deviations plus LF_C lists (a shuffled answer key then passes about nine times in ten). Enforced for
+// Crossroads (each district and cr-all); printed for Town Hall in --report only, after its other tables. The top leans
+// are printed either way, so a thin margin is visible before it becomes a failure.
+const LF_N = 4, LF_RIGHT = 0.70, LF_WN = 6, LF_WRONG = 0.90, LF_K = 2.5, LF_C = 1;
+function lfFeatures(t) {
+  const s = new Set();
+  if (/\b(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\b/.test(t)) s.add('<weekday>');
+  if (/\b\d{1,2}:\d\d\b/.test(t)) s.add('<clock>');
+  if (/\b[A-Z]{1,4}-\d+\b/.test(t)) s.add('<id>');
+  if (/\d/.test(t)) s.add('<digit>');
+  if (/[“”"]/.test(t)) s.add('<quote>');
+  if (/n[’']t\b/.test(t)) s.add('<n’t>');
+  for (const w of t.toLowerCase().replace(/'/g, '’').match(/[a-zà-ɏ]+(’[a-z]+)?/g) || []) s.add(w);
+  return s;
+}
+function loneFeatures(Ls) {
+  const T = {};
+  for (const L of Ls) {
+    if (L.key === 'cards') continue;
+    const F = L.items.map(x => lfFeatures(markText(x))), cnt = {};
+    F.forEach(f => f.forEach(k => { cnt[k] = (cnt[k] || 0) + 1; }));
+    const p = L.items.filter(x => x.good).length / L.items.length;
+    F.forEach((f, i) => f.forEach(k => {
+      if (cnt[k] !== 1) return;
+      const r = T[k] || (T[k] = {k, n: 0, hit: 0, exp: 0, v: 0});
+      r.n++; r.exp += p; r.v += p * (1 - p); if (L.items[i].good) r.hit++;
+    }));
+  }
+  return Object.values(T).map(r => {
+    const rate = r.hit / r.n, m = LF_K * Math.sqrt(r.v) + LF_C;
+    const flagR = r.n >= LF_N && rate >= LF_RIGHT, flagW = r.n >= LF_WN && 1 - rate >= LF_WRONG;
+    return Object.assign(r, {rate, flag: flagR || flagW, fail: (flagR && r.hit - r.exp > m) || (flagW && r.exp - r.hit > m), z: r.v ? (r.hit - r.exp) / Math.sqrt(r.v) : 0});
+  });
+}
+const lfFmt = r => r.k + ' ' + (r.rate >= 0.5 ? 'right ' : 'wrong ') + (r.rate >= 0.5 ? r.hit : r.n - r.hit) + '/' + r.n + ' (chance ' + (r.rate >= 0.5 ? r.exp : r.n - r.exp).toFixed(1) + ')';
+const lfTop = (rows, n) => rows.filter(r => r.n >= LF_N).sort((a, b) => Math.abs(b.z) - Math.abs(a.z)).slice(0, n);
+const lfRows = CR_DISTRICTS.concat(['cr-all']).map(s => ({s, rows: loneFeatures(crListsIn(s))}));
+const lfFails = lfRows.flatMap(x => x.rows.filter(r => r.fail).map(r => x.s + ' ' + lfFmt(r)));
 if (report) {
   console.log('\nPunctuation (report only in Town Hall; cell = g/G b/B lean-to-wrong%; lone = lists where only one option has the mark: right/lists)\n' + 'mark'.padEnd(16) + scopes.map(s => s.padEnd(19)).join(''));
   for (const [name, re] of PUNCT) {
@@ -359,6 +411,15 @@ if (report) {
       console.log('  lone'.padEnd(16) + CR_DISTRICTS.concat(['cr-all']).map(s => loneFmt(lone(crListsIn(s), re)).padEnd(26)).join(''));
     }
     for (const r of nameRows) console.log(r.n.padEnd(26) + pFmt(r.st) + (r.ok ? '' : '  OUT'));
+  }
+  console.log('\nLone features (report only in Town Hall): the 8 strongest leans per district, n>=' + LF_N + ' lists where only one option has the feature; * = flagged by the 70%/90% rule, ! = also beyond chance (fails in Crossroads)');
+  for (const s of scopes) {
+    const rows = loneFeatures(s === 'all' ? graded : graded.filter(L => district(L.file) === s));
+    console.log(s.padEnd(12) + lfTop(rows, 8).map(r => (r.fail ? '!' : r.flag ? '*' : '') + lfFmt(r)).join(', '));
+  }
+  if (crOpts.length) {
+    console.log('\nCrossroads lone features (enforced)');
+    for (const x of lfRows) console.log(x.s.padEnd(12) + lfTop(x.rows, 8).map(r => (r.fail ? '!' : r.flag ? '*' : '') + lfFmt(r)).join(', '));
   }
 }
 if (report) process.exit(0);  // --report prints both populations' tables and never fails
@@ -375,11 +436,13 @@ if (crFiles.length) checks.push(
   ['Crossroads: no tracked word or group outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !crWarns.length],
   ['Crossroads stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on its own groups, n>=' + CR_BAND_MIN_N + ' (' + crBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', crBand.every(x => x.ok)],
   ['Crossroads: no punctuation tell (; : dash parentheses) — within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it, and the lone-mark pick no better than chance (' + punctRows.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln)).join(', ') + ')', punctRows.every(x => x.ok)],
-  ['Crossroads: no name tell — options naming a character, Kole, Priya, Dr Vale and Marsh in the School District, and Marisol, Weller, Renata Osei, Kowal and Kit in the Clinic, within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it (' + nameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', nameRows.every(x => x.ok)]);
+  ['Crossroads: no name tell — options naming a character, Kole, Priya, Dr Vale and Marsh in the School District, and Marisol, Weller, Renata Osei, Kowal and Kit in the Clinic, within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it (' + nameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', nameRows.every(x => x.ok)],
+  ['Crossroads: no lone-feature tell — no word or pattern (weekday, clock time, ID, digit, quote, n’t) that only one option of a list carries is right in ' + LF_RIGHT * 100 + '% of n>=' + LF_N + ' lists or wrong in ' + LF_WRONG * 100 + '% of n>=' + LF_WN + ' beyond chance (' + LF_K + ' sd + ' + LF_C + '); strongest leans: ' + lfRows.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !lfFails.length]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);
 if (fails.length) console.log('  ' + fails.join('\n  '));
 if (crFails.length || crWarns.length) console.log('  Crossroads: ' + crFails.concat(crWarns).join('\n  Crossroads: '));
 const crBad = crBand.filter(x => !x.ok); if (crBad.length) console.log('  Crossroads band: ' + crBad.map(x => x.n + ' ' + fmt(x.st)).join(', '));
+if (lfFails.length) console.log('  Crossroads lone features: ' + lfFails.join(', '));
 const pBad = punctRows.concat(nameRows).filter(x => !x.ok); if (pBad.length) console.log('  Crossroads punctuation/names: ' + pBad.map(x => x.n + ' ' + pFmt(x.st) + (x.ln ? ' lone ' + loneFmt(x.ln) : '')).join(', '));
 process.exit(checks.every(c => c[1]) ? 0 : 1);

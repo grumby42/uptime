@@ -176,7 +176,7 @@ const LB_AAR = [
             {label: 'Juno Barros: he logs the support tickets and can ask'},
             {label: 'Dot Ferreira: she uses Shelfwright at the desk from opening to close'},
             {label: 'You: contacts belong on your incident plan’s page'}],
-   dates: [{label: 'Day 2: today, by 17:00', good: true}, {label: 'As soon as possible'}, {label: 'When the budget allows'}, {label: 'Day 30, after the next Board meeting', why: 'A month with nobody to call if Shelfwright breaks, when the contract binder is down the hall. Today.'}]}];
+   dates: [{label: 'Day 2: today, by 17:00', good: true}, {label: 'As soon as possible'}, {label: 'When the budget allows'}, {label: 'Day 30, after the Board’s 18:00 meeting', why: 'A month with nobody to call if Shelfwright breaks, when the contract binder is down the hall. Today.'}]}];
 
 /* ---------- Manager F4: after-hours cover for the Library (rota/budget primitive) ---------- */
 const LB_COVER = [
@@ -213,28 +213,28 @@ const LB_INTAKE = {
   e01ok: {id: 'E-01', what: 'PUB-PC-04 memory capture and disk image', form: 'Memory captured, then the disk imaged {IMG} by Juno with a write blocker; collection form signed by the acting team lead; SHA-256 of both at acquisition recorded on the form.',
     opts: [{label: 'Hash it on receipt, compare it with the form, seal the original, work on a copy', good: true},
            {label: 'Open the image directly to save time: it is already a copy of the disk', why: 'Work on a copy of the image, never the sealed original; that is what makes a second check possible.'},
-           {label: 'Hash it, but skip the form: matching hashes are the custody record that counts', why: 'The hash shows the file hasn’t changed; the form shows who had it, and when. Custody is both.'},
+           {label: 'Hash it, compare it, and skip the form: matching hashes are the custody record that counts', why: 'The hash shows the file hasn’t changed; the form shows who had it, and when. Custody is both.'},
            {label: 'Seal a copy on the firm’s shared drive beside Oxlow’s files, where Theo can reach it', why: 'One store per client. The Library’s evidence stays in the Library’s store.'}]},
   e01gap: {id: 'E-01', what: 'PUB-PC-04 memory capture and disk image', form: 'Memory captured, then the disk imaged {IMG} by Juno with a write blocker; collection form signed by the acting team lead; the SHA-256 boxes are empty.',
     opts: [{label: 'Hash it now and log the gap, since the form has no collection hash, then seal it and use a copy', good: true, gap: true},
-           {label: 'Write your receipt hash into the empty box on the collection form: then the record is complete', why: 'That makes the form say something nobody recorded at collection. A gap is written down as a gap.'},
+           {label: 'Write your receipt hash into the empty box on the collection form: then the log is complete', why: 'That makes the form say something nobody recorded at collection. A gap is written down as a gap.'},
            {label: 'Refuse the image: without a collection hash it is worthless as evidence', why: 'It is still evidence. Record the gap, hash it on receipt, and say plainly in the report what the gap means.'},
            {label: 'Carry on without mentioning it: nobody reads collection forms, and the image looks fine', why: 'A gap found later, unrecorded, undermines everything built on the image. Record it now.'}]},
   e02: {id: 'E-02', what: 'Booking system export, Day 1', form: 'Exported 08:40 Day 2 by Juno; SHA-256 at export recorded.',
     opts: [{label: 'As for every item: compare hashes, log the handover, seal the evidence, use a copy', good: true},
            {label: 'Leave it unsealed and read the sessions in the booking system itself instead', why: 'The live system keeps changing; the export is the fixed record. Use the export, logged and hashed.'},
            {label: 'Paste the sessions into the report draft, then delete the file once its hash is in the log', why: 'The export is the source the report rests on. It stays sealed in the store.'},
-           {label: 'Accept it as it is: Juno is careful, and comparing hashes adds nothing', why: 'The check is about the file, not Juno. Compare the hashes for every item.'}]},
+           {label: 'Log Juno’s handover and accept the file: she is careful, and comparing hashes adds nothing', why: 'The check is about the file, not Juno. Compare the hashes for every item.'}]},
   e03: {id: 'E-03', what: 'Patron-network flow records', form: 'Exported by Magda’s team; the form says 15:00 Day 1 to 08:00 Day 2; the file covers 14:00 to 08:00; the hash on receipt doesn’t match the form.',
     opts: [{label: 'Log the mismatch and ask for the export they hashed; keep both records', good: true, gap: true},
-           {label: 'Use it as it is: an extra hour of flows can only help, and the form is paperwork', why: 'The form and the file disagree, so the record doesn’t say what you have. Record it and get the export they hashed.'},
+           {label: 'Use the export as it is: an extra hour of flows can only help, and the form is paperwork', why: 'The form and the file disagree, so the record doesn’t say what you have. Record it and get the export they hashed.'},
            {label: 'Trim the file back to 15:00; hash it again, to match the form', why: 'Editing evidence to fit the paperwork is the one thing custody exists to prevent.'},
            {label: 'Throw it out and work the case without any flow records', why: 'The flows answer question 2. Fix the record; don’t lose the evidence.'}]},
   e04: {id: 'E-04', what: 'CIRC-01 Security log export', form: 'Day 1 00:00 to Day 2 08:00, exported 08:50 Day 2 by Juno; SHA-256 at export recorded.',
     opts: [{label: 'Hash it: compare with the export hash, log the handover, seal it, use a copy', good: true},
-           {label: 'Read it on CIRC-01 itself: the server’s viewer shows the same events, so no hash is needed', why: 'The live log keeps rolling and isn’t the item you were handed. Use the logged export.'},
+           {label: 'Read it on CIRC-01 itself: the server’s own log viewer shows the same events, so no hash is needed', why: 'The live log keeps rolling and isn’t the item you were handed. Use the logged export.'},
            {label: 'Skip it: the keylogger was on a public PC, not on the circulation server', why: 'Question 2 asks whether it reached Shelfwright. CIRC-01’s log is how you answer.'},
-           {label: 'Hash it and send the copy to Rae: CIRC-01 is on the town’s directory', why: 'It is the Library’s evidence under Noor’s letter. Anything outside the questions goes to Noor first.'}]}
+           {label: 'Hash it, seal it and send a copy to Rae: CIRC-01 is on the town’s directory', why: 'It is the Library’s evidence under Noor’s letter. Anything outside the questions goes to Noor first.'}]}
 };
 
 /* ---------- DFIR F3: one evidence store per client ---------- */
@@ -275,7 +275,7 @@ const LB_DRILLS = {
                       reveal: 'Tally added up the severity, the vendor’s label and the note’s guess. It never read which account wrote the file, or whose session was open.'},
          specific: {q: 'Which account wrote kbhelper.exe on PUB-PC-04?', text: 'The shared patron account, through the browser, at 15:12 on Day 1.'}},
     verdicts: [
-      {label: 'A leftover from a patron session: the patron account wrote it at 15:12, in B-2231’s hour', good: true, needs: 'edr',
+      {label: 'A leftover from a patron session: the patron account wrote it, in B-2231’s hour', good: true, needs: 'edr',
        needsWhy: 'the booking log says whose session was open; only the endpoint record shows which account wrote the file, and when.',
        why: 'The endpoint record and the booking log tell one story.'},
       {label: 'Staff-side: a high-rated keylogger from a known fraud crew means someone targeted the staff', why: 'Severity and a family name don’t say how it got there. The record shows the patron account, and no staff sign-in.'},
@@ -321,7 +321,7 @@ const LB_DRILLS = {
          res: ['No connection from PUB-PC-04 to CIRC-01, the circulation PCs or any staff address all day', 'Three small HTTPS uploads to 203.0.113.88: 2 KB at 16:58, 6 KB at 17:57, 4 KB at 18:38']}]}
     ],
     verdicts: [
-      {label: 'A leftover from B-2231’s session: a download into the patron profile at 15:12, and no staff profile or sign-in', good: true, needs: ['image', 'booking'],
+      {label: 'A leftover from B-2231’s session: a download into the patron profile, and no staff profile or sign-in', good: true, needs: ['image', 'booking'],
        needsWhy: 'the finding rests on two sources: E-01 dates the file and names the profile, and E-02 says whose session that was. You read only one of them.',
        why: 'E-01 and E-02 each decide their half.'},
       {label: 'Staff-side: a high-rated keylogger from a known fraud crew, on a network the staff share with the patrons', why: 'The image shows the patron profile and no staff sign-in; the flows show no staff connection.'},
@@ -412,10 +412,10 @@ const LB_DRILLS = {
        needsWhy: 'the finding rests on two sources: the schema comparison (could it be ours?) and E-05 (did anything leave?). You read only one.',
        why: 'Both halves, each from its own source.'},
       {label: 'Ours: a trusted poster with real leaks behind them, naming our system, is evidence enough', why: 'A reputation isn’t a record; the sample doesn’t fit our schema.'},
-      {label: 'Unknown: two names match cardholders of ours: it may be ours until the poster proves otherwise', why: 'Names collide everywhere. The schema and E-05 decide it.'}],
+      {label: 'Unknown: two names match cardholders of ours, so it may be a partial export of ours', why: 'Names collide everywhere. The schema and E-05 decide it.'}],
     reasons: [
       {label: 'Our schema can’t produce those rows, and E-05 records no bulk export', good: true, why: 'The schema for the sample, E-05 for what left.'},
-      {label: '2.4 million rows is ninety times our cardholders, so the claim can’t be about us at all', why: 'Size neither rules ours in nor out.'},
+      {label: '2.4 million rows is ninety times our cardholders, so the claim can’t be an export of ours at all', why: 'Size neither rules ours in nor out.'},
       {label: 'Eleven real leaks in two years make this poster the likeliest honest source on the forum', why: 'The poster’s past says nothing about this sample.'}],
     alts: [
       {label: 'Our rows hidden among someone else’s', good: true, why: 'Not supported: none of the 25 cards is ours, and E-05’s 90 days show no bulk export.'},
@@ -641,9 +641,9 @@ function lbMgrBossStages() {
       clues: ['08:40, the firm: one export, 6,212 rows, the holds-notice list; fields being confirmed. Shelfwright keeps no borrowing history. The way in: CIRC-01’s remote-support port, open to any address since 2019.', '08:50: all 20 sample rows are among the 6,212.', 'Not known: whether the rows have been passed on; how the attacker had sw-support’s password.'],
       ask: 'Emergency Board meeting. What do you tell them?',
       resp: [{label: 'What we know: one export, 6,212 rows; what we don’t; what’s being done; next at 13:00', good: true},
-             {label: 'Only 6,212 rows and no reading history: the email exaggerates, so there is little to worry about', why: 'Minimising before the fields are confirmed is a guess, and the rows include the titles on hold.'},
+             {label: 'Only one export of 6,212 rows and no reading history: the email exaggerates, so there is little to worry about', why: 'Minimising before the fields are confirmed is a guess, and the rows include the titles on hold.'},
              {label: 'All 26,500 patrons and their reading history are out, as the email says, so prepare for the worst', why: 'Repeating the criminal’s claim as fact; the evidence says one export of 6,212 rows.'},
-             {label: 'Nothing until the firm and Noor have finished; a partial picture would only confuse the Board', why: 'The Board hears it from you first, with the gaps named and a time for the next update.'}]},
+             {label: 'Nothing until the firm and Noor have finished; a partial picture at 13:00 would only confuse the Board', why: 'The Board hears it from you first, with the gaps named and a time for the next update.'}]},
     s3: {title: 'Stage 3 (13:00): the deadline and the way back',
       clues: ['12:30, the firm’s fields: name, email, card number, pickup branch and the title on hold. No addresses, no borrowing history.', 'Shelfwright Systems: sw-support’s password was shared across its customers and last changed in 2022 (game).', 'Monday is the extortionist’s deadline. The Board asks you whether to pay.'],
       ask: 'Which plan do you take to the Director, the Board and Noor?',
@@ -668,7 +668,7 @@ function lbDfirBossStages() {
       resp: [{label: '6,212 holds rows, five fields, one export: no borrowing history is kept', good: true},
              {label: 'All 26,500 patrons and their reading history, as the email says: assume the worst', why: 'The audit log records one export of 6,212 rows. Assuming the claim is overclaiming.'},
              {label: 'Nothing proven: the sample could be made up; wait for the attacker to show more', why: 'The 20 rows are in the export the log records. That is shown.'},
-             {label: '6,212 rows, and nothing else of the Library’s has left anywhere at all', why: 'That this export is all the logs show is not that nothing else left. Say what is shown.'}]}
+             {label: '6,212 rows in one export, and nothing else of the Library’s has left anywhere at all', why: 'That this export is all the logs show is not that nothing else left. Say what is shown.'}]}
   };
 }
 

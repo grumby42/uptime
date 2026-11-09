@@ -123,7 +123,7 @@ async function sdTalk(npc) {
     case 'sato': await say(f.sdFixNamed ? 'Nobody asks me for the department passwords any more. I won’t miss it.' : 'Nell Sato, registrar. Half the substitutes know the science login. I’m not proud of it.', who); break;
     case 'brooks':
       if (sdMgr() && f.sdNight8 && !f.sdDrillB) { await sdDrillB(); break; }
-      await say(f.sdNight8 ? 'I rang Ilse on the number in the staff directory, not the one in the email. Habit from the fire drills.' : 'Hal Brooks, Riverbend Middle. My teachers want to know if the reading app is safe. So do I.', who); break;
+      await say(f.sdNight8 ? 'I rang Ilse on the number in the staff directory, not the one in the email. Habit from the fire drills.' : 'Hal Brooks, Hollinmere Middle. My teachers want to know if the reading app is safe. So do I.', who); break;
     case 'ilse': await say('Grading at two in the morning through a VPN app. It was me, and I said so to Hal on the phone.', who); break;
     case 'wim': await sdDojoIntro(); break;
     case 'pike': await sdBoardScript(); break;
@@ -144,7 +144,7 @@ async function sdArrive() {
   const f = G.f, c = sdC();
   f.sdMet = true; G.day = Math.max(G.day, 8); G.focus = G.focusMax; touchCSF('Identify');
   if (sdDfir() && !c.rota) c.rota = sdAutoRota();
-  await say('Day 8, Monday, 08:30. The School District’s office, in the old wing of Riverbend Middle School. (The weekend passed: no call reached the on-call lead on Nights 5 to 7. The Library’s deadline is today; the Board and the Director decided on Friday not to pay, and the firm has found nothing published so far, which is not the same as nothing published. game)');
+  await say('Day 8, Monday, 08:30. The School District’s office, in the old wing of Hollinmere Middle School. (The weekend passed: no call reached the on-call lead on Nights 5 to 7. The Library’s deadline is today; the Board and the Director decided on Friday not to pay, and the firm has found nothing published so far, which is not the same as nothing published. game)');
   await say('Corinne Vale, Superintendent. On Friday at 16:40 Lumenlark, the reading app in grades 3 to 8, emailed our technology inbox: “Some customer data may have been accessed.” Nothing about whose, or what.', 'Dr Corinne Vale');
   await say('Three more things, plainly. We have no list of which vendors hold which student data. Half our science teachers sign in to Inkstone on a shared department login. And nobody here can tell me which clause of Lumenlark’s contract covers this.', 'Dr Corinne Vale');
   unlock('fact', 'sdcisak12'); unlock('fact', 'sdferpa');

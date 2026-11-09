@@ -361,7 +361,9 @@ async function session(ctx, file) {
     check('save/reload mid-Clinic (manager) restores the state; the export code round-trips', srC.same && srC.roundTrip && srC.before.map === 'clinic', srC);
     await A.follow(p => p.f.cnStaffing, []);
     const cst = await A.page.evaluate(() => ({ C: G.cr.drills.restore, B: G.cr.drills.tethermgr, cover: G.cr.cn.cover, rack: tileDef('clinic', 14, 1).pal, gaps: metricVals().crGaps, budget: metricVals().crBudget }));
-    check('Clinic manager: drill C (the restore) and drill B (the vendor’s remote support) right and supported; the weekend plan: day shifts, 0 gaps, 26 of 30 h; night alerts routed (tick)', cst.C.verdictOk && cst.C.supported && cst.B.verdictOk && cst.B.supported && cst.cover.k === 'shifts' && cst.cover.gaps === 0 && cst.cover.overtime === 26 && cst.rack === 'cnRackOk' && cst.budget === -13, cst);
+    check('Clinic manager: drill C (the restore) and drill B (the vendor’s remote support) right and supported; the weekend plan: day shifts, 0 gaps, 26 of 30 h (29 if a weak Night 12 was swapped to a rested lead); night alerts routed (tick)', cst.C.verdictOk && cst.C.supported && cst.B.verdictOk && cst.B.supported && cst.cover.k === 'shifts' && cst.cover.gaps === 0 && cst.cover.overtime === (cst.cover.n12 === 'swap' ? 29 : 26) && cst.rack === 'cnRackOk' && cst.budget === (cst.cover.n12 === 'swap' ? -3 : -13), cst);
+    // Drill C's right verdict rests on the copy's contents and the firm's check of it (review B2), not on one known file.
+    check('Clinic restore drill: the right verdict needs the backup record and the check of the copy (the share’s audit and a scan); no “copy is good” claim', await A.page.evaluate(() => { const D = CN_DRILLS.restore, v = D.verdicts.find(x => x.good); return JSON.stringify(v.needs) === JSON.stringify(['backup', 'check']) && D.sources.some(s => s.id === 'check' && s.qs.some(q => q.key && q.res.some(r => /scanned/.test(r)) && q.res.some(r => /audit/.test(r)))) && !/copy is good/.test(JSON.stringify(D)); }));
     await A.follow(p => p.f.cnBoss, []);
     const cboss = await A.page.evaluate(() => ({ day: G.day, boss: G.cr.cn.boss, n12: G.cr.cn.night12, lead: cnLead(12), tired: cnTired(12) }));
     check('Clinic boss on Day 13 (Saturday): Night 12’s lead is the week-2 rota’s; first look clear unless that lead is tired; all three stages right first time', cboss.day === 13 && cboss.n12.lead === cboss.lead && cboss.boss.look === (cboss.tired ? 'thin' : cboss.lead ? 'clear' : 'none') && cboss.boss.ok, cboss);
@@ -400,6 +402,11 @@ async function session(ctx, file) {
       out.inactive = [CN_REPORT_2.claims.find(c => c.id === 'archive').text, db.s2.resp.find(r => r.good).label, CN_BOARD_SPECS_DFIR()[0].resp.find(r => r.good).label].every(t => /inactive/.test(t) && /5,210/.test(t));
       // What left: "likely", never "confirmed"; the attacker's "full medical records" is never a right answer.
       out.likely = CN_REPORT_1.claims.find(c => c.id === 'left').truth === 'likely' && CN_REPORT_2.claims.find(c => c.id === 'left').truth === 'likely' && !goods.some(g => /full (medical )?records/.test(g) && !/not/.test(g));
+      // Review of slice 3: what left is "likely" in the DFIR boss's answer too; Friday's CLN-01 says what the archive held
+      // (S6) and whether the attacker is anywhere else, with an honest unknown (S4); the original email is evidence (S5).
+      const c1 = id => CN_REPORT_1.claims.find(c => c.id === id) || {};
+      out.likely2 = /^Likely/.test(db.s2.resp.find(r => r.good).label) && /likely/i.test(CN_BOARD_SPECS_DFIR()[0].resp.find(r => r.good).label);
+      out.cln1 = c1('contents').truth === 'confirmed' && /5,210/.test(c1('contents').text) && c1('foothold').truth === 'confirmed' && c1('saved').truth === 'unknown' && c1('way').evidence.some(e => /^C-09/.test(e));
       // HHS appears only in the Field Manual, in its own words, with the clinic's status left to counsel and the privacy officer.
       out.hhs = /The presence of ransomware \(or any malware\) on a covered entity’s or business associate’s computer systems is a security incident under the HIPAA Security Rule\./.test(FACTS.cnhipaa.desc) && /The game says neither/.test(FACTS.cnhipaa.desc) && !/within \d+ (days|hours)/.test(JSON.stringify(CN_DRILLS) + all.join(' '));
       // The vendor's remote-support drill tags T1219 as the explanation ruled out.
@@ -535,14 +542,14 @@ async function session(ctx, file) {
     let unkWhy = '';
     const nSch1 = await B.page.evaluate(() => SD_REPORT_1.claims.length);   // 7 since the slice-2 review (S12)
     for (let n = 1; n <= nSch1; n++) {
-      await B.settle([], /Finding \d of \d/);
+      await B.settle([], /Finding \d+ of \d+/);
       const card = (await B.page.textContent('#modal .card')).trim();
       const cl = await B.page.evaluate(t => { const c = SD_REPORT_1.claims.find(x => x.text === t); return c ? { id: c.id, truth: c.truth } : null; }, card);
       const want = cl && cl.id === 'accessed' ? 'Likely' : { confirmed: 'Confirmed', likely: 'Likely', unknown: 'Unknown' }[cl && cl.truth];
       await B.pickLabel(new RegExp('^' + want + '$'));
       const said = await B.settle([], /./);
       if (cl && cl.id === 'accessed') unkWhy = said && said.ui && said.ui.text || '';
-      await B.settle([], n < nSch1 ? /Finding \d of \d/ : /Report filed/);
+      await B.settle([], n < nSch1 ? /Finding \d+ of \d+/ : /Report filed/);
     }
     const filedB = await B.page.innerHTML('#modal');
     await B.settle();
@@ -587,19 +594,19 @@ async function session(ctx, file) {
     await B.settle([], /Report · /); await B.pickLabel(/^Start writing$/);
     const nCln1 = await B.page.evaluate(() => CN_REPORT_1.claims.length);
     for (let n = 1; n <= nCln1; n++) {
-      await B.settle([], /Finding \d of \d/);
+      await B.settle([], /Finding \d+ of \d+/);
       const card = (await B.page.textContent('#modal .card')).trim();
       const cl = await B.page.evaluate(t => { const c = CN_REPORT_1.claims.find(x => x.text === t); return c ? { id: c.id, truth: c.truth } : null; }, card);
       const want = cl && cl.id === 'left' ? 'Confirmed' : { confirmed: 'Confirmed', likely: 'Likely', unknown: 'Unknown' }[cl && cl.truth];
       await B.pickLabel(new RegExp('^' + want + '$'));
-      await B.settle([], n < nCln1 ? /Finding \d of \d/ : /Report filed/);
+      await B.settle([], n < nCln1 ? /Finding \d+ of \d+/ : /Report filed/);
     }
     const filedC = await B.page.innerHTML('#modal');
     await B.settle();
     check('CLN-01: what left goes out as “Likely” (the overclaim corrected before filing and counted); the sender as “Unknown”', /Likely:<\/b> The archive of the front desk’s daily lists/.test(filedC) && /Unknown:<\/b> Who sent the email/.test(filedC) && /corrected in review/.test(filedC) && await B.page.evaluate(() => G.cr.reports.cn1.over === 1), filedC.slice(0, 400));
     await B.follow(() => false, [], /End of the Community Clinic/);
     const cnB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.cn2, pulse: G.f.cnPulse, needs: G.cr.needs, obj: objective(), ser: crSeries(), corrected: G.cr.corrected }));
-    check('DFIR Clinic: CLN-02 filed, 34 custody items (Library 10 + district 12 + Clinic 12), Pulse Badge, summary “Next: Fire & EMS Dispatch”', cnB.cu.items === 34 && !!cnB.r2 && cnB.pulse && cnB.obj.done && cnB.ser.clinic === true && /Next: Fire/.test(await B.modalText()), cnB);
+    check('DFIR Clinic: CLN-02 filed, 35 custody items (Library 10 + district 12 + Clinic 13, the original email included), Pulse Badge, summary “Next: Fire & EMS Dispatch”', cnB.cu.items === 35 && !!cnB.r2 && cnB.pulse && cnB.obj.done && cnB.ser.clinic === true && /Next: Fire/.test(await B.modalText()), cnB);
     check('CLN-02: the archive held 5,210 patients, 1,180 of them inactive (confirmed); what left is likely; publication and anything beyond the archive unknown', await B.page.evaluate(() => { const c = id => CN_REPORT_2.claims.find(x => x.id === id); return c('archive').truth === 'confirmed' && /1,180/.test(c('archive').text) && c('left').truth === 'likely' && c('pub').truth === 'unknown' && c('more').truth === 'unknown'; }));
     await B.pickLabel(/^Keep exploring/); await B.settle();
     await B.page.evaluate(() => storeSet(encodeSave(G)));

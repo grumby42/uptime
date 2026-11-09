@@ -102,7 +102,7 @@ NPCS.push(
   {id: 'kole', name: 'Adaeze Kole', role: 'counsel for the School District', map: 'school', x: 17, y: 13, dir: 'left', pal: 'kole'},
   {id: 'priya', name: 'Priya Lindgren', role: 'student data privacy officer', map: 'school', x: 7, y: 3, dir: 'left', pal: 'priya'},
   {id: 'sato', name: 'Nell Sato', role: 'registrar', map: 'school', x: 8, y: 2, dir: 'left', pal: 'sato'},
-  {id: 'brooks', name: 'Hal Brooks', role: 'principal, Riverbend Middle School', map: 'school', x: 10, y: 6, dir: 'down', pal: 'brooks'},
+  {id: 'brooks', name: 'Hal Brooks', role: 'principal, Hollinmere Middle School', map: 'school', x: 10, y: 6, dir: 'down', pal: 'brooks'},
   {id: 'ilse', name: 'Ilse Brandt', role: 'Grade 7 science teacher', map: 'school', x: 17, y: 8, dir: 'up', pal: 'ilse', cond: G => !!G.f.sdDrillB},
   {id: 'wim', name: 'Wim Haddad', role: 'computer-science teacher', map: 'school', x: 27, y: 4, dir: 'left', pal: 'wim'},
   {id: 'luciasd', name: 'Lucia Ferrand', role: 'engagement lead, Tallowmere Forensics', map: 'school', x: 19, y: 11, dir: 'left', pal: 'lucia', cond: G => G.trackId === 'dfir' || !!G.f.sdBoss},
@@ -123,7 +123,7 @@ const SD_ACT_OK = 15, SD_ACT_LATE = 20;   // game minutes
 const SD_CLAUSE = [
   {label: '§9, Security incidents: what every notice must say, and what the district is owed', good: true},
   {label: '§14, Notices: it is the clause about notices, and it names the addresses for them', why: '§14 gives the postal addresses for formal notices; whether a request under §9 must also use them is for Kole to check. What Lumenlark owes after an incident is in §9.'},
-  {label: '§11, Termination: it covers deleting the district’s data, which is the thing families will ask about', why: '§11 is about deletion when the contract ends. The incident duties are in §9.'},
+  {label: '§11, Termination: it covers deleting the district’s data, which is what families will ask about', why: '§11 is about deletion when the contract ends. The incident duties are in §9.'},
   {label: '§6, Confidentiality: a breach is a failure of confidentiality, and §6 is where that sits', why: '§6 says what each side keeps confidential. What happens after a security incident is §9.'}];
 const SD_QUESTIONS = [
   {id: 'records', name: 'Our records, and how many', csf: 'Respond', text: 'Which of our district’s records were in the affected environment: all the fields, how many students, and whether former students’ records were among them.', good: true},
@@ -186,7 +186,7 @@ const SD_INJECTS = [
   {t: '10:00 (exercise): should the district stop using Lumenlark today?',
    opts: [{label: 'Dr Vale decides, on the facts you give her: it’s her service, and teachers have paper reading logs', good: true},
           {label: 'You decide and stop it at once: student data outranks a reading app', why: 'Stopping a service is the Superintendent’s decision. You advise; she decides, and teachers have paper logs.'},
-          {label: 'Kole decides: a contract question is a legal question, and the contract is hers to rule on', why: 'Kole advises on the contract. Whether the district keeps using the app is Dr Vale’s service decision.'},
+          {label: 'Kole decides, on the legal facts: a contract question is hers, and her ruling settles it', why: 'Kole advises on the contract. Whether the district keeps using the app is Dr Vale’s service decision.'},
           {label: 'Lumenlark decides: it is their app, and they know whether it is safe', why: 'The vendor runs the app; the district decides whether its students use it.'}]}];
 const SD_EX_ACTIONS = 3;
 
@@ -232,7 +232,7 @@ const SD_DIRECTIVE = {
   dfir: [
     {label: 'Give the case’s facts and the four questions to ask, so the choice is Dr Vale’s, made knowing them', good: true},
     {label: 'Tell Dr Vale the firm’s report forbids any new vendor until the Lumenlark incident is over', why: 'A report recommends. The Superintendent decides, knowing what the case showed.'},
-    {label: 'Say it is outside the letter Kole signed, and give her nothing at all, to be safe', why: 'Facts from the case can be given where counsel agrees, and Kole has. Silence leaves her guessing.'},
+    {label: 'Say it is outside the letter Kole signed, and give her no facts at all, to be safe', why: 'Facts from the case can be given where counsel agrees, and Kole has. Silence leaves her guessing.'},
     {label: 'Tell her to copy Lumenlark’s contract word for word: it already has a data list and a breach clause', why: 'Lumenlark’s contract had both and its token could still read grades. The review asks what this app will take.'}]};
 
 /* ---------- DFIR D1: the amended scoping letter (game) ---------- */
@@ -240,7 +240,7 @@ const SD_LETTER = [
   {label: 'Write down what we can’t see at the vendor, request it under §9.3, then collect our side', good: true},
   {label: 'Have the firm ask Lumenlark for remote access to its systems, to examine them itself today', why: 'Lumenlark’s systems are out of scope and not the firm’s to examine. What it holds is requested through counsel under §9.3.'},
   {label: 'Widen the scope to every teacher’s laptop first, in case the breach somehow started there', why: 'Nothing points at a teacher’s laptop. The letter scopes Inkstone, the SSO, FW-SD and the contracts.'},
-  {label: 'Ask Dr Vale to write to families today, before anything is known, to get ahead of the news', why: 'What families are told, and when, is for Kole and Priya to decide, on facts the firm hasn’t found yet.'}];
+  {label: 'Ask Dr Vale to write to families today about what happened, before anything is known', why: 'What families are told, and when, is for Kole and Priya to decide, on facts the firm hasn’t found yet.'}];
 
 /* ---------- DFIR D2: evidence intake (the district's store, case SCH) ---------- */
 const SD_INTAKE = {
@@ -248,7 +248,7 @@ const SD_INTAKE = {
     opts: [{label: 'Log it as each item is logged: compare the hashes, seal the original in the district’s store, use a copy', good: true},
            {label: 'Read the history in Inkstone itself instead; it is the same data, live, and always up to date', why: 'The live screen keeps changing; the export is the fixed record. Use the export, logged and hashed.'},
            {label: 'Not needed: the export history only shows what we meant to share, not what was taken', why: 'What we meant to share, and sent, is half of question 1. It is the record of what Lumenlark received.'},
-           {label: 'Seal it with Oxlow’s Lumenlark files: same vendor, same breach', why: 'One store per client. The district’s evidence stays in the district’s store.'}]},
+           {label: 'Compare the hashes, then seal it with Oxlow’s Lumenlark files: same vendor, same breach', why: 'One store per client. The district’s evidence stays in the district’s store.'}]},
   s02: {id: 'S-02', what: 'Inkstone API log (90 days)', form: 'To Day 8 09:40; exported 09:40 by Owen Marsh; SHA-256 at export recorded.',
     opts: [{label: 'As each item: compare hashes with Marsh’s form, seal it, work on a copy', good: true},
            {label: 'Accept it without comparing hashes: Marsh exported it an hour ago', why: 'The check is about the file, not Marsh. Compare the hashes for every item.'},
@@ -257,23 +257,23 @@ const SD_INTAKE = {
   s03: {id: 'S-03', what: 'Inkstone API token registry', form: 'Every token, its scope, issued, last-used and revoked times (LL-SYNC revoked 09:20, its row kept as it was); exported 09:40 by Owen Marsh; SHA-256 recorded.',
     opts: [{label: 'Hash it and compare with the form: then log the handover, seal it, work on a copy', good: true},
            {label: 'Ask Marsh to clear the revoked token’s row first, so the copy you seal is tidy', why: 'Clearing a row changes the record. Seal what was exported at 09:40, as it was handed over.'},
-           {label: 'Note only LL-SYNC’s row: the other tokens aren’t Lumenlark’s', why: 'Keep the whole export as it was handed over. Other rows may matter later, and the hash covers the file.'},
-           {label: 'Hash a screenshot of the registry page instead: quicker than an export, and it shows the same', why: 'A screenshot shows one screen, with no hash at the source. Use the export.'}]},
+           {label: 'Note only LL-SYNC’s row in the handover log: the other tokens aren’t Lumenlark’s', why: 'Keep the whole export as it was handed over. Other rows may matter later, and the hash covers the file.'},
+           {label: 'Hash a screenshot of the registry page and compare it: quicker than an export, and it shows the same', why: 'A screenshot shows one screen, with no hash at the source. Use the export.'}]},
   s04: {id: 'S-04', what: 'SSO sign-in log for the Lumenlark app (30 days)', form: 'Exported 09:50 by Owen Marsh with a filter “app = Lumenlark” that the form doesn’t record; SHA-256 at export recorded.',
     opts: [{label: 'Record the filter as a gap, since the form doesn’t, ask for the unfiltered export, keep both records', good: true, gap: true},
            {label: 'Hash it and use it as it is: the filter only removed rows we don’t need', why: 'The form doesn’t say what was removed, so the record doesn’t describe the file. Record it and get the unfiltered export.'},
-           {label: 'Write the filter onto Marsh’s form yourself, so the record is complete', why: 'That makes his form say something he didn’t record. A gap is written down as a gap.'},
+           {label: 'Write the filter onto Marsh’s form yourself, so both records match', why: 'That makes his form say something he didn’t record. A gap is written down as a gap.'},
            {label: 'Throw it out and work without any SSO records: a filtered export can’t be trusted at all', why: 'The SSO answers part of question 2. Fix the record; don’t lose the evidence.'}]},
   s05: {id: 'S-05', what: 'The Lumenlark contract and data agreement (2023)', form: 'Scanned from the contract file room by Priya Lindgren, 10:20; no hash at scan.',
     opts: [{label: 'Hash the scan on receipt, log who scanned it and when, and seal the paper original', good: true},
            {label: 'Log it without a hash: a contract is a document, not evidence, and nobody will dispute it', why: 'Question 1 rests on its data list. Anything a finding rests on goes in the log.'},
            {label: 'Ask Lumenlark for its copy instead: theirs is the signed one', why: 'The district’s countersigned copy is in the file room. If the copies differ, that is for Kole.'},
-           {label: 'Retype the data list into the case notes and shred the scan', why: 'A retyped list is not the document. Keep the scan, hashed, and the paper sealed.'}]}
+           {label: 'Retype the data list into the case notes, seal those, and shred the scan', why: 'A retyped list is not the document. Keep the scan, hashed, and the paper sealed.'}]}
 };
 const SD_INTAKE_NOTE = {id: 'S-08', what: 'Principal Brooks’s note of his 08:10 call to Ilse Brandt', form: 'Handwritten, signed 08:25 Day 9; scanned by Owen Marsh 08:40.',
   opts: [{label: 'Log it as a document, scan hashed, original sealed: it records what she said', good: true},
          {label: 'No hash needed: a note isn’t a log, and it can’t be evidence', why: 'A finding that rests on her answer rests on this note. It goes in the log as what it is.'},
-         {label: 'Log it as proof of where she was at 02:04: a principal’s signed note is strong evidence', why: 'It records what she told the principal on a known number. Where she was is shown, or not, by the sign-in record.'},
+         {label: 'Log it as proof of what she did at 02:04: a principal’s signed note is strong evidence', why: 'It records what she told the principal on a known number. Where she was is shown, or not, by the sign-in record.'},
          {label: 'Ask her to email you the same account, then shred the paper note', why: 'An email from her mailbox goes over the channel in question, and the signed note is the original.'}]};
 
 /* ---------- DFIR D3: requests for vendor-held evidence (through counsel, under §9.3) ---------- */
@@ -288,7 +288,7 @@ const SD_REQUESTS = [
 
 /* ---------- DFIR D4: one evidence store per client ---------- */
 const SD_STORES = [
-  {label: 'Two stores, one per district: both counsel and Lucia decide sharing', good: true},
+  {label: 'Two stores, one per district: what can be shared, both counsel and Lucia decide', good: true},
   {label: 'One “Lumenlark” folder for both districts: one vendor and one breach means one case', why: 'Two clients, two stores. Mixing them can show one district’s students’ records to the other’s team.'},
   {label: 'Lucia decides alone, as engagement lead, and gives Oxlow a copy of S-01 to compare', why: 'Not Lucia alone: what one client’s evidence may be shared with another needs both clients’ counsel too.'},
   {label: 'Keep them apart and never mention the shared address to either counsel, so nobody can complain', why: 'An indicator that matters to both goes to the people who can decide what is shared: Lucia and each district’s counsel.'}];
@@ -330,12 +330,12 @@ const SD_DRILLS = {
       {label: 'Yes, and it was accessed: “some customer data” plus our nightly sync means our students were affected', why: 'That they held it is shown; that it was accessed is not. That evidence sits at the vendor.'}],
     reasons: [
       {label: 'The export history shows the fields we sent each night, and Exhibit A shows Lumenlark may keep them', good: true, why: 'What we sent, and what they hold, each from its own record.'},
-      {label: 'With 900 districts in the same system, any single district has a small chance of being in the affected part', why: 'Nothing in the notice says “part” of anything by district. Size is not a record.'},
+      {label: 'With 900 districts in the same system, any district has a small chance of its fields being in the affected part', why: 'Nothing in the notice says “part” of anything by district. Size is not a record.'},
       {label: 'The notice tells us to rotate credentials, which it wouldn’t do if our district weren’t in the data', why: 'A precaution sent to every customer says nothing about whose data was reached.'}],
     alts: [
       {label: 'Lumenlark held more fields than the contract lists', good: true, why: 'Not supported: the sharing setup sends exactly Exhibit A’s six fields.'},
       {label: 'Lumenlark had deleted our data before the breach', good: true, why: 'Not supported: the contract is in force and no deletion was asked for.'},
-      {label: 'A teacher uploaded extra student files to the app', why: 'Nothing points to it; the record shows the sync, and no teacher is suspected.'},
+      {label: 'A teacher uploading files with extra fields to the app', why: 'Nothing points to it; the record shows the sync, and no teacher is suspected.'},
       {label: 'The notice being a phishing email', why: 'Worth a check on its own, and beside this question: the sync records answer it.'}],
     path: '<p>“Did the vendor hold our data?” is decided by <b>our own sharing records</b> (what we sent, and until when) and <b>the contract’s data list</b> (what it may keep). The notice’s wording and the vendor’s size fit any answer.</p>',
     response: ['Tell Dr Vale: our records were in what Lumenlark held; whether they were accessed is held by the vendor, and we ask for it in writing', 'Revoke, don’t rotate: LL-SYNC revoked at 08:50 with nothing cleared, then the logs exported and hashed at 09:40', 'The questions go to Lumenlark under the contract today, dated and logged', 'Coach Owen Marsh in private: a note says what it rests on, and “probably” needs a source'],
@@ -507,7 +507,7 @@ const SD_DRILLS = {
       {label: 'Not as offered: ask under §9.3 for the specific facts, and sign no terms without counsel’s clearance', good: true, needs: ['terms', 'contract'],
        needsWhy: 'the answer rests on two records: what the terms take away, and what §9.3 already gives. You read only one.',
        why: 'The contract already owes the facts; the terms would cost the district its claims and its advisers.'},
-      {label: 'Sign today: a full report from Lumenlark’s own forensic partner is worth more than the district’s questions', why: 'The terms bar the district’s firm, insurer and regulators from reading it, and release its claims. §9.3 owes the facts already.'},
+      {label: 'Sign today: the facts in a full report from Lumenlark’s own forensic partner are worth more than the district’s questions', why: 'The terms bar the district’s firm, insurer and regulators from reading it, and release its claims. §9.3 owes the facts already.'},
       {label: 'Refuse the report outright; stop asking Lumenlark for anything until the contract is cancelled', why: 'The district still needs Lumenlark’s facts, and §9.3 owes them. Ask for them; counsel clears any terms.'}],
     reasons: [
       {label: '§9.3 owes the facts in two business days anyway, and the terms would bar the firm and the insurer', good: true, why: 'What is owed, against what signing gives up.'},
@@ -614,12 +614,12 @@ const SD_REPORT_2 = {
 const SD_DOJO_MGR = [
   {q: 'A department wants a free app with click-through terms for next week. What is the least the district needs before students use it?',
    opts: ['Four questions answered: what data, where it goes, the data and breach terms, who decides',
-          'Nothing: the terms are standard, and teachers know their classes and their apps best',
+          'Nothing: the terms are standard, and teachers know their classes and what apps work best',
           'A full security audit of the app’s source code by the technology office, before anything else'], good: 0,
    explain: 'A minimum review answers four questions and leaves the decision with the owner. Skipping it is how data ends up with vendors nobody listed; a code audit is more than most schools can do, and isn’t the question.'},
   {q: 'A vendor’s notice says “some customer data may have been accessed”. What do you need first?',
    opts: ['Your own record of what you share with that vendor, and the contract clause on incidents',
-          'The vendor’s next update, before doing anything that might turn out to be wasted effort',
+          'The vendor’s next update on what happened, before doing anything that might be wasted',
           'A letter to families today saying their data was taken, so nobody hears it from the news first'], good: 0,
    explain: 'Your own records tell you what was at risk today; the clause tells you what you can ask for. Waiting gives up both; a letter before the facts may have to be taken back.'},
   {q: 'Who owns the risk of a vendor relationship?',
@@ -650,7 +650,7 @@ const SD_BOARD_SPECS_MGR = () => [
    ask: '“Teachers know the reading app’s sync is paused, and a parent has asked one why. Are our students’ data safe?”',
    resp: [{label: 'What is known and isn’t, who holds each answer, and when the Board hears next, so parents get facts', good: true},
           {label: 'Yes: the district’s own systems weren’t breached, only the vendor’s, and that is what counts', why: 'Where it was breached doesn’t make the data safe: the vendor held our students’ rosters.'},
-          {label: 'Assume the worst: every student record the district has is out', why: 'Repeating a fear as fact. Grades and attendance weren’t among the fields shared, and the 90 days of logs show roster reads only.'}]},
+          {label: 'Assume the worst, whatever the facts: every student record the district has is out', why: 'Repeating a fear as fact. Grades and attendance weren’t among the fields shared, and the 90 days of logs show roster reads only.'}]},
   {title: 'Round 2: drop Lumenlark today?', who: 'Lorna Pike',
    ask: '“Should we drop Lumenlark today?”',
    resp: [{label: 'Dr Vale decides, after Kole: dropping it stops the sync, not the vendor’s copy', good: true},
@@ -723,7 +723,7 @@ function sdDfirBossStages() {
       ask: 'From our side, what could have left through the integration?',
       resp: [{label: 'Six fields for 4,410 students: grades and attendance were readable but unread in 90 days, earlier unknown', good: true},
              {label: 'Everything in Inkstone: the token was “read: all”; write that all of it left through the integration', why: 'What the token could read is not what it read. The log shows roster calls only, for 90 days.'},
-             {label: 'Only the 10 rows in the sample: nothing else is shown to have left the vendor or the district', why: 'The sample shows 10 rows, not that the other 4,400 stayed. Our side shows what was shared.'},
+             {label: 'Only the 10 rows in the sample, six fields each: nothing else is shown to have left', why: 'The sample shows 10 rows, not that the other 4,400 stayed. Our side shows what was shared.'},
              {label: 'Nothing: LL-SYNC has been revoked since Monday, so nothing could leave', why: 'Revoking stopped new reads. What was shared before it is what could have left.'}]}
   };
 }

@@ -206,7 +206,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261109-1631Z', BUILD_TS = '2026-11-09 16:31 UTC';
+const BUILD_ID = 'ARCD-20261109-1821Z', BUILD_TS = '2026-11-09 18:21 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -1297,7 +1297,7 @@ const QT_TECH = {
                 plain: 'Finding out which other computers are on a network and which of them answer, by name or address. Even refused attempts leave a line in a firewall’s log.'},
   // Crossroads, Community Clinic (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
   'T1083':     {name: 'File and Directory Discovery', tactic: ['Discovery'],
-                plain: 'Listing the files and folders on a computer or a network share to see what is there worth taking. A listing opens no file, so it rarely raises an alarm.'},
+                plain: 'Listing the files and folders on a computer or a network share to see what is there worth taking. A listing opens no file, so file-change alerts don’t see it.'},
   // ATT&CK for ICS (verified on attack.mitre.org, 1 Nov 2026, ATT&CK v20.0).
   'T0859':     {name: 'Valid Accounts', tactic: ['Persistence', 'Lateral Movement'],
                 plain: '(ATT&CK for ICS) Using a real account on a plant system, such as a remote-access box or an engineering workstation, to get in and come back. A legitimate account raises no alarm when it is used.'}

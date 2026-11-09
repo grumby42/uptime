@@ -74,7 +74,7 @@ const MAPS = {
       '19,5': {to: 'school', x: 1, y: 7, dir: 'right',
         get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.lbBookmark) ? undefined : 'The School District office. Its door opens to you after the Library Board (the Bookmark Badge, game).'; }},
       '0,5': {to: 'clinic', x: 28, y: 7, dir: 'left',
-        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.sdSlate) ? undefined : 'Riverbend Community Clinic. Its door opens to you after the School Board (the Slate Badge, game).'; }}},
+        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.sdSlate) ? undefined : 'Quillfield Community Clinic. Its door opens to you after the School Board (the Slate Badge, game).'; }}},
     outdoor: true
   }
 };
