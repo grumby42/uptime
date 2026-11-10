@@ -310,7 +310,7 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
       return NPCS.map(n => { const v = V[n.dir] || [0, 0], t = tileDef(n.map, n.x + v[0], n.y + v[1]); return { id: n.id, map: n.map, solid: !t || !!t.solid, chars: CHAR_SPRITES.includes(n.spr || 'player') }; }); });
     check('Crossroads (f): no NPC faces into an adjacent solid tile; every NPC uses a four-facing character sprite', cf.length >= 15 && cf.every(f => !f.solid && f.chars), cf.filter(f => f.solid || !f.chars));
     const arr = await cp.evaluate(async () => {
-      const out = []; G.trackId = 'manager'; G.f.lbMet = true; G.f.lbBookmark = true; G.f.lbSummary = true; G.f.sdMet = true; G.f.sdSlate = true; G.f.sdSummary = true; G.f.cnMet = true; G.f.cnPulse = true; G.f.cnSummary = true; G.f.dpMet = true; G.f.dpRelay = true; G.f.dpSummary = true; G.f.apMet = true;
+      const out = []; G.trackId = 'manager'; G.f.lbMet = true; G.f.lbBookmark = true; G.f.lbSummary = true; G.f.sdMet = true; G.f.sdSlate = true; G.f.sdSummary = true; G.f.cnMet = true; G.f.cnPulse = true; G.f.cnSummary = true; G.f.dpMet = true; G.f.dpRelay = true; G.f.dpSummary = true; G.f.apMet = true; G.f.apWindsock = true; G.f.apSummary = true; G.f.fnMet = true;
       for (const m in MAPS) for (const k in MAPS[m].doors || {}) {
         const d = MAPS[m].doors[k]; if (!d.to || d.locked) continue;
         G.dir = {up: 'down', down: 'up', left: 'right', right: 'left'}[d.dir];
@@ -318,7 +318,7 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
       }
       return out;
     });
-    check('Crossroads (c): every door’s warp turns the player to face away from it (all 22 links, the School District’s, the Clinic’s, Dispatch’s and the Airport’s included)', arr.length === 22 && arr.every(a => a.got === a.want && a.map) && arr.some(a => /^school /.test(a.door)) && arr.some(a => /^sboard /.test(a.door)) && arr.some(a => /^clinic /.test(a.door)) && arr.some(a => /^cnboard /.test(a.door)) && arr.some(a => /^dispatch /.test(a.door)) && arr.some(a => /^dpboard /.test(a.door)) && arr.some(a => /^airport /.test(a.door)) && arr.some(a => /^apboard /.test(a.door)), arr);
+    check('Crossroads (c): every door’s warp turns the player to face away from it (all 26 links, the School District’s, the Clinic’s, Dispatch’s, the Airport’s and the finale’s included)', arr.length === 26 && arr.some(a => /^fnops /.test(a.door)) && arr.some(a => /^fnboard /.test(a.door)) && arr.every(a => a.got === a.want && a.map) && arr.some(a => /^school /.test(a.door)) && arr.some(a => /^sboard /.test(a.door)) && arr.some(a => /^clinic /.test(a.door)) && arr.some(a => /^cnboard /.test(a.door)) && arr.some(a => /^dispatch /.test(a.door)) && arr.some(a => /^dpboard /.test(a.door)) && arr.some(a => /^airport /.test(a.door)) && arr.some(a => /^apboard /.test(a.door)), arr);
     const turn = await cp.evaluate(async () => {
       G.map = 'library'; G.x = 12; G.y = 4; G.dir = 'right'; G.f.lbMet = true; G.trackId = 'manager';
       interact(); await new Promise(r => setTimeout(r, 120));

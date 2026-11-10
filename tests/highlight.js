@@ -39,7 +39,8 @@ const NAV_ALLOW = {
   'starter-pick': 'Starter tool: all three are valid, by preference. good is only the bot\'s pick.',
   'name-plate': 'Crossroads: keep the carried name or use the one typed. Not graded; good is the bot\'s pick.',
   'track-pick': 'Crossroads: the two offers (IR manager / DFIR). A preference, never graded; good marks the open (unlocked) offers.',
-  'track-confirm': 'Crossroads: take the chosen track or go back to the offers. Confirmation of your own choice.'
+  'track-confirm': 'Crossroads: take the chosen track or go back to the offers. Confirmation of your own choice.',
+  'ng-confirm': 'Crossroads edition ending: start New Game+ on a fresh save, or go back to the ending. Not graded; opens on Back.'
 };
 
 // Static scan of the sources (acorn, from the global tool install if it is not local).

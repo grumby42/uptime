@@ -1,9 +1,9 @@
 {
   "id": "crossroads",
   "name": "Crossroads",
-  "district": "Prologue (the Town Hall war room), the Public Library, the School District, the Community Clinic, Fire & EMS Dispatch and the Regional Airport",
+  "district": "Prologue (the Town Hall war room), the Public Library, the School District, the Community Clinic, Fire & EMS Dispatch, the Regional Airport and the Compact-wide incident (the finale), with New Game+ on the other track",
   "slice": 2,
-  "blurb": "A week after Town Hall, two offers: run the region’s incident response programme as IR manager, or join the outside firm as principal DFIR consultant. Choose once; the Public Library is first, then the School District, the Community Clinic, Fire & EMS Dispatch and the Regional Airport.",
+  "blurb": "A week after Town Hall, two offers: run the region’s incident response programme as IR manager, or join the outside firm as principal DFIR consultant. Choose once; the Public Library is first, then the School District, the Community Clinic, Fire & EMS Dispatch, the Regional Airport and, at the end, the Compact-wide incident. After the ending, New Game+ opens the other track on a fresh save.",
   "files": [
     "data.js",
     "quiet.js",
@@ -19,6 +19,8 @@
     "dispatch-data.js",
     "dispatch-story.js",
     "airport-data.js",
-    "airport-story.js"
+    "airport-story.js",
+    "finale-data.js",
+    "finale-story.js"
   ]
 }

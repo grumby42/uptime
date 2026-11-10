@@ -21,7 +21,7 @@
 //        node tests/tells.js --report   (full tables by district and by list type, every word; no failure)
 //        node tests/tells.js --hits=close [--d=basement] [--t=drill-verdicts]   (list the options carrying a word)
 //        UPTIME_ROOT=/path/to/tree node tests/tells.js     (scan another checkout)
-// Crossroads (editions/crossroads) is scanned as its own population (districts cr-prologue, cr-library, cr-school, cr-clinic, cr-dispatch and cr-airport), so the
+// Crossroads (editions/crossroads) is scanned as its own population (districts cr-prologue, cr-library, cr-school, cr-clinic, cr-dispatch, cr-airport and cr-finale), so the
 // Town Hall tables above are unchanged by it. The same 70% rule applies to it, any warning inside 35-65% fails it
 // (Crossroads starts clean), and it is held to the band on its own word groups (CROSSROADS_BAND: rota/rest/fatigue,
 // retainer/firm, custody/hash, confirmed/likely/unknown, counsel words, hurry words; and, since the slice-1 review, the
@@ -33,7 +33,8 @@
 // Crossroads, with the slice-2 groups and the now/safe words held in Dispatch too; since slice 5 (the Regional Airport), the
 // tenant/lease, duty-manager and mail/header words, held in the Airport and across Crossroads, with the slice-2 groups, the
 // now/safe words and the floor/measure words held in the Airport too; since the slice-5 review, every enforced word and group,
-// and every lone-feature word, is matched on its inflections in Crossroads: see stemRe() and stem() below).
+// and every lone-feature word, is matched on its inflections in Crossroads: see stemRe() and stem() below; since slice 6 (the
+// finale, district cr-finale), every Crossroads group is held in the finale too, and its deciders' names are counted).
 const fs = require('fs');
 const path = require('path');
 let acorn = null;
@@ -197,7 +198,7 @@ const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWit
   .concat(fs.readdirSync(root + '/engine').filter(f => f.endsWith('.js')).map(f => 'engine/' + f));
 const crFiles = fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : [];
 const DISTRICTS = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water', 'council'];
-const district = f => { const b = path.basename(f); if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : /^clinic-/.test(b) ? 'cr-clinic' : /^dispatch-/.test(b) ? 'cr-dispatch' : /^airport-/.test(b) ? 'cr-airport' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
+const district = f => { const b = path.basename(f); if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : /^clinic-/.test(b) ? 'cr-clinic' : /^dispatch-/.test(b) ? 'cr-dispatch' : /^airport-/.test(b) ? 'cr-airport' : /^finale-/.test(b) ? 'cr-finale' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
 function strOf(n) {
   if (!n) return null;
   if (n.type === 'Literal' && typeof n.value === 'string') return n.value;
@@ -335,7 +336,7 @@ const waterBand = WATER_BAND.map(n => { const st = stat(inScope('water'), EXTRA.
 const COUNCIL_BAND = ['brief', 'council', 'stakeholder', 'transparent', 'accountable', 'risk', 'owner', 'budget', 'counsel', 'G:urgent'];
 const councilBand = COUNCIL_BAND.map(n => { const st = stat(inScope('council'), EXTRA.find(w => w[0] === n)[1]); return {n, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
 // ---- Crossroads: its own population, scopes and band ----
-const CR_DISTRICTS = ['cr-prologue', 'cr-library', 'cr-school', 'cr-clinic', 'cr-dispatch', 'cr-airport'];
+const CR_DISTRICTS = ['cr-prologue', 'cr-library', 'cr-school', 'cr-clinic', 'cr-dispatch', 'cr-airport', 'cr-finale'];
 const crScope = s => s === 'cr-all' ? crOpts : TYPES.includes(s) ? crOpts.filter(x => x.t === s) : crOpts.filter(x => x.d === s);
 const crFails = [], crWarns = [];
 const CR_WORDS = stemmed(WORDS), CR_GROUPS = stemmed(EXTRA.concat(CR_EXTRA));
@@ -359,7 +360,8 @@ const crBand = [];
 // groups, the now/safe words and the floor/measure words are held in the Airport too.
 const CR_AP_ONLY = ['G:tenant', 'G:duty', 'G:mail'], CR_DP_AP = ['G:floor', 'G:measure'];
 const CR_SD_ONLY = ['G:vendor', 'G:notify', 'G:student'], CR_CN_ONLY = ['G:patient', 'G:privacy', 'G:downtime', 'G:hhs'], CR_CN_DP = ['G:now', 'G:safe'], CR_DP_ONLY = ['G:floor', 'G:cards', 'G:measure', 'G:chief'];
-const crBandScopes = n => CR_DISTRICTS.concat(['cr-all']).filter(s => CR_AP_ONLY.includes(n) ? (s === 'cr-airport' || s === 'cr-all') : CR_DP_AP.includes(n) ? (s === 'cr-dispatch' || s === 'cr-airport' || s === 'cr-all') : CR_DP_ONLY.includes(n) ? (s === 'cr-dispatch' || s === 'cr-all') : CR_CN_DP.includes(n) ? (s === 'cr-clinic' || s === 'cr-dispatch' || s === 'cr-airport' || s === 'cr-all') : CR_CN_ONLY.includes(n) ? (s === 'cr-clinic' || s === 'cr-all') : CR_SD_ONLY.includes(n) ? (s === 'cr-school' || s === 'cr-clinic' || s === 'cr-dispatch' || s === 'cr-airport' || s === 'cr-all') : true);
+// The finale (slice 6) is held to every group: it recalls every district.
+const crBandScopes = n => CR_DISTRICTS.concat(['cr-all']).filter(s => s === 'cr-finale' ? true : CR_AP_ONLY.includes(n) ? (s === 'cr-airport' || s === 'cr-all') : CR_DP_AP.includes(n) ? (s === 'cr-dispatch' || s === 'cr-airport' || s === 'cr-all') : CR_DP_ONLY.includes(n) ? (s === 'cr-dispatch' || s === 'cr-all') : CR_CN_DP.includes(n) ? (s === 'cr-clinic' || s === 'cr-dispatch' || s === 'cr-airport' || s === 'cr-all') : CR_CN_ONLY.includes(n) ? (s === 'cr-clinic' || s === 'cr-all') : CR_SD_ONLY.includes(n) ? (s === 'cr-school' || s === 'cr-clinic' || s === 'cr-dispatch' || s === 'cr-airport' || s === 'cr-all') : true);
 for (const n of CROSSROADS_BAND) for (const s of crBandScopes(n)) { const st = stat(crScope(s), CR_GROUPS.find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
 if (report && crOpts.length) {
   console.log('\nCrossroads (' + crGraded.length + ' graded lists, ' + crOpts.length + ' options)\n' + 'word'.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => s.padEnd(19)).join(''));
@@ -386,7 +388,7 @@ const PUNCT = [
   ['P:parentheses', /[()]/],
 ];
 const CR_NAMES = [
-  ['N:named', /\b(Adaeze|Kole|Priya|Lindgren|Corinne|Vale|Owen|Marsh|Hal Brooks|Brooks|Ilse|Brandt|Nell|Sato|Wim|Haddad|Lorna|Pike|Lucia|Ferrand|Theo|Marchetti|Noor|Castellanos|Mina|Strand|Cyrus|Hallowell|Agnes|Pell|Dot Ferreira|Ferreira|Juno|Barros|Kemal|Osterhout|Merrin|Rae|Okafor|Paz|Delgado|Magda|Petrov|Ruth|Avila|Bea|Lindqvist|Odile|Brennan|Beatriz|Solano|Marisol|Quintero|Tomasz|Weller|Renata|Osei|Kit|Ambrose|Joy|Okonjo|Ines|Vidal|Bettina|Ruiz|Harriet|Kowal|Imogen|Hale|Tamsin|Reyes|Gideon|Sayre|Anselm|Oduya|Celia|Marrow|Lionel|Ashdown|Petra|Vasko|Felix|Orrin|Ezra|Moll|Hollis|Grange|Warren|Teague|Delphine|Okoro|Joanna|Ferreday|Callum|Breck|Odette|Varga|Ansel|Whitcombe|Dario|Fenn|Imre|Castell|Bronwen|Teller|Yusuf|Darrow|Lise|Moreau|Rhoswen|Adair|Yara|Quist)\b/],
+  ['N:named', /\b(Adaeze|Kole|Priya|Lindgren|Corinne|Vale|Owen|Marsh|Hal Brooks|Brooks|Ilse|Brandt|Nell|Sato|Wim|Haddad|Lorna|Pike|Lucia|Ferrand|Theo|Marchetti|Noor|Castellanos|Mina|Strand|Cyrus|Hallowell|Agnes|Pell|Dot Ferreira|Ferreira|Juno|Barros|Kemal|Osterhout|Merrin|Rae|Okafor|Paz|Delgado|Magda|Petrov|Ruth|Avila|Bea|Lindqvist|Odile|Brennan|Beatriz|Solano|Marisol|Quintero|Tomasz|Weller|Renata|Osei|Kit|Ambrose|Joy|Okonjo|Ines|Vidal|Bettina|Ruiz|Harriet|Kowal|Imogen|Hale|Tamsin|Reyes|Gideon|Sayre|Anselm|Oduya|Celia|Marrow|Lionel|Ashdown|Petra|Vasko|Felix|Orrin|Ezra|Moll|Hollis|Grange|Warren|Teague|Delphine|Okoro|Joanna|Ferreday|Callum|Breck|Odette|Varga|Ansel|Whitcombe|Dario|Fenn|Imre|Castell|Bronwen|Teller|Yusuf|Darrow|Lise|Moreau|Rhoswen|Adair|Yara|Quist|Edda|Thornquist|Ivor|Penhallow|Hugo|Ellerby)\b/],
   ['N:Kole', /\bKole\b/], ['N:Priya', /\bPriya\b/], ['N:Vale', /\bVale\b/], ['N:Marsh', /\bMarsh\b/],
   ['N:sd-deciders', /\b(Kole|Priya|Vale)\b/],
   ['N:Marisol', /\bMarisol\b/], ['N:Weller', /\bWeller\b/], ['N:Osei', /\b(Renata|Osei)\b/], ['N:Kit', /\bKit\b/],
@@ -395,6 +397,8 @@ const CR_NAMES = [
   ['N:dp-deciders', /\b(Imogen|Celia|Marrow|Lionel|Ashdown|Petra|Vasko|Sayre|Oduya|Okoro)\b/],
   ['N:Joanna', /\b(Joanna|Ferreday)\b/], ['N:Callum', /\b(Callum|Breck)\b/], ['N:Odette', /\b(Odette|Varga)\b/], ['N:Ansel', /\b(Ansel|Whitcombe)\b/], ['N:Dario', /\b(Dario|Fenn)\b/],
   ['N:ap-deciders', /\b(Joanna|Ferreday|Callum|Breck|Odette|Varga|Ansel|Whitcombe|Dario|Fenn|Imre|Castell|Bronwen|Teller|Adair)\b/],
+  // The finale (slice 6): the shared services' owner, and every member's decider as the finale names them.
+  ['N:Edda', /\b(Edda|Thornquist)\b/], ['N:fn-deciders', /\b(Edda|Thornquist|Strand|Marisol|Imogen|Callum|Noor|Renata|Ansel|Vale|Owen|Marsh|Penhallow)\b/],
 ];
 const PUNCT_BAND_N = 6;
 const markText = x => x.key === 'cards' ? x.label.replace(' — ', ' ') : x.label;
@@ -427,8 +431,8 @@ for (const [name, re] of PUNCT) for (const s of CR_DISTRICTS.concat(['cr-all']))
   punctRows.push({n: name + '@' + s, st, ln, ok: pOk(st) && ln.ok});
 }
 const nameRows = [];
-const CN_NAMES = ['N:Marisol', 'N:Weller', 'N:Osei', 'N:Kit', 'N:cn-deciders'], DP_NAMES = ['N:Imogen', 'N:Celia', 'N:Lionel', 'N:Petra', 'N:Felix', 'N:dp-deciders'], AP_NAMES = ['N:Joanna', 'N:Callum', 'N:Odette', 'N:Ansel', 'N:Dario', 'N:ap-deciders'];
-for (const [name, re] of CR_NAMES) for (const s of (name === 'N:named' ? CR_DISTRICTS.concat(['cr-all']) : CN_NAMES.includes(name) ? ['cr-clinic'] : DP_NAMES.includes(name) ? ['cr-dispatch'] : AP_NAMES.includes(name) ? ['cr-airport'] : ['cr-school'])) {
+const FN_NAMES = ['N:Edda', 'N:fn-deciders'], CN_NAMES = ['N:Marisol', 'N:Weller', 'N:Osei', 'N:Kit', 'N:cn-deciders'], DP_NAMES = ['N:Imogen', 'N:Celia', 'N:Lionel', 'N:Petra', 'N:Felix', 'N:dp-deciders'], AP_NAMES = ['N:Joanna', 'N:Callum', 'N:Odette', 'N:Ansel', 'N:Dario', 'N:ap-deciders'];
+for (const [name, re] of CR_NAMES) for (const s of (name === 'N:named' ? CR_DISTRICTS.concat(['cr-all']) : FN_NAMES.includes(name) ? ['cr-finale'] : CN_NAMES.includes(name) ? ['cr-clinic'] : DP_NAMES.includes(name) ? ['cr-dispatch'] : AP_NAMES.includes(name) ? ['cr-airport'] : ['cr-school'])) {
   const st = pstat(crScope(s), re);
   nameRows.push({n: name + '@' + s, st, ok: pOk(st)});
 }
@@ -520,12 +524,12 @@ const checks = [
   ['no tracked word or group leans ' + THRESH * 100 + '% or more to right or wrong (n>=' + MIN_N + ') in any district, any list type, or overall', !fails.length],
 ];
 if (crFiles.length) checks.push(
-  ['Crossroads: source scan found graded lists in the prologue, the Library, the School District, the Clinic, Dispatch and the Airport (' + crGraded.length + ' lists, ' + crOpts.length + ' options)', CR_DISTRICTS.every(d => crGraded.some(L => district(L.file) === d))],
+  ['Crossroads: source scan found graded lists in the prologue, the Library, the School District, the Clinic, Dispatch, the Airport and the finale (' + crGraded.length + ' lists, ' + crOpts.length + ' options)', CR_DISTRICTS.every(d => crGraded.some(L => district(L.file) === d))],
   ['Crossroads: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ') in its districts, its list types or overall', !crFails.length],
   ['Crossroads: no tracked word or group outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !crWarns.length],
   ['Crossroads stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on its own groups, n>=' + CR_BAND_MIN_N + ' (' + crBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', crBand.every(x => x.ok)],
   ['Crossroads: no punctuation tell (; : dash parentheses) — within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it, and the lone-mark pick no better than chance (' + punctRows.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln)).join(', ') + ')', punctRows.every(x => x.ok)],
-  ['Crossroads: no name tell — options naming a character, Kole, Priya, Dr Vale and Marsh in the School District, Marisol, Weller, Renata Osei, Kowal and Kit in the Clinic, Imogen, Celia, Lionel, Petra and Felix in Dispatch, and Joanna, Callum, Odette, Ansel and Dario at the Airport, within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it (' + nameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', nameRows.every(x => x.ok)],
+  ['Crossroads: no name tell — options naming a character, Kole, Priya, Dr Vale and Marsh in the School District, Marisol, Weller, Renata Osei, Kowal and Kit in the Clinic, Imogen, Celia, Lionel, Petra and Felix in Dispatch, and Joanna, Callum, Odette, Ansel and Dario at the Airport, and Edda and the finale’s deciders, within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it (' + nameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', nameRows.every(x => x.ok)],
   ['Crossroads: no lone-feature tell — no word or pattern (weekday, clock time, ID, digit, quote, n’t) that only one option of a list carries is right in ' + LF_RIGHT * 100 + '% of n>=' + LF_N + ' lists or wrong in ' + LF_WRONG * 100 + '% of n>=' + LF_WN + ' beyond chance (' + LF_K + ' sd + ' + LF_C + '); strongest leans: ' + lfRows.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !lfFails.length]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);

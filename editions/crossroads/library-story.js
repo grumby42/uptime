@@ -579,7 +579,7 @@ async function lbSummary() {
   if (!f.lbSummary) {
     f.lbSummary = true; touchCSF('Govern');
     if (t === 'manager' && f.lbBookmark) c.bossActions = {owned: 3, total: 3};
-    Series.markEdition('crossroads', {track: t, library: true});
+    crSeriesMark({library: true});
     await say('The PCs come back clean, LIB-GUEST has its own network, and I know whom to call at Shelfwright. And I know who decides what. Thank you.', 'Director Mina Strand');
   }
   const body = '<p class="big">The Public Library: done.</p>' +

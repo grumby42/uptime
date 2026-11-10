@@ -41,6 +41,17 @@
 // two-source drills, separate stores per owner and AIR-01/AIR-02 (an overclaim corrected; tenant records likely left, never
 // confirmed); save/reload mid-Airport; the Windsock Badge; the Quiet Thread clue ap-accounts (T1087); the summary ("Next: the
 // Compact-wide incident").
+// The finale (slice 6), both tracks, defender-side only: the door opens only with the Windsock Badge; Day 34 is a Saturday;
+// the manager applies each member's annex as written (15 game minutes), stands up command with each member deciding for
+// itself, reviews three records drills (one read with a single `needs` source is unsupported; the School District's report
+// is not part of the campaign), orders the way back by life safety with each leader picking its time, briefs with nothing
+// promised, runs the cross-member AAR and the roadmap; the DFIR consultant keeps four cases in four stores, logs intake (the
+// link's gap as a gap), three two-source drills, four reports (an overclaim corrected), the report under challenge (likely
+// held, then revised on new evidence); Rae's suspicion file laid out, every clue in its own district's words, still open;
+// the Compact Board (the Compass Badge); the edition ending ("Next edition: coming later"), the summary across every district,
+// the metric names from the career ladder; New Game+ in play: from the ending to a fresh save on the other track in its own
+// slot, the first save and the Town Hall save left byte-for-byte as they were, both reachable from the title screen;
+// save/reload mid-finale on both tracks.
 // Usage: node tests/crossroads.js   (UPTIME_FILE=file:///.../crossroads/index.html to test another build)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -551,7 +562,7 @@ async function session(ctx, file) {
     check('Airport Board cleared: the Windsock Badge (in the edition’s badge flags); Day 29 (Monday); drill C (the tenant’s PC) right and supported', apA.windsock === true && apA.badges.includes('apWindsock') && apA.day === 29 && apA.C.verdictOk && apA.C.supported, apA);
     check('Airport manager: the AAR adds three actions (owners arrive approved), the impact as counted, first time; Night 27’s call-out added to the weekend plan’s overtime', apA.aar.total === 12 && apA.aar.onTime === 12 && apA.impact.impactFirst === true && apA.cover.overtime === (apA.cover.n27 === 'swap' ? 23 : 20) + apA.n27.overtime, apA);
     check('Quiet Thread (manager): the firm’s status report shows svc-print listing the airport directory’s accounts (ap-accounts, T1087), not in the alert mix, not evicted', apA.clue && apA.tech === 'T1087' && apA.qt && apA.inAlerts === 0 && !apA.evicted, apA);
-    check('Airport summary: “Next: the Compact-wide incident”; series records the Airport; the directory trust named as an open risk; the objective done', /Next: the Compact-wide incident/.test(apSum) && /Open risk/.test(apSum) && /trusts the town’s/.test(apSum) && apA.obj.done && /Compact-wide incident/.test(apA.obj.text) && apA.ser.airport === true && apA.ser.dispatch === true, apA.obj);
+    check('Airport summary: “Next: the Compact-wide incident”; series records the Airport; the directory trust named as an open risk; the objective moves to the Compact operations room', /Next: the Compact-wide incident/.test(apSum) && /Open risk/.test(apSum) && /trusts the town’s/.test(apSum) && !apA.obj.done && apA.obj.map === 'fnops' && /Compact operations room/.test(apA.obj.text) && apA.ser.airport === true && apA.ser.dispatch === true, apA.obj);
     // The slice's rules, checked on the text: business IT only, one decider per decision, restore only from a checked copy, honest wording.
     const arules = await A.page.evaluate(() => {
       const out = {}, goods = [], all = [];
@@ -580,6 +591,114 @@ async function session(ctx, file) {
       return out; });
     check('Airport rules on the text: over- and under-reaction both wrong; the manager on duty runs the terminal, the airport manager decides the network, counsel what tenants are told, the Board any payment; pilots decide their flights; restore only from a checked copy, after the vendor’s session, pw-support kept disabled; tenant records likely, never confirmed; business and office IT only; facts in their own words; T1657, T1133 ruled out and open', Object.values(arules).every(Boolean), arules);
     await A.pickLabel(/^Keep exploring/); await A.settle();
+    // ---- The Compact-wide incident (slice 6, the finale), manager track ----
+    const fdoor = await A.page.evaluate(() => { const keep = G.f.apWindsock; G.f.apWindsock = false; const d = MAPS.csquare.doors['4,0'], shut = d.locked; G.f.apWindsock = keep; return { shut, open: !d.locked, to: d.to }; });
+    check('Finale: the square’s north door west of Town Hall’s is locked without the Windsock Badge and opens with it', /Windsock Badge/.test(fdoor.shut || '') && fdoor.open && fdoor.to === 'fnops', fdoor);
+    await A.follow(p => p.f.fnMet && !p.ui && !p.busy, []);
+    const farr = await A.page.evaluate(() => ({ day: G.day, wd: FN_DAY[G.day], hud: hudStatus(), obj: objective().text, rota: G.cr.fn.rota, n33: fnLead(33), pre: fnPre(), gaps: metricVals().crGaps, ap: G.cr.ap.rota.stats.gaps }));
+    check('Finale arrival: Day 34 (Saturday); week 5’s rota drawn up by the acting lead, Nights 28 and 29 carried, not on the scorecard; next, the plan’s test', farr.day === 34 && farr.wd === 'Saturday' && /the Compact/.test(farr.hud) && /plan’s test/.test(farr.obj) && farr.rota.assign[0] === farr.pre[0] && farr.rota.assign[1] === farr.pre[1] && farr.rota.assign.length === 9 && !!farr.n33, farr);
+    await A.follow(p => p.f.fnBoss1, []);
+    const ft = await A.page.evaluate(() => ({ act: G.cr.fn.activate, act2: G.cr.activate, m: metricVals(), boss: G.cr.fn.boss }));
+    check('Finale manager: each annex as written (met for the Clinic and the Airport), the retainer in 15 game minutes; command stood up with each member’s leaders deciding for it, first time', ft.act === 15 && ft.act2 === 15 && ft.m.crActivate === 15 && ft.boss.first[0] === true, ft);
+    // Drill B read with one of its two `needs` sources: unsupported.
+    await A.goTo('fnops', 26, 2);
+    await A.settle([], /Investigation drill/); await A.pickLabel(/^Start investigating$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/^Query: The shared directory’s sign-in records/);
+    await A.settle([], /Which question/); await A.pickLabel(/Where did svc-fileops sign in from/);
+    await A.settle([], /^Result/); await A.pickLabel(/^Back to the investigation$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/^Query: The hour/);
+    await A.settle([], /Which question/); await A.pickLabel(/When does the file service run/);
+    await A.settle([], /^Result/); await A.pickLabel(/^Back to the investigation$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/I have enough|Budget spent/);
+    await A.settle([], /^Verdict/); await A.pickLabel(/^Someone else, with the account’s own password/);
+    await A.settle([], /^Reasoning/); await A.pickLabel(/^No job or change was due/);
+    await A.settle([], /Debrief/);
+    const debFA = await A.modalText();
+    check('Finale manager drill B: the right verdict from the sign-in records alone is unsupported (the change records are needed too); T1078 tagged', /Unsupported/.test(debFA) && /two records/.test(debFA) && /T1078/.test(debFA), debFA.slice(0, 300));
+    await A.settle();
+    const srFn = await A.saveReload();
+    check('save/reload mid-finale (manager) restores the state; the export code round-trips', srFn.same && srFn.roundTrip && srFn.before.map === 'fnops', srFn);
+    await A.follow(p => p.f.fnBoss3, []);
+    const fb = await A.page.evaluate(() => ({ C: G.cr.drills.fnfloormgr, Ad: G.cr.drills.fnphishmgr, boss: G.cr.fn.boss, day: G.day }));
+    check('Finale manager: drill C (Imogen decides the floor: nothing changes) and drill A (the School District’s report is not part of the campaign) right and supported; the restore order and the briefings right first time; Saturday', fb.C.verdictOk && fb.C.supported && fb.Ad.verdictOk && fb.Ad.supported && fb.boss.ok && fb.boss.first.length === 3 && fb.day === 34, fb);
+    // Rae's suspicion file: every clue found, in its own district's words; the thread still open.
+    await A.follow(() => false, [], /The suspicion file, laid out/);
+    const qtA = await A.page.evaluate(() => { const t = document.getElementById('mbody').textContent, found = Series.qt().cluesFound;
+      return { found: found, cr: ['lb-rdp', 'sd-probe', 'cn-folders', 'dp-conns', 'ap-accounts'].filter(id => found.includes(id)), exact: found.filter(id => QT_CLUES[id]).every(id => t.includes(QT_CLUES[id].seen) && t.includes(QT_CLUES[id].where)), prior: crQtPriorLines().every(l => t.includes(l)),
+        open: /Open: who, and why\./.test(t), discovery: /discovery/.test(t), unknownCirc: !found.includes('lb-rdp') || /what the session did is unknown/.test(t), nolink: /Nothing links the two, and nothing rules a link out/.test(t), evicted: Series.qt().evicted, noActor: !/Volt|Typhoon|China|PRC|Russia|Iran|North Korea/i.test(t) }; });
+    check('Quiet Thread in the finale (manager): every clue found recalled in its own district’s words (the members’ five), discovery only, what it did on CIRC-01 unknown, nothing linking it to the campaign, no actor named, still open and not evicted', qtA.cr.length === 5 && qtA.exact && qtA.prior && qtA.open && qtA.discovery && qtA.unknownCirc && qtA.nolink && !qtA.evicted && qtA.noActor, qtA);
+    await A.follow(() => false, [], /The end of the Crossroads edition/);
+    const fnA = await A.page.evaluate(() => ({ compass: G.f.fnCompass, badges: EDITION.badgeFlags, aar: G.cr.aar, fn: G.cr.fn, obj: objective(), ser: crSeries(), day: G.day, labels: EDITION_METRICS.map(d => d.label), m: metricVals() }));
+    const fnEndA = await A.modalText();
+    check('Finale manager: the cross-member AAR adds three actions (owners arrive approved), the impact as counted, first time; the roadmap’s four lines; Monday', fnA.aar.total === 15 && fnA.aar.onTime === 15 && fnA.fn.aar.impactFirst === true && fnA.fn.aar.factorsWrong === 0 && fnA.fn.roadmap.wrong === 0 && fnA.day === 36, fnA.fn);
+    check('The Compact Board cleared: the Compass Badge (in the edition’s badge flags), three rounds right first time', fnA.compass === true && fnA.badges.includes('fnCompass') && fnA.fn.board.first.every(Boolean), fnA.fn.board);
+    check('The edition ending: “Next edition: coming later”; the summary across every district, prologue to finale; the thread still open; series records the finale, done, and New Game+; the objective done', /Next edition: coming later/.test(fnEndA) && /Every district, prologue to finale/.test(fnEndA) && ['The Public Library', 'The School District', 'The Community Clinic', 'Fire & EMS Dispatch', 'The Regional Airport', 'The Compact-wide incident'].every(d => fnEndA.includes(d)) && /Who, and why: open/.test(fnEndA) && fnA.ser.finale === true && fnA.ser.done === true && fnA.ser.ngPlus === true && fnA.obj.done, { obj: fnA.obj, ser: fnA.ser });
+    check('Scorecard metric names follow the career ladder (§2A/§2B)', ['Exercises run: actions closed', 'Time to activate outside help (game min)', 'Rota gaps (hours)', 'AAR actions closed by due date', 'Budget variance (overtime against budget)', 'Findings with every needs met', 'Claims later corrected'].every(l => fnA.labels.includes(l)) && !fnA.labels.includes('Overtime against budget'), fnA.labels);
+    // The finale's rules, checked on the text: defender-side only, one decider per decision, the way back, honest wording.
+    const frules = await A.page.evaluate(() => {
+      const out = {}, all = [], goods = [];
+      const add = arr => arr.forEach(o => { all.push(o.label); if (o.good) goods.push(o.label); });
+      [FN_TEST, FN_IMPACT, FN_STORES, FN_INTAKE.l01.opts, FN_INTAKE.p05.opts, FN_INTAKE.s13.opts].forEach(add);
+      FN_CHALLENGE.forEach(c => add(c.resp)); FN_BOARD_SPECS_MGR().concat(FN_BOARD_SPECS_DFIR()).forEach(b => add(b.resp));
+      const mb = fnMgrBossStages(), db = fnDfirBossStages(); [mb.s1, mb.s2, mb.s3, db.s1, db.s2, db.s3].forEach(st => add(st.resp));
+      Object.values(FN_DRILLS).forEach(d => { add(d.verdicts); add(d.reasons); add(d.alts); });
+      const txt = JSON.stringify(FN_DRILLS) + JSON.stringify([FN_REPORT_LIB, FN_REPORT_CLN, FN_REPORT_AIR, FN_REPORT_CMP, FN_CHALLENGE, FN_FACTORS, FN_ROADMAP]) + JSON.stringify(mb) + JSON.stringify(db) + all.join(' ') + fnArrive.toString() + fnSundayHtml.toString() + JSON.stringify(EXTRA_ACTIONS.fnsign) + JSON.stringify(EXTRA_ACTIONS.fnway);
+      // Only the ATT&CK IDs Revision 1 allows; no new technique; T1078 on the sign-in drills, none on the others.
+      const ids = (txt.match(/\bT\d{4}(?:\.\d{3})?\b/g) || []).filter((x, i, a) => a.indexOf(x) === i);
+      out.techs = ids.every(t => ['T1078', 'T1486', 'T1657', 'T1133', 'T1021.001', 'T1018', 'T1083', 'T1049', 'T1087'].includes(t)) && FN_DRILLS.fnsignmgr.techs[0] === 'T1078' && FN_DRILLS.fnsigndfir.techs[0] === 'T1078' && !FN_DRILLS.fnphishmgr.techs.length && !FN_DRILLS.fnfloormgr.techs.length;
+      // Defender-side only: outcomes and log lines, never how (no mechanism words about credentials, directories, replication or encryption).
+      out.defender = !/\b(kerberos|ntlm|hash(es)? of the password|pass-the|dump(ed|ing)?|mimikatz|replicat\w*|dcsync|golden ticket|brute|spray\w*|cipher|AES|RSA|lateral)\b/i.test(txt) && /How svc-fileops’s password was got/.test(JSON.stringify(FN_REPORT_CMP)) && FN_REPORT_CMP.claims.find(c => c.id === 'how').truth === 'unknown';
+      // One decider: each member's leaders decide for it; Edda for the shared services; the supervisor on duty decides the floor; each counsel its report.
+      out.deciders = /Each member’s leaders decide for their member/.test(mb.s1.resp.find(r => r.good).label) && /Imogen, on duty, decides/.test(FN_DRILLS.fnfloormgr.verdicts.find(v => v.good).label) && FN_DRILLS.fnfloormgr.verdicts.some(v => !v.good && /Edda decides that for the center/.test(v.label)) && /Each leader picks its time/.test(mb.s2.resp.find(r => r.good).label) && /Each member decides for itself/.test(FN_BOARD_SPECS_MGR()[1].resp.find(r => r.good).label) && /Each counsel decides for its report/.test(FN_BOARD_SPECS_DFIR()[2].resp.find(r => r.good).label) && /let the Library and Dispatch decide with counsel/.test(FN_TEST.find(o => o.good).label);
+      // Over- and under-reaction both wrong.
+      out.overUnder = mb.s1.resp.some(r => !r.good && /^You command every member/.test(r.label)) && mb.s1.resp.some(r => !r.good && /^Hold everything/.test(r.label)) && FN_TEST.some(o => !o.good && /shut down/.test(o.label)) && FN_TEST.some(o => !o.good && /^Not yet/.test(o.label)) && db.s1.resp.some(r => !r.good && /Shut every member’s file server down/.test(r.label));
+      // The way back: the directory reviewed and every password reset before any restore; the account the campaign used stays off.
+      const sun = fnSundayHtml();
+      out.way = sun.indexOf('reviews the shared directory') >= 0 && sun.indexOf('reviews the shared directory') < sun.indexOf('restored') && sun.indexOf('resets the password of every Compact admin and service account') < sun.indexOf('restored') && /svc-fileops stays disabled/.test(sun) && /in isolation/.test(sun) && db.s3.resp.some(r => !r.good && /switch it back on/.test(r.label)) && /Review the shared directory and reset every Compact admin and service password first/.test(db.s3.resp.find(r => r.good).label);
+      // Honest wording: likely never as fact; the Library's unknown; no legal conclusion; nothing promised.
+      const rc = (R, id) => R.claims.find(c => c.id === id).truth;
+      out.wording = rc(FN_REPORT_AIR, 'out') === 'likely' && rc(FN_REPORT_CLN, 'out') === 'likely' && rc(FN_REPORT_LIB, 'out') === 'unknown' && rc(FN_REPORT_CMP, 'link') === 'unknown' && FN_CHALLENGE[0].resp.find(r => r.good).label.startsWith('It stays likely') && FN_CHALLENGE[1].resp.find(r => r.good).label.startsWith('It stays likely') && !/duty|liab|negligen/i.test(FN_CHALLENGE[2].resp.find(r => r.good).label) && FN_CHALLENGE[2].resp.some(r => !r.good && /legal duty/.test(r.label)) && /Nothing promised/.test(mb.s3.resp.find(r => r.good).label);
+      // The School District: not part of the campaign, from the sign-ins and the trace.
+      out.school = /^Not part of the campaign/.test(FN_DRILLS.fnphishmgr.verdicts.find(v => v.good).label) && /^Not part of the campaign/.test(FN_DRILLS.fnphishdfir.verdicts.find(v => v.good).label) && JSON.stringify(FN_DRILLS.fnphishdfir.verdicts.find(v => v.good).needs) === '["p01","s13"]';
+      out.noActor = !/Volt|Typhoon|China|PRC|Russia|Iran|North Korea/i.test(txt);
+      out.addresses = (txt.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g) || []).every(a => /^(192\.0\.2|198\.51\.100|203\.0\.113)\./.test(a)) && (txt.match(/[a-z0-9-]+\.example\b/g) || []).length > 0;
+      return out; });
+    check('Finale rules on the text: only the ATT&CK IDs Revision 1 allows; defender-side only, the way in unknown; each member’s leaders decide for it, Edda for the shared services, the supervisor on duty the floor, each counsel its report; over- and under-reaction both wrong; the directory reviewed and every password reset before any restore; likely never as fact, no legal conclusion; the district not part of the campaign; no actor named; documentation addresses only', Object.values(frules).every(Boolean), frules);
+    // New Game+ in play: from the ending, a fresh save on the other track; the first save and Town Hall's untouched.
+    await A.pickLabel(/^New Game\+: the other track, on a fresh save$/);
+    await A.settle([], /New Game\+/);
+    const ngA0 = await A.page.evaluate(() => ({ main: localStorage.getItem('uptime.crossroads.save'), th: localStorage.getItem('uptime.slice1.save'), ng: localStorage.getItem('uptime.crossroads.ngplus.save') }));
+    await A.pickLabel(/^Start New Game\+$/);
+    await A.settle([], /nameplate/); await A.settle();
+    const ngA1 = await A.page.evaluate(() => ({ ngPlus: G.ngPlus, from: G.ngFrom, slot: crSlot, key: EDITION.saveKey, day: G.day, track: G.trackId }));
+    check('New Game+ from the ending: a fresh save (Day 1, no track yet) in the second slot; the first save as the ending left it', ngA1.ngPlus === true && ngA1.from === 'manager' && ngA1.slot === 'ngplus' && ngA1.key === 'uptime.crossroads.ngplus.save' && ngA1.day === 1 && ngA1.track === null && !!ngA0.main && ngA0.ng === null, ngA1);
+    await A.page.evaluate(() => { G.f.crRota = true; G.f.crGrowth = true; G.cr.rota = { assign: ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae'], stats: rotaStats(CR_ROTA, ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae']) }; G.cr.growth = 'paz'; run(crCommandTable); });
+    await A.settle([], /Two offers/);
+    const ngOffers = (await A.peek()).ui.options;
+    check('New Game+: the offers show the first save’s track (IR manager) as taken and the other open', ngOffers.find(o => /Mayor/.test(o.label)).disabled && !ngOffers.find(o => /Tallowmere/.test(o.label)).disabled && /taken: played on your first save/.test(await A.modalText()), ngOffers);
+    await A.pickLabel(/^Tallowmere/); await A.settle([], /Are you sure/); await A.pickLabel(/^Take it/); await A.settle();
+    const ngA2 = await A.page.evaluate(() => ({ main: localStorage.getItem('uptime.crossroads.save'), th: localStorage.getItem('uptime.slice1.save'), ng: localStorage.getItem('uptime.crossroads.ngplus.save'), ser: crSeries(), track: G.trackId }));
+    check('New Game+: the DFIR track on the second save; the first save and the Town Hall save byte-for-byte unchanged; the series keeps the first track and records the New Game+ one', ngA2.track === 'dfir' && !!ngA2.ng && ngA2.main === ngA0.main && ngA2.th === ngA0.th && ngA2.ser.track === 'manager' && ngA2.ser.ngTrack === 'dfir' && ngA2.ser.ngPlus === true, { ser: ngA2.ser, track: ngA2.track, same: ngA2.main === ngA0.main });
+    // Both saves from the title screen.
+    await A.page.reload(); await A.page.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui); await A.page.evaluate(() => __UPTIME.turbo(true));
+    const titleOpts = (await A.peek()).ui.options.map(o => o.label);
+    await A.pickLabel(/^Continue$/); await sleep(80);
+    const contMain = await A.page.evaluate(() => ({ track: G.trackId, sum: G.f.fnSummary, ng: G.ngPlus, slot: crSlot }));
+    await A.page.reload(); await A.page.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui); await A.page.evaluate(() => __UPTIME.turbo(true));
+    await A.pickLabel(/^Continue New Game\+$/); await sleep(80);
+    const contNg = await A.page.evaluate(() => ({ track: G.trackId, ng: G.ngPlus, slot: crSlot, day: G.day }));
+    check('Title screen: Continue opens the first save (the ending reached), Continue New Game+ the second (the DFIR track)', titleOpts.includes('Continue') && titleOpts.includes('Continue New Game+') && contMain.track === 'manager' && contMain.sum === true && !contMain.ng && contMain.slot === 'main' && contNg.track === 'dfir' && contNg.ng === true && contNg.slot === 'ngplus', { titleOpts, contMain, contNg });
+    check('manager session: zero console errors and network requests', !A.errors.length && !A.requests.length, { e: A.errors, r: A.requests });
+  }
+  await ctxA.close();
+
+  // ======== C: the lock on a fresh browser (a series record holding the manager track, no New Game+), and the test hook ========
+  const ctxC = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const C = await session(ctxC);
+  {
+    const A = C;
+    await A.page.evaluate(() => { localStorage.setItem('uptime.series', JSON.stringify({ v: 1, quietThread: { stage: 0, cluesFound: [], evicted: false }, editions: { crossroads: { track: 'manager', tracksPlayed: ['manager'] } } })); Series.load(); UI.closeModal(0); });
+    await A.settle();
     // A fresh save on this browser: the other track is locked; New Game+ opens it.
     await A.page.evaluate(() => { started = false; newGame(); });
     await A.settle([], /nameplate/); await A.settle();
@@ -599,9 +718,9 @@ async function session(ctx, file) {
     // A Town Hall save code is refused.
     const refused = await A.page.evaluate(() => { const th = encodeSave({ v: 1, seed: 1, map: 'hub', rank: 'Intern', f: {} }); try { sameEdition(decodeSave(th)); return false; } catch (e) { return /another Uptime edition/.test(e.message); } });
     check('Crossroads refuses a Town Hall save code (and keeps its own state)', refused);
-    check('manager session: zero console errors and network requests', !A.errors.length && !A.requests.length, { e: A.errors, r: A.requests });
+    check('fresh-browser session: zero console errors and network requests', !A.errors.length && !A.requests.length, { e: A.errors, r: A.requests });
   }
-  await ctxA.close();
+  await ctxC.close();
 
   // ======== B: DFIR track, with a Town Hall save ========
   const ctxB = await browser.newContext({ viewport: { width: 1280, height: 800 } });
@@ -868,9 +987,75 @@ async function session(ctx, file) {
     check('AIR-01: the Wednesday connections through Plinthwise’s network go out as “Likely” (the overclaim corrected and counted); who sent the email as “Unknown”; the ports map as “Confirmed”', /Likely:<\/b> The Wednesday connections came from Plinthwise’s own support network/.test(filedA) && /Unknown:<\/b> Who sent the email/.test(filedA) && /Confirmed:<\/b> Of the office switch’s 46 ports/.test(filedA) && /corrected in review/.test(filedA) && await B.page.evaluate(() => G.cr.reports.ap1.over === 1), filedA.slice(0, 400));
     await B.follow(() => false, [], /End of the Regional Airport/);
     const apB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.ap2, windsock: G.f.apWindsock, obj: objective(), ser: crSeries(), sw: G.f.apSwitch, stores: G.f.apStores, day: G.day }));
-    check('DFIR Airport: AIR-02 filed, 79 custody items (53 + the Airport’s 26: A-01 to A-25 and the shop’s own store, S-01), the airport manager’s question answered, separate stores per owner, Windsock Badge, summary “Next: the Compact-wide incident”', apB.cu.items === 79 && !!apB.r2 && apB.sw && apB.stores && apB.windsock && apB.obj.done && apB.ser.airport === true && apB.day === 29 && /Next: the Compact-wide incident/.test(await B.modalText()), apB);
+    check('DFIR Airport: AIR-02 filed, 79 custody items (53 + the Airport’s 26: A-01 to A-25 and the shop’s own store, S-01), the airport manager’s question answered, separate stores per owner, Windsock Badge, summary “Next: the Compact-wide incident”', apB.cu.items === 79 && !!apB.r2 && apB.sw && apB.stores && apB.windsock && !apB.obj.done && apB.obj.map === 'fnops' && apB.ser.airport === true && apB.day === 29 && /Next: the Compact-wide incident/.test(await B.modalText()), apB);
     check('AIR-02: the office systems encrypted from AP-OF-03 (confirmed); AP-DC-01 not encrypted over the window covered (confirmed); no directory change in the 14 days its log covers (confirmed); the export (confirmed); tenant records left (likely); MS-PC-01, the way in and publication unknown, the way in from the directory’s sign-in records', await B.page.evaluate(() => { const c = id => AP_REPORT_2.claims.find(x => x.id === id); return c('enc').truth === 'confirmed' && c('dc').truth === 'confirmed' && /between 04:00 and 08:00/.test(c('dc').text) && c('dir').truth === 'confirmed' && /14 days/.test(c('dir').text) && /^A-22: ap-admin’s first sign-in/.test(c('way').evidence[0]) && c('export').truth === 'confirmed' && c('left').truth === 'likely' && c('mspc').truth === 'unknown' && c('way').truth === 'unknown' && c('pub').truth === 'unknown'; }));
     await B.pickLabel(/^Keep exploring/); await B.settle();
+    // ---- The Compact-wide incident (slice 6, the finale), DFIR track ----
+    await B.follow(p => p.f.fnStoresSet, []);
+    check('Finale DFIR: four letters, four stores (CMP-01, LIB-03, CLN-03, AIR-03), a common actor’s indicators shared with each counsel agreeing; Day 34 (Saturday); four clients in parallel', await B.page.evaluate(() => G.cr.fn.stores === 4 && G.day === 34 && metricVals().crClients === 4 && /^Four cases, four stores/.test(FN_STORES.find(o => o.good).label)));
+    const cuF0 = await B.page.evaluate(() => JSON.parse(JSON.stringify(G.cr.custody)));
+    await B.follow(p => p.f.fnIntake, []);
+    const cuF = await B.page.evaluate(() => ({ cu: G.cr.custody, boss: G.cr.fn.boss, l01: FN_INTAKE.l01.opts.find(o => o.good).label, p05: FN_INTAKE.p05.opts.find(o => o.good).label }));
+    check('Finale DFIR: preserve first (stage 1 right first time); intake of fourteen items, each in its own case’s store, the link’s gap logged as a gap', cuF.cu.items === cuF0.items + 14 && cuF.cu.complete === cuF0.complete + 14 && cuF.cu.gaps === cuF0.gaps && cuF.boss.first[0] === true && /Library’s store/.test(cuF.l01) && /gap recorded as a gap/.test(cuF.p05), { now: cuF, before: cuF0 });
+    await B.follow(p => p.f.fnDrillB, []);
+    // Drill A (the district's question) with one of its two needed sources and a trap: unsupported. S-13 is logged first.
+    await B.goTo('fnops', 3, 11);
+    await B.settle([], /Investigation drill/); await B.pickLabel(/^Start investigating$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/^Query: P-01/);
+    await B.settle([], /Which question/); await B.pickLabel(/Did any district account sign in/);
+    await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/^Query: The morning/);
+    await B.settle([], /Which question/); await B.pickLabel(/Same morning/);
+    await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/I have enough|Budget spent/);
+    await B.settle([], /^Verdict/); await B.pickLabel(/^Not part of the campaign: P-01 and S-13/);
+    await B.settle([], /^Reasoning/); await B.pickLabel(/^P-01: no district sign-in/);
+    await B.settle([], /Debrief/);
+    const debFB = await B.modalText();
+    check('Finale DFIR drill A: not part of the campaign, but read from P-01 without S-13 it is unsupported (two sources); S-13 kept in the district’s own store', /Unsupported/.test(debFB) && /two sources/.test(debFB) && await B.page.evaluate(() => G.cr.custody.items) === cuF.cu.items + 1, debFB.slice(0, 300));
+    await B.settle();
+    const srFnB = await B.saveReload();
+    check('save/reload mid-finale (DFIR) restores the state; the export code round-trips', srFnB.same && srFnB.roundTrip && srFnB.before.track === 'dfir' && srFnB.before.map === 'fnops', srFnB);
+    await B.follow(p => p.f.fnBoss3, []);
+    check('Finale DFIR: drills B (not Compact work: T1078) and C (two refused sign-ins on the collector, the facts to the supervisor on duty) right and supported; what it reached and the way back right; Sunday, the directory reviewed and every password reset (tick)', await B.page.evaluate(() => G.cr.drills.fnsigndfir.verdictOk && G.cr.drills.fnsigndfir.supported && G.cr.drills.fncollectdfir.verdictOk && G.cr.drills.fncollectdfir.supported && G.cr.fn.boss.ok && G.cr.fn.boss.first.length === 3 && G.day === 35 && G.f.fnReset && tileDef('fnops', 26, 1).pal === 'fnRackOk' && G.cr.fn.requests.date === 'Day 35 (Sunday) 14:00'));
+    // The four reports: CLN-03's finding 3 (likely) written as confirmed, an overclaim, corrected and counted.
+    const corr0 = await B.page.evaluate(() => G.cr.corrected);
+    await B.goTo('fnops', 3, 11);
+    for (let rr = 0; rr < 4; rr++) {
+      await B.settle([], /Report · /); await B.pickLabel(/^Start writing$/);
+      for (let n = 1; ; n++) {
+        await B.settle([], /Finding \d+ of \d+|Report filed/);
+        if (/Report filed/.test(await B.modalText())) break;
+        const card = (await B.page.textContent('#modal .card')).trim();
+        const cl = await B.page.evaluate(t => { for (const [k, R] of [['lib', FN_REPORT_LIB], ['cln', FN_REPORT_CLN], ['air', FN_REPORT_AIR], ['cmp', FN_REPORT_CMP]]) { const c = R.claims.find(x => x.text === t); if (c) return { r: k, id: c.id, truth: c.truth }; } return null; }, card);
+        const want = cl && cl.r === 'cln' && cl.id === 'out' ? 'Confirmed' : { confirmed: 'Confirmed', likely: 'Likely', unknown: 'Unknown' }[cl && cl.truth];
+        await B.pickLabel(new RegExp('^' + want + '$'));
+      }
+      const filed = await B.page.innerHTML('#modal');
+      if (rr === 1) check('CLN-03: “nothing copied out” goes out as “Likely” (the overclaim corrected in review and counted); the encryption and Wrenfold as “Confirmed”', /Likely:<\/b> Nothing was copied out of S:\\FrontDesk/.test(filed) && /corrected in review/.test(filed) && /Confirmed:<\/b> WF-01/.test(filed), filed.slice(0, 400));
+      if (rr === 3) check('CMP-01: how the password was got and any link to the suspicion file as “Unknown”; the directory unchanged in its window as “Confirmed”', /Unknown:<\/b> How svc-fileops’s password was got/.test(filed) && /Unknown:<\/b> That this campaign is linked/.test(filed) && /Confirmed:<\/b> No account, group or policy in the shared directory/.test(filed), filed.slice(0, 400));
+      await B.pickLabel(/^Continue$/);
+    }
+    check('Finale DFIR: four reports filed, one overclaim counted as a claim later corrected', await B.page.evaluate(c0 => ['fnlib', 'fncln', 'fnair', 'fncmp'].every(k => !!G.cr.reports[k]) && G.cr.reports.fncln.over === 1 && G.cr.corrected === c0 + 1 && metricVals().crCorrected === c0 + 1, corr0));
+    await B.follow(p => p.f.fnChallenge, []);
+    const chB = await B.page.evaluate(() => ({ ch: G.cr.fn.challenge, rev: G.cr.fn.revised, cu: G.cr.custody, day: G.day, corr: G.cr.corrected }));
+    check('The report under challenge (Monday): “likely” held from the evidence against both pushes and put in plain words, first time; then revised on the town’s edge records (new evidence, not a correction); 97 custody items (79 + the finale’s 18)', chB.ch.first.every(Boolean) && chB.ch.first.length === 3 && chB.rev === true && chB.cu.items === 97 && chB.day === 36 && chB.corr === corr0 + 1, chB);
+    await B.follow(() => false, [], /The end of the Crossroads edition/);
+    const fnB = await B.page.evaluate(() => ({ compass: G.f.fnCompass, board: G.cr.fn.board, obj: objective(), ser: crSeries(), qt: Series.qt().evicted, reports: Object.keys(G.cr.reports) }));
+    const fnEndB = await B.modalText();
+    check('DFIR ending: the Compact Board cleared (the Compass Badge), the report challenge in the summary, “Next edition: coming later”, the reports column in the summary across every district; New Game+ granted; the thread open', fnB.compass && fnB.board.first.every(Boolean) && /The report under challenge/.test(fnEndB) && /Next edition: coming later/.test(fnEndB) && /Reports \(game score\)/.test(fnEndB) && fnB.ser.finale === true && fnB.ser.ngPlus === true && fnB.obj.done && !fnB.qt, fnB);
+    // New Game+ from the DFIR ending: the manager track on the second slot; the first save and Town Hall's untouched.
+    await B.pickLabel(/^New Game\+: the other track, on a fresh save$/);
+    await B.settle([], /New Game\+/);
+    const ngB0 = await B.page.evaluate(() => ({ main: localStorage.getItem('uptime.crossroads.save'), th: localStorage.getItem('uptime.slice1.save') }));
+    await B.pickLabel(/^Start New Game\+$/);
+    await B.settle([], /nameplate/); await B.settle();
+    await B.page.evaluate(() => { G.f.crRota = true; G.f.crGrowth = true; G.cr.rota = { assign: ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae'], stats: rotaStats(CR_ROTA, ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae']) }; G.cr.growth = 'paz'; run(crCommandTable); });
+    await B.settle([], /Two offers/);
+    const ngBo = (await B.peek()).ui.options;
+    await B.pickLabel(/^The Mayor/); await B.settle([], /Are you sure/); await B.pickLabel(/^Take it/); await B.settle();
+    const ngB1 = await B.page.evaluate(() => ({ main: localStorage.getItem('uptime.crossroads.save'), th: localStorage.getItem('uptime.slice1.save'), ng: !!localStorage.getItem('uptime.crossroads.ngplus.save'), ser: crSeries(), track: G.trackId, slot: crSlot, carry: G.cr.carry && G.cr.carry.from }));
+    check('New Game+ from the DFIR ending: the DFIR offer taken, the manager track on the second save (the Town Hall carry-over read again); the first save and the Town Hall save byte-for-byte unchanged', ngBo.find(o => /Tallowmere/.test(o.label)).disabled && !ngBo.find(o => /Mayor/.test(o.label)).disabled && ngB1.track === 'manager' && ngB1.slot === 'ngplus' && ngB1.ng && ngB1.main === ngB0.main && ngB1.th === ngB0.th && ngB1.th === thSave && ngB1.ser.track === 'dfir' && ngB1.ser.ngTrack === 'manager' && ngB1.carry === 'save', { ser: ngB1.ser, track: ngB1.track });
     await B.page.evaluate(() => storeSet(encodeSave(G)));
     const after = await B.page.evaluate(() => localStorage.getItem('uptime.slice1.save'));
     check('the Town Hall save is byte-for-byte unchanged after a Crossroads playthrough', after === thSave);

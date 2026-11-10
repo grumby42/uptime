@@ -716,7 +716,7 @@ async function apSummary() {
   const f = G.f, c = apC(), t = G.trackId;
   if (!f.apSummary) {
     f.apSummary = true; touchCSF('Govern');
-    Series.markEdition('crossroads', {track: t, airport: true});
+    crSeriesMark({airport: true});
     await say((t === 'manager' ? 'We kept the terminal working on paper, told every tenant what we knew and nothing we didn’t, and came back on a copy and a directory somebody checked first. ' : 'I know what was encrypted, what likely left, and what nobody can say yet, and Ansel can tell the tenants without guessing. ') + 'And I know whose each thing is on this network. Thank you.', 'Joanna Ferreday');
   }
   const body = '<p class="big">Regional Airport: done.</p>' +

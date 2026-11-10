@@ -709,7 +709,7 @@ async function dpSummary() {
   const f = G.f, c = dpC(), t = G.trackId, m = dpCardsMedian();
   if (!f.dpSummary) {
     f.dpSummary = true; touchCSF('Govern');
-    Series.markEdition('crossroads', {track: t, dispatch: true});
+    crSeriesMark({dispatch: true});
     await say((t === 'manager' ? 'We answered every call, called back every hang-up, and dispatched every one that needed it, and we know how long it took. ' : 'I know what happened to CAD and what didn’t, and I can say it to a crew without guessing. ') + 'And I know who decides what on my floor. Thank you.', 'Imogen Hale');
   }
   const body = '<p class="big">Fire &amp; EMS Dispatch: done.</p>' +

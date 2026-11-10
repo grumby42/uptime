@@ -694,9 +694,12 @@ function fmtTime(ms) { const s = Math.floor(ms / 1000); return Math.floor(s / 60
 /* ---------- Title ---------- */
 async function titleScreen() {
   titleOpen = true;
+  // Optional edition hook (Crossroads' New Game+; Town Hall defines none): {items, pick(k) -> true if it handled k}.
+  const extra = typeof editionTitle === 'function' ? editionTitle() : null;
   const has = !!storeGet();
   const items = [];
   if (has) items.push({label: 'Continue', meta: {k: 'cont'}});
+  if (extra) items.push(...extra.items);
   items.push({label: 'New game', meta: {k: 'new'}}, {label: 'Import save code', meta: {k: 'import'}}, {label: 'Settings', meta: {k: 'settings'}}, {label: 'Credits', meta: {k: 'credits'}});
   const body = '<div class="title"><div class="logo">UPTIME</div><div>' + esc(EDITION.title) + '</div></div>' +
     '<p>' + esc(EDITION.blurb) + '</p>' +
@@ -705,6 +708,7 @@ async function titleScreen() {
   const i = await UI.openModal('', body, items, {closable: false, cls: 'titlebox'});
   const k = items[i].meta.k;
   titleOpen = false;
+  if (extra && await extra.pick(k)) return;
   if (k === 'cont') {
     try { G = sameEdition(decodeSave(storeGet())); fixupState(); qtAdopt(); started = true; hudUpdate(); }
     catch (e) { await UI.openModal('Continue', '<p>That save could not be read: ' + esc(e.message) + '</p>', [{label: 'OK'}]); return titleScreen(); }

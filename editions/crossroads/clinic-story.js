@@ -646,7 +646,7 @@ async function cnSummary() {
   if (!f.cnSummary) {
     if (t === 'manager' && !f.cnExClosed) { f.cnExClosed = true; G.cr.ex.closed += c.ex || 0; f.cnFixCart = true; touchCSF('Recover'); await say('16:00: the tabletop’s three actions closed: tomorrow’s schedule, contact sheet and the clinicians’ summaries printed into the cart tonight, the back-entry checklist written, the binder’s call tree and Wrenfold’s escalation line updated. (game)'); }
     f.cnSummary = true; touchCSF('Govern');
-    Series.markEdition('crossroads', {track: t, clinic: true});
+    crSeriesMark({clinic: true});
     await say((t === 'manager' ? 'We ran a Saturday on paper and nobody went unseen. ' : 'I know what likely left, and what we can’t know, and I can say it to a patient without guessing. ') + 'And I know who decides what. Thank you.', 'Marisol Quintero');
   }
   const body = '<p class="big">The Community Clinic: done.</p>' +

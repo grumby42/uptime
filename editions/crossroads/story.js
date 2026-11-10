@@ -3,24 +3,29 @@
    Crossroads (edition 2): EDITION settings, state, the carry-over from Town
    Hall (read only: the Town Hall save is never written), the track (IR manager
    or principal DFIR consultant: chosen once, with a two-step confirmation, and
-   locked per save; New Game+ after the edition ending opens the other one), the
+   locked per save; New Game+ after the edition ending opens the other one on a
+   second save slot, and a small title-screen hook offers it), the
    engine hooks, the objective chain, and the prologue in the Town Hall war room
    (the on-call rota, analyst growth, the two offers). The Public Library is in
    library-*.js, the School District in school-*.js, the Community Clinic in clinic-*.js, Fire & EMS Dispatch in
-   dispatch-*.js and the Regional Airport in airport-*.js. Timeline: scratchpad crossroads-timeline.md.
+   dispatch-*.js, the Regional Airport in airport-*.js and the finale (the Compact-wide incident, the edition
+   ending) in finale-*.js. Timeline: scratchpad crossroads-timeline.md.
    ============================================================ */
 'use strict';
 
+// Two save slots: the first save, and New Game+'s (the other track, a fresh save). The first is never changed by New Game+.
+let crSlot = 'main';
+const CR_MAIN_KEY = 'uptime.crossroads.save', CR_NG_KEY = 'uptime.crossroads.ngplus.save';
 const EDITION = {
   id: 'crossroads',
-  saveKey: 'uptime.crossroads.save',
+  get saveKey() { return crSlot === 'ngplus' ? CR_NG_KEY : CR_MAIN_KEY; },
   ownMetrics: true,           // the analyst scorecard is replaced by each track's own (EDITION_METRICS)
   noTools: true,              // no tool console: you lead, or you investigate evidence
-  badgeFlags: ['lbBookmark', 'sdSlate', 'cnPulse', 'dpRelay', 'apWindsock'],
+  badgeFlags: ['lbBookmark', 'sdSlate', 'cnPulse', 'dpRelay', 'apWindsock', 'fnCompass'],
   title: 'Crossroads edition',
-  blurb: 'A week after Town Hall, two offers: run the region’s incident response programme, or join the outside firm working the hardest cases. Choose once; the Public Library is first, then the School District, the Community Clinic, Fire & EMS Dispatch and the Regional Airport.',
+  blurb: 'A week after Town Hall, two offers: run the region’s incident response programme, or join the outside firm working the hardest cases. Choose once; the Public Library is first, then the School District, the Community Clinic, Fire & EMS Dispatch, the Regional Airport and the Compact-wide incident. New Game+ comes with the ending.',
   creditsName: 'Crossroads edition',
-  creditsFacts: 'Crossroads: MITRE ATT&CK content v20.1 (T1056.001, T1078, T1657; Quiet Thread T1021.001). NIST SP 800-86 (August 2006): collection, examination, analysis, reporting; chain of custody; message digests of original and copy. NIST FIPS 180-4, Secure Hash Standard (SHA-256). Microsoft Learn, event 4624 (logon type 10, RemoteInteractive). CISA Tabletop Exercise Packages and the CTEP After-Action Report / Improvement Plan template. NICE Framework (CISA NICCS task pages T1450, T1510, T1617; v2.2.0 summary of changes). American Library Association: State Privacy Laws Regarding Library Records; ALA Code of Ethics. Joint Cybersecurity Advisory AA24-038A (Volt Typhoon), the basis of the Quiet Thread. School District: ATT&CK v20.1 T1078, T1550.001 and T1657; Quiet Thread T1018; US Department of Education, Student Privacy Policy Office, “What is FERPA?”, and PTAC, Protecting Student Privacy While Using Online Educational Services (February 2014); CISA, Protecting Our Future: Partnering to Safeguard K–12 Organizations from Cybersecurity Threats (January 2023). Community Clinic: ATT&CK v20.1 T1486, T1566.001, T1219 and T1657; Quiet Thread T1083; HHS, Fact Sheet: Ransomware and HIPAA; HHS 405(d), Health Industry Cybersecurity Practices (HICP, 2023 edition). Fire & EMS Dispatch: ATT&CK v20.1 T1078, T1133 and T1486; Quiet Thread T1049; CISA, 911 Cybersecurity Best Practices Package (July 2023); 911.gov, Next Generation 911 and About; FCC, 911 outages reporting page. Regional Airport: ATT&CK v20.1 T1657, T1133 and T1486; Quiet Thread T1087; CISA, Transportation Systems Sector; FAA, What is a NOTAM; ACRP Report 140, Guidebook on Best Practices for Airport Cybersecurity (2015), named only.'
+  creditsFacts: 'Crossroads: MITRE ATT&CK content v20.1 (T1056.001, T1078, T1657; Quiet Thread T1021.001). NIST SP 800-86 (August 2006): collection, examination, analysis, reporting; chain of custody; message digests of original and copy. NIST FIPS 180-4, Secure Hash Standard (SHA-256). Microsoft Learn, event 4624 (logon type 10, RemoteInteractive). CISA Tabletop Exercise Packages and the CTEP After-Action Report / Improvement Plan template. NICE Framework (CISA NICCS task pages T1450, T1510, T1617; v2.2.0 summary of changes). American Library Association: State Privacy Laws Regarding Library Records; ALA Code of Ethics. Joint Cybersecurity Advisory AA24-038A (Volt Typhoon), the basis of the Quiet Thread. School District: ATT&CK v20.1 T1078, T1550.001 and T1657; Quiet Thread T1018; US Department of Education, Student Privacy Policy Office, “What is FERPA?”, and PTAC, Protecting Student Privacy While Using Online Educational Services (February 2014); CISA, Protecting Our Future: Partnering to Safeguard K–12 Organizations from Cybersecurity Threats (January 2023). Community Clinic: ATT&CK v20.1 T1486, T1566.001, T1219 and T1657; Quiet Thread T1083; HHS, Fact Sheet: Ransomware and HIPAA; HHS 405(d), Health Industry Cybersecurity Practices (HICP, 2023 edition). Fire & EMS Dispatch: ATT&CK v20.1 T1078, T1133 and T1486; Quiet Thread T1049; CISA, 911 Cybersecurity Best Practices Package (July 2023); 911.gov, Next Generation 911 and About; FCC, 911 outages reporting page. Regional Airport: ATT&CK v20.1 T1657, T1133 and T1486; Quiet Thread T1087; CISA, Transportation Systems Sector; FAA, What is a NOTAM; ACRP Report 140, Guidebook on Best Practices for Airport Cybersecurity (2015), named only. The Compact-wide incident (the finale): no new facts; ATT&CK v20.1 T1078, T1486 and T1657 as already cited, the Quiet Thread’s clues recalled as found.'
 };
 const TH_SAVE_KEY = 'uptime.slice1.save';   // Town Hall's save: read for the carry-over, never written
 const CR_TRACK = {manager: {rank: 'IR manager', offer: 'the Mayor’s offer'}, dfir: {rank: 'Principal DFIR consultant', offer: 'Tallowmere’s offer'}};
@@ -30,7 +35,7 @@ const TH_BADGES = [['Key', g => g.badge], ['Seal', g => g.f && g.f.mrSeal], ['Sh
 /* ---------- State ---------- */
 function newState(seed) {
   return {
-    v: 1, edition: 'crossroads', seed: seed, map: 'cwar', x: 9, y: 7, dir: 'up',
+    v: 1, edition: 'crossroads', seed: seed, map: 'cwar', x: 9, y: 7, dir: 'up', ngPlus: false, ngFrom: null,
     day: 1, f: {}, party: [], active: 0, items: {guide: 0},
     focus: 50, focusMax: 50, rep: 50, uptime: 99.95,
     health: {}, rank: 'Security team lead', badge: false, track: {}, trackId: null, name: 'Lead',
@@ -39,7 +44,7 @@ function newState(seed) {
     mfaSet: [], fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
     fpWeight: 50, queue: 0, steps: 0, auto: false, autoReview: false, playMs: 0,
     cr: {carry: null, rota: null, growth: null, ex: {run: 0, actions: 0, closed: 0}, activate: null, aar: null, cover: null,
-      needs: {met: 0, total: 0}, corrected: 0, custody: null, first: null, drills: {}, reports: {}, board: null, boss: null, dojo: [false, false, false], status: null, sd: null, cn: null, dp: null, ap: null}
+      needs: {met: 0, total: 0}, corrected: 0, custody: null, first: null, drills: {}, reports: {}, board: null, boss: null, dojo: [false, false, false], status: null, sd: null, cn: null, dp: null, ap: null, fn: null}
   };
 }
 // The engine owns G.track (best/worst per metric), so the career track lives in G.trackId (and G.f.crTrack).
@@ -75,18 +80,50 @@ function crCarryHtml(c) {
 /* ---------- Series record for this edition: the track, New Game+ ---------- */
 function crSeries() { const s = Series.load(); return s.editions.crossroads || {}; }
 function crLockedTrack() { const s = crSeries(); return s.track && !s.ngPlus ? s.track : null; }
-// Granted by the edition ending (a later slice); tests call it directly.
+// Granted by the edition ending (finale-story.js); tests may call it directly.
 function crGrantNgPlus() { Series.markEdition('crossroads', {ngPlus: true}); return crSeries(); }
+// A district's summary marks the series record. On a New Game+ save the series keeps the first save's track; the
+// New Game+ track is recorded as ngTrack.
+function crSeriesMark(info) { Series.markEdition('crossroads', Object.assign(G && G.ngPlus ? {ngTrack: G.trackId} : {track: G.trackId}, info)); }
+function crNgSave() { try { return localStorage.getItem(CR_NG_KEY); } catch (e) { return null; } }
+// Start New Game+: the second slot, a fresh save, the other track (the first save's track shown as taken).
+function crNgBegin(other) {
+  const from = crSeries().track || (other === 'manager' ? 'dfir' : 'manager');
+  Series.markEdition('crossroads', {ngPlus: true, ngTrack: other});
+  crSlot = 'ngplus'; started = false;
+  newGame();
+  G.ngPlus = true; G.ngFrom = from;
+}
+// The engine's optional title-screen hook (Town Hall defines none): Continue New Game+, or start it, once it is granted.
+function editionTitle() {
+  crSlot = 'main';
+  const s = crSeries();
+  if (!s.ngPlus) return null;
+  const has = !!crNgSave();
+  if (!has && !s.track) return null;
+  const items = [has ? {label: 'Continue New Game+', note: 'your second save: ' + (CR_TRACK[s.ngTrack] ? CR_TRACK[s.ngTrack].rank : 'the other track'), meta: {k: 'ngcont'}}
+    : {label: 'New Game+', note: 'a fresh save on the other track: ' + CR_TRACK[s.track === 'manager' ? 'dfir' : 'manager'].rank, meta: {k: 'ngnew'}}];
+  return {items: items, pick: async k => {
+    if (k === 'ngcont') {
+      crSlot = 'ngplus';
+      try { G = sameEdition(decodeSave(storeGet())); fixupState(); qtAdopt(); started = true; hudUpdate(); }
+      catch (e) { crSlot = 'main'; await UI.openModal('Continue New Game+', '<p>That save could not be read: ' + esc(e.message) + '</p>', [{label: 'OK'}]); titleScreen(); }
+      return true;
+    }
+    if (k === 'ngnew') { crNgBegin(s.track === 'manager' ? 'dfir' : 'manager'); return true; }
+    return false;
+  }};
+}
 
 /* ---------- Engine hooks ---------- */
-function hudStatus() { return 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + (G.map === 'library' || G.map === 'lboard' ? ' · Library' : G.map === 'school' || G.map === 'sboard' ? ' · School District' : G.map === 'clinic' || G.map === 'cnboard' ? ' · Clinic' : G.map === 'dispatch' || G.map === 'dpboard' ? ' · Dispatch' : G.map === 'airport' || G.map === 'apboard' ? ' · Airport' : ''); }
+function hudStatus() { return 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + (G.map === 'library' || G.map === 'lboard' ? ' · Library' : G.map === 'school' || G.map === 'sboard' ? ' · School District' : G.map === 'clinic' || G.map === 'cnboard' ? ' · Clinic' : G.map === 'dispatch' || G.map === 'dpboard' ? ' · Dispatch' : G.map === 'airport' || G.map === 'apboard' ? ' · Airport' : G.map === 'fnops' || G.map === 'fnboard' ? ' · the Compact' : ''); }
 async function editionQueue() {
   const t = crTrack();
   await say(t === 'dfir' ? 'No alert queue on a consultant’s desk: your cases come to you through scoping letters. The Compact’s on-call leads work its queue.'
     : t === 'manager' ? 'The on-call queue: the Compact’s leads work it, and anything that needs you reaches you by phone. Your job is the rota, the exercises and the records.'
     : 'The team’s queue: the leads have it. Today is the rota and the people.');
 }
-function editionTile(d, ch, x, y) { if (typeof lbTile === 'function') d = lbTile(d, ch, x, y); if (typeof sdTile === 'function') d = sdTile(d, ch, x, y); if (typeof cnTile === 'function') d = cnTile(d, ch, x, y); if (typeof dpTile === 'function') d = dpTile(d, ch, x, y); if (typeof apTile === 'function') d = apTile(d, ch, x, y); return d; }
+function editionTile(d, ch, x, y) { if (typeof lbTile === 'function') d = lbTile(d, ch, x, y); if (typeof sdTile === 'function') d = sdTile(d, ch, x, y); if (typeof cnTile === 'function') d = cnTile(d, ch, x, y); if (typeof dpTile === 'function') d = dpTile(d, ch, x, y); if (typeof apTile === 'function') d = apTile(d, ch, x, y); if (typeof fnTile === 'function') d = fnTile(d, ch, x, y); return d; }
 function surfaceMissed() { return Promise.resolve(); }   // no wild alerts here, so nothing can be missed
 async function evolveCheck() {}
 const crPct = (a, b) => b ? Math.round(a / b * 100) : null;
@@ -108,7 +145,7 @@ function editionMetricVals() {
     crCustody: c.custody ? crPct(c.custody.complete, c.custody.items) : null,
     crCGaps: c.custody ? c.custody.gaps : null,
     crFirst: c.first === null || c.first === undefined ? null : c.first,
-    crClients: crTrack() === 'dfir' && G.f.sdStores ? 3 : crTrack() === 'dfir' && G.f.lbStores ? 2 : null,
+    crClients: crTrack() === 'dfir' && G.f.fnStoresSet ? 4 : crTrack() === 'dfir' && G.f.sdStores ? 3 : crTrack() === 'dfir' && G.f.lbStores ? 2 : null,
     crDispatch: dp.boss && dp.boss.done && typeof dpCardsMedian === 'function' ? dpCardsMedian() : null,
     crAnswered: dp.boss && dp.boss.done ? 100 : null
   };
@@ -116,14 +153,14 @@ function editionMetricVals() {
 const crMgr = () => !!G && (crTrack() === 'manager' || !crTrack());
 const crDfir = () => !!G && crTrack() === 'dfir';
 const EDITION_METRICS = [
-  {k: 'crExAct', label: 'Exercise actions closed', unit: '%', higher: true, when: () => crTrack() === 'manager'},
+  {k: 'crExAct', label: 'Exercises run: actions closed', unit: '%', higher: true, when: () => crTrack() === 'manager'},
   {k: 'crActivate', label: 'Time to activate outside help (game min)', unit: ' min', higher: false, lower: true, when: () => crTrack() === 'manager'},
-  {k: 'crGaps', label: 'Rota gaps (hours uncovered)', unit: ' h', higher: false, lower: true, when: crMgr},
+  {k: 'crGaps', label: 'Rota gaps (hours)', unit: ' h', higher: false, lower: true, when: crMgr},
   {k: 'crTired', label: 'Nights on call past two in a row', unit: '', higher: false, lower: true, when: crMgr},
-  {k: 'crAar', label: 'AAR actions closed by their due date', unit: '%', higher: true, when: () => crTrack() === 'manager'},
-  {k: 'crBudget', label: 'Overtime against budget', unit: '%', higher: false, lower: true, when: crMgr},
-  {k: 'crNeeds', label: 'Findings with every needed source read', unit: '%', higher: true, when: crDfir},
-  {k: 'crCorrected', label: 'Claims corrected after review', unit: '', higher: false, lower: true, when: crDfir},
+  {k: 'crAar', label: 'AAR actions closed by due date', unit: '%', higher: true, when: () => crTrack() === 'manager'},
+  {k: 'crBudget', label: 'Budget variance (overtime against budget)', unit: '%', higher: false, lower: true, when: crMgr},
+  {k: 'crNeeds', label: 'Findings with every needs met', unit: '%', higher: true, when: crDfir},
+  {k: 'crCorrected', label: 'Claims later corrected', unit: '', higher: false, lower: true, when: crDfir},
   {k: 'crCustody', label: 'Evidence items with full custody', unit: '%', higher: true, when: crDfir},
   {k: 'crCGaps', label: 'Custody gaps', unit: '', higher: false, lower: true, when: crDfir},
   {k: 'crFirst', label: 'Time to first defensible finding (game h)', unit: ' h', higher: false, lower: true, when: crDfir},
@@ -140,16 +177,16 @@ function editionScorecard() {
   }).join('');
   const t = crTrack(), c = G.cr;
   return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
-    (typeof lbScoreHtml === 'function' ? lbScoreHtml() : '') + (typeof sdScoreHtml === 'function' ? sdScoreHtml() : '') + (typeof cnScoreHtml === 'function' ? cnScoreHtml() : '') + (typeof dpScoreHtml === 'function' ? dpScoreHtml() : '') + (typeof apScoreHtml === 'function' ? apScoreHtml() : '') +
+    (typeof lbScoreHtml === 'function' ? lbScoreHtml() : '') + (typeof sdScoreHtml === 'function' ? sdScoreHtml() : '') + (typeof cnScoreHtml === 'function' ? cnScoreHtml() : '') + (typeof dpScoreHtml === 'function' ? dpScoreHtml() : '') + (typeof apScoreHtml === 'function' ? apScoreHtml() : '') + (typeof fnScoreHtml === 'function' ? fnScoreHtml() : '') +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (t ? ' · track: ' + (t === 'manager' ? 'IR manager (the Compact)' : 'principal DFIR consultant (Tallowmere)') : ' · the offers come at 16:00') +
-    ' · Bookmark Badge: ' + (G.f.lbBookmark ? 'yes' : 'not yet') + (G.f.sdMet ? ' · Slate Badge: ' + (G.f.sdSlate ? 'yes' : 'not yet') : '') + (G.f.cnMet ? ' · Pulse Badge: ' + (G.f.cnPulse ? 'yes' : 'not yet') : '') + (G.f.dpMet ? ' · Relay Badge: ' + (G.f.dpRelay ? 'yes' : 'not yet') : '') + (G.f.apMet ? ' · Windsock Badge: ' + (G.f.apWindsock ? 'yes' : 'not yet') : '') + '</p>' +
+    ' · Bookmark Badge: ' + (G.f.lbBookmark ? 'yes' : 'not yet') + (G.f.sdMet ? ' · Slate Badge: ' + (G.f.sdSlate ? 'yes' : 'not yet') : '') + (G.f.cnMet ? ' · Pulse Badge: ' + (G.f.cnPulse ? 'yes' : 'not yet') : '') + (G.f.dpMet ? ' · Relay Badge: ' + (G.f.dpRelay ? 'yes' : 'not yet') : '') + (G.f.apMet ? ' · Windsock Badge: ' + (G.f.apWindsock ? 'yes' : 'not yet') : '') + (G.f.fnMet ? ' · Compass Badge: ' + (G.f.fnCompass ? 'yes' : 'not yet') : '') + (G.ngPlus ? ' · New Game+' : '') + '</p>' +
     (c && c.carry ? '<p class="small">Carried from Town Hall: ' + (c.carry.rank ? esc(c.carry.rank) : 'no save') + (c.carry.badges.length ? ' · badges ' + c.carry.badges.join(', ') : '') + ' · suspicion file ' + qtCount() + ' notes.</p>' : '') +
     '<p class="small">Every number here is a game model (game). Objective: ' + esc(objective().text) + '</p>';
 }
 function peekExtra() {
-  // crSummary: the end of the edition so far (the Regional Airport's summary, slice 5); dpSummary, cnSummary, sdSummary and
-  // lbSummary: Fire & EMS Dispatch's, the Community Clinic's, the School District's and the Library's.
-  return {track: crTrack(), crSummary: !!(G.f && G.f.apSummary), dpSummary: !!(G.f && G.f.dpSummary), cnSummary: !!(G.f && G.f.cnSummary), sdSummary: !!(G.f && G.f.sdSummary), lbSummary: !!(G.f && G.f.lbSummary), cr: G.cr ? JSON.parse(JSON.stringify(G.cr)) : null, series: crSeries()};
+  // crSummary: the edition's ending (the finale, slice 6); apSummary, dpSummary, cnSummary, sdSummary and lbSummary: the
+  // Regional Airport's, Fire & EMS Dispatch's, the Community Clinic's, the School District's and the Library's.
+  return {track: crTrack(), ngPlus: !!G.ngPlus, slot: crSlot, crSummary: !!(G.f && G.f.fnSummary), apSummary: !!(G.f && G.f.apSummary), dpSummary: !!(G.f && G.f.dpSummary), cnSummary: !!(G.f && G.f.cnSummary), sdSummary: !!(G.f && G.f.sdSummary), lbSummary: !!(G.f && G.f.lbSummary), cr: G.cr ? JSON.parse(JSON.stringify(G.cr)) : null, series: crSeries()};
 }
 
 /* ---------- Intro (new game) ---------- */
@@ -161,6 +198,7 @@ async function introScript() {
   qtMirror();
   await say('Day 1, Monday, 09:00. Town Hall, the war room. Nine days after the night of the portal export.');
   await UI.openModal('What you carry from Town Hall', crCarryHtml(c), [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
+  if (G.ngPlus) await UI.openModal('New Game+', '<p>A fresh save, in its own slot. Your first save, on the ' + esc(CR_TRACK[G.ngFrom] ? CR_TRACK[G.ngFrom].rank : 'other') + ' track, is kept as it stands; Continue opens it from the title screen.</p><p>At 16:00 the offer you took last time shows as taken: this save takes the other one.</p>', [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
   const i = await UI.openModal('The nameplate on the war room door', '<p>What should it say? Type it, then tap or click your choice. (Leave it blank to keep “' + esc(G.name) + '”.)</p><textarea id="codebox" rows="1" maxlength="24" placeholder="' + esc(G.name) + '"></textarea>',
     [{label: 'Keep “' + G.name + '”', meta: {good: true, k: 'keep'}}, {label: 'Use the name I typed', meta: {k: 'use'}}], {closable: false, nav: 'name-plate'});
   if (i === 1) { const n = String(lastImportText || '').replace(/[^\p{L}\p{N} .’'-]/gu, '').trim().slice(0, 24); if (n) G.name = n; }
@@ -181,12 +219,13 @@ function objective() {
   if (typeof sdObjective === 'function') { const o = sdObjective(); if (o && !o.done) return o; }
   if (typeof cnObjective === 'function') { const o = cnObjective(); if (o && !o.done) return o; }
   if (typeof dpObjective === 'function') { const o = dpObjective(); if (o && !o.done) return o; }
-  if (typeof apObjective === 'function') { const o = apObjective(); if (o) return o; }
+  if (typeof apObjective === 'function') { const o = apObjective(); if (o && !o.done) return o; }
+  if (typeof fnObjective === 'function') { const o = fnObjective(); if (o) return o; }
   return {text: 'Regional Airport done. Next: the Compact-wide incident.', done: true};
 }
 
 /* ---------- Triggers and interactions ---------- */
-function triggers() { return (typeof lbTriggers === 'function' && lbTriggers()) || (typeof sdTriggers === 'function' && sdTriggers()) || (typeof cnTriggers === 'function' && cnTriggers()) || (typeof dpTriggers === 'function' && dpTriggers()) || (typeof apTriggers === 'function' && apTriggers()); }
+function triggers() { return (typeof lbTriggers === 'function' && lbTriggers()) || (typeof sdTriggers === 'function' && sdTriggers()) || (typeof cnTriggers === 'function' && cnTriggers()) || (typeof dpTriggers === 'function' && dpTriggers()) || (typeof apTriggers === 'function' && apTriggers()) || (typeof fnTriggers === 'function' && fnTriggers()); }
 function interact() {
   const [dx, dy] = DIRS[G.dir];
   const tx = G.x + dx, ty = G.y + dy;
@@ -200,11 +239,12 @@ function interact() {
   if (typeof cnInteract === 'function' && cnInteract(ch, tx, ty)) return;
   if (typeof dpInteract === 'function' && dpInteract(ch, tx, ty)) return;
   if (typeof apInteract === 'function' && apInteract(ch, tx, ty)) return;
+  if (typeof fnInteract === 'function' && fnInteract(ch, tx, ty)) return;
   if (G.map !== 'cwar' && G.map !== 'csquare') return;
   if (ch === 'µ') run(async () => { await say(G.cr.rota ? 'The team board: next week’s nights, a name on each, and the night post still advertised.' : 'The team board: next week’s nights, every one of them blank.'); });
   else if (ch === '¥') run(crCommandTable);
   else if (ch === 'Y') run(async () => { await say(G.trackId ? 'Your desk, cleared for whoever sits here next.' : 'Your desk: the team board on a screen, the plan on the wall behind it.'); });
-  else if (ch === 'S') run(async () => { await say('THE TOWN SQUARE. North: Town Hall, and beside it Fire & EMS Dispatch. South: the Public Library, and beside it the Regional Airport’s terminal offices. East: the School District. West: the Community Clinic.'); });
+  else if (ch === 'S') run(async () => { await say('THE TOWN SQUARE. North: Town Hall, with Fire & EMS Dispatch to the east of it and the Compact operations room to the west. South: the Public Library, and beside it the Regional Airport’s terminal offices. East: the School District. West: the Community Clinic.'); });
 }
 async function talk(npc) {
   if (typeof lbTalk === 'function' && await lbTalk(npc)) return;
@@ -212,6 +252,7 @@ async function talk(npc) {
   if (typeof cnTalk === 'function' && await cnTalk(npc)) return;
   if (typeof dpTalk === 'function' && await dpTalk(npc)) return;
   if (typeof apTalk === 'function' && await apTalk(npc)) return;
+  if (typeof fnTalk === 'function' && await fnTalk(npc)) return;
   const who = npc.name, f = G.f;
   switch (npc.id) {
     case 'raecr':
@@ -311,14 +352,14 @@ async function crCommandTable() {
   await say('The council and the members of the Riverbend Shared Services Compact voted on Friday (game). One incident response programme for all of them: the town, the Public Library, the School District, the Community Clinic, Fire & EMS Dispatch and the Regional Airport. Run from here, permanent, with a budget and a rota. I want you to run it: IR manager.', 'Mayor Dalia Merrin');
   await say('Lucia Ferrand, Tallowmere Forensics. We worked the portal export with you and we’ve had the file since last Monday. We want you on the team: the hardest cases, several clients at once, reports that stand up. Principal DFIR consultant.', 'Lucia Ferrand');
   await say('The Mayor’s seat is people, money, exercises and the calls nobody else wants to make. Tallowmere’s is evidence, custody and reports. Both stay with the file. You can’t take both.', 'Rae Okafor');
-  const locked = crLockedTrack();
+  const locked = crLockedTrack(), taken = G.ngPlus ? G.ngFrom : null;   // New Game+: the first save's track is taken
   while (true) {
     const items = ['manager', 'dfir'].map(t => ({label: t === 'manager' ? 'The Mayor: IR manager for the Compact' : 'Tallowmere: principal DFIR consultant',
-      note: locked && locked !== t ? 'locked: chosen on another save in this browser; New Game+ comes with the edition’s ending, in a later slice' : t === 'manager' ? 'people, rota, exercises, retainers, AARs' : 'evidence, custody, reports, several clients',
-      disabled: !!(locked && locked !== t), meta: {track: t, good: !(locked && locked !== t)}}));
+      note: taken === t ? 'taken: played on your first save; this New Game+ save takes the other' : !taken && locked && locked !== t ? 'locked: chosen on another save in this browser; New Game+ comes with the edition’s ending' : t === 'manager' ? 'people, rota, exercises, retainers, AARs' : 'evidence, custody, reports, several clients',
+      disabled: taken ? taken === t : !!(locked && locked !== t), meta: {track: t, good: taken ? taken !== t : !(locked && locked !== t)}}));
     const i = await UI.openModal('Two offers', '<p>Choose the seat you take for the rest of this edition. Both tracks visit the same districts; the work differs.</p>', items, {closable: false, nav: 'track-pick'});
     const t = items[i].meta.track;
-    const j = await UI.openModal('Are you sure?', '<p>You are taking <b>' + esc(CR_TRACK[t].rank) + '</b>.</p><p>This can’t be changed on this save. New Game+ comes with the edition’s ending (a later slice) and opens the other track on a fresh save; until then this browser keeps the track you take.</p>',
+    const j = await UI.openModal('Are you sure?', '<p>You are taking <b>' + esc(CR_TRACK[t].rank) + '</b>.</p><p>This can’t be changed on this save. New Game+ comes with the edition’s ending and opens the other track on a fresh save; until then this browser keeps the track you take.</p>',
       [{label: 'Take it: ' + CR_TRACK[t].rank, meta: {good: true, k: 'yes'}}, {label: 'Go back to the two offers', meta: {k: 'no'}}], {closable: false, nav: 'track-confirm', cursor: 1});
     if (j !== 0) continue;
     crSetTrack(t);
@@ -332,7 +373,7 @@ async function crCommandTable() {
 function crSetTrack(t) {
   G.trackId = t; G.f.crTrack = t; G.rank = CR_TRACK[t].rank;
   const s = crSeries(), played = (s.tracksPlayed || []).filter(x => x !== t).concat([t]);
-  Series.markEdition('crossroads', {track: t, tracksPlayed: played, started: true});
+  Series.markEdition('crossroads', G.ngPlus ? {ngTrack: t, tracksPlayed: played} : {track: t, tracksPlayed: played, started: true});
   touchCSF('Govern'); track();
 }
 // The evening and Night 1: the Library's keylogger alert, handled by Night 1's lead (from your rota).

@@ -35,7 +35,7 @@ Object.assign(TILES, {
 // The war room (prologue): the team board (north-west), the command table, your desk, the door south to the square.
 // The square: Town Hall's door in the north edge, the Library's door in the south edge, the School District's in the east
 // edge, the Community Clinic's in the west edge, Fire & EMS Dispatch's in the north edge beside Town Hall's, the Regional
-// Airport's in the south edge beside the Library's.
+// Airport's in the south edge beside the Library's, the Compact operations room's (the finale) in the north edge, west of Town Hall's.
 const MAPS = {
   cwar: {
     name: 'Town Hall · war room',
@@ -57,7 +57,7 @@ const MAPS = {
   csquare: {
     name: 'The town square',
     rows: [
-      "hhhhhhhhhEhhhhhDhhhh",
+      "hhhhDhhhhEhhhhhDhhhh",
       "h..................h",
       "h..S...............h",
       "h..................h",
@@ -79,7 +79,9 @@ const MAPS = {
       '15,0': {to: 'dispatch', x: 15, y: 14, dir: 'up',
         get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.cnPulse) ? undefined : 'Fire & EMS Dispatch. Its door opens to you after the Clinic Board (the Pulse Badge, game).'; }},
       '15,10': {to: 'airport', x: 15, y: 1, dir: 'down',
-        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.dpRelay) ? undefined : 'The Regional Airport’s terminal offices. Their door opens to you after the Dispatch Board (the Relay Badge, game).'; }}},
+        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.dpRelay) ? undefined : 'The Regional Airport’s terminal offices. Their door opens to you after the Dispatch Board (the Relay Badge, game).'; }},
+      '4,0': {to: 'fnops', x: 4, y: 14, dir: 'up',
+        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.apWindsock) ? undefined : 'The Compact operations room. Its door opens to you after the Airport Board (the Windsock Badge, game).'; }}},
     outdoor: true
   }
 };

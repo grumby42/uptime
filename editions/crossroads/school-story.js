@@ -668,7 +668,7 @@ async function sdSummary() {
   const f = G.f, c = sdC(), t = G.trackId;
   if (!f.sdSummary) {
     f.sdSummary = true; touchCSF('Govern');
-    Series.markEdition('crossroads', {track: t, school: true});
+    crSeriesMark({school: true});
     await say((t === 'manager' ? 'I know what we share and with whom, ' : 'I know what we shared with Lumenlark, ') + 'every teacher signs in as themselves, and I know which clause to read. And I know who decides what. Thank you.', 'Dr Corinne Vale');
   }
   const body = '<p class="big">The School District: done.</p>' +

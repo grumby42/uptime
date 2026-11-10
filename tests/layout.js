@@ -226,7 +226,7 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
       return { overlap: h.bottom > s.top + 0.5 && h.top < s.bottom, truncated: ob.scrollWidth > ob.clientWidth + 1 || ob.scrollHeight > ob.clientHeight + 1 || st.scrollWidth > st.clientWidth + 1, lines: Math.round(ob.getBoundingClientRect().height / lh), sw: document.documentElement.scrollWidth, W: innerWidth }; });
     const h0 = await hud();
     check('Crossroads ' + name + ': HUD band clear of the map, nothing truncated, no horizontal scroll', !h0.overlap && !h0.truncated && h0.sw <= h0.W, h0);
-    const lo = await p.evaluate(() => { const re = /(?:\bat\(|\btext:\s*)(['"])((?:(?!\1)[^\\]|\\.)*)\1/g, all = []; for (const f of [objective, lbObjective, sdObjective, cnObjective, dpObjective, apObjective]) { const src = f.toString(); let m; while ((m = re.exec(src))) all.push(m[2]); } all.sort((a, b) => b.length - a.length); return all[0]; });
+    const lo = await p.evaluate(() => { const re = /(?:\bat\(|\btext:\s*)(['"])((?:(?!\1)[^\\]|\\.)*)\1/g, all = []; for (const f of [objective, lbObjective, sdObjective, cnObjective, dpObjective, apObjective, fnObjective]) { const src = f.toString(); let m; while ((m = re.exec(src))) all.push(m[2]); } all.sort((a, b) => b.length - a.length); return all[0]; });
     await p.evaluate(t => { window.__ro = objective; objective = () => ({ text: t, map: 'cwar', x: 1, y: 1 }); }, lo); await sleep(150);
     const h1 = await hud();
     check('Crossroads ' + name + ': the longest objective (' + lo.length + ' chars) wraps in full, at most 3 lines', !h1.truncated && !h1.overlap && h1.lines <= 3, h1);
@@ -482,6 +482,72 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     shots.finding = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-air01.png' });
     for (const [k, m] of Object.entries(shots)) check('Crossroads Airport ' + name + ': ' + k + ' (' + m.title.trim() + ') fits above the controls, body at least 30% of the box or whole, a full option row shown', ok(m), m);
     check('Crossroads Airport ' + name + ': no console errors or network requests', !errs.length, errs);
+    await c.close();
+  }
+  // Crossroads, the finale (slice 6): the AAR's factor cards and the roadmap's cards, the letters-and-stores modal, a drill
+  // hub and a CMP-01 finding, the report under challenge, the suspicion file laid out and the edition ending, at phone
+  // portrait, two landscape phones and desktop: each fits above the controls, nothing overflows sideways, and the body keeps
+  // at least 30% of the box (or shows whole).
+  for (const [name, opt] of Object.entries({
+    phone360: { viewport: { width: 360, height: 800 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    phoneLand: { viewport: { width: 800, height: 360 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    land844: { viewport: { width: 844, height: 390 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    desktop: { viewport: { width: 1280, height: 800 } } })) {
+    const c = await b.newContext(opt);
+    if (SETTINGS_INIT) await c.addInitScript(v => { try { localStorage.setItem('uptime.settings', v); } catch (e) {} }, SETTINGS_INIT);
+    const p = await c.newPage(); const errs = [];
+    p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+    p.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) errs.push('request ' + r.url()); });
+    const touch = !!opt.hasTouch, portrait = opt.viewport.height > opt.viewport.width;
+    const fresh = async (track) => {
+      await p.goto(CRF); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui);
+      await p.evaluate(() => { __UPTIME.seed(5); __UPTIME.turbo(true); }); await sleep(300);
+      await p.evaluate(() => { [...document.querySelectorAll('#mopts .opt')].find(e => /New game/.test(e.textContent)).click(); });
+      for (let i = 0; i < 300; i++) { const q = await p.evaluate(() => __UPTIME.peek()); if (!q.ui && !q.busy && q.started) break; if (q.ui) await p.evaluate(() => { if (UI.mode === 'say') UI.handle('a'); else { const m = UI.modal || UI.choice; const g = m.items.findIndex(o => o.meta && o.meta.good); m.cursor = g < 0 ? 0 : g; UI.handle('a'); } }); await sleep(15); }
+      await p.evaluate(t => { __UPTIME.turbo(false); G.trackId = t; G.cr.rota = { assign: ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae'], stats: rotaStats(CR_ROTA, ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae']) };
+        const w4 = ['magda', 'bea', 'ruth', 'paz', 'odile', 'beatriz', 'rae', 'magda', 'bea']; apC().rota = { assign: w4, stats: rotaStats(AP_ROTA, w4) };
+        fnC().rota = rotaAuto(FN_ROTA, fnPre(), SD_ROTA_ORDER);
+        Object.assign(G.f, { lbSummary: true, lbBookmark: true, sdMet: true, sdSummary: true, sdSlate: true, cnMet: true, cnSummary: true, cnPulse: true, dpMet: true, dpSummary: true, dpRelay: true, apMet: true, apSummary: true, apWindsock: true, fnMet: true });
+        G.day = 34; G.map = 'fnops'; G.x = 4; G.y = 12; }, track);
+      await sleep(150);
+    };
+    const measure = () => p.evaluate(() => { const box = document.querySelector('#modal .mbox').getBoundingClientRect(), pad = document.getElementById('pad'), mb = document.getElementById('mbody'), mo = document.getElementById('mopts');
+      const padTop = pad.getBoundingClientRect().height ? pad.getBoundingClientRect().top : innerHeight;
+      const btnsOk = [...document.querySelectorAll('[data-btn]')].every(e => { const q = e.getBoundingClientRect(); if (!q.width) return true; const t = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return t && (t === e || e.contains(t)); });
+      const first = mo.querySelector('.opt'), fr = first ? first.getBoundingClientRect() : null, or = mo.getBoundingClientRect();
+      return { title: document.querySelector('#modal .mhead').textContent.slice(0, 40), top: Math.round(box.top), bottom: Math.round(box.bottom), padTop: Math.round(padTop), H: innerHeight, btnsOk, overflow: mb.scrollWidth > mb.clientWidth + 1,
+        box: Math.round(box.height), body: Math.round(mb.getBoundingClientRect().height), bodyAll: mb.scrollHeight <= mb.clientHeight + 1, firstRow: !fr || (fr.top >= or.top - 0.5 && fr.bottom <= or.bottom + 0.5) }; });
+    const ok = m => m.top >= 0 && (touch && portrait ? m.bottom <= m.padTop + 0.5 : m.bottom <= m.H + 0.5) && (!touch || m.btnsOk) && !m.overflow && (m.bodyAll || m.body >= 0.3 * m.box) && m.firstRow;
+    const shots = {};
+    const skipSays = async () => { for (let i = 0; i < 10 && await p.evaluate(() => UI.mode === 'say'); i++) { await p.evaluate(() => UI.handle('a')); await sleep(60); } };
+    await fresh('manager');
+    await p.evaluate(() => { G.f.fnNight35 = true; G.cr.aar = { total: 12, onTime: 12 }; run(fnAar); }); await sleep(250); await skipSays();
+    shots.aarCards = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-fnaar.png' });
+    await fresh('manager');
+    await p.evaluate(() => { G.f.fnAar = true; run(fnRoadmap); }); await sleep(250); await skipSays();
+    shots.roadmap = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-fnroadmap.png' });
+    await fresh('dfir');
+    await p.evaluate(() => { run(fnStoresTask); }); await sleep(250); await skipSays();
+    shots.stores = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-fnstores.png' });
+    await fresh('dfir');
+    await p.evaluate(() => { run(() => doDrill(FN_DRILLS.fnsigndfir)); }); await sleep(250);
+    await p.evaluate(() => UI.handle('a')); await sleep(250);
+    shots.drillHub = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-fndrill.png' });
+    await fresh('dfir');
+    await p.evaluate(() => { run(() => doReport(FN_REPORT_CMP)); }); await sleep(250);
+    await p.evaluate(() => UI.closeModal(0)); await sleep(250);
+    shots.finding = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-cmp01.png' });
+    await fresh('dfir');
+    await p.evaluate(() => { G.f.fnNight35 = true; G.day = 36; run(fnChallengeTask); }); await sleep(250); await skipSays();
+    shots.challenge = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-fnchallenge.png' });
+    await fresh('manager');
+    await p.evaluate(() => { ['lb-rdp', 'sd-probe', 'cn-folders', 'dp-conns', 'ap-accounts'].forEach(id => { const q = Series.qt(); if (!q.cluesFound.includes(id)) q.cluesFound.push(id); }); G.f.fnNight34 = true; run(fnRaeFile); }); await sleep(250); await skipSays();
+    shots.qtFile = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-fnfile.png' });
+    await fresh('dfir');
+    await p.evaluate(() => { G.f.fnBoard = true; G.f.fnCompass = true; G.f.fnSummary = true; G.day = 36; run(fnSummary); }); await sleep(300); await skipSays();
+    shots.ending = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-fnending.png' });
+    for (const [k, m] of Object.entries(shots)) check('Crossroads finale ' + name + ': ' + k + ' (' + m.title.trim() + ') fits above the controls, body at least 30% of the box or whole, a full option row shown', ok(m), m);
+    check('Crossroads finale ' + name + ': no console errors or network requests', !errs.length, errs);
     await c.close();
   }
   // Modal share (review of Crossroads slice 1, B6), both editions: a long body with six long options, and a long body

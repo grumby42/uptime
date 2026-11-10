@@ -6,9 +6,12 @@
 // Also checks: no Quiet Thread technique ever shows up as an ordinary alert, and the series save
 // (quietThread) survives the mid-game reload.
 // Crossroads (edition 2): UPTIME_FILE=.../editions/crossroads/index.html (or UPTIME_EDITION=crossroads) plays the
-// prologue, the Public Library, the School District, the Community Clinic, Fire & EMS Dispatch and the Regional Airport on
-// one track: TRACK=manager (default) or TRACK=dfir. It checks the track lock in the series save, a save/reload mid-Library,
-// mid-district, mid-Clinic, mid-Dispatch and mid-Airport, and the Airport's summary.
+// prologue, the Public Library, the School District, the Community Clinic, Fire & EMS Dispatch, the Regional Airport and the
+// finale (the Compact-wide incident) to the edition ending, on one track: TRACK=manager (default) or TRACK=dfir. It checks the
+// track lock in the series save, a save/reload mid-Library, mid-district, mid-Clinic, mid-Dispatch, mid-Airport and
+// mid-finale, the Airport's summary and the ending; then it starts New Game+ from the ending and plays its prologue to the
+// offers: the first track shows as taken, the other is taken on the second save slot, and the first save and the Town Hall
+// save are left byte-for-byte as they were. The run is capped at 45 minutes (the Town Hall phone run needs about 26).
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -192,7 +195,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheckCr = null, savedCheckSd = null, savedCheckCn = null, savedCheckDp = null, savedCheckAp = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheckCr = null, savedCheckSd = null, savedCheckCn = null, savedCheckDp = null, savedCheckAp = null, savedCheckFn = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -223,7 +226,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
   await shot('title');
   while (true) {
-    if (++iter > 60000 || Date.now() - t0 > 30 * 60 * 1000) throw new Error('bot timed out at iteration ' + iter);
+    if (++iter > 60000 || Date.now() - t0 > 45 * 60 * 1000) throw new Error('bot timed out at iteration ' + iter);
     const p = await peek();
     const sig = JSON.stringify([p.map, p.x, p.y, p.ui && p.ui.type, p.ui && (p.ui.text || '').slice(0, 30), p.ui && p.ui.options && p.ui.options.map(o => o.label).join('|').slice(0, 80), p.ui && p.ui.sel, p.objective && p.objective.text, p.battle && p.battle.ev, p.battle && p.battle.dwell]);
     if (sig !== lastSig) { lastSig = sig; lastProgress = Date.now(); }
@@ -236,6 +239,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (CR && p.map === 'clinic' && !p.ui && !stats.shots.clinic && p.started && p.f.cnMet) { stats.shots.clinic = 1; await shot('clinic-' + TRACK); }
     if (CR && p.map === 'dispatch' && !p.ui && !stats.shots.dispatch && p.started && p.f.dpMet) { stats.shots.dispatch = 1; await shot('dispatch-' + TRACK); }
     if (CR && p.map === 'airport' && !p.ui && !stats.shots.airport && p.started && p.f.apMet) { stats.shots.airport = 1; await shot('airport-' + TRACK); }
+    if (CR && p.map === 'fnops' && !p.ui && !stats.shots.finale && p.started && p.f.fnMet) { stats.shots.finale = 1; await shot('finale-' + TRACK); }
+    if (CR && p.extra && p.extra.apSummary && !stats.apSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.apSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-airport-' + TRACK); }
     if (CR && p.extra && p.extra.dpSummary && !stats.dpSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.dpSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-dispatch-' + TRACK); }
     if (CR && p.extra && p.extra.cnSummary && !stats.cnSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.cnSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-clinic-' + TRACK); }
     if (CR && p.extra && p.extra.sdSummary && !stats.sdSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.sdSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-school-' + TRACK); }
@@ -304,6 +309,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (CR && !savedCheckCn && p.map === 'clinic' && p.f.cnDrillA && !p.f.cnDrillB) { savedCheckCn = await saveReload(); continue; }
     if (CR && !savedCheckDp && p.map === 'dispatch' && p.f.dpDrillA && !p.f.dpDrillB) { savedCheckDp = await saveReload(); continue; }
     if (CR && !savedCheckAp && p.map === 'airport' && p.f.apDrillA && !p.f.apDrillB) { savedCheckAp = await saveReload(); continue; }
+    if (CR && !savedCheckFn && p.map === 'fnops' && p.f.fnDrillB && !p.f.fnDrillC) { savedCheckFn = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -316,13 +322,44 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const quietInAlerts = Object.keys(stats.alertTechs).filter(t => QT_TECHS.includes(t));
   if (CR) {
     const ser = await page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series') || '{}'));
+    await shot('ending-' + TRACK);
+    // New Game+ from the ending: a fresh save on the other track in the second slot; the first save and Town Hall's untouched.
+    const ng = { other: TRACK === 'manager' ? 'dfir' : 'manager' };
+    try {
+      const waitLabel = async re => { for (let i = 0; i < 400; i++) { const q = await peek(); if (q.ui && q.ui.options && q.ui.options.some(o => re.test(o.label) && !o.disabled)) return q; await sleep(20); } throw new Error('no option ' + re); };
+      let q = await waitLabel(/^New Game\+: the other track/);
+      await pick(q, q.ui.options.findIndex(o => /^New Game\+: the other track/.test(o.label)));
+      q = await waitLabel(/^Start New Game\+$/);
+      ng.mainBefore = await page.evaluate(() => localStorage.getItem('uptime.crossroads.save'));
+      ng.thBefore = await page.evaluate(() => localStorage.getItem('uptime.slice1.save'));
+      await pick(q, q.ui.options.findIndex(o => /^Start New Game\+$/.test(o.label)));
+      for (let n = 0; n < 6000 && !ng.done; n++) {
+        if (Date.now() - t0 > 45 * 60 * 1000) throw new Error('New Game+ timed out');
+        const p = await peek();
+        if (p.ui && p.ui.options && p.ui.options.some(o => o.meta && o.meta.track)) {
+          ng.offers = p.ui.options.map(o => ({ label: o.label, track: o.meta && o.meta.track, disabled: !!o.disabled }));
+          await pick(p, p.ui.options.findIndex(o => o.meta && o.meta.track === ng.other)); continue;
+        }
+        if (p.ui) { if (ng.offers && p.ui.type === 'modal' && /^Night 1$/.test((await page.textContent('#modal .mhead')).trim())) await shot('ngplus-night1-' + TRACK); await handleUI(p); continue; }
+        if (!p.started || p.busy || p.moving) { await sleep(15); continue; }
+        if (ng.offers && p.extra && p.extra.track === ng.other) { ng.done = true; break; }
+        await navigate(p);
+      }
+      await sleep(150);
+      const st = await page.evaluate(() => ({ main: localStorage.getItem('uptime.crossroads.save'), th: localStorage.getItem('uptime.slice1.save'), ngSave: localStorage.getItem('uptime.crossroads.ngplus.save'), ser: JSON.parse(localStorage.getItem('uptime.series') || '{}').editions.crossroads, slot: crSlot, ngPlus: G.ngPlus, track: G.trackId }));
+      ng.mainUnchanged = st.main === ng.mainBefore && !!st.main; ng.thUnchanged = st.th === ng.thBefore; ng.ngSave = !!st.ngSave; ng.slot = st.slot; ng.track = st.track;
+      ng.seriesTrack = st.ser.track; ng.ngTrack = st.ser.ngTrack;
+      ng.offersOk = !!ng.offers && ng.offers.find(o => o.track === TRACK).disabled && !ng.offers.find(o => o.track === ng.other).disabled;
+      ng.ok = ng.done && ng.offersOk && ng.mainUnchanged && ng.thUnchanged && ng.ngSave && st.slot === 'ngplus' && st.ngPlus === true && st.track === ng.other && st.ser.track === TRACK && st.ser.ngTrack === ng.other;
+      delete ng.mainBefore; delete ng.thBefore;
+    } catch (e) { ng.error = e.message; ng.ok = false; }
     const crRes = { edition: 'crossroads', track: TRACK, mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter, errors, requests,
-      saveReloadLibrary: savedCheckCr, saveReloadSchool: savedCheckSd, saveReloadClinic: savedCheckCn, saveReloadDispatch: savedCheckDp, saveReloadAirport: savedCheckAp, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, quietTechInAlertMix: quietInAlerts,
+      saveReloadLibrary: savedCheckCr, saveReloadSchool: savedCheckSd, saveReloadClinic: savedCheckCn, saveReloadDispatch: savedCheckDp, saveReloadAirport: savedCheckAp, saveReloadFinale: savedCheckFn, newGamePlus: ng, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, quietTechInAlertMix: quietInAlerts,
       seriesCrossroads: ser.editions && ser.editions.crossroads, final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, qt: fin.qt, cr: fin.extra && fin.extra.cr, objective: fin.objective }, stats };
     console.log(JSON.stringify(crRes, null, 1));
     await browser.close();
-    const lockOk = crRes.seriesCrossroads && crRes.seriesCrossroads.track === TRACK && crRes.seriesCrossroads.library === true && crRes.seriesCrossroads.school === true && crRes.seriesCrossroads.clinic === true && crRes.seriesCrossroads.dispatch === true && crRes.seriesCrossroads.airport === true;
-    process.exit(errors.length || requests.length || !savedCheckCr || !savedCheckCr.restored || !savedCheckCr.exportRoundTrip || !savedCheckSd || !savedCheckSd.restored || !savedCheckSd.exportRoundTrip || !savedCheckCn || !savedCheckCn.restored || !savedCheckCn.exportRoundTrip || !savedCheckDp || !savedCheckDp.restored || !savedCheckDp.exportRoundTrip || !savedCheckAp || !savedCheckAp.restored || !savedCheckAp.exportRoundTrip || !stats.lbSummary || !stats.sdSummary || !stats.cnSummary || !stats.dpSummary || !fin.objective.done || !fin.extra.crSummary || !lockOk || fin.extra.track !== TRACK || quietInAlerts.length || !crRes.noHorizontalScroll ? 1 : 0);
+    const lockOk = crRes.seriesCrossroads && crRes.seriesCrossroads.track === TRACK && crRes.seriesCrossroads.library === true && crRes.seriesCrossroads.school === true && crRes.seriesCrossroads.clinic === true && crRes.seriesCrossroads.dispatch === true && crRes.seriesCrossroads.airport === true && crRes.seriesCrossroads.finale === true && crRes.seriesCrossroads.ngPlus === true;
+    process.exit(errors.length || requests.length || !savedCheckCr || !savedCheckCr.restored || !savedCheckCr.exportRoundTrip || !savedCheckSd || !savedCheckSd.restored || !savedCheckSd.exportRoundTrip || !savedCheckCn || !savedCheckCn.restored || !savedCheckCn.exportRoundTrip || !savedCheckDp || !savedCheckDp.restored || !savedCheckDp.exportRoundTrip || !savedCheckAp || !savedCheckAp.restored || !savedCheckAp.exportRoundTrip || !savedCheckFn || !savedCheckFn.restored || !savedCheckFn.exportRoundTrip || !ng.ok || !stats.apSummary || !stats.lbSummary || !stats.sdSummary || !stats.cnSummary || !stats.dpSummary || !fin.objective.done || !fin.extra.crSummary || !lockOk || fin.extra.track !== TRACK || quietInAlerts.length || !crRes.noHorizontalScroll ? 1 : 0);
   }
   const result = {
     quietTechInAlertMix: quietInAlerts,
