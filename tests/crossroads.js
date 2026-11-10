@@ -332,6 +332,7 @@ async function session(ctx, file) {
     check('manager drill C (the vendor’s offer): right and supported', sdA.C.verdictOk && sdA.C.supported, sdA.C);
     check('School Board cleared: the Slate Badge', sdA.slate === true, sdA);
     check('Quiet Thread (manager): the firm’s status report shows the pings (sd-probe, T1018), not in the alert mix, not evicted', sdA.clue && sdA.tech === 'T1018' && sdA.qt && sdA.inAlerts === 0 && !sdA.evicted, sdA);
+    const sdVendMgr = await A.page.evaluate(() => JSON.stringify(G.cr.drills.vendmgr));   // the School's drill A, kept for the check after the Airport (Review S11)
     check('School District summary: “Next: Community Clinic”, with its door; series records the district; the token-scope risk named as open; the objective moves to the Clinic', /Next: Community Clinic\. Its door is on the west side of the square/.test(sdSum) && /Open risk/.test(sdSum) && /read: all/.test(sdSum) && !sdA.obj.done && /Community Clinic/.test(sdA.obj.text) && sdA.obj.map === 'clinic' && sdA.ser.school === true, sdA.obj);
     const brS = await A.page.evaluate(() => {
       const keep = G.cr.sd.night10, out = {};
@@ -547,7 +548,7 @@ async function session(ctx, file) {
     const srAp = await A.saveReload();
     check('save/reload mid-Airport (manager) restores the state; the export code round-trips', srAp.same && srAp.roundTrip && srAp.before.map === 'airport', srAp);
     await A.follow(p => p.f.apRota, []);
-    const art = await A.page.evaluate(() => ({ B: G.cr.drills.vendmgr, owners: G.cr.ap.owners, rota: G.cr.ap.rota, pre: apPre(), bill: tileDef('airport', 27, 1).pal, first: AP_ROTA.first, carry: AP_ROTA.carry, calls: Object.keys(AP_ROTA.calls).length }));
+    const art = await A.page.evaluate(() => ({ B: G.cr.drills['ap-vendmgr'], owners: G.cr.ap.owners, rota: G.cr.ap.rota, pre: apPre(), bill: tileDef('airport', 27, 1).pal, first: AP_ROTA.first, carry: AP_ROTA.carry, calls: Object.keys(AP_ROTA.calls).length }));
     check('Airport manager: drill B (the 02:40 sign-in: the vendor’s scheduled work) right and supported; vendor support on demand (tick); who owns what, no wrong card; the week-4 rota carries Nights 21 and 22 from week 3 and shows no forecast calls', art.B.verdictOk && art.B.supported && art.bill === 'apBillOk' && art.owners.wrong === 0 && art.first === 21 && art.carry === 2 && art.calls === 0 && art.rota.assign[0] === art.pre[0] && art.rota.assign[1] === art.pre[1] && art.rota.assign.length === 9, art);
     await A.follow(p => p.f.apTabletop, []);
     const att = await A.page.evaluate(() => ({ ex: G.cr.ex, day: G.day }));
@@ -557,12 +558,29 @@ async function session(ctx, file) {
     const wk = aboss.cover && aboss.cover.n27 === 'swap' ? 23 : 20;
     check('Airport boss on Day 27 (Saturday): the annex met as written (ransomware on the office network), the retainer called in 15 game minutes; all three stages right first time; the weekend plan: shifts, 0 gaps, 20 of 30 h (23 if a weak Night 27 was swapped); the tabletop’s actions closed by Friday (the front desk and the tenant panel tick)', aboss.day === 27 && aboss.boss.ok && aboss.act === 15 && aboss.act2 === 15 && aboss.cover.k === 'shifts' && aboss.cover.gaps === 0 && aboss.cover.overtime === wk && aboss.m.crBudget === Math.round((wk - 30) / 30 * 100) && aboss.desk === 'apDeskOk' && aboss.patch === 'apPatchOk' && aboss.ex.closed === 15, aboss);
     await A.follow(() => false, [], /End of the Regional Airport/);
-    const apA = await A.page.evaluate(() => ({ windsock: G.f.apWindsock, clue: qtFound('ap-accounts'), tech: QT_CLUES['ap-accounts'].tech, qt: !!QT_TECH.T1087, inAlerts: Object.keys(THREATS).length, evicted: Series.qt().evicted, obj: objective(), ser: crSeries(), aar: G.cr.aar, day: G.day, C: G.cr.drills.tenantmgr, impact: G.cr.ap.aar, n27: G.cr.ap.night27, cover: G.cr.ap.cover, badges: EDITION.badgeFlags }));
+    const apA = await A.page.evaluate(() => ({ windsock: G.f.apWindsock, clue: qtFound('ap-accounts'), tech: QT_CLUES['ap-accounts'].tech, qt: !!QT_TECH.T1087, inAlerts: Object.keys(THREATS).length, evicted: Series.qt().evicted, obj: objective(), ser: crSeries(), aar: G.cr.aar, day: G.day, C: G.cr.drills['ap-tenantmgr'], impact: G.cr.ap.aar, n27: G.cr.ap.night27, cover: G.cr.ap.cover, badges: EDITION.badgeFlags }));
     const apSum = await A.modalText();
     check('Airport Board cleared: the Windsock Badge (in the edition’s badge flags); Day 29 (Monday); drill C (the tenant’s PC) right and supported', apA.windsock === true && apA.badges.includes('apWindsock') && apA.day === 29 && apA.C.verdictOk && apA.C.supported, apA);
     check('Airport manager: the AAR adds three actions (owners arrive approved), the impact as counted, first time; Night 27’s call-out added to the weekend plan’s overtime', apA.aar.total === 12 && apA.aar.onTime === 12 && apA.impact.impactFirst === true && apA.cover.overtime === (apA.cover.n27 === 'swap' ? 23 : 20) + apA.n27.overtime, apA);
     check('Quiet Thread (manager): the firm’s status report shows svc-print listing the airport directory’s accounts (ap-accounts, T1087), not in the alert mix, not evicted', apA.clue && apA.tech === 'T1087' && apA.qt && apA.inAlerts === 0 && !apA.evicted, apA);
     check('Airport summary: “Next: the Compact-wide incident”; series records the Airport; the directory trust named as an open risk; the objective moves to the Compact operations room', /Next: the Compact-wide incident/.test(apSum) && /Open risk/.test(apSum) && /trusts the town’s/.test(apSum) && !apA.obj.done && apA.obj.map === 'fnops' && /Compact operations room/.test(apA.obj.text) && apA.ser.airport === true && apA.ser.dispatch === true, apA.obj);
+    // Review S11: the Airport's drill B no longer overwrites the School's drill A; Dr Vale's summary shows the School's own result. And an
+    // older save (the Airport's results under the School's keys) is migrated once on load, the School's lost result said as such.
+    const sdKeep = await A.page.evaluate(sv => {
+      const out = {}, keep = encodeSave(G), sd = JSON.parse(sv);
+      out.kept = JSON.stringify(G.cr.drills.vendmgr) === sv && !!G.cr.drills['ap-vendmgr'] && !G.cr.drills.mailmgr && !!G.cr.drills['ap-mailmgr'];
+      out.row = sdDrillRows().includes('<td>' + esc(SD_DRILLS.vendmgr.title) + '</td><td>' + sd.score + '</td><td>no</td>');
+      const old = decodeSave(keep), d = old.cr.drills;
+      for (const k of ['mailmgr', 'vendmgr', 'tenantmgr']) if (d['ap-' + k]) { d[k] = d['ap-' + k]; delete d['ap-' + k]; }
+      G = old; fixupState();
+      const m1 = JSON.stringify(G.cr.drills);
+      out.migrated = G.cr.drills.vendmgr.lost === true && JSON.stringify(G.cr.drills['ap-vendmgr']) === JSON.stringify(decodeSave(keep).cr.drills['ap-vendmgr']) && !!G.cr.drills['ap-mailmgr'] && !G.cr.drills.mailmgr && !!G.cr.drills['ap-tenantmgr'];
+      out.lostRow = /not kept \(an earlier build\)/.test(sdDrillRows()) && apDrillRows().split('<tr>').length === 4 && !/—<\/td><td>—/.test(apDrillRows());
+      editionFixup(); out.idem = JSON.stringify(G.cr.drills) === m1;
+      const nw = decodeSave(keep); G = nw; fixupState(); out.newShape = JSON.stringify(G.cr.drills) === JSON.stringify(decodeSave(keep).cr.drills);
+      G = decodeSave(keep); fixupState(); out.slot = crSlot;
+      return out; }, sdVendMgr);
+    check('S11: the Airport’s drills under ap- keys; the School’s drill A kept and shown in Dr Vale’s summary; an older save migrated once (the School’s overwritten result marked lost), idempotent; a save in the new shape unchanged', sdKeep.kept && sdKeep.row && sdKeep.migrated && sdKeep.lostRow && sdKeep.idem && sdKeep.newShape && sdKeep.slot === 'main', sdKeep);
     // The slice's rules, checked on the text: business IT only, one decider per decision, restore only from a checked copy, honest wording.
     const arules = await A.page.evaluate(() => {
       const out = {}, goods = [], all = [];
@@ -654,7 +672,25 @@ async function session(ctx, file) {
       out.overUnder = mb.s1.resp.some(r => !r.good && /^You command every member/.test(r.label)) && mb.s1.resp.some(r => !r.good && /^Hold everything/.test(r.label)) && FN_TEST.some(o => !o.good && /shut down/.test(o.label)) && FN_TEST.some(o => !o.good && /^Not yet/.test(o.label)) && db.s1.resp.some(r => !r.good && /Shut every member’s file server down/.test(r.label));
       // The way back: the directory reviewed and every password reset before any restore; the account the campaign used stays off.
       const sun = fnSundayHtml();
-      out.way = sun.indexOf('reviews the shared directory') >= 0 && sun.indexOf('reviews the shared directory') < sun.indexOf('restored') && sun.indexOf('resets the password of every Compact admin and service account') < sun.indexOf('restored') && /svc-fileops stays disabled/.test(sun) && /in isolation/.test(sun) && db.s3.resp.some(r => !r.good && /switch it back on/.test(r.label)) && /Review the shared directory and reset every Compact admin and service password first/.test(db.s3.resp.find(r => r.good).label);
+      out.way = sun.indexOf('reviews the shared directory') >= 0 && sun.indexOf('reviews the shared directory') < sun.indexOf('restored') && sun.indexOf('resets the password of every admin and service account in the shared directory') > 0 && sun.indexOf('resets the password of every admin and service account in the shared directory') < sun.indexOf('restored') && /the town’s admin accounts in the shared directory are reset too, svc-print excepted under Rae’s plan/.test(sun) && /svc-fileops stays disabled/.test(sun) && /in isolation/.test(sun) && db.s3.resp.some(r => !r.good && /switch it back on/.test(r.label)) && /Review the shared directory and reset every admin and service password in it first/.test(db.s3.resp.find(r => r.good).label);
+      // Review B1: the review agrees with the change records (Day 12's rights review of svc-fileops and the Clinic's resets).
+      out.dirAgrees = /on Day 12, svc-fileops’s rights review/.test(sun) && /resets of the passwords used on CL-FD-02/.test(sun) && !/Nothing created or changed except/.test(sun) && /matches an approved change record/.test(FN_REPORT_CMP.claims.find(c => c.id === 'dir').text) && FN_REPORT_CMP.claims.find(c => c.id === 'dir').evidence.some(e => /^P-02: Day 12/.test(e)) && /Day 12, a rights review/.test(JSON.stringify(FN_DRILLS.fnsigndfir));
+      // Review B2: nothing claims “nothing was copied out” from a size threshold, and Monday never confirms what is smaller.
+      const reps = [FN_REPORT_LIB, FN_REPORT_CLN, FN_REPORT_AIR, FN_REPORT_CMP], rtxt = JSON.stringify(reps);
+      out.threshold = !/[Nn]othing was copied out|[Nn]othing left the|[Ll]ikely nothing left|In the records I read nothing left/.test(rtxt + JSON.stringify(FN_CHALLENGE.map(c => c.resp.find(r => r.good))) + JSON.stringify(db) + JSON.stringify(mb) + fnChallengeTask.toString()) && FN_REPORT_CLN.claims.find(c => c.id === 'small').truth === 'unknown' && FN_REPORT_AIR.claims.find(c => c.id === 'small').truth === 'unknown' && /above 1 MB/.test(FN_REPORT_CLN.claims.find(c => c.id === 'out').text) && /above 1 MB/.test(FN_REPORT_AIR.claims.find(c => c.id === 'out').text) && /finding 4, anything smaller, stays unknown/.test(fnChallengeTask.toString()) && /Under 1 MB: unknown/.test(FN_CHALLENGE[2].resp.find(r => r.good).label) && /unknown/.test(FN_BOARD_SPECS_DFIR()[1].resp.find(r => r.good).label);
+      // Review S1/S2: the way out P-08 covers is said; the Library's edge record is collected and what it can't show is said.
+      out.edges = /the Compact’s edge sits behind the town’s/.test(fnSunday.toString()) && /the Compact’s edge’s traffic included/.test(fnChallengeTask.toString()) && FN_REPORT_LIB.claims.find(c => c.id === 'out').evidence.some(e => /^L-04: the Library firewall’s log for Night 33/.test(e)) && !/keeps no flow records/.test(rtxt + JSON.stringify(db));
+      // Review S3: nothing at 08:30 or 10:00 claims “since” beyond P-01's 05:00 end.
+      out.since = !/or since|None for the account since/.test(JSON.stringify(FN_DRILLS.fnphishdfir) + JSON.stringify(FN_DRILLS.fncollectdfir)) && /to 05:00, P-01’s end/.test(JSON.stringify(FN_DRILLS.fnphishdfir));
+      // Review S4: with four wrong answers on the plan's test, nothing claims the firm called or counsel engaged before it happened.
+      const a0 = G.cr.fn.activate; G.cr.fn.activate = FN_ACT_OK + 4 * FN_ACT_LATE; const t4 = fnMgrTimes(), ttl = fnMgrBossStages().s1.title; G.cr.fn.activate = a0; const t0 = fnMgrTimes();
+      out.clock = t4.s1 > t4.call && t4.line > t4.s1 && t4.mayor >= t4.line && t4.fbi > t4.ans && t4.fbi < 6 * 60 && ttl.includes(fnHm(t4.s1)) && t0.s1 === 200 && t0.fbi === 270 && t0.mayor === 240 && t0.call === 188;
+      // Review S5/S6: the Library and Dispatch decide with counsel; every annex quoted as written, with the fact that decides Dispatch's.
+      const tt = fnTestTask.toString();
+      out.annex = tt.includes('when ransomware or another destructive attack is found on any system that shares the center’s network, the county office’s included') && tt.includes('when patient information may have been reached, wherever it is held') && tt.includes('when billing or tenant records may have left the airport’s control') && tt.includes('when Shelfwright or the patron records it holds may have been reached') && /None of the three shares is on the center’s network/.test(tt) && /Director Strand decides, with Noor, that the firm looks at LIB-IMG-01/.test(tt) && /Celia Marrow, for the 911 authority, decides with Lionel Ashdown/.test(tt) && /Director Strand decides, with Noor/.test(fnArrive.toString()) && /Celia Marrow, for the 911 authority, decides with Lionel Ashdown/.test(fnArrive.toString());
+      // Review S8/S9: Rae's line follows the members' notes, never further than the records; no “one actor” as fact.
+      const rTh = fnRaeLine(['th-signin', 'th-logclear', 'rh-vault']), rAll = fnRaeLine(['lb-rdp', 'sd-probe', 'cn-folders', 'dp-conns', 'ap-accounts']);
+      out.rae = /^Nothing noted among the members/.test(rTh) && !/looking/.test(rTh) && /as far as the records go, and on CIRC-01 we can’t say/.test(rAll) && !/not touching/.test(rAll + rTh) && /^An empty board/.test(fnRaeLine([])) && !/one actor/.test(fnSummary.toString());
       // Honest wording: likely never as fact; the Library's unknown; no legal conclusion; nothing promised.
       const rc = (R, id) => R.claims.find(c => c.id === id).truth;
       out.wording = rc(FN_REPORT_AIR, 'out') === 'likely' && rc(FN_REPORT_CLN, 'out') === 'likely' && rc(FN_REPORT_LIB, 'out') === 'unknown' && rc(FN_REPORT_CMP, 'link') === 'unknown' && FN_CHALLENGE[0].resp.find(r => r.good).label.startsWith('It stays likely') && FN_CHALLENGE[1].resp.find(r => r.good).label.startsWith('It stays likely') && !/duty|liab|negligen/i.test(FN_CHALLENGE[2].resp.find(r => r.good).label) && FN_CHALLENGE[2].resp.some(r => !r.good && /legal duty/.test(r.label)) && /Nothing promised/.test(mb.s3.resp.find(r => r.good).label);
@@ -688,6 +724,14 @@ async function session(ctx, file) {
     await A.pickLabel(/^Continue New Game\+$/); await sleep(80);
     const contNg = await A.page.evaluate(() => ({ track: G.trackId, ng: G.ngPlus, slot: crSlot, day: G.day }));
     check('Title screen: Continue opens the first save (the ending reached), Continue New Game+ the second (the DFIR track)', titleOpts.includes('Continue') && titleOpts.includes('Continue New Game+') && contMain.track === 'manager' && contMain.sum === true && !contMain.ng && contMain.slot === 'main' && contNg.track === 'dfir' && contNg.ng === true && contNg.slot === 'ngplus', { titleOpts, contMain, contNg });
+    // Review N11: “New game” after the ending asks before replacing the first save (Back keeps it); a New Game+ code imported goes to the second slot.
+    await A.page.reload(); await A.page.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui); await A.page.evaluate(() => __UPTIME.turbo(true));
+    const ngMain0 = await A.page.evaluate(() => localStorage.getItem('uptime.crossroads.save'));
+    await A.pickLabel(/^New game$/); await A.settle([], /This replaces your first save/);
+    const ngAsk = await A.modalText();
+    await A.pickLabel(/^Back$/); await A.settle([], /Continue New Game\+/);
+    const ngImp = await A.page.evaluate(() => { const keep = G, slot0 = crSlot; G = decodeSave(localStorage.getItem('uptime.crossroads.ngplus.save')); crSlot = 'main'; fixupState(); const s = crSlot; crSlot = slot0; G = keep; return { s: s, main: localStorage.getItem('uptime.crossroads.save') }; });
+    check('N11: after the ending, “New game” asks before replacing the first save, and Back leaves it as it was; an imported New Game+ code is routed to the second slot', /This replaces your first save/.test(ngAsk) && /New Game\+ is separate/.test(ngAsk) && ngImp.main === ngMain0 && ngImp.s === 'ngplus', { ngImp: ngImp.s, same: ngImp.main === ngMain0 });
     check('manager session: zero console errors and network requests', !A.errors.length && !A.requests.length, { e: A.errors, r: A.requests });
   }
   await ctxA.close();
@@ -844,6 +888,7 @@ async function session(ctx, file) {
     check('DFIR drill C: our log, worded with both dates and “unknown: … held by the vendor; requested on Day 8 (Monday)”; right and supported', tdB.d.verdictOk && tdB.d.supported && /held by the vendor; requested on Day 8 \(Monday\)/.test(tdB.resp), tdB);
     await B.follow(() => false, [], /End of the School District/);
     const sdB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.sd2, slate: G.f.sdSlate, needs: G.cr.needs, obj: objective(), ser: crSeries() }));
+    const sdVendDfir = await B.page.evaluate(() => JSON.stringify(G.cr.drills.venddfir));   // Review S11
     check('DFIR School District: SCH-02 filed, 22 custody items (Library 10 + district 12), Slate Badge, summary “Next: Community Clinic”, the objective moves to the Clinic', sdB.cu.items === 22 && !!sdB.r2 && sdB.slate && !sdB.obj.done && sdB.obj.map === 'clinic' && sdB.ser.school === true && /Next: Community Clinic/.test(await B.modalText()), sdB);
     check('SCH-02 carries the vendor-held unknown', await B.page.evaluate(() => SD_REPORT_2.claims.some(c => c.truth === 'unknown' && /held by the vendor; requested on Day 8 \(Monday\)/.test(c.why))));
     await B.pickLabel(/^Keep exploring/); await B.settle();
@@ -969,7 +1014,7 @@ async function session(ctx, file) {
     const srAB = await B.saveReload();
     check('save/reload mid-Airport (DFIR) restores the state; the export code round-trips', srAB.same && srAB.roundTrip && srAB.before.track === 'dfir' && srAB.before.map === 'airport', srAB);
     await B.follow(p => p.f.apDrillC, []);
-    check('Airport DFIR drills B (the 02:40 session: the vendor’s update) and C (the vendor’s log and our flows, worded honestly) right and supported; separate stores per owner', await B.page.evaluate(() => G.cr.drills.venddfir.verdictOk && G.cr.drills.venddfir.supported && G.cr.drills.lastdfir.verdictOk && G.cr.drills.lastdfir.supported && G.f.apStores));
+    check('Airport DFIR drills B (the 02:40 session: the vendor’s update) and C (the vendor’s log and our flows, worded honestly) right and supported; separate stores per owner', await B.page.evaluate(() => G.cr.drills['ap-venddfir'].verdictOk && G.cr.drills['ap-venddfir'].supported && G.cr.drills['ap-lastdfir'].verdictOk && G.cr.drills['ap-lastdfir'].supported && G.f.apStores));
     // AIR-01: write "network" (likely) as confirmed: an overclaim, corrected and counted.
     await B.goTo('airport', 22, 11);
     await B.settle([], /Report · /); await B.pickLabel(/^Start writing$/);
@@ -988,6 +1033,7 @@ async function session(ctx, file) {
     await B.follow(() => false, [], /End of the Regional Airport/);
     const apB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.ap2, windsock: G.f.apWindsock, obj: objective(), ser: crSeries(), sw: G.f.apSwitch, stores: G.f.apStores, day: G.day }));
     check('DFIR Airport: AIR-02 filed, 79 custody items (53 + the Airport’s 26: A-01 to A-25 and the shop’s own store, S-01), the airport manager’s question answered, separate stores per owner, Windsock Badge, summary “Next: the Compact-wide incident”', apB.cu.items === 79 && !!apB.r2 && apB.sw && apB.stores && apB.windsock && !apB.obj.done && apB.obj.map === 'fnops' && apB.ser.airport === true && apB.day === 29 && /Next: the Compact-wide incident/.test(await B.modalText()), apB);
+    check('S11 (DFIR): the School’s drill A result kept after the Airport’s drill B (ap-venddfir)', await B.page.evaluate(sv => JSON.stringify(G.cr.drills.venddfir) === sv && !!G.cr.drills['ap-venddfir'] && !G.cr.drills.lastdfir, sdVendDfir));
     check('AIR-02: the office systems encrypted from AP-OF-03 (confirmed); AP-DC-01 not encrypted over the window covered (confirmed); no directory change in the 14 days its log covers (confirmed); the export (confirmed); tenant records left (likely); MS-PC-01, the way in and publication unknown, the way in from the directory’s sign-in records', await B.page.evaluate(() => { const c = id => AP_REPORT_2.claims.find(x => x.id === id); return c('enc').truth === 'confirmed' && c('dc').truth === 'confirmed' && /between 04:00 and 08:00/.test(c('dc').text) && c('dir').truth === 'confirmed' && /14 days/.test(c('dir').text) && /^A-22: ap-admin’s first sign-in/.test(c('way').evidence[0]) && c('export').truth === 'confirmed' && c('left').truth === 'likely' && c('mspc').truth === 'unknown' && c('way').truth === 'unknown' && c('pub').truth === 'unknown'; }));
     await B.pickLabel(/^Keep exploring/); await B.settle();
     // ---- The Compact-wide incident (slice 6, the finale), DFIR track ----
@@ -996,7 +1042,7 @@ async function session(ctx, file) {
     const cuF0 = await B.page.evaluate(() => JSON.parse(JSON.stringify(G.cr.custody)));
     await B.follow(p => p.f.fnIntake, []);
     const cuF = await B.page.evaluate(() => ({ cu: G.cr.custody, boss: G.cr.fn.boss, l01: FN_INTAKE.l01.opts.find(o => o.good).label, p05: FN_INTAKE.p05.opts.find(o => o.good).label }));
-    check('Finale DFIR: preserve first (stage 1 right first time); intake of fourteen items, each in its own case’s store, the link’s gap logged as a gap', cuF.cu.items === cuF0.items + 14 && cuF.cu.complete === cuF0.complete + 14 && cuF.cu.gaps === cuF0.gaps && cuF.boss.first[0] === true && /Library’s store/.test(cuF.l01) && /gap recorded as a gap/.test(cuF.p05), { now: cuF, before: cuF0 });
+    check('Finale DFIR: preserve first (stage 1 right first time); intake of fifteen items (L-04, the Library firewall’s log, among them), each in its own case’s store, the link’s gap logged as a gap', cuF.cu.items === cuF0.items + 15 && cuF.cu.complete === cuF0.complete + 15 && cuF.cu.gaps === cuF0.gaps && cuF.boss.first[0] === true && /Library’s store/.test(cuF.l01) && /gap recorded as a gap/.test(cuF.p05), { now: cuF, before: cuF0 });
     await B.follow(p => p.f.fnDrillB, []);
     // Drill A (the district's question) with one of its two needed sources and a trap: unsupported. S-13 is logged first.
     await B.goTo('fnops', 3, 11);
@@ -1032,14 +1078,14 @@ async function session(ctx, file) {
         await B.pickLabel(new RegExp('^' + want + '$'));
       }
       const filed = await B.page.innerHTML('#modal');
-      if (rr === 1) check('CLN-03: “nothing copied out” goes out as “Likely” (the overclaim corrected in review and counted); the encryption and Wrenfold as “Confirmed”', /Likely:<\/b> Nothing was copied out of S:\\FrontDesk/.test(filed) && /corrected in review/.test(filed) && /Confirmed:<\/b> WF-01/.test(filed), filed.slice(0, 400));
-      if (rr === 3) check('CMP-01: how the password was got and any link to the suspicion file as “Unknown”; the directory unchanged in its window as “Confirmed”', /Unknown:<\/b> How svc-fileops’s password was got/.test(filed) && /Unknown:<\/b> That this campaign is linked/.test(filed) && /Confirmed:<\/b> No account, group or policy in the shared directory/.test(filed), filed.slice(0, 400));
+      if (rr === 1) check('CLN-03: “no transfer above 1 MB” goes out as “Likely” (the overclaim corrected in review and counted); anything smaller as “Unknown”; the encryption and Wrenfold as “Confirmed”', /Likely:<\/b> No transfer above 1 MB left S:\\FrontDesk for an outside address/.test(filed) && /Unknown:<\/b> Whether anything smaller than 1 MB left S:\\FrontDesk/.test(filed) && /corrected in review/.test(filed) && /Confirmed:<\/b> WF-01/.test(filed), filed.slice(0, 600));
+      if (rr === 3) check('CMP-01: how the password was got and any link to the suspicion file as “Unknown”; every change in the directory matches an approved change record (Day 12’s two named in its evidence, as in P-02) as “Confirmed”', /Unknown:<\/b> How svc-fileops’s password was got/.test(filed) && /Unknown:<\/b> That this campaign is linked/.test(filed) && /Confirmed:<\/b> Every change in the shared directory from Day 5 to Sunday 07:30 matches an approved change record/.test(filed) && !/No account, group or policy in the shared directory changed/.test(filed), filed.slice(0, 600));
       await B.pickLabel(/^Continue$/);
     }
     check('Finale DFIR: four reports filed, one overclaim counted as a claim later corrected', await B.page.evaluate(c0 => ['fnlib', 'fncln', 'fnair', 'fncmp'].every(k => !!G.cr.reports[k]) && G.cr.reports.fncln.over === 1 && G.cr.corrected === c0 + 1 && metricVals().crCorrected === c0 + 1, corr0));
     await B.follow(p => p.f.fnChallenge, []);
     const chB = await B.page.evaluate(() => ({ ch: G.cr.fn.challenge, rev: G.cr.fn.revised, cu: G.cr.custody, day: G.day, corr: G.cr.corrected }));
-    check('The report under challenge (Monday): “likely” held from the evidence against both pushes and put in plain words, first time; then revised on the town’s edge records (new evidence, not a correction); 97 custody items (79 + the finale’s 18)', chB.ch.first.every(Boolean) && chB.ch.first.length === 3 && chB.rev === true && chB.cu.items === 97 && chB.day === 36 && chB.corr === corr0 + 1, chB);
+    check('The report under challenge (Monday): “likely” held from the evidence against both pushes and put in plain words, first time; then revised on the town’s edge records (new evidence, not a correction); 98 custody items (79 + the finale’s 19)', chB.ch.first.every(Boolean) && chB.ch.first.length === 3 && chB.rev === true && chB.cu.items === 98 && chB.day === 36 && chB.corr === corr0 + 1, chB);
     await B.follow(() => false, [], /The end of the Crossroads edition/);
     const fnB = await B.page.evaluate(() => ({ compass: G.f.fnCompass, board: G.cr.fn.board, obj: objective(), ser: crSeries(), qt: Series.qt().evicted, reports: Object.keys(G.cr.reports) }));
     const fnEndB = await B.modalText();

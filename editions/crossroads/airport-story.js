@@ -191,7 +191,7 @@ async function apTable() {
   if (!f.apLetter) return say('The bench. Ansel has the letter; read it with him first.');
   if (f.apIntake && !f.apDrillA) {
     await apDrill('maildfir'); f.apDrillA = true; touchCSF('Detect');
-    await say(G.cr.drills.maildfir.supported ? 'Not ours, from A-01 and A-02.' : 'Question 1 has its answer, but write it only from what you’ve read.', 'Lucia Ferrand');
+    await say(G.cr.drills['ap-maildfir'].supported ? 'Not ours, from A-01 and A-02.' : 'Question 1 has its answer, but write it only from what you’ve read.', 'Lucia Ferrand');
     await say('09:40: Odette has rung every tenant on its lease-file number: no change, don’t pay. Nobody had paid. 09:45: Dario blocked rvb-airports.example at the airport’s mail. (game)', 'Lucia Ferrand');
     return;
   }
@@ -204,7 +204,7 @@ async function apTable() {
   }
   if (f.apStores && !f.apDrillC) {
     await apDrill('lastdfir'); f.apDrillC = true; touchCSF('Detect');
-    await say(G.cr.drills.lastdfir.verdictOk ? 'Our records, their word, and an honest unknown with the date. And the control worked.' : 'What each record shows, and who tried as unknown, with R-02 dated. A session and a connection are different things.', 'Theo Marchetti');
+    await say(G.cr.drills['ap-lastdfir'].verdictOk ? 'Our records, their word, and an honest unknown with the date. And the control worked.' : 'What each record shows, and who tried as unknown, with R-02 dated. A session and a connection are different things.', 'Theo Marchetti');
     await say('AIR-01 for Ansel, at the bench, when you’re ready.', 'Lucia Ferrand');
     return;
   }
@@ -216,7 +216,7 @@ async function apTable() {
 async function apDrill(key) {
   const c = G.cr;
   const r = await doDrill(AP_DRILLS[key]);
-  c.drills[key] = {score: r.score, verdictOk: r.verdictOk, supported: r.supported, keys: r.keys, ai: r.ai};
+  c.drills['ap-' + key] = {score: r.score, verdictOk: r.verdictOk, supported: r.supported, keys: r.keys, ai: r.ai};
   if (apDfir()) { c.needs.total++; if (r.verdictOk && r.supported) c.needs.met++; }
   track();
   return r;
@@ -710,7 +710,7 @@ function apScoreHtml() {
 }
 function apDrillRows() {
   const keys = apMgr() ? ['mailmgr', 'vendmgr', 'tenantmgr'] : ['maildfir', 'venddfir', 'lastdfir'];
-  return keys.map(k => { const d = G.cr.drills[k]; return '<tr><td>' + esc(AP_DRILLS[k].title) + '</td><td>' + (d ? d.score : '—') + '</td><td>' + (d ? (d.supported ? 'yes' : 'no') : '—') + '</td></tr>'; }).join('');
+  return keys.map(k => { const d = G.cr.drills['ap-' + k]; return '<tr><td>' + esc(AP_DRILLS[k].title) + '</td><td>' + (d ? d.score : '—') + '</td><td>' + (d ? (d.supported ? 'yes' : 'no') : '—') + '</td></tr>'; }).join('');
 }
 async function apSummary() {
   const f = G.f, c = apC(), t = G.trackId;

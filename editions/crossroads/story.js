@@ -86,6 +86,7 @@ function crGrantNgPlus() { Series.markEdition('crossroads', {ngPlus: true}); ret
 // New Game+ track is recorded as ngTrack.
 function crSeriesMark(info) { Series.markEdition('crossroads', Object.assign(G && G.ngPlus ? {ngTrack: G.trackId} : {track: G.trackId}, info)); }
 function crNgSave() { try { return localStorage.getItem(CR_NG_KEY); } catch (e) { return null; } }
+function crMainDone() { try { const g = decodeSave(localStorage.getItem(CR_MAIN_KEY)); return !!(g && g.f && g.f.fnSummary); } catch (e) { return false; } }
 // Start New Game+: the second slot, a fresh save, the other track (the first save's track shown as taken).
 function crNgBegin(other) {
   const from = crSeries().track || (other === 'manager' ? 'dfir' : 'manager');
@@ -111,11 +112,28 @@ function editionTitle() {
       return true;
     }
     if (k === 'ngnew') { crNgBegin(s.track === 'manager' ? 'dfir' : 'manager'); return true; }
+    if (k === 'new' && crMainDone()) {
+      const j = await UI.openModal('New game', '<p>This replaces your first save, the one that reached the edition’s ending. New Game+ is separate, on its own save, and isn’t touched.</p>', [{label: 'Replace my first save', meta: {k: 'go'}}, {label: 'Back', meta: {k: 'back'}}], {closable: false, cursor: 1});
+      if (j !== 0) { titleScreen(); return true; }
+    }
     return false;
   }};
 }
 
 /* ---------- Engine hooks ---------- */
+// The engine's optional load hook (Town Hall defines none), run by fixupState on Continue, Continue New Game+ and import.
+// 1. Before this build the Airport stored its drills under the School District's keys (vendmgr, venddfir), so the
+//    Airport's drill B overwrote the School's result. The Airport's now live under 'ap-' keys: an older save is moved
+//    across once (idempotent), and a School result already overwritten is marked lost (the School summary says so).
+// 2. A New Game+ save code imported from the title screen goes to the second slot, never over the first save.
+function editionFixup() {
+  const d = G.cr && G.cr.drills;
+  if (d) {
+    if (G.f && G.f.apDrillB) for (const k of ['vendmgr', 'venddfir']) if (d[k] && !d[k].lost && !d['ap-' + k]) { d['ap-' + k] = d[k]; d[k] = {lost: true}; }
+    for (const k of ['mailmgr', 'maildfir', 'tenantmgr', 'lastdfir']) if (d[k] && !d['ap-' + k]) { d['ap-' + k] = d[k]; delete d[k]; }
+  }
+  if (G.ngPlus && crSlot === 'main') crSlot = 'ngplus';
+}
 function hudStatus() { return 'Day ' + G.day + ' · ' + G.rank + ' · Focus ' + G.focus + '/' + G.focusMax + (G.map === 'library' || G.map === 'lboard' ? ' · Library' : G.map === 'school' || G.map === 'sboard' ? ' · School District' : G.map === 'clinic' || G.map === 'cnboard' ? ' · Clinic' : G.map === 'dispatch' || G.map === 'dpboard' ? ' · Dispatch' : G.map === 'airport' || G.map === 'apboard' ? ' · Airport' : G.map === 'fnops' || G.map === 'fnboard' ? ' · the Compact' : ''); }
 async function editionQueue() {
   const t = crTrack();

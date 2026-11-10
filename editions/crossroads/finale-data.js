@@ -103,11 +103,11 @@ const FN_DESKS = {2: 'the Library', 3: 'the Library', 6: 'the School District', 
 
 /* ---------- People (the members' leaders at their desks or on the line; Tallowmere at the bench) ---------- */
 NPCS.push(
-  {id: 'strandfn', name: 'Director Mina Strand', role: 'library director (the Library’s desk)', map: 'fnops', x: 2, y: 2, dir: 'down', pal: 'strand'},
-  {id: 'marshfn', name: 'Owen Marsh', role: 'district technology director (the School District’s desk)', map: 'fnops', x: 6, y: 2, dir: 'down', pal: 'marsh'},
-  {id: 'marisolfn', name: 'Marisol Quintero', role: 'practice manager (the Clinic’s desk)', map: 'fnops', x: 10, y: 2, dir: 'down', pal: 'marisol'},
-  {id: 'halefn', name: 'Imogen Hale', role: 'day supervisor, on the line from the floor (Dispatch’s desk)', map: 'fnops', x: 14, y: 2, dir: 'down', pal: 'hale'},
-  {id: 'breckfn', name: 'Callum Breck', role: 'weekend duty manager (the Airport’s desk)', map: 'fnops', x: 18, y: 2, dir: 'down', pal: 'breck'},
+  {id: 'strandfn', name: 'Director Mina Strand', role: 'library director, on the line (the Library’s desk)', map: 'fnops', x: 2, y: 2, dir: 'down', pal: 'strand'},
+  {id: 'marshfn', name: 'Owen Marsh', role: 'district technology director (the School District’s desk)', map: 'fnops', x: 6, y: 2, dir: 'down', pal: 'marsh', cond: G => !G.f.fnMet || (G.trackId === 'manager' ? !!G.f.fnDrillC : !!G.f.fnDrillB)},
+  {id: 'marisolfn', name: 'Marisol Quintero', role: 'practice manager, on the line (the Clinic’s desk)', map: 'fnops', x: 10, y: 2, dir: 'down', pal: 'marisol'},
+  {id: 'halefn', name: 'Imogen Hale', role: 'day supervisor, on the line from the floor (Dispatch’s desk)', map: 'fnops', x: 14, y: 2, dir: 'down', pal: 'hale', cond: G => !G.f.fnMet || !!G.f.fnDrillB},
+  {id: 'breckfn', name: 'Callum Breck', role: 'weekend duty manager, on the line (the Airport’s desk)', map: 'fnops', x: 18, y: 2, dir: 'down', pal: 'breck'},
   {id: 'edda', name: 'Edda Thornquist', role: 'the Compact’s shared-services director', map: 'fnops', x: 22, y: 2, dir: 'down', pal: 'thornquist'},
   {id: 'beatrizfn', name: 'Beatriz Solano', role: 'identity team lead (the shared directory)', map: 'fnops', x: 26, y: 2, dir: 'down', pal: 'solano'},
   {id: 'noorfn', name: 'Noor Castellanos', role: 'town attorney, counsel for the town, the shared services and the Library', map: 'fnops', x: 13, y: 6, dir: 'down', pal: 'noor'},
@@ -132,7 +132,7 @@ const FN_TEST = [
   {label: 'Met for the Clinic and the Airport as written: call the firm now, and let the Library and Dispatch decide with counsel', good: true},
   {label: 'Not yet: hold off for each member’s leader to ring at 08:00, as the decision is theirs', why: 'Two annexes are met as written: ransomware found on a clinic system, and on the airport’s office network. The retainer is the Compact’s to call, and the night’s evidence won’t wait.'},
   {label: 'Met for the six members, so the firm works for the Compact’s counsel, who decides for each of them', why: 'Each member’s counsel engages the firm for that member. The Library’s and Dispatch’s lines aren’t met by what is known, and the School District saw nothing.'},
-  {label: 'Not met at all: the on-call lead contained it at 02:41, and our own team can work it alone', why: 'The Clinic’s and the Airport’s first lines are ransomware found, met whatever happened at 02:41.'},
+  {label: 'Not met at all: the on-call lead contained it at 02:41, and our own team can work it alone', why: 'The Clinic’s and the Airport’s ransomware lines are met, whatever happened at 02:41.'},
   {label: 'Met, and more: every member onto paper, its systems shut down while the firm looks at them', why: 'Shutting a member down is its own leaders’ call, and the account has been disabled since 02:41.'}];
 const FN_ACT_OK = 15, FN_ACT_LATE = 20;   // game minutes
 
@@ -144,7 +144,7 @@ const FN_FACTORS = [
   {id: 'paper', name: 'Paper with an owner', csf: 'Recover', text: 'Each member’s paper fallback had a named owner and had been practised, so the branch, the clinic and the desk kept working.', good: true},
   {id: 'first', name: 'The Library first', csf: 'Identify', text: 'The Library was hit first, at 02:31: its server is where the trouble started, and its staff should answer for it.'},
   {id: 'thread', name: 'The suspicion file', csf: 'Identify', text: 'svc-print’s actor ran the campaign: the file shows it has been in the town for years.'},
-  {id: 'collector', name: 'Dispatch’s collector', csf: 'Protect', text: 'DP-LOG-01 let the attackers onto the center’s network at 02:42.'}];
+  {id: 'collector', name: 'Dispatch’s collector', csf: 'Protect', text: 'DP-LOG-01 let the attackers onto the center’s network at 02:42, and from there they reached the other members.'}];
 const FN_IMPACT = [
   {label: 'Three shares, under ten minutes. Paper at three members until Sunday, all of it entered', good: true},
   {label: 'No impact to report: every member opened on Saturday without paper, and nothing was lost', why: 'The branch, the clinic’s Saturday session and the airport’s desk ran on paper, and three shares were restored. Say what it cost, as counted.'},
@@ -165,17 +165,17 @@ const FN_AAR = [
    dates: [{label: 'Day 57, a Monday', good: true},
            {label: 'As soon as possible', why: 'A date nobody can check. Day 57.'},
            {label: 'When the budget allows', why: 'The copies and the members exist already. Day 57.'},
-           {label: 'Day 120', why: 'A quarter is the cycle; the first one comes before it. Day 57.'}]}];
+           {label: 'Day 120, a Monday', why: 'A quarter is the cycle; the first one comes before it. Day 57.'}]}];
 
 /* ---------- Manager: the programme roadmap (Day 36 13:00; pick four) ---------- */
 const FN_ROADMAP = [
   {id: 'ex', name: 'Exercises', csf: 'Govern', text: 'A cross-member tabletop each quarter, from the members’ own risk registers, with each member’s leader at the table.', good: true},
   {id: 'terms', name: 'Retainer terms', csf: 'Govern', text: 'One retainer: each member engages the firm through its own counsel, with separate cases and stores, written into the terms.', good: true},
   {id: 'rota', name: 'Rota health', csf: 'Govern', text: 'Fill the night post, nobody past two nights in a row, and gaps and overtime reported to the Compact Board each month.', good: true},
-  {id: 'accts', name: 'Service accounts', csf: 'Protect', text: 'One service account per member, rights only where it needs them, reviewed each quarter.', good: true},
-  {id: 'command', name: 'One command', csf: 'Respond', text: 'In an incident the Compact decides for every member, and the six of them move as one.'},
-  {id: 'cut', name: 'A smaller retainer', csf: 'Govern', text: 'Saturday was contained in six minutes. The retainer can be cut to half its hours.'},
-  {id: 'magda', name: 'Nights for good', csf: 'Govern', text: 'Magda takes the nights permanently. She offered, and nobody reads the platform faster.'}];
+  {id: 'accts', name: 'Service accounts', csf: 'Protect', text: 'One service account per member, rights only on the shares it needs, reviewed each quarter with each member.', good: true},
+  {id: 'command', name: 'One command', csf: 'Respond', text: 'In an incident the Compact decides for every member, and the six of them move as one, so no member’s board slows it.'},
+  {id: 'cut', name: 'A smaller retainer', csf: 'Govern', text: 'Saturday was contained in six minutes. The retainer can be cut to half its hours, and the saving spent on tools.'},
+  {id: 'magda', name: 'Nights for good', csf: 'Govern', text: 'Magda takes the nights permanently. She offered, nobody reads the platform faster, and the schedule stops changing weekly.'}];
 
 /* ---------- DFIR D1: the letters and the stores (Day 34 04:10) ---------- */
 const FN_STORES = [
@@ -196,7 +196,7 @@ const FN_INTAKE = {
            {label: 'Fill the gap from the Airport’s own flows, to make the file whole', why: 'An item filled in is not the item. A gap is recorded, never filled.'},
            {label: 'Drop it: a file with a gap in it can’t support any finding', why: 'Outside the gap it shows what it shows. Log it, gap and all.'},
            {label: 'Ask Beatriz to export it again at once, for the three missing minutes', why: 'The rows don’t exist. Asking again changes nothing but the record.'}]},
-  s13: {id: 'S-13', what: 'The district’s message trace, Saturday 07:00 to 08:00', form: 'Given by Owen Marsh at 08:20, with Adaeze Kole’s agreement at 08:15: for the question “is it part of the campaign?” only.',
+  s13: {id: 'S-13', what: 'The district’s message trace, Saturday 07:00 to 08:00', form: 'Given by Owen Marsh at 08:20. At 08:15 Adaeze Kole added one question to the district’s letter, SCH-01, in writing: “is it part of the campaign?” Only that.',
     opts: [{label: 'Into the district’s store, with its limit: that one question only', good: true},
            {label: 'Into CMP-01: the question is the campaign’s, and the item goes with it', why: 'The trace is the district’s, given for one question. It goes in its own store.'},
            {label: 'Into the district’s store, for any question it may help with later', why: 'Kole agreed one question. More needs her agreement.'},
@@ -205,7 +205,7 @@ const FN_INTAKE = {
 
 /* ---------- DFIR: the report under challenge (Day 36 09:00; Hugo Ellerby, with Ansel present) ---------- */
 const FN_CHALLENGE = [
-  {title: 'The challenge · round 1', ask: '“Finding 3 says likely. No record shows a transfer, so make it confirmed and the claim closes.”',
+  {title: 'The challenge · round 1', ask: '“Finding 3 says likely. No record shows a transfer above 1 MB, so make it confirmed and the claim closes.”',
    resp: [{label: 'It stays likely: P-05 has three minutes without rows, and the town’s edge records, asked for on Sunday, aren’t in', good: true},
           {label: 'Agreed: the insurer pays for the work, and its reading of the evidence decides it', why: 'The evidence decides the wording, not who pays. Confirmed needs a record that covers the gap.'},
           {label: 'A filed report isn’t open to discussion: put it to counsel in writing if you disagree', why: 'Ansel decided you should hear this. Answer it from the evidence.'},
@@ -216,10 +216,10 @@ const FN_CHALLENGE = [
           {label: 'Unknown, and the Airport’s own flows can be set aside as the airport’s', why: 'T-03 is evidence like any other. It points the same way as P-05.'},
           {label: 'Write both words, likely and unknown, and let the reader choose between them', why: 'One wording, the one the evidence supports.'}]},
   {title: 'The challenge · round 3', ask: '“In plain words, for my file: what can you say?”',
-   resp: [{label: '“Files were encrypted 02:34 to 02:40. In the records I read nothing left, but one has a gap, so I say likely.”', good: true},
-          {label: '“The Authority has no legal duty to tell anyone: nothing left the airport.”', why: 'Whether anyone must be told is counsel’s question, and the finding is likely, not confirmed.'},
-          {label: '“Beyond any doubt nothing was taken, and the claim should be paid in full.”', why: 'Overclaimed, and the claim is the insurer’s and Ansel’s business, not the firm’s.'},
-          {label: '“I would rather not say anything until the town’s edge records arrive.”', why: 'Say what the evidence shows now, and what is still to come.'}]}];
+   resp: [{label: '“No transfer over 1 MB in the records I read. One has a gap, so likely. Under 1 MB: unknown.”', good: true},
+          {label: '“The Authority has no legal duty to tell anyone, since the records show nothing left the airport.”', why: 'Whether anyone must be told is counsel’s question. The records show nothing above 1 MB, likely, and can’t speak to less.'},
+          {label: '“Beyond any doubt nothing was taken from the share, and the claim should be paid in full.”', why: 'Overclaimed: a small file fits under 1 MB. The claim is the insurer’s and Ansel’s business, not the firm’s.'},
+          {label: '“I would rather say nothing at all until the town’s edge records arrive on my desk.”', why: 'Say what the evidence shows now, and what is still to come.'}]}];
 
 /* ---------- Drills (all cases original; artefacts are invented, fields are real kinds of evidence) ---------- */
 const FN_DRILLS = {
@@ -381,7 +381,7 @@ const FN_DRILLS = {
          wall: ['{t}  recv  CAD-0{i}  syslog', '{t}  recv  MQ-01  syslog', '{t}  fwd  platform  batch {n}']}]},
       {id: 'p01', name: 'P-01: the directory’s record', qs: [
         {q: 'What does the directory record for those two sign-ins?', kind: 'focus', key: true,
-         res: ['02:41: svc-fileops disabled. 02:42: two sign-ins for DP-LOG-01, refused, from 192.0.2.141', 'None for the account since']}]}
+         res: ['02:41: svc-fileops disabled. 02:42: two sign-ins for DP-LOG-01, refused, from 192.0.2.141', 'None for the account after 02:42, to P-01’s end at 05:00']}]}
     ],
     verdicts: [
       {label: 'Nothing, confirmed: both refused, no session. P-03 and P-01 agree', good: true, needs: ['p03', 'p01'],
@@ -420,7 +420,7 @@ const FN_DRILLS = {
         {q: 'Does it mention accounts?', kind: 'trap', res: ['“Confirm your account.”', '(Most phishing does.)']}]},
       {id: 'signins', name: 'The Compact’s sign-in records for the district', qs: [
         {q: 'Did any district account sign in from the campaign’s addresses?', kind: 'focus', key: true,
-         res: ['None from 192.0.2.140 or .141 for any district account, Night 33 or since', 'w.haddad’s last sign-in: Friday 15:40, from Riverbend High. svc-fileops has no rights at the district']}]},
+         res: ['None from 192.0.2.140 or .141 for any district account, Night 33 or since', 'w.haddad’s last sign-in: Friday 15:40, from Hollinmere Middle. svc-fileops has no rights at the district']}]},
       {id: 'trace', name: 'The district’s message trace', qs: [
         {q: 'Where did the email come from, and to whom?', kind: 'focus', key: true,
          res: ['07:12: one outside sender, to 40 district mailboxes', 'Its link goes to staff-verify.example. Nothing in the campaign’s records names that domain or sender']},
@@ -467,7 +467,7 @@ const FN_DRILLS = {
         {q: 'Does it ask about accounts?', kind: 'trap', res: ['“Confirm your account.”', '(So does most phishing.)']}]},
       {id: 'p01', name: 'P-01: the sign-in records', qs: [
         {q: 'Did any district account sign in from 192.0.2.140 or .141?', kind: 'focus', key: true,
-         res: ['None, on Night 33 or since, in the district’s forwarded SSO sign-ins', 'w.haddad’s last: Friday 15:40, Riverbend High']}]},
+         res: ['None from Night 33 to 05:00, P-01’s end, in the district’s forwarded SSO sign-ins', 'w.haddad’s last to 05:00: Friday 15:40, Hollinmere Middle']}]},
       {id: 's13', name: 'S-13: the message trace', qs: [
         {q: 'Where did it come from, and to whom?', kind: 'focus', key: true,
          res: ['07:12: one outside sender to 40 district mailboxes', 'The link: staff-verify.example. Neither appears in CMP-01’s records']},
@@ -490,7 +490,7 @@ const FN_DRILLS = {
       {label: 'A test by the district', why: 'Nothing points to it.'},
       {label: 'The email’s wording', why: 'Beside the point.'}],
     path: '<p>Two decisive sources: <b>P-01</b> (the district’s sign-ins, as forwarded) and <b>S-13</b> (the message trace). The morning and the subject fit either answer. Not part of the campaign: the district handles it.</p>',
-    response: ['To Kole: not part of the campaign, from P-01 and S-13', 'S-13 used for that question only, as she agreed', 'Owen pulls the messages and blocks the sender: the district’s to do', 'The district’s store stays apart from CMP-01'],
+    response: ['To Kole: not part of the campaign, from P-01 and S-13', 'S-13 used for that question only, as she agreed', 'Owen pulls the messages, blocks the sender and checks the district’s own sign-ins since 05:00: the district’s to do', 'The district’s store stays apart from CMP-01'],
     techs: [], acts: ['fnphish']
   }
 };
@@ -505,29 +505,33 @@ const FN_REPORT_LIB = {
     {id: 'circ', text: 'CIRC-01 shows no sign-in by svc-fileops on Night 33.', truth: 'confirmed',
      evidence: ['L-03: CIRC-01’s Security log for Night 33: no sign-in by svc-fileops'], why: 'Its own sign-in record, over the night it covers.'},
     {id: 'out', text: 'Whether anything was copied out of LIB-IMG-01.', truth: 'unknown',
-     evidence: ['The Library keeps no flow records at its own edge', 'P-05, as shared with Noor’s agreement: no rows 02:36–02:39'], why: 'No record in scope covers the way out for the whole window.'}]
+     evidence: ['L-04: the Library firewall’s log for Night 33 records connections at its edge, not their size', 'The patron-network flow records cover the public PCs and patron Wi-Fi, not LIB-IMG-01', 'P-05, as shared with Noor’s agreement: no rows 02:36–02:39'], why: 'No record in scope says what left LIB-IMG-01 over the whole window.'}]
 };
 const FN_REPORT_CLN = {
   title: 'CLN-03: the front-desk folder', audience: 'Renata Osei, counsel for the Clinic',
-  intro: '<p>Three findings for Renata, from CLN-03’s store.</p>',
+  intro: '<p>Four findings for Renata, from CLN-03’s store.</p>',
   claims: [
     {id: 'enc', text: 'Files in CL-FS-01’s S:\\FrontDesk were encrypted 02:33–02:39 on Night 33 under svc-fileops.', truth: 'confirmed',
      evidence: ['N-01: the share audit, each write under svc-fileops', 'N-01: the snapshot, the folder’s files encrypted'], why: 'The share’s own audit, and its files.'},
     {id: 'wf', text: 'WF-01, which runs Wrenfold, shows no sign-in by svc-fileops on Night 33.', truth: 'confirmed',
      evidence: ['N-02: WF-01’s sign-in log for Night 33'], why: 'Its own record, over the night it covers.'},
-    {id: 'out', text: 'Nothing was copied out of S:\\FrontDesk before it was encrypted.', truth: 'likely',
-     evidence: ['N-03: no transfer above 1 MB from CL-FS-01 at CL-FW, 01:30–03:00', 'P-05, as shared with Noor’s agreement: none in the link’s records, but no rows 02:36–02:39'], why: 'Two records point to it; one has a gap.'}]
+    {id: 'out', text: 'No transfer above 1 MB left S:\\FrontDesk for an outside address, 01:30–03:00.', truth: 'likely',
+     evidence: ['N-03: none from CL-FS-01 at CL-FW, 01:30–03:00', 'P-05, as shared with Noor’s agreement: none in the link’s records, but no rows 02:36–02:39'], why: 'Two records point to it; one has a gap.'},
+    {id: 'small', text: 'Whether anything smaller than 1 MB left S:\\FrontDesk, 01:30–03:00.', truth: 'unknown',
+     evidence: ['N-03 and P-05 answer by size, and a day’s list is a few kilobytes', 'Nothing in scope records what the sessions read'], why: 'Below the threshold the records can’t tell a list from the sessions’ own traffic.'}]
 };
 const FN_REPORT_AIR = {
   title: 'AIR-03: the office file share', audience: 'Ansel Whitcombe, counsel to the Thistlecombe Airport Authority',
-  intro: '<p>Three findings for Ansel, from AIR-03’s store.</p>',
+  intro: '<p>Four findings for Ansel, from AIR-03’s store.</p>',
   claims: [
     {id: 'enc', text: 'Files on AP-FS-01 were encrypted 02:34–02:40 on Night 33 under svc-fileops.', truth: 'confirmed',
      evidence: ['T-01: AP-FS-01’s file events, each write under svc-fileops', 'T-01: the snapshot, the share’s files encrypted'], why: 'The share’s own events, and its files.'},
     {id: 'bil', text: 'AP-BIL-02, which runs Plinthwise, shows no sign-in by svc-fileops on Night 33.', truth: 'confirmed',
      evidence: ['T-02: AP-BIL-02’s sign-in log for Night 33'], why: 'Its own record, over the night it covers.'},
-    {id: 'out', text: 'Nothing was copied out of AP-FS-01 before it was encrypted.', truth: 'likely',
-     evidence: ['T-03: no transfer above 1 MB from AP-FS-01 at AP-FW-01, 01:30–03:00', 'P-05, as shared with Noor’s agreement: none in the link’s records, but no rows 02:36–02:39'], why: 'Two records point to it; one has a gap.'}]
+    {id: 'out', text: 'No transfer above 1 MB left AP-FS-01 for an outside address, 01:30–03:00.', truth: 'likely',
+     evidence: ['T-03: none from AP-FS-01 at AP-FW-01, 01:30–03:00', 'P-05, as shared with Noor’s agreement: none in the link’s records, but no rows 02:36–02:39'], why: 'Two records point to it; one has a gap.'},
+    {id: 'small', text: 'Whether anything smaller than 1 MB left AP-FS-01, 01:30–03:00.', truth: 'unknown',
+     evidence: ['T-03 and P-05 answer by size, and a small file fits under it', 'Nothing in scope records what the sessions read'], why: 'Below the threshold the records can’t tell a file from the sessions’ own traffic.'}]
 };
 const FN_REPORT_CMP = {
   title: 'CMP-01: the shared services', audience: 'Noor Castellanos, counsel for the town and the Compact’s shared services',
@@ -539,8 +543,8 @@ const FN_REPORT_CMP = {
      evidence: ['P-01: the sign-ins’ targets', 'P-03: the collector’s own refusals'], why: 'The directory and the collector agree.'},
     {id: 'off', text: 'svc-fileops was disabled at 02:41 and has not signed in since, to Sunday 07:30.', truth: 'confirmed',
      evidence: ['P-04: the disable in the directory’s change record', 'P-06: no sign-in for it from 02:41 to Sunday 07:30, only the two refusals at 02:42'], why: 'The change record and the review agree, over the window they cover.'},
-    {id: 'dir', text: 'No account, group or policy in the shared directory changed from Day 5 to Sunday 07:30, but that disable.', truth: 'confirmed',
-     evidence: ['P-06: the review of the directory’s 30 days of records', 'P-04: Saturday’s snapshot matches them'], why: 'The review and the snapshot agree, over the window they cover.'},
+    {id: 'dir', text: 'Every change in the shared directory from Day 5 to Sunday 07:30 matches an approved change record.', truth: 'confirmed',
+     evidence: ['P-06: the review of the directory’s 30 days of records against P-02', 'P-02: Day 12, svc-fileops’s rights review (Edda) and the resets of the passwords used on CL-FD-02 (Kit, for the Clinic)', 'P-04: the 02:41 disable under the runbook; Saturday’s 05:30 snapshot matches, and nothing changed after it to Sunday 07:30'], why: 'The review, the change records and the snapshot agree, over the window they cover.'},
     {id: 'how', text: 'How svc-fileops’s password was got.', truth: 'unknown',
      evidence: ['P-01: the first sign-in from a new address at 01:52, with the right password', 'Nothing in scope records how it was got'], why: 'The records say when and from where, not how.'},
     {id: 'link', text: 'That this campaign is linked to svc-print’s notes in the suspicion file.', truth: 'unknown',
@@ -572,9 +576,9 @@ const FN_BOARD_SPECS_DFIR = () => [
           {label: 'Three separate attacks that happened to share two addresses on the same night', why: 'One account, two addresses and nine minutes. The records join them.'}]},
   {title: 'Round 2: did anything leave?', who: 'Ivor Penhallow',
    ask: '“Did anything leave any member?”',
-   resp: [{label: 'Clinic and Airport: nothing above 1 MB. The Library: unknown', good: true},
-          {label: 'Nothing left anywhere: the firm has shown it for every member', why: 'The Library keeps no records at its edge. Unknown there.'},
-          {label: 'Everything on the three shares left: assume the worst and tell everyone', why: 'The records show no transfer above 1 MB at two members. Say what is known.'}]},
+   resp: [{label: 'Over 1 MB: none at the Clinic or the Airport. Smaller, or at the Library: unknown', good: true},
+          {label: 'Nothing left anywhere: the firm has shown it, member by member, in its four reports', why: 'Nothing above 1 MB at two members; below that, and at the Library, whose edge logs no sizes, unknown.'},
+          {label: 'Everything on the three shares left: assume the worst, and tell everyone today', why: 'The records show no transfer above 1 MB at two members. Say what is known.'}]},
   {title: 'Round 3: can we publish?', who: 'Ivor Penhallow',
    ask: '“Can the Board publish the firm’s reports?”',
    resp: [{label: 'Each counsel decides for its report: Noor for CMP-01', good: true},
@@ -584,7 +588,7 @@ const FN_BOARD_SPECS_DFIR = () => [
 /* ---------- The boss: the Compact-wide incident (game-original), one seat per track ---------- */
 function fnMgrBossStages() {
   return {
-    s1: {title: 'Stage 1 (03:20): stand up command',
+    s1: {title: 'Stage 1 (' + (typeof fnMgrTimes === 'function' && typeof G !== 'undefined' && G && G.cr ? fnHm(fnMgrTimes().s1) : '03:20') + '): stand up command',
       clues: ['02:31–02:40: files encrypted on LIB-IMG-01, CL-FS-01’s S:\\FrontDesk and AP-FS-01 under svc-fileops. 02:41: the account disabled.', 'On the line: Director Strand, Marisol, Callum (weekend duty manager), Dispatch’s night supervisor. Edda is in the room.', 'The firm has been called. Each member’s counsel is engaging it for that member.'],
       ask: 'Six members, one room. Who decides what?',
       resp: [{label: 'Each member’s leaders decide for their member, Edda for the shared services. You coordinate, the firm through counsel', good: true},
@@ -593,7 +597,7 @@ function fnMgrBossStages() {
              {label: 'Hold everything for each leader to ring in the morning: nobody need be woken for file shares', why: 'Three members are hit. Their leaders decide now, on what is known.'},
              {label: 'The Compact sets every member’s downtime to match the others’, and tells each leader', why: 'Each member decides its own downtime. Matching them helps nobody.'}]},
     s2: {title: 'Stage 2 (09:30): what comes back first?',
-      clues: ['Dispatch: two sign-ins refused on DP-LOG-01. Imogen, on duty, keeps the floor on CAD.', 'The Clinic’s Saturday session on the cart since 08:00; the airport’s desk on paper since 07:30; the branch on paper slips from 09:00.', 'The shared directory hasn’t been reviewed yet. Friday’s 23:00 copies of the three shares are held off the network.'],
+      clues: ['The shared directory hasn’t been reviewed yet. Friday’s 23:00 copies of the three shares are held off the network.', 'Dispatch: two sign-ins refused on DP-LOG-01. Imogen, on duty, keeps the floor on CAD.', 'The Clinic’s Saturday session on the cart since 08:00; the airport’s desk on paper since 07:30; the branch on paper slips from 09:00.'],
       ask: 'Restoring across members: in what order, and who picks the times?',
       resp: [{label: 'Dispatch first in practice, and settled by Imogen. Then care, the desk, the branch. Each leader picks its time', good: true},
              {label: 'Edda moves Dispatch to cards first, as a precaution, and tells Imogen once it is done', why: 'The floor is the supervisor on duty’s, and nothing reached it. She has decided.'},
@@ -601,11 +605,11 @@ function fnMgrBossStages() {
              {label: 'Everything back at 09:00 from last night’s copies, with the paper dropped the same minute as it returns', why: 'Nothing returns before the shared directory is reviewed and its passwords reset, and each copy is checked.'},
              {label: 'Skip Dispatch: nothing there was encrypted, and its people needn’t hear', why: 'Its supervisor still needs the facts, first. She decides.'}]},
     s3: {title: 'Stage 3 (12:00): the briefings',
-      clues: ['11:00, the firm, through each counsel: three shares encrypted under svc-fileops; nothing on Shelfwright, Wrenfold, Plinthwise or CAD; two refused tries on DP-LOG-01.', 'Not known: how the password was got; whether anything left in a three-minute gap in the link’s records.', 'Each member’s counsel decides what its public is told.'],
+      clues: ['11:00, the firm, through each counsel: three shares encrypted under svc-fileops; nothing on Shelfwright, Wrenfold, Plinthwise or CAD; two refused tries on DP-LOG-01.', 'Not known: how the password was got; whether anything under 1 MB left, or anything at all in the link’s three-minute gap.', 'Each member’s counsel decides what its public is told.'],
       ask: 'What does each member’s leadership hear?',
       resp: [{label: 'What is known today for their member, what isn’t, 16:00 next. Nothing promised', good: true},
              {label: 'Promise every member its share back by Monday morning', why: 'A promise nobody can keep yet. The next update at 16:00.'},
-             {label: 'Tell them nothing was taken from any member, gap or no gap', why: 'Not known: one record has a gap, and the Library keeps none at its edge.'},
+             {label: 'Tell them nothing was taken from any member, gap or no gap', why: 'Not known: one record has a gap, nothing rules out a small transfer, and the Library’s edge logs no sizes.'},
              {label: 'Tell them the suspicion file’s actor did this', why: 'Nothing in the evidence links the two.'},
              {label: 'Nothing until counsel has the firm’s final reports, so nobody repeats a mistake', why: 'Silence leaves each leader guessing. Say what is known, and when more comes.'}]}
   };
@@ -621,17 +625,17 @@ function fnDfirBossStages() {
              {label: 'Restore the three shares from Friday’s copies, and let the members work', why: 'Restoring before preserving, before the copies are checked and the directory reviewed, can bring it back.'},
              {label: 'One store for the lot, because one actor used one account and two addresses', why: 'Each member’s evidence goes in its own store, under its own letter.'}]},
     s2: {title: 'Stage 2 (12:00): what did it reach?',
-      clues: ['L-01, N-01, T-01: writes under svc-fileops on LIB-IMG-01 02:31–02:38, S:\\FrontDesk 02:33–02:39, AP-FS-01 02:34–02:40.', 'L-03, N-02, T-02: no sign-in by svc-fileops on CIRC-01, WF-01 or AP-BIL-02. P-03: two refusals on DP-LOG-01.', 'N-03, T-03, P-05: no transfer above 1 MB from the shares, but P-05 has no rows 02:36–02:39. The Library keeps no flow records.'],
+      clues: ['L-01, N-01, T-01: writes under svc-fileops on LIB-IMG-01 02:31–02:38, S:\\FrontDesk 02:33–02:39, AP-FS-01 02:34–02:40.', 'L-03, N-02, T-02: no sign-in by svc-fileops on CIRC-01, WF-01 or AP-BIL-02. P-03: two refusals on DP-LOG-01.', 'N-03, T-03, P-05: no transfer above 1 MB from the shares, but P-05 has no rows 02:36–02:39. L-04: the Library’s edge logs connections, not sizes.'],
       ask: 'From the evidence, what did it reach?',
       resp: [{label: 'Three shares, from svc-fileops’s sessions. Two refused tries on the collector. Nothing else', good: true},
              {label: 'Every member’s systems, the School District’s among them', why: 'The district saw none of it. Say what each store shows.'},
              {label: 'Shelfwright too: the account is the Compact’s, and the Compact runs CIRC-01 for the Library', why: 'L-03 shows no sign-in by svc-fileops on CIRC-01, and it has no rights there.'},
-             {label: 'The clinic’s patient lists, copied out in the gap before the encryption', why: 'No record shows a transfer above 1 MB. Likely nothing left; never confirmed copied.'},
-             {label: 'Nothing left any of the three members, at any time that night', why: 'One record has a gap, and the Library keeps none at its edge.'}]},
+             {label: 'The clinic’s patient lists, copied out in the gap before the encryption', why: 'No record shows a transfer above 1 MB, and none shows a list copied. Say what the records show.'},
+             {label: 'Nothing left any of the three members, at any time that night', why: 'One record has a gap, a small transfer isn’t ruled out, and the Library’s edge logs no sizes.'}]},
     s3: {title: 'Stage 3 (Sunday 07:30): the way back',
-      clues: ['Friday’s 23:00 copies of the three shares are held off the network.', 'The shared directory: nothing reviewed yet since Saturday’s 05:30 snapshot.', 'Edda decides for the shared services; each member’s leader decides its own restore time.'],
+      clues: ['Friday’s 23:00 copies of the three shares are held off the network.', 'The shared directory: nothing reviewed yet since Saturday’s 05:30 snapshot.', 'Edda decides for the shared services, the Mayor for the town’s accounts; each member’s leader decides its own restore time.'],
       ask: 'What has to happen before any share returns?',
-      resp: [{label: 'Review the shared directory and reset every Compact admin and service password first. Copies checked in isolation', good: true},
+      resp: [{label: 'Review the shared directory and reset every admin and service password in it first. Copies checked in isolation', good: true},
              {label: 'Restore the three now, and review the directory on Monday', why: 'A share back on a directory nobody has checked can bring it back.'},
              {label: 'A new password for svc-fileops, and switch it back on: the file service needs it', why: 'The account the campaign used stays disabled. Edda decides what replaces it.'},
              {label: 'Edda picks each member’s restore time, as she knows when the copies are ready', why: 'The firm says what it found. Each member’s leader picks the time.'}]}

@@ -35,7 +35,7 @@ function fnCustody() { return G.cr.custody || (G.cr.custody = {items: 0, complet
 
 /* ---------- Map tiles that change ---------- */
 function fnTile(d, ch) {
-  if (ch === 'Ƈ' && G.f.fnReset) d.pal = 'fnRackOk';   // the shared directory reviewed and every Compact admin and service password reset
+  if (ch === 'Ƈ' && G.f.fnReset) d.pal = 'fnRackOk';   // the shared directory reviewed and every admin and service password in it reset (svc-print excepted, the Mayor’s decision)
   return d;
 }
 
@@ -46,7 +46,7 @@ function fnObjective() {
   if (!f.fnMet) return Object.assign(at('The Compact operations room: its door is on the north side of the square, west of Town Hall’s.', 4, 14), {step: true});
   if (fnMgr()) {
     if (!f.fnTest) return at('03:05: the plan’s test for each member, at the command table.', 13, 4);
-    if (!f.fnBoss1) return at('03:20: six members, one room. The command table.', 13, 4);
+    if (!f.fnBoss1) return at(fnHm(fnMgrTimes().s1) + ': six members, one room. The command table.', 13, 4);
     if (!f.fnDrillB) return at('06:30: the 01:52 sign-ins. Beatriz, at the shared-services rack.', 26, 2);
     if (!f.fnDrillC) return at('07:20: Imogen is on the line at Dispatch’s desk.', 14, 2);
     if (!f.fnDrillA) return at('08:10: Owen Marsh, at the School District’s desk, has a report.', 6, 2);
@@ -88,10 +88,10 @@ function fnInteract(ch, tx) {
   if (!f.fnMet && G.map === 'fnops') { if ('ƁƇƊƑƓ§Y'.includes(ch)) { run(async () => { await say('The operations room is quiet. Once the Airport’s week is closed, it is yours to use.'); }); return true; } return false; }
   if (ch === 'Ɠ') { run(fnCommandTable); return true; }
   if (ch === '§') { run(fnBench); return true; }
-  if (ch === 'Ƒ') { run(async () => { if (fnDfir() && f.fnBoss1 && !f.fnIntake) await fnIntake(); else await say(fnDfir() ? 'Four locked cases, each with its own seal log: CMP-01, LIB-03, CLN-03, AIR-03. A fifth, smaller, holds the School District’s one item, apart.' : 'The firm’s lockers, one per case. Not yours to open.'); }); return true; }
+  if (ch === 'Ƒ') { run(async () => { if (fnDfir() && f.fnBoss1 && !f.fnIntake) await fnIntake(); else await say(fnDfir() ? 'Four locked cases, each with its own seal log: CMP-01, LIB-03, CLN-03, AIR-03. A fifth, smaller, holds the School District’s one item, under its letter SCH-01 for one question: apart.' : 'The firm’s lockers, one per case. Not yours to open.'); }); return true; }
   if (ch === 'Ɗ') { run(async () => { if (f.fnNight34 && !f.fnRae) await fnRaeFile(); else await say(f.fnRae ? 'The suspicion file, laid out: every note in its place, and a card at the bottom: “Who, and why: open.”' : 'Rae’s board: the suspicion file’s notes, pinned and dated. Rae lays it out on Sunday evening.'); }); return true; }
   if (ch === 'Ɓ') { run(async () => { await say('The liaison desk for ' + (FN_DESKS[tx] || 'a member') + ': a phone, the plan’s contact page for that member, and a card: “This member’s leaders decide for it.”'); }); return true; }
-  if (ch === 'Ƈ') { run(async () => { await say(f.fnReset ? 'The shared-services rack: the shared directory’s console and CP-OPS-02. A label: “Reviewed Sunday 07:30–09:30. Every Compact admin and service password reset. svc-fileops: disabled.”' : 'The shared-services rack: the shared directory’s console and CP-OPS-02, the Compact’s operations server.' + (f.fnMet ? ' A label: “svc-fileops disabled 02:41.”' : '')); }); return true; }
+  if (ch === 'Ƈ') { run(async () => { await say(f.fnReset ? 'The shared-services rack: the shared directory’s console and CP-OPS-02. A label: “Reviewed Sunday 07:30–09:30. Every admin and service password reset, svc-print excepted (the Mayor’s decision). svc-fileops: disabled.”' : 'The shared-services rack: the shared directory’s console and CP-OPS-02, the Compact’s operations server.' + (f.fnMet ? ' A label: “svc-fileops disabled 02:41.”' : '')); }); return true; }
   if (ch === 'Y') { run(fnDesk); return true; }
   if (ch === '±') { run(async () => { await say('The Compact Board’s minutes, by year. This year’s binder: “The Compact’s incident response programme: one member at a time.”'); }); return true; }
   return false;
@@ -115,10 +115,10 @@ async function fnTalk(npc) {
       await say(f.fnBoss2 ? 'Front desk on paper since 07:30: the receipt templates live on that share. It’s my terminal at weekends; Joanna knows.' : 'Callum Breck, weekend duty manager. The terminal is mine on Saturdays and Sundays.', who); break;
     case 'edda':
       if (f.fnBoard) { await fnSummary(); break; }
-      await say(f.fnReset ? 'Every Compact admin and service password reset, the directory reviewed first. svc-fileops stays off until each member has its own account.' : 'Edda Thornquist, shared services. I decide for the Compact’s own services. I decide for no member.', who); break;
+      await say(f.fnReset ? 'Every admin and service password in the directory reset but svc-print’s, the directory reviewed first. svc-fileops stays off until each member has its own account.' : 'Edda Thornquist, shared services. I decide for the Compact’s own services. I decide for no member.', who); break;
     case 'beatrizfn':
       if (fnMgr() && f.fnBoss1 && !f.fnDrillB) { await fnDrillBMgr(); break; }
-      await say(f.fnReset ? 'Resets done, every Compact admin and service account. Two people checked each one.' : 'Beatriz. I run the shared directory for Edda. Exports, resets, nothing else without her say.', who); break;
+      await say(f.fnReset ? 'Resets done: every admin and service account, the town’s too, svc-print excepted as the Mayor decided. Two people checked each one.' : 'Beatriz. I run the shared directory for Edda. Exports, resets, nothing else without her say.', who); break;
     case 'noorfn':
       await say(fnDfir() ? 'Three letters from me: the town, the shared services, the Library. Three stores. Renata and Ansel have their own.' : 'I engage the firm for the town, the shared services and the Library, separately. Renata and Ansel do their own.', who); break;
     case 'raefn':
@@ -146,9 +146,9 @@ async function fnArrive() {
     '<p>Wednesday: the Compact operations room opens, off the square: a desk for each member’s liaison, for incidents that touch more than one member. Edda Thornquist, the Compact’s shared-services director, runs it day to day. Nights 30 to 32: quiet. Friday 23:00: the Compact’s nightly copies of the members’ shares it looks after, held off the network, as every night. (game)</p>',
     [{label: 'Night 33', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.day = 34; G.focus = G.focusMax;
-  const n33 = fnLead(33) || 'the Compact’s on-call lead';
+  const n33l = fnLead(33), n33 = n33l || 'the Compact’s on-call lead';
   await UI.openModal('Night 33 (Friday to Saturday)', '<p>On call: <b>' + esc(n33) + '</b>.</p>' +
-    '<p>02:35: the Compact’s log platform pages, under the members’ night thresholds: “files renamed at volume on LIB-IMG-01, CL-FS-01, AP-FS-01, account svc-fileops”. svc-fileops is a Compact service account with rights on those three members’ file shares (game). 02:41: ' + esc(n33.split(' ')[0]) + ' disables svc-fileops in the shared directory, under the runbook Edda signed: a service account seen encrypting is disabled at once, and disabling destroys nothing. 02:44: the two addresses its sign-ins came from, 192.0.2.140 and 192.0.2.141, blocked at the Compact’s edge. No file event under svc-fileops anywhere after 02:40. (game)</p>' +
+    '<p>02:35: the Compact’s log platform pages, under the members’ night thresholds: “files renamed at volume on LIB-IMG-01, CL-FS-01, AP-FS-01, account svc-fileops”. svc-fileops is a Compact service account with rights on those three members’ file shares (game). 02:41: ' + esc(n33l ? n33l.split(' ')[0] : 'the on-call lead') + ' disables svc-fileops in the shared directory, under the runbook Edda signed: a service account seen encrypting is disabled at once, and disabling destroys nothing. 02:44: the two addresses its sign-ins came from, 192.0.2.140 and 192.0.2.141, blocked at the Compact’s edge. No file event under svc-fileops anywhere after 02:40. (game)</p>' +
     '<p>02:50: ' + (fnMgr() ? 'you are rung, as the plan says for an incident at more than one member. By then the account record says svc-fileops has no rights on CIRC-01, WF-01, AP-BIL-02 or CAD, and the platform shows no sign-in by it on CIRC-01.' : esc(lead) + ', the acting team lead, is rung, and rings Noor at 02:55, and each member’s counsel from the plan’s contact page.') + ' 02:55: Dispatch’s night supervisor hears that DP-LOG-01, the Compact’s collector on the center’s network, refused two sign-ins as svc-fileops at 02:42, and keeps the floor as it is: their call. (game)</p>',
     [{label: 'Saturday', meta: {good: true}}], {closable: false, cls: 'summary'});
   unlock('tech', 'T1486'); unlock('tech', 'T1657');
@@ -157,7 +157,7 @@ async function fnArrive() {
     await say('Three shares at three members, one account, one night. Each member’s leaders are on their way to the phone. Read me the plan.', 'Edda Thornquist');
     await say('(Windsock Badge: the firm, like every third party, is on the plan’s page with its owner, its contact and what it owns. game)');
   } else {
-    await say('03:30: Noor engages Tallowmere for the town and the Compact’s shared services, case CMP-01. 03:40: Renata Osei for the Clinic, CLN-03. 03:45: Ansel Whitcombe for the Airport, AIR-03. 03:50: Noor again, separately, for the Library, LIB-03; Director Strand told. One counsel can sign two letters; each letter is its own case. (game)');
+    await say('03:30: Noor engages Tallowmere for the town and the Compact’s shared services, case CMP-01. 03:40: Renata Osei for the Clinic, CLN-03; and Celia Marrow, for the 911 authority, decides with Lionel Ashdown, the county attorney, that the firm needn’t look at anything of the center’s own: DP-LOG-01 is the Compact’s, in CMP-01. 03:45: Ansel Whitcombe for the Airport, AIR-03. 03:50: Director Strand decides, with Noor, that the firm looks at LIB-IMG-01, and Noor engages it for the Library, separately: LIB-03. One counsel can sign two letters; each letter is its own case. (game)');
     await say('Day 34, Saturday, 04:00. The Compact operations room. Lucia rang at 03:35.');
     await say('Four letters, one account across all of them. Before anything else, the stores. At the bench.', 'Lucia Ferrand');
   }
@@ -175,7 +175,7 @@ async function fnCommandTable() {
 }
 async function fnTestTask() {
   const c = fnC();
-  await say('03:05. Each member’s annex to the Compact’s plan says when the retainer is called. The Clinic’s: ransomware or another destructive attack found on any clinic system. The Airport’s: ransomware or another destructive attack found on the office network. The Library’s: Shelfwright or its patron records may have been reached, or the on-call lead can’t contain it. Dispatch’s: a dispatch system may have been reached, or ransomware is found on the center’s network, or the on-call lead can’t contain it. (game)');
+  await say('03:05. Each member’s annex to the Compact’s plan says when the retainer is called. The Clinic’s: “when patient information may have been reached, wherever it is held; when ransomware or another destructive attack is found on any clinic system; or when the on-call lead can’t contain an incident.” The Airport’s: “when ransomware or another destructive attack is found on the airport’s office network; when billing or tenant records may have left the airport’s control; or when the on-call lead can’t contain an incident” (its vendor line isn’t in play: no vendor’s access is in question). The Library’s: “when Shelfwright or the patron records it holds may have been reached, or when the on-call lead can’t contain an incident.” Dispatch’s: “when a dispatch system may have been reached by someone not authorised; when ransomware or another destructive attack is found on any system that shares the center’s network, the county office’s included; or when the on-call lead can’t contain an incident.” None of the three shares is on the center’s network: each is on its own member’s. (game)');
   let mins = FN_ACT_OK;
   while (true) {
     const items = FN_TEST.map(o => ({label: o.label, meta: {good: !!o.good}}));
@@ -185,15 +185,23 @@ async function fnTestTask() {
     await say(FN_TEST[i].why + ' (+' + FN_ACT_LATE + ' game minutes)');
   }
   c.activate = mins; G.cr.activate = mins;
-  const call = 3 * 60 + 8 + (mins - FN_ACT_OK), ack = call + FN_ACT_OK;
-  await say(fnHm(call) + ' retainer line called · ' + fnHm(ack) + ' Tallowmere acknowledges. Renata Osei engages the firm for the Clinic at ' + fnHm(Math.max(3 * 60 + 40, ack + 5)) + ' and Ansel Whitcombe for the Airport at ' + fnHm(Math.max(3 * 60 + 45, ack + 10)) + '. Noor engages it for the town and the shared services, and, her decision with Director Strand told, separately for the Library. (game)');
+  const t = fnMgrTimes();
+  await say(fnHm(t.call) + ' retainer line called · ' + fnHm(t.ack) + ' Tallowmere acknowledges. Renata Osei engages the firm for the Clinic at ' + fnHm(t.ren) + ' and Ansel Whitcombe for the Airport at ' + fnHm(t.ans) + '. Noor engages it for the town and the shared services. ' + fnHm(t.ren) + ': Celia Marrow, for the 911 authority, decides with Lionel Ashdown, the county attorney, that the firm needn’t look at anything of the center’s own: DP-LOG-01 is the Compact’s, in Noor’s case. ' + fnHm(t.lib) + ': Director Strand decides, with Noor, that the firm looks at LIB-IMG-01, and Noor engages it for the Library, separately. (game)');
   G.f.fnTest = true; unlock('act', 'crretainer'); touchCSF('Respond'); track();
 }
+// The manager's night clock after the plan's test (Review S4): each wrong answer moves the call 20 game minutes, and
+// everything that waits on the call or on counsel's engagement moves with it; at best the times are as the timeline gives them.
+function fnMgrTimes() {
+  const a = G.cr.fn ? G.cr.fn.activate : null, mins = a === null || a === undefined ? FN_ACT_OK : a;
+  const call = 3 * 60 + 8 + (mins - FN_ACT_OK), ack = call + FN_ACT_OK, ren = Math.max(3 * 60 + 40, ack + 5), ans = Math.max(3 * 60 + 45, ack + 10);
+  const s1 = Math.max(3 * 60 + 20, call + 5), line = Math.max(3 * 60 + 30, s1 + 10);
+  return {call: call, ack: ack, ren: ren, ans: ans, lib: Math.max(3 * 60 + 50, ack + 15), s1: s1, line: line, mayor: Math.max(4 * 60, line), fbi: Math.max(4 * 60 + 30, ans + 5)};
+}
 async function fnBossStage(k) {
-  const c = fnC();
+  const c = fnC(), t = fnMgrTimes();
   if (!c.boss) c.boss = {first: []};
   const st = fnMgrBossStages()[k];
-  if (k === 's1') await say('03:20. On the line: Director Strand, Marisol, Callum and Dispatch’s night supervisor. Edda is here. The Mayor will be told at 04:00.');
+  if (k === 's1') await say(fnHm(t.s1) + '. On the line: Director Strand, Marisol, Callum and Dispatch’s night supervisor. Edda is here. The Mayor will be told at ' + fnHm(t.mayor) + '.');
   const items = st.resp.map(r => ({label: r.label, meta: {good: !!r.good}}));
   let first = true;
   while (true) {
@@ -205,12 +213,12 @@ async function fnBossStage(k) {
   c.boss.first.push(first);
   if (k === 's1') {
     G.f.fnBoss1 = true; unlock('act', 'fncommand'); touchCSF('Respond'); track();
-    await say('03:30: each leader on the line, each deciding for their own. 04:00: the Mayor told, for the town. 04:30: with each counsel’s agreement, the FBI contact on the plan’s page is told, and the CISA contact on the plan’s page too. 06:00: the Compact’s heads-up to every member’s contact: svc-fileops, the two addresses, the three shares, what to watch for. (game)');
+    await say(fnHm(t.line) + ': each leader on the line, each deciding for their own. ' + fnHm(t.mayor) + ': the Mayor told, for the town. ' + fnHm(t.fbi) + ': with each counsel’s agreement, the FBI contact on the plan’s page is told, and the CISA contact on the plan’s page too. 06:00: the Compact’s heads-up to every member’s contact: svc-fileops, the two addresses, the three shares, what to watch for. (game)');
     await say('06:30. Beatriz has the night’s records at the shared-services rack.');
   } else if (k === 's2') {
     G.f.fnBoss2 = true; unlock('act', 'fnorder'); touchCSF('Recover'); track();
     await say('Agreed round the room: Dispatch settled by Imogen; the Clinic’s care, the airport’s desk and the branch on paper, each by its own leader; nothing returns before the shared directory is reviewed and its passwords reset, Edda’s decision for the shared services; each member’s leader picks its own time once its copy is checked. (game)');
-    await say('11:00, the firm, through each counsel: three shares encrypted under svc-fileops 02:31–02:40; no sign-in by it on Shelfwright, Wrenfold, Plinthwise or CAD; two refused tries on DP-LOG-01; no transfer above 1 MB from the shares in the records read, with one three-minute gap in the link’s records, 02:36–02:39; how the password was got: unknown. (game)');
+    await say('11:00, the firm, through each counsel: three shares encrypted under svc-fileops 02:31–02:40; no sign-in by it on Shelfwright, Wrenfold, Plinthwise or CAD; two refused tries on DP-LOG-01; no transfer above 1 MB from the shares in the records read, with one three-minute gap in the link’s records, 02:36–02:39; smaller transfers: not ruled out; how the password was got: unknown. (game)');
   } else {
     c.boss.ok = c.boss.first.every(Boolean); c.boss.done = true;
     G.f.fnBoss3 = true; touchCSF('Respond'); track();
@@ -265,7 +273,7 @@ async function fnBench() {
   if (!f.fnDrillB) {
     await fnDrill('fnsigndfir'); f.fnDrillB = true; touchCSF('Detect');
     await say(G.cr.drills.fnsigndfir.supported ? 'Not Compact work, from P-01 and P-02. To Noor, and the indicators to Renata’s and Ansel’s cases with their agreement.' : 'Not Compact work: write it only from what you’ve read.', 'Lucia Ferrand');
-    await say('07:40: Owen Marsh rang the operations room about an email Wim Haddad reported at 07:31. 08:15: Adaeze Kole agrees the district may give the firm its message trace for one question. (game)', 'Lucia Ferrand');
+    await say('07:40: Owen Marsh rang the operations room about an email Wim Haddad reported at 07:31. 08:15: Adaeze Kole adds one question to the district’s letter, SCH-01, in writing: is the email part of the campaign? For that, the firm may use the district’s message trace. (game)', 'Lucia Ferrand');
     return;
   }
   if (!f.fnDrillA) {
@@ -300,7 +308,7 @@ async function fnDfirStage(k) {
   c.boss.first.push(first);
   if (k === 's1') {
     G.f.fnBoss1 = true; touchCSF('Respond'); track();
-    await say('05:00 to 05:50, each export by its own people, hashed at export: P-01 the shared directory’s sign-in records (Beatriz), P-02 the Compact’s change records (Edda’s team), P-03 DP-LOG-01’s own log (Ezra Moll), P-04 the directory’s change record and a snapshot (Beatriz), P-05 the Compact link’s flow records (Beatriz); L-01 to L-03 for the Library (Juno), N-01 to N-03 for the Clinic (Kit), T-01 to T-03 for the Airport (Dario). Hosts left running, svc-fileops left disabled. (Bookmark Badge: the Compact’s handovers carry their collection hashes. game)', 'Lucia Ferrand');
+    await say('05:00 to 05:55, each export by its own people, hashed at export: P-01 the shared directory’s sign-in records (Beatriz), P-02 the Compact’s change records (Edda’s team), P-03 DP-LOG-01’s own log (Ezra Moll), P-04 the directory’s change record and a snapshot (Beatriz), P-05 the Compact link’s flow records (Beatriz); L-01 to L-04 for the Library (Juno; L-04 the Library firewall’s log for Night 33, which records connections, not their size), N-01 to N-03 for the Clinic (Kit), T-01 to T-03 for the Airport (Dario). Magda’s team checks the patron-network flow records: they cover the public PCs and patron Wi-Fi, not LIB-IMG-01. Hosts left running, svc-fileops left disabled. (Bookmark Badge: the Compact’s handovers carry their collection hashes. game)', 'Lucia Ferrand');
     await say('06:00: intake at the lockers. Two of them need your call.', 'Lucia Ferrand');
   } else if (k === 's2') {
     c.boss.ok2 = true;
@@ -315,8 +323,8 @@ async function fnDfirStage(k) {
 }
 // Sunday (both tracks): the directory reviewed, the passwords reset, each copy checked, each member's own restore time.
 function fnSundayHtml() {
-  return '<p>07:30–09:30: the firm reviews the shared directory (P-06): accounts, groups, policies, delegations and sign-ins over the 30 days its records keep, Day 5 to 07:30 today, against Saturday’s 05:30 snapshot. Nothing created or changed except the 02:41 disable. svc-fileops: CP-OPS-02 nightly at 23:00, then 192.0.2.140 and .141 01:52–02:28 Saturday, none since 02:41.</p>' +
-    '<p>09:30–10:30: Beatriz resets the password of every Compact admin and service account in the shared directory, Edda’s decision (P-07). svc-fileops stays disabled; the file service stays paused until each member has its own account. 10:00: the firm checks Friday’s 23:00 copies of the three shares in isolation: scanned clean, nothing in them later than 23:04 Friday.</p>' +
+  return '<p>07:30–09:30: the firm reviews the shared directory (P-06): accounts, groups, policies, delegations and sign-ins over the 30 days its records keep, Day 5 to 07:30 today, against Saturday’s 05:30 snapshot and the Compact’s change records (P-02). Every change in them has an approved change record: on Day 12, svc-fileops’s rights review (Edda’s) and the resets of the passwords used on CL-FD-02 (Kit’s, for the Clinic); at 02:41, the disable under the runbook. Nothing else created or changed. svc-fileops: CP-OPS-02 nightly at 23:00, then 192.0.2.140 and .141 01:52–02:28 Saturday, none since 02:41.</p>' +
+    '<p>09:00: the Mayor decides, with Rae, that the town’s admin accounts in the shared directory are reset too, svc-print excepted under Rae’s plan: its sign-ins watched, its rights on the members’ servers reviewed by Day 43, each member’s leader told. 09:30–10:30: Beatriz resets the password of every admin and service account in the shared directory, the Compact’s on Edda’s decision and the town’s on the Mayor’s, but svc-print’s (P-07). svc-fileops stays disabled; the file service stays paused until each member has its own account. 10:00: the firm checks Friday’s 23:00 copies of the three shares in isolation: scanned clean, nothing in them later than 23:04 Friday.</p>' +
     '<p>11:00: S:\\FrontDesk restored, at the time Marisol picks; Saturday’s paper to be entered by 09:30 Monday, each entry checked by a second person. 12:00: AP-FS-01 restored, at the time Callum picks; a test entry, the desk off paper at 12:30, the weekend’s slips entered by 17:00, each checked. 13:00: Director Strand puts the branch back on Shelfwright. 14:00: LIB-IMG-01 restored, at the time she picks; 15:00 the public PCs back after a clean restore; Saturday’s slips entered by 17:00, each checked. (game)</p>';
 }
 async function fnSunday() {
@@ -324,7 +332,7 @@ async function fnSunday() {
   await UI.openModal('Sunday: the way back', fnSundayHtml(), [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.f.fnReset = true; cu.items += 2; cu.complete += 2; touchCSF('Recover'); track();   // P-06, P-07
   fnC().requests = {date: 'Day 35 (Sunday) 14:00'};
-  await say('14:00, through Ansel and Renata to Noor: R-31, the town’s internet edge flow records for 02:30 to 02:45 on Night 33. Logged as it went: “requested Day 35 (Sunday) 14:00” (Slate Badge). 15:00: the four reports, at the bench. (game)', 'Lucia Ferrand');
+  await say('14:00, through Ansel and Renata to Noor: R-31, the town’s internet edge flow records for 02:30 to 02:45 on Night 33: the Compact’s edge sits behind the town’s, so anything that went out through it in P-05’s gap went out through the town’s edge too. Logged as it went: “requested Day 35 (Sunday) 14:00” (Slate Badge). 15:00: the four reports, at the bench. (game)', 'Lucia Ferrand');
 }
 
 /* ---------- DFIR D1: the letters and the stores ---------- */
@@ -357,15 +365,15 @@ async function fnIntakeItem(it) {
 }
 async function fnIntake() {
   const cu = fnCustody();
-  await say('Fourteen items in four cases. Twelve are routine: log each with its handover and its hash on receipt against the form, seal the original in its own case’s locker, work on copies. Two need your call.', 'Lucia Ferrand');
+  await say('Fifteen items in four cases. Thirteen are routine: log each with its handover and its hash on receipt against the form, seal the original in its own case’s locker, work on copies. Two need your call.', 'Lucia Ferrand');
   await fnIntakeItem(FN_INTAKE.l01);
   await fnIntakeItem(FN_INTAKE.p05);
-  cu.items += 12; cu.complete += 12;   // the other twelve, hashed on receipt against each export record, sealed in their own cases
+  cu.items += 13; cu.complete += 13;   // the other thirteen, hashed on receipt against each export record, sealed in their own cases
   G.f.fnIntake = true; unlock('act', 'crcustody'); touchCSF('Respond'); track();
-  await say('Fourteen logged: CMP-01 five, LIB-03 three, CLN-03 three, AIR-03 three. 07:00, at the bench: CMP-01’s first question.', 'Lucia Ferrand');
+  await say('Fifteen logged: CMP-01 five, LIB-03 four, CLN-03 three, AIR-03 three. 07:00, at the bench: CMP-01’s first question.', 'Lucia Ferrand');
 }
 async function fnIntakeS13() {
-  await say('08:20: Owen Marsh hands over S-13, the district’s message trace for 07:00 to 08:00, with Kole’s agreement. Log it.', 'Theo Marchetti');
+  await say('08:20: Owen Marsh hands over S-13, the district’s message trace for 07:00 to 08:00, for the one question Kole added to SCH-01. Log it.', 'Theo Marchetti');
   await fnIntakeItem(FN_INTAKE.s13);
   track();
 }
@@ -393,7 +401,7 @@ async function fnChallengeTask() {
     const items = s.resp.map(r => ({label: r.label, meta: {good: !!r.good}}));
     let first = true;
     while (true) {
-      const i = await UI.openModal(s.title, '<div class="card"><b>AIR-03, finding 3 (Likely):</b> Nothing was copied out of AP-FS-01 before it was encrypted.</div><p><b>' + esc(who) + ':</b> ' + esc(s.ask) + '</p>', items, {shuffle: true, closable: false, cls: 'drill'});
+      const i = await UI.openModal(s.title, '<div class="card"><b>AIR-03, finding 3 (Likely):</b> ' + esc(FN_REPORT_AIR.claims.find(x => x.id === 'out').text) + '</div><p><b>' + esc(who) + ':</b> ' + esc(s.ask) + '</p>', items, {shuffle: true, closable: false, cls: 'drill'});
       if (items[i].meta.good) break;
       first = false;
       await say(s.resp[i].why, 'Lucia Ferrand');
@@ -404,7 +412,7 @@ async function fnChallengeTask() {
   await say('Fair. Likely, with the next record named and dated. I can write that down.', who);
   const cu = fnCustody(); cu.items++; cu.complete++;   // P-08
   c.revised = true;
-  await say('11:30: P-08, the town’s internet edge flow records for 02:30 to 02:45, exported by Beatriz with Noor’s agreement, hashed: no transfer above 1 MB to any outside address in the gap. With Renata’s and Ansel’s agreement, CLN-03’s and AIR-03’s finding 3 are reissued as confirmed for 01:30 to 03:00, the change and its reason written in each. LIB-03 stays unknown: the Library keeps no records at its own edge, and P-08 shows only what left through the town. A finding revised on new evidence, not a claim corrected. (game)', 'Lucia Ferrand');
+  await say('11:30: P-08, the town’s internet edge flow records for 02:30 to 02:45, exported by Beatriz with Noor’s agreement, hashed: no transfer above 1 MB to any outside address in the gap, the Compact’s edge’s traffic included. With Renata’s and Ansel’s agreement, CLN-03’s and AIR-03’s finding 3, no transfer above 1 MB, are reissued as confirmed for 01:30 to 03:00, the change and its reason written in each; finding 4, anything smaller, stays unknown. LIB-03 stays unknown: the Library’s own edge logs no sizes, and P-08 shows only what left through the town. A finding revised on new evidence, not a claim corrected. (game)', 'Lucia Ferrand');
   await say('14:00: the Compact Board, through the west door.', 'Lucia Ferrand');
 }
 
@@ -413,7 +421,7 @@ async function fnChallengeTask() {
 const FN_QT_TIMES = {'lb-rdp': '03:12', 'sd-probe': '03:21', 'cn-folders': '03:14', 'dp-conns': '03:11', 'ap-accounts': '03:13'};
 const FN_QT_CR = ['lb-rdp', 'sd-probe', 'cn-folders', 'dp-conns', 'ap-accounts'];
 const FN_QT_VERBS = {'lb-rdp': 'signing in', 'sd-probe': 'pinging', 'cn-folders': 'listing folders', 'dp-conns': 'listing connections', 'ap-accounts': 'listing accounts'};
-const FN_QT_CHANGES = ['th-logclear', 'mr-fwdrule', 'cr-portproxy', 'rh-vault'];   // Town Hall notes that record a change, or something taken
+const FN_QT_CHANGES = ['th-logclear', 'th-schtask', 'mr-fwdrule', 'cr-portproxy', 'rh-vault', 'sv-nesting', 'wt-vendorbox'];   // Town Hall notes that record a change made (a task, a rule, a proxy, a group, an account), or something taken
 function fnQtHtml() {
   const found = Series.qt().cluesFound, cr = FN_QT_CR.filter(id => found.includes(id)), th = crQtPriorLines();
   let h = '';
@@ -422,7 +430,7 @@ function fnQtHtml() {
   if (!cr.length) h += '<p>None noted: each member’s note was optional, and each was left unread.</p>';
   else h += cr.map(id => '<div class="card"><b>' + esc(QT_CLUES[id].tech + ' · ' + QT_CLUES[id].where) + '</b><br>' + esc(QT_CLUES[id].seen) + '</div>').join('');
   if (cr.length) {
-    const ts = cr.map(id => FN_QT_TIMES[id]).sort(), span = ts[0] === ts[ts.length - 1] ? 'at ' + ts[0] : 'between ' + ts[0] + ' and ' + (ts[ts.length - 1] === '03:21' ? '03:22' : ts[ts.length - 1]);
+    const ts = cr.map(id => FN_QT_TIMES[id]).sort(), span = ts[0] === ts[ts.length - 1] ? 'at ' + (ts[0] === '03:21' ? '03:21–03:22' : ts[0]) : 'between ' + ts[0] + ' and ' + (ts[ts.length - 1] === '03:21' ? '03:22' : ts[ts.length - 1]);
     h += '<h3>What the members’ notes share</h3><p>' + (cr.length === 1 ? 'One note: ' : 'In every one of them: ') + 'svc-print, a town account, or FD-STAFF-11’s address, Town Hall’s front-desk PC; ' + span + ' at night. ' + (v => v.charAt(0).toUpperCase() + v.slice(1))(cr.map(id => FN_QT_VERBS[id]).join(', ')) + ': discovery. No record in them shows a change made or anything taken' + (cr.includes('lb-rdp') ? '; on CIRC-01, what the session did is unknown' : '') + '.</p>';
   }
   if (FN_QT_CHANGES.some(id => found.includes(id))) h += '<p>Inside the town it was different: Town Hall’s notes above include changes made or something taken.</p>';
@@ -430,11 +438,18 @@ function fnQtHtml() {
   h += '<p class="big">Open: who, and why.</p><p class="small">Not this edition’s to answer. The file goes onward with it. (game)</p>';
   return h;
 }
+// Rae's closing line follows the members' notes found, not Town Hall's (Review S8); never further than the records go.
+function fnRaeLine(found) {
+  const cr = FN_QT_CR.filter(id => found.includes(id));
+  if (cr.length) return 'One pattern among the members, patient and quiet: looking, as far as the records go' + (cr.includes('lb-rdp') ? ', and on CIRC-01 we can’t say' : '') + '. Who, and why: I can’t tell you. Not from this.';
+  if (found.length) return 'Nothing noted among the members: their notes went unread, so the file can’t say what happened out there. Inside the town, it holds what you read. Who, and why: still open.';
+  return 'An empty board tells you what you didn’t read, not what wasn’t there.';
+}
 async function fnRaeFile() {
   const who = 'Rae Okafor';
   await say('Sunday, 18:00. Everything in the file, in one place, for the first time. Read it with me. Then we decide nothing, because nothing changes on svc-print without a plan.', who);
   await UI.openModal('The suspicion file, laid out', fnQtHtml(), [{label: 'Back', meta: {good: true}}], {closable: false, cls: 'drill'});
-  await say(qtCount() ? 'One pattern, patient, quiet, looking and not touching, out among the members. Who, and why: I can’t tell you. Not from this.' : 'An empty board tells you what you didn’t read, not what wasn’t there.', who);
+  await say(fnRaeLine(Series.qt().cluesFound), who);
   G.f.fnRae = true; touchCSF('Identify'); track();
   await say('End the day when you’re ready.');
 }
@@ -582,8 +597,8 @@ async function fnSummary() {
   const body = '<p class="big">The Crossroads edition: done.</p>' +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b> · Day <b>' + G.day + '</b> (' + (FN_DAY[G.day] || '') + ')' + (G.ngPlus ? ' · New Game+' : '') + '</p>' +
     '<h3>The finale’s drills (game)</h3><table class="sc"><tr><th>Drill</th><th>Score</th><th>Supported</th></tr>' + fnDrillRows() + '</table>' +
-    (t === 'dfir' ? '<p>The report under challenge: ' + (c.challenge && c.challenge.first.every(Boolean) ? 'held from the evidence at the first try' : 'held, with false starts the debriefs named') + '; CLN-03 and AIR-03 revised on new evidence, LIB-03 kept at unknown (game).</p>' : '<p>The plan’s test: ' + (c.activate !== null && c.activate !== undefined ? c.activate + ' game minutes to the retainer' : '—') + ' · the AAR’s impact ' + (c.aar && c.aar.impactFirst ? 'as counted, first time' : 'as counted') + ' (game).</p>') +
-    '<p>Lesson (game): one Compact account with rights on three members’ shares let one password reach all three in under ten minutes. The night thresholds and a runbook turned it off at 02:41, each member’s own leaders ran their own paper and picked their own times, and every share came back from a checked copy onto a directory reviewed first. The firm kept four cases apart though one actor ran through them.</p>' +
+    (t === 'dfir' ? '<p>The report under challenge: ' + (c.challenge && c.challenge.first.every(Boolean) ? 'held from the evidence at the first try' : 'held, with false starts the debriefs named') + '; CLN-03 and AIR-03 revised on new evidence (no transfer above 1 MB; anything smaller still unknown), LIB-03 kept at unknown (game).</p>' : '<p>The plan’s test: ' + (c.activate !== null && c.activate !== undefined ? c.activate + ' game minutes to the retainer' : '—') + ' · the AAR’s impact ' + (c.aar && c.aar.impactFirst ? 'as counted, first time' : 'as counted') + ' (game).</p>') +
+    '<p>Lesson (game): one Compact account with rights on three members’ shares let one password reach all three in under ten minutes. The night thresholds and a runbook turned it off at 02:41, each member’s own leaders ran their own paper and picked their own times, and every share came back from a checked copy onto a directory reviewed first. The firm kept four cases apart though one account ran through them.</p>' +
     '<h3>Every district, prologue to finale (game)</h3>' + fnHistoryRows() +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, FD-STAFF-11’s address, the 03:00 pattern' + (qtCount() ? ', ' + qtCount() + ' notes in the suspicion file' : '') + '. Who, and why: open. It goes onward with the file.</p>') +

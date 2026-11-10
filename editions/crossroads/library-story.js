@@ -568,7 +568,7 @@ function lbScoreHtml() {
   if (!G.trackId || !G.f.lbMet) return '';
   const c = G.cr;
   if (lbMgr()) return '<p>Library: exercises run <b>' + c.ex.run + '</b> · actions <b>' + c.ex.closed + ' of ' + c.ex.actions + '</b> closed · cover ' + (c.cover ? '<b>' + esc(c.cover.k) + '</b>' : 'not set') + ' (game)</p>';
-  return '<p>Library: custody log <b>' + (c.custody ? c.custody.items : 0) + '</b> items · reports filed <b>' + Object.keys(c.reports).length + '</b> · claims corrected <b>' + c.corrected + '</b> (game)</p>';
+  return '<p>Every case so far: custody log <b>' + (c.custody ? c.custody.items : 0) + '</b> items · reports filed <b>' + Object.keys(c.reports).length + '</b> · claims corrected <b>' + c.corrected + '</b> (game)</p>';
 }
 function lbDrillRows() {
   const keys = lbMgr() ? ['pcmgr', 'pastemgr', 'aar'] : ['pcdfir', 'pastedfir', 'clocks'];

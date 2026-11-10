@@ -732,6 +732,7 @@ function fixupState() {
   for (const k in base.targets) if (G.targets[k] === undefined) G.targets[k] = base.targets[k];
   if (G.targets.esc === 1) G.targets.esc = base.targets.esc; // older saves: the escalation target was a count
   if (!G.qt) G.qt = Series.blankQT();
+  if (typeof editionFixup === 'function') editionFixup();   // optional edition hook (Crossroads' save migration; Town Hall defines none)
   fixPosition();
 }
 // Older saves can stand on a tile that a later build turned into a wall (map edits, e.g. the hub at 1,10): move the

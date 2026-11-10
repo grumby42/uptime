@@ -662,7 +662,7 @@ function sdScoreHtml() {
 }
 function sdDrillRows() {
   const keys = sdMgr() ? ['vendmgr', 'signmgr', 'offer'] : ['venddfir', 'signdfir', 'tokendate'];
-  return keys.map(k => { const d = G.cr.drills[k]; return '<tr><td>' + esc(SD_DRILLS[k].title) + '</td><td>' + (d ? d.score : '—') + '</td><td>' + (d ? (d.supported ? 'yes' : 'no') : '—') + '</td></tr>'; }).join('');
+  return keys.map(k => { const d = G.cr.drills[k]; return '<tr><td>' + esc(SD_DRILLS[k].title) + '</td>' + (d && d.lost ? '<td colspan="2">not kept (an earlier build)</td>' : '<td>' + (d ? d.score : '—') + '</td><td>' + (d ? (d.supported ? 'yes' : 'no') : '—') + '</td>') + '</tr>'; }).join('');
 }
 async function sdSummary() {
   const f = G.f, c = sdC(), t = G.trackId;
