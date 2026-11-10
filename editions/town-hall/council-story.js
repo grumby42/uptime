@@ -275,7 +275,7 @@ async function ccRiskTask() {
       {label: 'A councillor: Bram, chairing a risk committee that reads the register monthly', meta: {good: true}},
       {label: 'You: the security team lead knows the risks best, so they should be yours to own'},
       {label: 'Audra Finch, the CIO: in the end, cyber risk is a matter for the IT department'},
-      {label: 'The insurer: it pays out when things go wrong, so in practice the risk is theirs now'}], {shuffle: true});
+      {label: 'The insurer: it pays out when things go wrong, so in practice the risk is theirs'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('You advise and run the controls. Owning the town’s risk means deciding what the town accepts, and that is the council’s job.');
     else if (i === 2) await say('Audra runs IT delivery; security is one input among her costs and uptime. The council decides what risk the town accepts.');

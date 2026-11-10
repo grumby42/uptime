@@ -105,9 +105,12 @@ const FAKE_AUDIO = () => {
     const d = await p.evaluate(() => __UPTIME.settings());
     check('defaults: Classic, Soft, volume 60 but sound muted, all sounds, reduced flashing off without prefers-reduced-motion, normal text',
       d.palette === 'classic' && d.sound === 'soft' && d.volume === 60 && d.mute && !d.alertsOnly && !d.reduceFlash && d.textSize === 'normal', d);
-    const tip = await p.evaluate(() => { const t = document.getElementById('toast'); return { text: t.textContent, show: t.classList.contains('show'), z: +getComputedStyle(t).zIndex, mz: +getComputedStyle(document.getElementById('modal')).zIndex, tipSaved: JSON.parse(localStorage.getItem('uptime.settings') || '{}').soundTip }; });
-    check('first start: a toast says "Sound is off. Turn it on in Settings." above the title menu, and it is remembered in uptime.settings',
-      tip.text === 'Sound is off. Turn it on in Settings.' && tip.show && tip.z > tip.mz && tip.tipSaved === true, tip);
+    // Since maintenance slice 1 a toast raised while a modal is open shows in the modal's toast lane, below the box and
+    // clear of it (it used to sit on top of the title menu), and the map toast stays hidden.
+    const tip = await p.evaluate(() => { const t = document.getElementById('mtoast'), r = t.getBoundingClientRect(), bx = document.querySelector('#modal .mbox').getBoundingClientRect();
+      return { text: t.textContent, show: t.classList.contains('show') && r.height > 0, clear: r.top >= bx.bottom - 0.5, onScreen: r.bottom <= innerHeight + 0.5, mapHidden: !document.getElementById('toast').classList.contains('show'), tipSaved: JSON.parse(localStorage.getItem('uptime.settings') || '{}').soundTip }; });
+    check('first start: a toast says "Sound is off. Turn it on in Settings." in the toast lane below the title menu, clear of it, and it is remembered in uptime.settings',
+      tip.text === 'Sound is off. Turn it on in Settings.' && tip.show && tip.clear && tip.onScreen && tip.mapHidden && tip.tipSaved === true, tip);
     await key(p, 'ArrowDown'); await key(p, 'ArrowUp');
     const mv = await p.evaluate(() => Sound.trace.filter(t => t.ev === 'move').map(t => t.out));
     check('sound off by default: menu moves after the first gesture are muted', mv.length >= 1 && mv.every(o => o === 'muted'), mv);
@@ -139,7 +142,7 @@ const FAKE_AUDIO = () => {
     const stored = await p.evaluate(() => ({ s: localStorage.getItem('uptime.settings'), save: localStorage.getItem('uptime.slice1.save') }));
     check('settings are stored in their own key (uptime.settings), not in the game save', stored.s && JSON.parse(stored.s).palette === 'cbsafe' && !stored.save, stored);
     await p.reload(); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui);
-    const tip2 = await p.evaluate(() => ({ text: document.getElementById('toast').textContent, show: document.getElementById('toast').classList.contains('show') }));
+    const tip2 = await p.evaluate(() => { const l = document.getElementById('mtoast'); return { text: document.getElementById('toast').textContent + (l ? l.textContent : ''), show: document.getElementById('toast').classList.contains('show') || !!(l && l.classList.contains('show')) }; });
     check('the sound-off toast shows once: not again after a reload', !tip2.show && tip2.text === '', tip2);
     const re = await p.evaluate(() => ({ v: __UPTIME.settings(), pal: document.documentElement.dataset.palette, tok: getComputedStyle(document.documentElement).getPropertyValue('--paper').trim(), calm: document.body.classList.contains('calm'), big: document.body.classList.contains('bigtext') }));
     check('persistence across reload: palette, volume, alerts only, reduced flashing and text size come back and are applied',

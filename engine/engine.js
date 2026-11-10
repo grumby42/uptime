@@ -300,10 +300,13 @@ const UI = {
       this.modalEl.innerHTML =
         '<div class="mbox ' + (o.cls || '') + '"><div class="mhead">' + esc(title) + '</div>' +
         '<div class="mbody" id="mbody">' + bodyHtml + '</div>' +
-        '<div class="mopts" id="mopts"></div></div>';
+        '<div class="mopts" id="mopts"></div></div><div class="mtoast" id="mtoast" role="status"></div>';
       this.modalEl.classList.add('show');
+      this.syncToast();
       this.renderModal();
+      // The page opens at its top (title, then the body), whichever layout fitModal chose.
       const mb = document.getElementById('mbody'); if (mb) mb.scrollTop = 0;
+      const bx = this.modalEl.querySelector('.mbox'); if (bx) bx.scrollTop = 0;
     });
   },
   renderModal() {
@@ -321,18 +324,41 @@ const UI = {
     this.fitModal();
     const cur = box.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
   },
-  // The options keep their own height up to 40% of the modal area (a lone Back button is never squeezed); past that
-  // they scroll. The body likewise keeps its own height up to a third of the area, so a short question above long
-  // options is never cut on a landscape phone (Crossroads slice 2). Past those floors the two share the shrinking,
-  // so a long body keeps most of the box.
+  // Maintenance slice 1: an answer option is never clipped, however long the clues or findings above it are.
+  // 'mkeep': the options keep their whole height (they never scroll), and the body scrolls in what is left, which must be
+  //          at least 30% of the modal area (or the whole body), so a long body keeps its share (slice-1 review, B6) and a
+  //          lone Back button is never squeezed.
+  // 'mscroll': when the options and that much body can't both fit (long options on a landscape phone), the whole box
+  //          scrolls as one page: body first, then every option in full. Nothing scrolls inside a pane of its own.
+  // The modal area is what the overlay leaves: above the pad on a portrait phone, between the controls on a landscape
+  // one, less the toast lane while a toast shows.
   fitModal() {
-    const mo = document.getElementById('mopts'), mb = document.getElementById('mbody'); if (!mo || !this.modalEl) return;
-    const cs = getComputedStyle(this.modalEl), avail = this.modalEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-    mo.style.minHeight = ''; if (mb) mb.style.minHeight = '';
-    if (avail > 0) {
-      mo.style.minHeight = Math.min(mo.scrollHeight, Math.round(avail * 0.4)) + 'px';
-      if (mb) mb.style.minHeight = Math.min(mb.scrollHeight, Math.round(avail * 0.33)) + 'px';
-    }
+    const mo = document.getElementById('mopts'), mb = document.getElementById('mbody'); if (!mo || !mb || !this.modalEl) return;
+    const box = mo.parentElement; if (!box) return;
+    mo.style.minHeight = ''; mb.style.minHeight = '';  // (scrollHeight below is the content's height in either layout)
+    const cs = getComputedStyle(this.modalEl), lane = document.getElementById('mtoast');
+    const laneH = lane && lane.classList.contains('show') ? lane.offsetHeight + (parseFloat(getComputedStyle(lane).marginTop) || 0) : 0;
+    const avail = this.modalEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - laneH;
+    if (!(avail > 0)) { box.classList.remove('mkeep', 'mscroll'); return; }
+    const bs = getComputedStyle(box), head = box.querySelector('.mhead');
+    const inner = avail - (parseFloat(bs.borderTopWidth) || 0) - (parseFloat(bs.borderBottomWidth) || 0) - (head ? head.offsetHeight : 0);
+    const optsH = mo.scrollHeight, bodyH = mb.scrollHeight, floor = Math.min(bodyH, Math.ceil(avail * 0.3) + 2);  // + 2: rounding, so the body never falls a hair under 30%
+    const keep = optsH + floor <= inner;
+    box.classList.toggle('mkeep', keep); box.classList.toggle('mscroll', !keep);  // toggled, not reset, so a scrolled page keeps its place
+  },
+  // The element that scrolls the page's text: the whole box in 'mscroll', otherwise the body.
+  scroller() { const mb = document.getElementById('mbody'), box = mb && mb.parentElement; return box && box.classList.contains('mscroll') ? box : mb; },
+  /* Toasts (unlocks, badges, notices). On the map they show in #toast, inside the screen. While a modal is open they
+     show in the modal's toast lane (#mtoast) below its box, which fitModal leaves room for, so a toast never covers modal
+     text, options, the HUD or the controls. One at a time; a new one replaces the old, as before. */
+  toastMsg: '', toastLeft: 0,
+  toast(msg, ms) { this.toastMsg = String(msg); this.toastLeft = ms || 2600; this.syncToast(); },
+  toastTick(dt) { if (this.toastLeft > 0) { this.toastLeft -= dt; if (this.toastLeft <= 0) { this.toastLeft = 0; this.syncToast(); } } },
+  syncToast() {
+    const el = document.getElementById('toast'), lane = document.getElementById('mtoast');
+    const on = this.toastLeft > 0 && !!this.toastMsg, inModal = !!(lane && this.modalEl && this.modalEl.classList.contains('show'));
+    if (el) { if (on) el.textContent = this.toastMsg; el.classList.toggle('show', on && !inModal); }
+    if (lane) { const was = lane.classList.contains('show'); lane.textContent = on ? this.toastMsg : ''; lane.classList.toggle('show', on && inModal); if (was !== (on && inModal) || on) this.fitModal(); }
   },
   modalActivate(i) {
     const m = this.modal;
@@ -346,12 +372,13 @@ const UI = {
   closeModal(v) {
     const m = this.modal; this.modal = null;
     this.modalEl.classList.remove('show'); this.modalEl.innerHTML = '';
+    this.syncToast();
     // {lr, i}: left/right on a settings-style row (opts.lr); i is already the caller's index
     if (m) m.resolve(Array.isArray(v) ? v.map(i => m.perm[i]) : v && typeof v === 'object' ? v : v < 0 ? v : m.perm[v]);
   },
   modalHandle(b) {
     const m = this.modal, n = m.items.length;
-    const mb = document.getElementById('mbody');
+    const mb = this.scroller();
     const move = d => { let i = m.cursor; for (let k = 0; k < n; k++) { i = (i + d + n) % n; if (!m.items[i].disabled) break; } if (i !== m.cursor) sfx('move'); m.cursor = i; this.renderModal(); };
     const it = m.items[m.cursor];
     // Settings-style rows: left/right change the value (the caller reopens the page with the new value).

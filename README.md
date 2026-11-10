@@ -17,7 +17,7 @@ Planned home: GitHub Pages at `grumby42/uptime` (open `index.html` for the serie
 ```
 index.html                  series menu (generated)
 engine/                     shared code
-  shell.html, style.css     page skeleton and layout (HUD band above the map; phone portrait: taller map view, dialogue, then the pad at the bottom, modals above the pad; desktop: dialogue below the map when there is room)
+  shell.html, style.css     page skeleton and layout (HUD band above the map; phone portrait: taller map view, dialogue, then the pad at the bottom, modals above the pad, or between the controls on a landscape phone, the pad always visible; a modal keeps its answer options whole and lets the body scroll, or scrolls as one page when both can't fit, so an option is never clipped; toasts sit on the map, or in a lane below an open modal, never over it or the HUD; desktop: dialogue below the map when there is room)
   core-data.js              sprites (characters in four facings, each with two stepping frames so the feet alternate), palettes, tile legend, tool classes, tools, abilities, NIST CSF function names
   settings.js               Settings ('uptime.settings', shared by every edition): colour palettes applied at render time, Web Audio
                             sound sets, volume / mute / alerts only, reduced flashing, text size, the state-badge glyphs, the Settings page
@@ -73,7 +73,7 @@ editions/crossroads/          edition 2 (the branch): IR manager or principal DF
   airport-data.js           the Regional Airport (business and office IT only): map, people, both tracks' tables, six drills, two reports, directive, Airport Board, dojos, boss stages
   airport-story.js          the Regional Airport's objectives and scripts for both tracks, who owns what, the week-4 rota, the tabletop, the weekend plan, the nights, the boss from each seat, the AAR, the summary
 tools/build.py              builds every edition and the menu (the menu lists editions in play order)
-tests/                      Playwright checks (district suites, quiet, layout, highlight, doors, sprites, bot)
+tests/                      Playwright checks (district suites, quiet, layout, modal fit, highlight, doors, sprites, bot)
 ```
 
 An edition supplies `EDITION`, `newState`, `objective`, `interact`, `triggers`, `editionTile`, `introScript`, `summary`, `surfaceMissed`, `evolveCheck` and its data tables; the engine calls them.
@@ -106,6 +106,9 @@ Need Node and Playwright (Chromium).
                                    #   scene (pixel-sampled) and go back to their own facing after; no NPC faces into an adjacent wall
     node tests/layout.js           # pad and screen fit in phone portrait/landscape and desktop; series menu fits a phone
                                    #   (UPTIME_PALETTE=contrast|light|... and UPTIME_TEXT=large run it under a palette / text size)
+    node tests/modalfit.js         # every graded modal in both editions (recorded by the three desktop bots, plus every drill, report finding and
+                                   #   clue stage built from the data) at 800x360, 844x390, 390x844, 360x640 and 1280x800: no option clipped or
+                                   #   off-screen, the pad visible; toasts clear of the modal and the HUD (MODAL_CORPUS=dir reuses recorded logs)
     node tests/settings.js         # Settings: persistence across reload, storage blocked, v1 migration, each palette on canvas pixels and
                                    #   CSS, WCAG contrast >= 4.5:1 for 15 text/background token pairs per palette, colour-blind
                                    #   simulation of every badged equipment state pair, no colour-only cue (badges, lit PCs, hatched

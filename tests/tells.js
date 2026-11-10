@@ -79,9 +79,9 @@ const WORDS = [
 ];
 // Extra words measured in --report only (not enforced): candidates for future tracking.
 const EXTRA = [
-  // OT words (Water Plant review, 1 Nov 2026): reported, not enforced game-wide yet, because G:urgent already leans
-  // 72-73% to wrong in Records Hall and the Server Room (backlog: rebalance there, then enforce). The Water Plant itself
-  // is held to the warning band on these four groups (WATER_BAND below).
+  // OT words (Water Plant review, 1 Nov 2026): reported, not enforced game-wide. The Water Plant itself is held to the
+  // warning band on these four groups (WATER_BAND below). G:urgent leaned 72-73% to wrong in Records Hall and the Server
+  // Room; rebalanced in maintenance slice 1 and since then held to the band across Town Hall (TH_URGENT below).
   ['G:shutdown', /\b(shut|shuts|shutting|power(ed|s|ing)? (it |them |the [^ ]+ )?(off|down)|power-cycl\w*|unplug\w*|disconnect\w*|turn(ed)? off)\b/i],
   ['operator', /\boperators?\b/i],
   ['compare', /\bcompar(e|ed|es|ing)\b/i],
@@ -274,10 +274,17 @@ scanFiles(files);
 const thLists = lists; lists = [];
 scanFiles(crFiles);
 const crLists = lists; lists = thLists;
-const SKIP = /^(End shift|Not yet|Keep exploring|Title screen|Fix it|Done|Yes|No)\b/;
+// Non-graded menus: a list is left out when every right option is a bare menu label (End shift, Not yet, Keep exploring
+// …, Title screen, Fix it, Done, Yes, No). Since maintenance slice 1 the Town Hall filter matches the whole label, so a
+// graded answer that merely starts "No:" or "Yes:" (the insurer drill's verdicts, council-data.js) is read like any
+// other; it used to be skipped by the word match. Crossroads keeps the word match (CR_SKIP) for now: read with the
+// whole-label filter its tables change (11 more lists) and it fails, so that rescan is a Crossroads content task
+// (BACKLOG.md), not this slice's.
+const SKIP = /^(End shift|Not yet|Keep exploring( [^:;]*)?|Title screen|Fix it( and test again)?|Done|Yes|No)$/;
+const CR_SKIP = /^(End shift|Not yet|Keep exploring|Title screen|Fix it|Done|Yes|No)\b/;
 const graded = lists.filter(L => !L.items.filter(x => x.good).every(x => SKIP.test(x.label)));
 const opts = graded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
-const crGraded = crLists.filter(L => !L.items.filter(x => x.good).every(x => SKIP.test(x.label)));
+const crGraded = crLists.filter(L => !L.items.filter(x => x.good).every(x => CR_SKIP.test(x.label)));
 const crOpts = crGraded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
 
 function stat(set, re) {
@@ -335,6 +342,11 @@ const waterBand = WATER_BAND.map(n => { const st = stat(inScope('water'), EXTRA.
 // lawyer: report-only game-wide) and the hurry words (G:urgent).
 const COUNCIL_BAND = ['brief', 'council', 'stakeholder', 'transparent', 'accountable', 'risk', 'owner', 'budget', 'counsel', 'G:urgent'];
 const councilBand = COUNCIL_BAND.map(n => { const st = stat(inScope('council'), EXTRA.find(w => w[0] === n)[1]); return {n, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
+// The hurry words (G:urgent), report-only game-wide since the Water Plant review because Records Hall (72%) and the Server
+// Room (73%) leaned to wrong, are held to the same band across Town Hall since maintenance slice 1: in every district, in
+// every list type and overall, at n >= MIN_N (the wording in Records Hall and the Server Room was rebalanced first).
+const TH_URGENT = EXTRA.find(w => w[0] === 'G:urgent')[1];
+const thUrgent = scopes.concat(TYPES).map(s => { const st = stat(inScope(s), TH_URGENT); return {n: s, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
 // ---- Crossroads: its own population, scopes and band ----
 const CR_DISTRICTS = ['cr-prologue', 'cr-library', 'cr-school', 'cr-clinic', 'cr-dispatch', 'cr-airport', 'cr-finale'];
 const crScope = s => s === 'cr-all' ? crOpts : TYPES.includes(s) ? crOpts.filter(x => x.t === s) : crOpts.filter(x => x.d === s);
@@ -521,6 +533,7 @@ const checks = [
   ['source scan found graded lists of every list type', TYPES.every(t => graded.some(L => L.type === t))],
   ['Water Plant stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on the OT groups (' + waterBand.map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', waterBand.every(x => x.ok)],
   ['Council Chambers stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on the leadership words (' + councilBand.map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', councilBand.every(x => x.ok)],
+  ['Town Hall stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on the hurry words (G:urgent) in every district, every list type and overall, n>=' + MIN_N + ' (' + thUrgent.filter(x => x.st.n >= MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', thUrgent.every(x => x.ok)],
   ['no tracked word or group leans ' + THRESH * 100 + '% or more to right or wrong (n>=' + MIN_N + ') in any district, any list type, or overall', !fails.length],
 ];
 if (crFiles.length) checks.push(

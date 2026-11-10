@@ -13,7 +13,7 @@ let busy = 0;          // running scripts
 let moving = null;     // current step animation
 let fade = 0;          // map transition fade (0..1)
 let started = false;   // past the title screen
-let lastT = 0, encCooldown = 0, toastT = 0, shake = 0, titleOpen = false;
+let lastT = 0, encCooldown = 0, shake = 0, titleOpen = false;
 
 const DIRS = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0]};
 
@@ -21,7 +21,7 @@ const DIRS = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0]};
 // A named speaker standing on this map turns to face the player while speaking (talks and walk-triggered scenes alike).
 const say = (t, who) => { faceSpeaker(who); return UI.say(t, who); };
 const choose = (p, items, o) => UI.choose(p, items, o);
-function toast(msg, ms) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); toastT = ms || 2600; }
+function toast(msg, ms) { UI.toast(msg, ms); }  // engine.js: on the map in #toast, in the modal's toast lane while a modal is open
 function unlock(kind, key) { if (!G.fm[kind + ':' + key]) { G.fm[kind + ':' + key] = true; return true; } return false; }
 function touchCSF(fn) { if (!G.csf[fn]) { G.csf[fn] = true; toast('CSF ' + fn + ' unlocked in the Field Manual'); } }
 function groupFixed(g) { return !!G.f[GROUPS[g].fix]; }
@@ -785,7 +785,7 @@ function frame(t) {
   UI.tick(dt);
   const tallOK = !!(G && started && !B && !titleOpen);
   if (tallOK !== Screen.tallOK) { Screen.tallOK = tallOK; Screen.fit(); }
-  if (toastT > 0) { toastT -= dt; if (toastT <= 0) document.getElementById('toast').classList.remove('show'); }
+  UI.toastTick(dt);
   if (shake > 0) shake -= dt;
   watchSounds();
   if (G && started) {

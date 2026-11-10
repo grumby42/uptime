@@ -211,7 +211,7 @@ Object.assign(ALERTS, {
     rule: 'Backup job failures',
     mal: {clues: ['Every backup job for FS-03 has failed since 04:30: the backup agent’s service on FS-03 was stopped at 04:29.', 'At 04:28 wbadmin deleted the Windows backup catalog on FS-03, run by a domain admin account.', 'A minute later the same account tried to sign in to the backup console.'],
           truth: 'Inhibit System Recovery: removing the backups and catalogs that let you restore. Ransomware often comes next.',
-          resp: [{label: 'Isolate FS-03, disable the account, lock retention on its copies, check the offline copy: ransomware often comes next. Hunt for it', good: true},
+          resp: [{label: 'Isolate FS-03 now, disable the account, lock retention on its copies, check the offline copy: ransomware often comes next. Hunt for it', good: true},
                  {label: 'Rerun the failed backup jobs now so fresh copies exist, check they finish with Success, and hunt for the cause first thing in the morning', good: false, why: 'The jobs failed because someone removed the way back on purpose. They’re still in.'},
                  {label: 'Reset the admin’s password and isolate FS-03 only if files start changing, so nobody is disturbed over a scheduling fault', good: false, why: 'This is the warning, and a reset leaves FS-03 and its backups exposed. Act now.'}]},
     benign: {clues: ['The appliance’s disk is 100% full.', 'Every job that wrote after 01:40 failed with “no space”.', 'Nico’s dashboard warned about space last week.'],
@@ -347,7 +347,7 @@ const RH_DRILLS = {
     verdicts: [
       {label: 'The approved migration, so mark it resolved: its own account, from its own server, in its change window, shadow copies untouched', good: true, why: 'The audit log names svc-dmsimport on DMS-01 for every rename, CHG-5120 covers it, and nothing touched the ways back.'},
       {label: 'Ransomware: twelve thousand files renamed in under an hour, all with the same new extension, which is what mass encryption looks like; isolate FS-02 now', why: 'Volume and speed fit both. The writer and the shadow copies decide, and isolating FS-02 would cut the department off in the middle of an approved migration.'},
-      {label: 'Ransomware: an extension nobody here has ever seen before, appended to every single file in the department’s shared folder at once', why: 'Extensions are chosen by whoever renames the files. They decide nothing.'}],
+      {label: 'Ransomware: an extension nobody here has ever seen before, appended to every single file in the department’s shared folder, all at the same time', why: 'Extensions are chosen by whoever renames the files. They decide nothing.'}],
     reasons: [
       {label: 'Every rename came from the migration’s service account on DMS-01 in its change window; nothing touched the ways back on FS-02 or DMS-01 (ransomware often clears them where it runs)', good: true, why: 'Who did it, from where, under what approval, and whether the ways back were touched, from two independent records.'},
       {label: 'The new extension sounds like a document-management format rather than anything a ransomware crew would choose, and the renamed files still carry their original names in front of it', why: 'An attacker can choose any extension, and most ransomware keeps the original file name in front of its own.'},

@@ -38,7 +38,9 @@ body.portrait #app{height:100vh;height:100dvh;min-height:0}
 body.portrait #hud{width:100%;font-size:11.5px;min-height:calc(3 * 1.3em + 7px)}
 #hud.off{visibility:hidden}
 #hud .obj{color:var(--gold)}
-#toast{position:absolute;z-index:55;left:50%;top:24%;transform:translateX(-50%);background:var(--toast);color:var(--toast-ink);border:2px solid var(--gold);
+/* Toasts: on the map, inside the screen (never over the HUD band above it). While a modal is open they move to the modal's
+   own toast lane below its box (.mtoast), which takes its own space, so a toast never covers modal text, options or the HUD. */
+#toast{position:absolute;z-index:40;left:50%;top:24%;transform:translateX(-50%);background:var(--toast);color:var(--toast-ink);border:2px solid var(--gold);
   padding:3px 8px;font-size:calc(var(--fs) * .8);opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:96%;overflow:hidden;text-overflow:ellipsis}
 #toast.show{opacity:1}
 #screen.battle #toast{top:50%}
@@ -116,20 +118,30 @@ body.portrait #foot{flex:none;padding:2px 10px calc(4px + env(safe-area-inset-bo
 body.portrait #foot .keys,body.touch #foot .keys{display:none}
 
 /* Modal pages */
-#modal{position:fixed;inset:0;background:rgba(8,10,16,.8);display:none;align-items:center;justify-content:center;z-index:50;padding:8px}
+#modal{position:fixed;inset:0;background:rgba(8,10,16,.8);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:50;padding:8px}
 /* Modals fit in the area above the on-screen controls (portrait) or between them (touch landscape); they scroll inside */
 body.portrait #modal{bottom:var(--padZone,0px);padding:6px}
 body.landscape.touch #modal{padding:8px 150px 8px 168px}
 #modal.show{display:flex}
-.mbox{background:var(--paper);color:var(--paper-ink);width:min(760px,100%);max-height:100%;display:flex;flex-direction:column;border:3px solid var(--line);box-shadow:0 0 0 3px var(--paper)}
+.mbox{background:var(--paper);color:var(--paper-ink);width:min(760px,100%);max-height:100%;flex:0 1 auto;min-height:0;display:flex;flex-direction:column;border:3px solid var(--line);box-shadow:0 0 0 3px var(--paper)}
+/* The toast lane: below the modal box, in the modal's own area (above the pad on a phone), never over the box or the HUD */
+.mtoast{display:none;flex:none;margin-top:9px;max-width:min(760px,100%);background:var(--toast);color:var(--toast-ink);border:2px solid var(--gold);
+  padding:3px 8px;font-size:12px;line-height:1.3;text-align:center;pointer-events:none;overflow-wrap:anywhere}
+.mtoast.show{display:block}
 .mhead{font-weight:700;padding:10px 14px 0;font-size:17px;letter-spacing:1px}
 .mhead:empty{display:none}
-/* Body and options share the shrinking in proportion (as before a2d0962); UI.fitModal gives the options a floor of
-   their own height up to 40% of the modal area, so a lone Back button is never squeezed and a long body keeps its share. */
+/* UI.fitModal picks one of two layouts (maintenance slice 1), so an answer option is never clipped:
+   .mkeep: the options keep their whole height (they never scroll) and the body scrolls in the rest, which is at least 30%
+           of the modal area or the whole body;
+   .mscroll: when the options and that much body don't both fit (long options on a landscape phone), the whole box scrolls
+           as one page: body first, then every option in full, none clipped by a pane of its own. */
 .mbody{overflow:auto;flex:1 1 auto;min-height:0;padding:6px 14px;font-size:15px;line-height:1.45;-webkit-user-select:text;user-select:text;overscroll-behavior:contain}
 .mbody p{margin:.5em 0}
 .mbody h3{font-size:14px;margin:1em 0 .3em;color:var(--accent);letter-spacing:1px;text-transform:uppercase}
 .mopts{padding:6px 10px 10px;display:flex;flex-direction:column;gap:3px;overflow:auto;flex:0 1 auto;min-height:0}
+.mbox.mkeep .mopts{flex:none}
+.mbox.mscroll{overflow-y:auto;overscroll-behavior:contain}
+.mbox.mscroll .mbody,.mbox.mscroll .mopts{flex:none;min-height:0}  /* full height, so they never scroll vertically; wide tables still scroll sideways */
 .mopts .opt{flex:none;font-size:15px;min-height:40px;padding:6px 8px;color:var(--paper-ink)}
 .mopts .opt.cur{background:var(--cur);border-color:var(--paper-ink)}
 .mopts .opt .note{color:var(--muted)}
@@ -206,7 +218,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261110-0817Z', BUILD_TS = '2026-11-10 08:17 UTC';
+const BUILD_ID = 'ARCD-20261110-1002Z', BUILD_TS = '2026-11-10 10:02 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -738,10 +750,13 @@ const UI = {
       this.modalEl.innerHTML =
         '<div class="mbox ' + (o.cls || '') + '"><div class="mhead">' + esc(title) + '</div>' +
         '<div class="mbody" id="mbody">' + bodyHtml + '</div>' +
-        '<div class="mopts" id="mopts"></div></div>';
+        '<div class="mopts" id="mopts"></div></div><div class="mtoast" id="mtoast" role="status"></div>';
       this.modalEl.classList.add('show');
+      this.syncToast();
       this.renderModal();
+      // The page opens at its top (title, then the body), whichever layout fitModal chose.
       const mb = document.getElementById('mbody'); if (mb) mb.scrollTop = 0;
+      const bx = this.modalEl.querySelector('.mbox'); if (bx) bx.scrollTop = 0;
     });
   },
   renderModal() {
@@ -759,18 +774,41 @@ const UI = {
     this.fitModal();
     const cur = box.querySelector('.cur'); if (cur && cur.scrollIntoView) cur.scrollIntoView({block: 'nearest'});
   },
-  // The options keep their own height up to 40% of the modal area (a lone Back button is never squeezed); past that
-  // they scroll. The body likewise keeps its own height up to a third of the area, so a short question above long
-  // options is never cut on a landscape phone (Crossroads slice 2). Past those floors the two share the shrinking,
-  // so a long body keeps most of the box.
+  // Maintenance slice 1: an answer option is never clipped, however long the clues or findings above it are.
+  // 'mkeep': the options keep their whole height (they never scroll), and the body scrolls in what is left, which must be
+  //          at least 30% of the modal area (or the whole body), so a long body keeps its share (slice-1 review, B6) and a
+  //          lone Back button is never squeezed.
+  // 'mscroll': when the options and that much body can't both fit (long options on a landscape phone), the whole box
+  //          scrolls as one page: body first, then every option in full. Nothing scrolls inside a pane of its own.
+  // The modal area is what the overlay leaves: above the pad on a portrait phone, between the controls on a landscape
+  // one, less the toast lane while a toast shows.
   fitModal() {
-    const mo = document.getElementById('mopts'), mb = document.getElementById('mbody'); if (!mo || !this.modalEl) return;
-    const cs = getComputedStyle(this.modalEl), avail = this.modalEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-    mo.style.minHeight = ''; if (mb) mb.style.minHeight = '';
-    if (avail > 0) {
-      mo.style.minHeight = Math.min(mo.scrollHeight, Math.round(avail * 0.4)) + 'px';
-      if (mb) mb.style.minHeight = Math.min(mb.scrollHeight, Math.round(avail * 0.33)) + 'px';
-    }
+    const mo = document.getElementById('mopts'), mb = document.getElementById('mbody'); if (!mo || !mb || !this.modalEl) return;
+    const box = mo.parentElement; if (!box) return;
+    mo.style.minHeight = ''; mb.style.minHeight = '';  // (scrollHeight below is the content's height in either layout)
+    const cs = getComputedStyle(this.modalEl), lane = document.getElementById('mtoast');
+    const laneH = lane && lane.classList.contains('show') ? lane.offsetHeight + (parseFloat(getComputedStyle(lane).marginTop) || 0) : 0;
+    const avail = this.modalEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - laneH;
+    if (!(avail > 0)) { box.classList.remove('mkeep', 'mscroll'); return; }
+    const bs = getComputedStyle(box), head = box.querySelector('.mhead');
+    const inner = avail - (parseFloat(bs.borderTopWidth) || 0) - (parseFloat(bs.borderBottomWidth) || 0) - (head ? head.offsetHeight : 0);
+    const optsH = mo.scrollHeight, bodyH = mb.scrollHeight, floor = Math.min(bodyH, Math.ceil(avail * 0.3) + 2);  // + 2: rounding, so the body never falls a hair under 30%
+    const keep = optsH + floor <= inner;
+    box.classList.toggle('mkeep', keep); box.classList.toggle('mscroll', !keep);  // toggled, not reset, so a scrolled page keeps its place
+  },
+  // The element that scrolls the page's text: the whole box in 'mscroll', otherwise the body.
+  scroller() { const mb = document.getElementById('mbody'), box = mb && mb.parentElement; return box && box.classList.contains('mscroll') ? box : mb; },
+  /* Toasts (unlocks, badges, notices). On the map they show in #toast, inside the screen. While a modal is open they
+     show in the modal's toast lane (#mtoast) below its box, which fitModal leaves room for, so a toast never covers modal
+     text, options, the HUD or the controls. One at a time; a new one replaces the old, as before. */
+  toastMsg: '', toastLeft: 0,
+  toast(msg, ms) { this.toastMsg = String(msg); this.toastLeft = ms || 2600; this.syncToast(); },
+  toastTick(dt) { if (this.toastLeft > 0) { this.toastLeft -= dt; if (this.toastLeft <= 0) { this.toastLeft = 0; this.syncToast(); } } },
+  syncToast() {
+    const el = document.getElementById('toast'), lane = document.getElementById('mtoast');
+    const on = this.toastLeft > 0 && !!this.toastMsg, inModal = !!(lane && this.modalEl && this.modalEl.classList.contains('show'));
+    if (el) { if (on) el.textContent = this.toastMsg; el.classList.toggle('show', on && !inModal); }
+    if (lane) { const was = lane.classList.contains('show'); lane.textContent = on ? this.toastMsg : ''; lane.classList.toggle('show', on && inModal); if (was !== (on && inModal) || on) this.fitModal(); }
   },
   modalActivate(i) {
     const m = this.modal;
@@ -784,12 +822,13 @@ const UI = {
   closeModal(v) {
     const m = this.modal; this.modal = null;
     this.modalEl.classList.remove('show'); this.modalEl.innerHTML = '';
+    this.syncToast();
     // {lr, i}: left/right on a settings-style row (opts.lr); i is already the caller's index
     if (m) m.resolve(Array.isArray(v) ? v.map(i => m.perm[i]) : v && typeof v === 'object' ? v : v < 0 ? v : m.perm[v]);
   },
   modalHandle(b) {
     const m = this.modal, n = m.items.length;
-    const mb = document.getElementById('mbody');
+    const mb = this.scroller();
     const move = d => { let i = m.cursor; for (let k = 0; k < n; k++) { i = (i + d + n) % n; if (!m.items[i].disabled) break; } if (i !== m.cursor) sfx('move'); m.cursor = i; this.renderModal(); };
     const it = m.items[m.cursor];
     // Settings-style rows: left/right change the value (the caller reopens the page with the new value).
@@ -6288,7 +6327,7 @@ Object.assign(ALERTS, {
     rule: 'Backup job failures',
     mal: {clues: ['Every backup job for FS-03 has failed since 04:30: the backup agent’s service on FS-03 was stopped at 04:29.', 'At 04:28 wbadmin deleted the Windows backup catalog on FS-03, run by a domain admin account.', 'A minute later the same account tried to sign in to the backup console.'],
           truth: 'Inhibit System Recovery: removing the backups and catalogs that let you restore. Ransomware often comes next.',
-          resp: [{label: 'Isolate FS-03, disable the account, lock retention on its copies, check the offline copy: ransomware often comes next. Hunt for it', good: true},
+          resp: [{label: 'Isolate FS-03 now, disable the account, lock retention on its copies, check the offline copy: ransomware often comes next. Hunt for it', good: true},
                  {label: 'Rerun the failed backup jobs now so fresh copies exist, check they finish with Success, and hunt for the cause first thing in the morning', good: false, why: 'The jobs failed because someone removed the way back on purpose. They’re still in.'},
                  {label: 'Reset the admin’s password and isolate FS-03 only if files start changing, so nobody is disturbed over a scheduling fault', good: false, why: 'This is the warning, and a reset leaves FS-03 and its backups exposed. Act now.'}]},
     benign: {clues: ['The appliance’s disk is 100% full.', 'Every job that wrote after 01:40 failed with “no space”.', 'Nico’s dashboard warned about space last week.'],
@@ -6424,7 +6463,7 @@ const RH_DRILLS = {
     verdicts: [
       {label: 'The approved migration, so mark it resolved: its own account, from its own server, in its change window, shadow copies untouched', good: true, why: 'The audit log names svc-dmsimport on DMS-01 for every rename, CHG-5120 covers it, and nothing touched the ways back.'},
       {label: 'Ransomware: twelve thousand files renamed in under an hour, all with the same new extension, which is what mass encryption looks like; isolate FS-02 now', why: 'Volume and speed fit both. The writer and the shadow copies decide, and isolating FS-02 would cut the department off in the middle of an approved migration.'},
-      {label: 'Ransomware: an extension nobody here has ever seen before, appended to every single file in the department’s shared folder at once', why: 'Extensions are chosen by whoever renames the files. They decide nothing.'}],
+      {label: 'Ransomware: an extension nobody here has ever seen before, appended to every single file in the department’s shared folder, all at the same time', why: 'Extensions are chosen by whoever renames the files. They decide nothing.'}],
     reasons: [
       {label: 'Every rename came from the migration’s service account on DMS-01 in its change window; nothing touched the ways back on FS-02 or DMS-01 (ransomware often clears them where it runs)', good: true, why: 'Who did it, from where, under what approval, and whether the ways back were touched, from two independent records.'},
       {label: 'The new extension sounds like a document-management format rather than anything a ransomware crew would choose, and the renamed files still carry their original names in front of it', why: 'An attacker can choose any extension, and most ransomware keeps the original file name in front of its own.'},
@@ -7214,7 +7253,7 @@ function rhBossStages(picks, d) {
       clues: ['At 02:44 svc-scanbak tried to sign in to the backup console. Refused: it isn’t a backup account. Before the fieldwork, any account in the old domain group could.', 'At 02:46 it tried to delete the appliance’s copies over the network. The retention lock refused every request, and every refusal raised an alert.', picks.includes('reconnect') ? 'The tapes were loaded into the library this morning to speed things up: the one copy they couldn’t reach is on the network now.' : 'The weekly tapes are in the offsite store, offline. Their key is in escrow.'],
       truth: 'Inhibit System Recovery: going after the backups before the ransom demand. The separate credentials and the retention lock held.',
       resp: [{label: 'Keep the backup network sealed and the tapes offline: svc-scanbak still works. Check the locked and offline copies are intact before any restore', good: true},
-             {label: 'Bring the tapes in now and load them in the backup library, to check they’re readable and complete before the restore starts, since a bad tape found later costs a day', good: false, why: 'Not while svc-scanbak still works. The offline copy is the one thing they can’t reach: keep it that way until identity is yours again.'},
+             {label: 'Bring the tapes in and load them in the backup library, to check they’re readable and complete before the restore starts, since a bad tape found later costs a day', good: false, why: 'Not while svc-scanbak still works. The offline copy is the one thing they can’t reach: keep it that way until identity is yours again.'},
              {label: 'Clear the alerts: they’re only refusals, which prove the lock is working and nothing got through', good: false, why: 'The refusals are the attacker telling you what they want. Keep every one.'}],
       chain: [{at: 60, text: 'svc-scanbak tries a second way into the appliance.'}]},
     s3: {kind: 'mal', threat: 'lapse', tech: 'T1078', tags: ['identity'], story: true, group: 'c', ev0: ev0,
@@ -9096,7 +9135,7 @@ const SV_DRILLS = {
       {label: 'The monitoring server’s nightly ticket requests', good: true, why: 'Ruled out: MON-01 used AES and its documented account; PK-WS-11 used RC4 and a clerk’s.'},
       {label: 'An application server requesting its own service’s tickets at start-up', good: true, why: 'Ruled out: those are AES, for one service, from the app’s own account, not a clerk’s workstation across 12.'},
       {label: 'A clock problem bunched old requests into one window', why: 'The clocks are synchronised; the 4769 events are real and recent.'},
-      {label: 'The clerk opening 12 applications at once', why: 'A person opening apps doesn’t ask for RC4 tickets for service accounts they never use.'}],
+      {label: 'The clerk opening 12 applications at the same time', why: 'A person opening apps doesn’t ask for RC4 tickets for service accounts they never use.'}],
     path: '<p>A burst of service-ticket requests is decided by <b>the encryption type and the requesting account</b> in event 4769 (RC4/0x17 for cracking versus the AES the town uses; a clerk’s account versus a documented service) and by <b>whether the requesting host has a business reason</b> to reach those services. The total count and the time of night fit a monitoring tool just as well, so they decide nothing.</p>',
     response: ['Isolate PK-WS-11 and collect triage, the program included', 'Reset d.okonjo and revoke its sessions; find the email the program came from', 'Rotate the 12 roasted service accounts, svc-permits first (its 2019 password and domain-admin rights make it the worst case), and hunt its sign-ins since 02:10; the other 11 already have long random passwords, rotate them anyway', 'Move the RC4 ones to AES after a test, and keep the RC4-ticket rule'],
     techs: ['T1558.003'], acts: ['krbaudit']
@@ -9179,7 +9218,7 @@ const SV_DRILLS = {
     reasons: [
       {label: 'The requesting account is the documented Entra Connect MSOL_ connector, and SYNC-02 is the identity team’s own Tier 0 sync server, placed in Tier 0 during the fieldwork, on its first run', good: true, why: 'Who asked, whether it’s documented, and who owns the host.'},
       {label: 'Only 2.1 GB moved this morning, far less than the whole directory would be, well under what a full password-data dump would need to pull', why: 'Volume fits both a first sync and a dump; it decides nothing.'},
-      {label: 'The request went to both domain controllers at once, which is how ordinary directory replication works and not how a quiet attacker pulling hashes would behave', why: 'An attacker can target either or both DCs; the destinations don’t clear it.'}],
+      {label: 'The request went to both domain controllers at the same time, which is how ordinary directory replication works and not how a quiet attacker pulling hashes would behave', why: 'An attacker can target either or both DCs; the destinations don’t clear it.'}],
     alts: [
       {label: 'A DCSync-style credential dump from a compromised host', good: true, why: 'Ruled out: the account is the documented connector and the host is the owned Tier 0 sync server.'},
       {label: 'A rogue account quietly granted replication rights', good: true, why: 'Ruled out: this account was created with SYNC-02 under a change ticket, holds only the connector’s documented rights, and replicates only from SYNC-02.'},
@@ -9838,9 +9877,9 @@ function svBossStages(picks) {
       title: 'Stage 1: a request only a DC should make', host: 'DC-01 · domain controller', enemy: {spr: 'scrub', pal: 'mirror'},
       clues: ['At 03:02 DC-01 logged a replication request (event 4662 with the replication rights) from APP-03, an application server, not a domain controller.', 'The account that asked is k.hale, a Parks account whose owner has been on leave since July. It holds “Replicating Directory Changes (All)” on the domain object: a right no group grants it, an entry added directly to the ACL.', 'Nothing recorded the grant: 5136 was still off, and the domain object’s change metadata keeps only its latest edit, the audit settings you added. The likeliest moment is Day ' + Math.max(1, SV().day0 - 2) + ' at 03:12, the week’s only night-time admin sign-in to a DC: a-rmenon, by NTLM from Ravi’s old laptop, IT-WS-03. k.hale’s password was last set a minute later. a-rmenon’s password was reset when it moved to its PAW, so that copy is dead; the ACL entry survived.'],
       truth: 'A DCSync-style replication from a host that is not a domain controller, by an account quietly given replication rights two nights before you came down. The directory’s password data is out: this is a domain compromise. Cutting k.hale off now stops further pulls but shows them they are seen: worth it while replication is live, and why the scoping must move fast.',
-      resp: [{label: 'Treat every credential as exposed, because the replication pulled them all; preserve DC-01 and APP-03, disable k.hale, remove its ACL entry, tell leadership', good: true},
+      resp: [{label: 'Treat every credential as exposed, because the replication pulled them all; preserve DC-01 and APP-03, disable k.hale now, remove its ACL entry, tell leadership', good: true},
              {label: 'Isolate APP-03 from the domain controllers, since with it cut off no more password data can be replicated out of the domain', good: false, why: 'The replication already happened: every hash is out. Isolating APP-03 can’t recall them. Scope the domain.'},
-             {label: 'Reset k.hale and remove its ACL entry, then reopen the directory now the rogue account and its rights are gone', good: false, disrupt: 1, why: 'k.hale is one way in. The hashes they already pulled, krbtgt included, are the compromise. Scope before you reset anything else.'}],
+             {label: 'Reset k.hale and remove its ACL entry, then reopen the directory, since the rogue account and its rights are gone', good: false, disrupt: 1, why: 'k.hale is one way in. The hashes they already pulled, krbtgt included, are the compromise. Scope before you reset anything else.'}],
       chain: [{at: 40, text: 'k.hale’s session reaches a second domain controller.'}, {at: 75, text: 'A privileged account’s hash is used on a server.'}]},
     s2: {kind: 'mal', threat: 'relay', tech: 'T1550.002', tags: ['lateral'], story: true, group: 'c', ev0: ev0,
       rate: picks.includes('scope') ? 9 : 13, dwell0: picks.includes('scope') ? 15 : 40,
@@ -9908,7 +9947,7 @@ async function raeServerTalk() {
       {label: 'Leave svc-print as is for now, on the suspicion file: keep Rae’s rule, nothing changes on it without her. Map what the nesting grants', meta: {good: true, k: 'file'}},
       {label: 'Strip svc-print out of SRV-Ops-Legacy tonight and disable it: it has local admin everywhere it shouldn’t, and every night it keeps that is a night of exposure', meta: {k: 'strip'}},
       {label: 'File it as legacy cruft: a 2019 printer rollout left it over-privileged, there’s no sign it’s been used, and the account that made it is long gone', meta: {k: 'cruft'}},
-      {label: 'Rebuild SRV-Ops-Legacy’s membership from scratch across every server, so the nesting is cleaned up everywhere at once', meta: {k: 'rebuild'}}], {shuffle: true, closable: false, cls: 'drill'});
+      {label: 'Rebuild SRV-Ops-Legacy’s membership from scratch across every server, so the nesting is cleaned up everywhere in one pass', meta: {k: 'rebuild'}}], {shuffle: true, closable: false, cls: 'drill'});
     const k = [0, 1, 2, 3][i];
     if (k === 0) break;
     if (k === 1) await say('It ties to months of quiet clues, not to tonight’s intruder as far as we can see. Pulling it before we know how it’s used can warn whoever is behind it, and it breaks the printers and the 2019 laptops on the way. That’s a planned change, Rae’s call.', who);
@@ -11933,7 +11972,7 @@ async function ccRiskTask() {
       {label: 'A councillor: Bram, chairing a risk committee that reads the register monthly', meta: {good: true}},
       {label: 'You: the security team lead knows the risks best, so they should be yours to own'},
       {label: 'Audra Finch, the CIO: in the end, cyber risk is a matter for the IT department'},
-      {label: 'The insurer: it pays out when things go wrong, so in practice the risk is theirs now'}], {shuffle: true});
+      {label: 'The insurer: it pays out when things go wrong, so in practice the risk is theirs'}], {shuffle: true});
     if (i === 0) break;
     if (i === 1) await say('You advise and run the controls. Owning the town’s risk means deciding what the town accepts, and that is the council’s job.');
     else if (i === 2) await say('Audra runs IT delivery; security is one input among her costs and uptime. The council decides what risk the town accepts.');
@@ -12424,7 +12463,7 @@ let busy = 0;          // running scripts
 let moving = null;     // current step animation
 let fade = 0;          // map transition fade (0..1)
 let started = false;   // past the title screen
-let lastT = 0, encCooldown = 0, toastT = 0, shake = 0, titleOpen = false;
+let lastT = 0, encCooldown = 0, shake = 0, titleOpen = false;
 
 const DIRS = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0]};
 
@@ -12432,7 +12471,7 @@ const DIRS = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0]};
 // A named speaker standing on this map turns to face the player while speaking (talks and walk-triggered scenes alike).
 const say = (t, who) => { faceSpeaker(who); return UI.say(t, who); };
 const choose = (p, items, o) => UI.choose(p, items, o);
-function toast(msg, ms) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); toastT = ms || 2600; }
+function toast(msg, ms) { UI.toast(msg, ms); }  // engine.js: on the map in #toast, in the modal's toast lane while a modal is open
 function unlock(kind, key) { if (!G.fm[kind + ':' + key]) { G.fm[kind + ':' + key] = true; return true; } return false; }
 function touchCSF(fn) { if (!G.csf[fn]) { G.csf[fn] = true; toast('CSF ' + fn + ' unlocked in the Field Manual'); } }
 function groupFixed(g) { return !!G.f[GROUPS[g].fix]; }
@@ -13196,7 +13235,7 @@ function frame(t) {
   UI.tick(dt);
   const tallOK = !!(G && started && !B && !titleOpen);
   if (tallOK !== Screen.tallOK) { Screen.tallOK = tallOK; Screen.fit(); }
-  if (toastT > 0) { toastT -= dt; if (toastT <= 0) document.getElementById('toast').classList.remove('show'); }
+  UI.toastTick(dt);
   if (shake > 0) shake -= dt;
   watchSounds();
   if (G && started) {

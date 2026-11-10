@@ -59,6 +59,33 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       });
     });
   }
+  // UPTIME_MODAL_LOG=path: record every graded modal the game opens (title, body, items, options), once each, as JSON lines
+  // (tests/modalfit.js replays them at five viewports and fails if an option is ever clipped or off-screen).
+  if (process.env.UPTIME_MODAL_LOG) {
+    const logPath = process.env.UPTIME_MODAL_LOG; fs.writeFileSync(logPath, '');
+    await page.exposeFunction('__mdLog', rec => fs.appendFileSync(logPath, JSON.stringify(rec) + '\n'));
+    await page.addInitScript(() => {
+      window.addEventListener('DOMContentLoaded', () => {
+        const seen = new Set(), orig = UI.openModal.bind(UI);
+        const pinned = it => !!(it.pin || it.done || (it.meta && (it.meta.back || it.meta.done || it.meta.decide || it.meta.ai)));
+        UI.openModal = function (title, body, items, o) {
+          try {
+            const free = (items || []).filter(it => !pinned(it)), good = free.filter(it => it.meta && it.meta.good);
+            if (good.length && good.length < free.length) {
+              const key = title + '\u0001' + body + '\u0001' + items.map(it => it.label).join('\u0001');
+              if (!seen.has(key)) {
+                seen.add(key); o = o || {};
+                window.__mdLog({title: String(title), body: String(body), o: {shuffle: !!o.shuffle, multi: o.multi || 0, cls: o.cls || '', closable: o.closable !== false, cursor: o.cursor === undefined ? null : o.cursor, lr: !!o.lr},
+                  items: items.map(it => ({label: it.label, note: it.note || '', disabled: !!it.disabled, done: !!it.done, pin: !!it.pin,
+                    meta: {good: !!(it.meta && it.meta.good), back: !!(it.meta && it.meta.back), done: !!(it.meta && it.meta.done), decide: !!(it.meta && it.meta.decide), ai: !!(it.meta && it.meta.ai), lr: !!(it.meta && it.meta.lr)}}))});
+              }
+            }
+          } catch (e) {}
+          return orig(title, body, items, o);
+        };
+      });
+    });
+  }
   await page.goto(FILE);
   await page.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
   await page.evaluate(() => { __UPTIME.seed(20261027); __UPTIME.turbo(true); });
