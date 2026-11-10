@@ -191,12 +191,12 @@ const LB_DIRECTIVE = {
   manager: [
     {label: 'Lay out what the restore does and costs, with options: the choice is Director Strand’s', good: true},
     {label: 'Refuse: a restore is a security control, and a library board has no say over controls', why: 'The PCs are the Library’s service. You inform the decision; the Director owns it.'},
-    {label: 'Drop it quietly: the logoff restore covers most of it, and the Board will be happier', why: 'Dropping a control without telling the owner what it costs is how the next keylogger lasts a week.'},
-    {label: 'Let the Mayor decide: the Compact pays for the Library’s IT, and she can overrule the Board', why: 'The Compact runs the IT; the Library decides its service. Going over their heads loses the member.'}],
+    {label: 'Drop it quietly, the easy option: the logoff restore covers most of it, and the Board will be happier', why: 'Dropping a control without telling the owner what it costs is how the next keylogger lasts a week.'},
+    {label: 'Let the Mayor make the choice: the Compact pays for the Library’s IT, and she can overrule the Board', why: 'The Compact runs the IT; the Library decides its service. Going over their heads loses the member.'}],
   dfir: [
     {label: 'Give the case’s facts and each option’s cost, so Director Strand can choose', good: true},
-    {label: 'Tell the Board the report’s recommendation is final, and the restore stays as written', why: 'A report recommends. The Director decides, knowing what each option costs.'},
-    {label: 'Say it no longer matters: the keylogger is gone, and PUB-PC-04 has been restored', why: 'The next program a patron leaves behind is why the restore exists; the facts from this case say so.'},
+    {label: 'Tell the Board the report’s recommendation is final, no other option: the restore stays as written', why: 'A report recommends. The Director decides, knowing what each option costs.'},
+    {label: 'Say the facts no longer matter: the keylogger is gone, and PUB-PC-04 has been restored', why: 'The next program a patron leaves behind is why the restore exists; the facts from this case say so.'},
     {label: 'Say only “ask Noor”: a consultant answers to counsel, not to a library board', why: 'Facts from the case can be given where counsel agrees, and Noor does. Silence leaves the Board guessing.'}]};
 
 /* ---------- DFIR F1: the scoping letter (game) ---------- */
@@ -222,7 +222,7 @@ const LB_INTAKE = {
            {label: 'Carry on without mentioning it: nobody reads collection forms, and the image looks fine', why: 'A gap found later, unrecorded, undermines everything built on the image. Record it now.'}]},
   e02: {id: 'E-02', what: 'Booking system export, Day 1', form: 'Exported 08:40 Day 2 by Juno; SHA-256 at export recorded.',
     opts: [{label: 'As for every item: compare hashes, log the handover, seal the evidence, use a copy', good: true},
-           {label: 'Leave it unsealed and read the sessions in the booking system itself instead', why: 'The live system keeps changing; the export is the fixed record. Use the export, logged and hashed.'},
+           {label: 'Leave the item unsealed and read the sessions in the booking system itself instead', why: 'The live system keeps changing; the export is the fixed record. Use the export, logged and hashed.'},
            {label: 'Paste the sessions into the report draft, then delete the file once its hash is in the log', why: 'The export is the source the report rests on. It stays sealed in the store.'},
            {label: 'Log Juno’s handover and accept the file: she is careful, and comparing hashes adds nothing', why: 'The check is about the file, not Juno. Compare the hashes for every item.'}]},
   e03: {id: 'E-03', what: 'Patron-network flow records', form: 'Exported by Magda’s team; the form says 15:00 Day 1 to 08:00 Day 2; the file covers 14:00 to 08:00; the hash on receipt doesn’t match the form.',

@@ -251,7 +251,7 @@ const SD_INTAKE = {
            {label: 'Compare the hashes, then seal it with Oxlow’s Lumenlark files: same vendor, same breach', why: 'One store per client. The district’s evidence stays in the district’s store.'}]},
   s02: {id: 'S-02', what: 'Inkstone API log (90 days)', form: 'To Day 8 09:40; exported 09:40 by Owen Marsh; SHA-256 at export recorded.',
     opts: [{label: 'As each item: compare hashes with Marsh’s form, seal it, work on a copy', good: true},
-           {label: 'Accept it without comparing hashes: Marsh exported it an hour ago', why: 'The check is about the file, not Marsh. Compare the hashes for every item.'},
+           {label: 'Accept the item without comparing hashes: Marsh exported it an hour ago', why: 'The check is about the file, not Marsh. Compare the hashes for every item.'},
            {label: 'Trim it to the last seven days before sealing it: nobody will read 90 days of API calls', why: 'Editing evidence before it is sealed is the one thing custody exists to prevent.'},
            {label: 'Send Lumenlark a hashed copy: its investigators can compare logs with ours', why: 'What the firm shares, and with whom, goes through Kole. The district’s evidence stays in its store.'}]},
   s03: {id: 'S-03', what: 'Inkstone API token registry', form: 'Every token, its scope, issued, last-used and revoked times (LL-SYNC revoked 09:20, its row kept as it was); exported 09:40 by Owen Marsh; SHA-256 recorded.',
@@ -289,7 +289,7 @@ const SD_REQUESTS = [
 /* ---------- DFIR D4: one evidence store per client ---------- */
 const SD_STORES = [
   {label: 'Two stores, one per district: what can be shared, both counsel and Lucia decide', good: true},
-  {label: 'One “Lumenlark” folder for both districts: one vendor and one breach means one case', why: 'Two clients, two stores. Mixing them can show one district’s students’ records to the other’s team.'},
+  {label: 'One “Lumenlark” store for both districts: one vendor and one breach means one case', why: 'Two clients, two stores. Mixing them can show one district’s students’ records to the other’s team.'},
   {label: 'Lucia decides alone, as engagement lead, and gives Oxlow a copy of S-01 to compare', why: 'Not Lucia alone: what one client’s evidence may be shared with another needs both clients’ counsel too.'},
   {label: 'Keep them apart and never mention the shared address to either counsel, so nobody can complain', why: 'An indicator that matters to both goes to the people who can decide what is shared: Lucia and each district’s counsel.'}];
 

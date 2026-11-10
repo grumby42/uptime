@@ -162,18 +162,18 @@ async function apArrive() {
   f.apMet = true; G.day = Math.max(G.day, 23); G.focus = G.focusMax; touchCSF('Identify');
   if (apDfir()) c.rota = apAutoRota();
   await say('Day 23, Tuesday, ' + (apMgr() ? '08:00' : '08:35') + '. The Regional Airport, the terminal offices. (Dispatch’s week closed on Friday. game)');
-  await say('Joanna Ferreday, airport manager. Four things, plainly. The tenants, the flight school, the maintenance shop and the FBO, all plug into our office network. Plinthwise, our billing and lease system, has vendor support that is always on. Nobody has a list of which connections are tenants’. And the front desk shares one login.', 'Joanna Ferreday');
-  await say('This is the business side only: billing, leases, tenant records, email. Access control and fuelling are separate systems, and they aren’t part of this. (game)', 'Joanna Ferreday');
-  await say('And this morning: at 07:50 Imre, at the flight school, forwarded an email “from Airport Operations” saying our bank account has changed. Bronwen and Yusuf got it too. And the Compact’s day lead read an alert from the night: Plinthwise’s support account signed in at 02:40.', 'Joanna Ferreday');
+  await say('Joanna Ferreday, airport manager. Four things, plainly. The tenants, the flight school, the maintenance shop and the FBO, all plug into our office network. Plinthwise, our billing and lease system, has vendor support that is always on. Nobody has a list of which connections are tenants’. And the front desk, where we take hangar rent, tie-down and parking fees, shares one login.', 'Joanna Ferreday');
+  await say('This is the business side only: billing, leases, tenant records, email. Tenant records cover the three businesses and about 140 hangar renters, most of them aircraft owners (game). Access control and fuelling are separate systems, and they aren’t part of this. (game)', 'Joanna Ferreday');
+  await say('And this morning: at 07:50 Imre, at the flight school, forwarded an email “from Airport Operations” saying our bank account has changed. Bronwen and Yusuf got it too. And the Compact’s day lead read an alert from the night, and told me when I rang at 07:55: Plinthwise’s support account signed in at 02:40.', 'Joanna Ferreday');
   unlock('fact', 'apcisa'); unlock('fact', 'apnotam'); unlock('fact', 'apacrp');
   if (apMgr()) {
-    await say('The Airport annex to the Compact’s plan (game): the retainer is called when ransomware or another destructive attack is found on the airport’s office network; when billing or tenant records may have left the airport’s control; or when the on-call lead can’t contain an incident. A vendor’s unexplained access is checked first with the vendor on the contract’s own number; if it can’t be confirmed within the hour, the retainer is called.');
-    await say('08:45: Odette rings Plinthwise’s support line from the contract and reaches it: the 02:40 session was its scheduled work, it says. 08:55: she writes and signs a note of the call. Nothing destructive found, nothing shown to have left: the annex isn’t met. The Compact’s own team works it. (game)');
+    await say('The Airport annex to the Compact’s plan (game): the retainer is called when ransomware or another destructive attack is found on the airport’s office network; when billing or tenant records may have left the airport’s control; or when the on-call lead can’t contain an incident. A vendor’s unexplained access is checked first with the vendor on the contract’s own number; if it can’t be confirmed within an hour of the airport being told, the retainer is called.');
+    await say('08:45, fifty minutes after the airport was told at 07:55: Odette rings Plinthwise’s support line from the contract and reaches it: the 02:40 session was its scheduled work, it says. 08:55: she writes and signs a note of the call. The annex, line by line: no ransomware or other destructive attack found. May billing or tenant records have left the airport’s control? The email went to three tenants whose names and mail addresses are on the airport’s public tenant directory (game), so it needs no leak, and nothing else points to one. The vendor confirmed within the hour. Not met: the Compact’s own team works it. (game)');
     await say('Plinthwise’s incident clause, §9, and its escalation line are already on the plan’s contact page (Slate Badge). Odette has the email at her desk. (game)');
   } else {
     const lead = G.cr.growth === 'paz' ? 'Paz' : G.cr.growth === 'beatriz' ? 'Ruth' : 'Beatriz';
     await say('07:55: Joanna rang ' + lead + ', the town’s acting team lead, who put her through to Ansel Whitcombe, the Authority’s counsel, on the plan’s contact page. 08:30: Ansel engages Tallowmere under a letter. (The airport has no IR manager applying its annex: counsel engages the firm for two questions and a map, his decision. game)');
-    await say('08:45: Odette is ringing Plinthwise’s support line from the contract. She’ll write a note of it. (game)');
+    await say('Odette will ring Plinthwise’s support line from the contract at 08:45, and write a note of the call. (game)');
     await say('You lead it. The meeting room is ours. Ansel first, and nothing a tenant owns is touched.', 'Lucia Ferrand');
   }
 }
@@ -243,7 +243,7 @@ async function apDrillC() {
   const r = await apDrill('tenantmgr');
   G.f.apDrillC = true; touchCSF('Respond');
   await say(r.verdictOk ? 'My people will look at it tomorrow, then. Memory first, they say. And I’ll share what they find about those two connections, through Ansel.' : 'It stays off your network and my own IT checks it. That I can live with. Memory first, they say. What they find about those two connections, I’ll share through Ansel.', 'Bronwen Teller');
-  await say('Joanna keeps MS-PC-01’s port shut until it is checked. Ansel writes to Bronwen: what the airport saw, and what it asks. Monday 09:00: her own IT firm preserves MS-PC-01, memory and disk, and keeps the copies. (game)');
+  await say('Callum, the duty manager, keeps MS-PC-01’s port shut until it is checked; Joanna is told. Ansel writes to Bronwen: what the airport saw, and what it asks. Monday 09:00: her own IT firm preserves MS-PC-01, memory and disk, and keeps the copies. (game)');
   await say('End the day when you’re ready.');
 }
 
@@ -304,12 +304,12 @@ async function apTabletop() {
 /* ---------- Manager: the AAR (Monday 13:00) ---------- */
 async function apAar() {
   const c = G.cr, d = apC(), who = 'Joanna Ferreday';
-  await say('Blameless. No names. I want to know how one PC reached everything on Saturday, and what it cost us and the tenants.', who);
+  await say('Blameless. No names. I want to know how one PC reached so much on Saturday, and what it cost us and the tenants.', who);
   const items = AP_FACTORS.map(p => ({label: p.name, meta: {good: !!p.good}})).concat([{label: 'These are the four', done: true, meta: {done: true}}]);
   const body = '<p>Pick the <b>four</b> contributing factors the AAR should record.</p>' + shownOrder(AP_FACTORS, items).map(p => '<div class="card"><b>' + esc(p.name) + '</b><br>' + esc(p.text) + '</div>').join('');
   const sel = await UI.openModal('AAR · contributing factors', body, items, {shuffle: true, multi: 4, closable: false, cls: 'tabletop'});
   const wrong = sel.filter(i => !AP_FACTORS[i].good);
-  for (const i of wrong) await say(AP_FACTORS[i].name + ': ' + (AP_FACTORS[i].id === 'login' ? 'a blame, not a cause, and the shared login was switched off on Thursday. Nothing shows it was used.' : AP_FACTORS[i].id === 'vendor' ? 'pw-support has been disabled since Tuesday, and Wednesday’s attempts were rejected.' : 'the tabletop is why the paper worked on Saturday.'));
+  for (const i of wrong) await say(AP_FACTORS[i].name + ': ' + (AP_FACTORS[i].id === 'login' ? 'a blame, not a cause, and the shared login was switched off on Thursday. Nothing shows it was used.' : AP_FACTORS[i].id === 'vendor' ? 'pw-support has been disabled since Tuesday, and Wednesday’s attempts were rejected.' : 'the tabletop helped the paper work on Saturday.'));
   let impFirst = true;
   while (true) {
     const its = AP_IMPACT.map(o => ({label: o.label, meta: {good: !!o.good}}));
@@ -359,7 +359,7 @@ async function apLetterTask() {
   const who = 'Ansel Whitcombe', f = G.f;
   const row = (k, v) => '<tr><th style="vertical-align:top;white-space:nowrap">' + k + '</th><td>' + v + '</td></tr>';
   const letter = '<p><b>Scoping letter · Tallowmere Forensics · case AIR-01 (game)</b></p><table class="sc letter">' +
-    row('Engaged by', 'Ansel Whitcombe, counsel to the Airport Authority, at 08:30') +
+    row('Engaged by', 'Ansel Whitcombe, counsel to the Thistlecombe Airport Authority, at 08:30') +
     row('Questions', '1. Did the “Airport Operations” email to tenants come from the airport’s mail system?<br>2. Who used pw-support at 02:40 today, and what was done?<br>3. On the office network, what is the airport’s and what is a tenant’s?') +
     row('In scope', 'The airport’s own systems: the mail service’s admin console and trace, AP-BIL-01, AP-FS-01, AP-DC-01, AP-FW-01, AP-SW-01') +
     row('Can’t touch', 'Tenants’ PCs and systems: only what a tenant chooses to give, with its consent recorded. Plinthwise’s own systems: requests through counsel, logged when sent') +
@@ -418,7 +418,7 @@ async function apIntake() {
 // The Quiet Thread clue, seen in A-06 (DFIR). Noticing is the mechanic: the prompt opens on "Leave it".
 async function apQtEvidence() {
   if (qtFound('ap-accounts')) return;
-  const i = await choose('A-06, the directory’s query log. The letter’s questions don’t need it. Its seven days run back to last Wednesday.', [{label: 'Read the rest of the query log too'}, {label: 'Leave it: the questions have what they need'}], {cursor: 1});
+  const i = await choose('A-06, the directory’s query log. The letter’s questions don’t need it. Its seven days run back to last Tuesday.', [{label: 'Read the rest of the query log too'}, {label: 'Leave it: the questions have what they need'}], {cursor: 1});
   if (i !== 0) return;
   await say('03:13, Night 21, Sunday to Monday: one query from svc-print, a town account, from FD-STAFF-11’s address (Town Hall’s front-desk PC), over the Compact’s link and through the airport directory’s trust with the town’s. It asks for every account: 214 entries returned, names and account names. No password is asked for. Nothing changed, and nothing else was queried. What it did with the list is unknown.');
   await say('Not one of the letter’s questions. It goes to Ansel first; with his agreement, to Lucia and Rae’s suspicion-file team. Nothing changes on svc-print without a plan.');
@@ -465,8 +465,8 @@ async function apSwitchDfir() {
     await say(AP_SWITCH_DFIR[i].why);
   }
   G.f.apSwitch = true; unlock('act', 'apcopy'); touchCSF('Recover'); track();
-  await say('The firm’s check of AP-BIL-02 finished at 14:00 yesterday, after the vendor’s session: nothing foreign in a fresh memory capture or in its EDR since 07:00, nothing set to persist, the one-time account removed at 13:10, and the copy it was restored from checked in isolation before it was used. When the desk goes back is Joanna’s.');
-  await say('Joanna’s decision: a test entry, then the desk back on Plinthwise at 08:00. By 12:00 the weekend’s 64 paper receipts are entered, each checked by a second person. MS-PC-01 stays off the airport’s network. (game)');
+  await say('The firm’s check of AP-BIL-02 finished at 14:00 yesterday, after the vendor’s session: nothing foreign in a fresh memory capture or in its EDR since 07:00, nothing set to persist, the one-time account removed at 13:10, the copy it was restored from checked in isolation before it was used, and the directory it rejoined reviewed first: nothing created or changed to 07:30 yesterday, and every admin and service password reset by 10:15. When the desk goes back is Joanna’s.');
+  await say('Joanna’s decision: a test entry, then the desk back on Plinthwise at 08:00. By 12:00 the weekend’s 64 paper receipts are entered, each checked by a second person. MS-PC-01 stays off the airport’s network; the other tenants’ ports stay shut for now, the tenant portal open to them over the internet from 08:00. (game)');
 }
 
 /* ---------- The desk: end the day, and the nights between ---------- */
@@ -492,7 +492,7 @@ async function apNights24() {
   G.f.apFixDesk = true; G.f.apFixTenants = true;
   if (mgr) G.cr.ex.closed += AP_EX_ACTIONS;
   touchCSF('Protect'); touchCSF('Identify');
-  const body = (mgr ? '<p>Wednesday 14:05: two sign-ins on pw-support rejected, account disabled, from 203.0.113.44, inside Plinthwise’s range. 14:30: Dario tells you. 14:40: Odette asks Plinthwise on its contract’s line; 15:40, in writing: no session or technician activity of its own for the airport today. Who tried is unknown; noted in the plan’s log. (game)</p>' : '') +
+  const body = (mgr ? '<p>Wednesday 14:05: two sign-ins on pw-support rejected, account disabled, from 203.0.113.44, inside Plinthwise’s range. 14:30: Dario tells you. 14:40: Odette asks Plinthwise on its contract’s line; 15:40, in writing: no session or technician activity of its own for the airport today. Who tried is unknown. Both sign-ins were rejected, so nothing was accessed: the annex’s vendor line isn’t met (your reading as IR manager, game). 15:45: Odette asks Plinthwise under §9 to check its own support network, and Dario has the Compact page its on-call lead on any further attempt on pw-support. Noted in the plan’s log. (game)</p>' : '') +
     '<p>Nights 24 to 26 (Wednesday to Saturday). On call: <b>' + esc(L(24)) + '</b>, <b>' + esc(L(25)) + '</b>, <b>' + esc(L(26)) + '</b>. No page on any of them. (game)</p>' +
     '<p>Thursday 10:00: ' + (mgr ? '' : 'on Joanna’s own plan, ') + 'the front desk practises the paper procedure: 11 minutes from “Plinthwise is down” to the first paper receipt (practice time, game). 17:00: named front-desk logins; “frontdesk” switched off. Friday 12:00: Callum has the plan’s contact page and the paper procedure. 16:00: the tenant connections list: 46 ports, 15 of them tenants’, each with a tenant contact, kept by Dario, signed by Joanna. (game)</p>';
   await UI.openModal('Nights 24 to 26', body, [{label: 'Saturday morning', meta: {good: true}}], {closable: false, cls: 'summary'});
@@ -510,21 +510,22 @@ async function apNight27() {
   G.day = 28; G.focus = G.focusMax;
   c.night27 = {lead: lead, tired: tired, overtime: cost};
   if (cost && c.cover) { c.cover.overtime += cost; c.cover.variance = Math.round((c.cover.overtime - AP_ROTA.budget) / AP_ROTA.budget * 100); }
-  if (tired && apMgr()) { G.focus = Math.max(10, G.focus - 10); await say('You were rung at 02:10 by a tired on-call lead. Focus ' + G.focus + '/' + G.focusMax + ' this morning. (game)'); }
+  if (tired && apMgr()) { G.focus = Math.max(10, G.focus - 10); await say('You were rung at 02:10 by a tired on-call lead with a handover question. Focus ' + G.focus + '/' + G.focusMax + ' this morning. (game)'); }
   G.f.apNight27 = true;
-  await say('Day 28, Sunday, 07:00. Dario starts building a new Plinthwise server, AP-BIL-02. Plinthwise’s support works through a one-time account Odette authorised for this session, with MFA; pw-support stays disabled; the firm watches. 08:00: the firm checks Saturday’s 01:00 nightly copy in isolation before anyone restores it. (game)');
-  if (apMgr()) await say('Bronwen Teller rang Joanna at 09:40: she won’t have the firm image her shop’s PC. Joanna asks you to see her at 10:00.');
-  else await say('10:00: Bronwen Teller declines the firm’s offer to image MS-PC-01, her shop’s PC: it’s hers. Joanna keeps its port shut until it is checked. Her own IT firm will preserve it on Monday. (game)');
+  await say('Day 28, Sunday, 07:00. Dario starts building a new Plinthwise server, AP-BIL-02. Plinthwise’s support works through a one-time account Odette authorised for this session, with MFA; pw-support stays disabled; the firm watches. 07:30: before anything rejoins the office directory, the firm reviews AP-DC-01: every account, group, policy and sign-in since the records begin. 08:00: the firm checks Saturday’s 01:00 nightly copy in isolation before anyone restores it. (game)');
+  await say('08:30: through Ansel, the firm asks Brackenlow Aero Services whether it may image MS-PC-01, the shop’s PC that AP-OF-03 reached at 05:55. (game)');
+  if (apMgr()) await say('09:40: Bronwen Teller rings Callum: she won’t have the firm image her shop’s PC. Callum asks you to see her at 10:00.');
+  else await say('09:40: Bronwen Teller declines: MS-PC-01 is hers. Callum, the duty manager, keeps its port shut until it is checked; Joanna is told. Her own IT firm will preserve it on Monday. (game)');
   track();
 }
 async function apNight28() {
   const lead = apLead(28);
-  const body = '<p>Sunday (game): 08:00 the firm’s check of the 01:00 copy, in isolation: scanned clean, its own audit tables ending at 00:58 with no ap-admin sign-in and no unknown account. 10:30 restored onto AP-BIL-02. ap-admin replaced by two named admin accounts with MFA (Dario). 13:10 the vendor’s one-time account removed. 14:00 the firm’s check of AP-BIL-02 after the session: a fresh memory capture and the EDR’s processes, connections and file events since 07:00: nothing foreign, nothing set to persist. AP-OF-03 stays off; the other office PCs are reimaged from a clean image after their disks were imaged.</p>' +
+  const body = '<p>Sunday (game): 07:30–09:30 the firm’s review of AP-DC-01, its records from Day 14 to 07:30 today against Saturday’s 09:00 snapshot: no account, group, policy or delegation created or changed; ap-admin signed in on weekdays from AP-OF-04, the PC Dario uses, then from AP-OF-03, 04:24 to 06:20 Saturday, and not since it was disabled at 08:10. 08:00 the firm’s check of the 01:00 copy, in isolation: scanned clean, its own audit tables ending at 00:58 with no ap-admin sign-in and no unknown account. 09:30–10:15 Dario resets the password of every admin and service account in the airport’s directory; ap-admin stays disabled, replaced by two named admin accounts with MFA. The directory’s trust with the town’s is left as it is and noted for Rae. 10:30 restored onto AP-BIL-02, joined to the directory just reviewed. 13:10 the vendor’s one-time account removed. 14:00 the firm’s check of AP-BIL-02 after the session: a fresh memory capture and the EDR’s processes, connections and file events since 07:00: nothing foreign, nothing set to persist. AP-OF-03 stays off; the other office PCs are reimaged from a clean image after their disks were imaged.</p>' +
     '<p>Night 28 (Sunday to Monday). On call: <b>' + esc(lead || 'nobody') + '</b>' + (apTired(28) ? ', a third night or more in a row' : '') + '. No page. (game)</p>';
   await UI.openModal('Night 28', body, [{label: 'Monday morning', meta: {good: true}}], {closable: false, cls: 'summary'});
-  if (apDfir()) { const cu = apCustody(); cu.items += 2; cu.complete += 2; }   // A-22 the vendor session's record, A-23 the check of AP-BIL-02
+  if (apDfir()) { const cu = apCustody(); cu.items += 3; cu.complete += 3; }   // A-23 AP-DC-01's records to Sunday 07:30, A-24 the vendor session's record, A-25 the check of AP-BIL-02
   G.day = 29; G.focus = G.focusMax; G.f.apNight28 = true;
-  if (apMgr()) await say('Day 29, Monday, 07:30. Joanna, back on duty, decides: a test entry, then the front desk back on Plinthwise at 08:00. By 12:00 the weekend’s 64 paper receipts are entered, each checked by a second person. MS-PC-01 stays off the network; Bronwen’s own IT preserves it at 09:00. The AAR at 13:00. (game)');
+  if (apMgr()) await say('Day 29, Monday, 07:30. Joanna, back on duty, decides: a test entry, then the front desk back on Plinthwise at 08:00. By 12:00 the weekend’s 64 paper receipts are entered, each checked by a second person. MS-PC-01 stays off the network; Bronwen’s own IT preserves it at 09:00. The other tenants’ ports stay shut for now, Plinthwise’s tenant portal open to them over the internet from 08:00: Joanna’s decision, to review after the AAR. The AAR at 13:00. (game)');
   else await say('Day 29, Monday, 07:30. Joanna wants a word in her office before the desk goes back.');
   track();
 }
@@ -637,21 +638,21 @@ async function apBoss() {
     await say(apHm(call) + ' retainer line called · ' + apHm(ack) + ' Tallowmere acknowledges. Ansel Whitcombe engages the firm at ' + apHm(eng) + ' under a letter, and tells the Authority’s insurer at ' + apHm(Math.max(8 * 60 + 40, eng + 20)) + '. (game)');
     const S = apMgrBossStages();
     await apStages(S, ['s1']);
-    await say('08:05: Dario cuts the office network off from the internet and from the tenants’ ports, Callum’s OK on the time, hosts left running. 08:10: ap-admin disabled, clearing nothing. 08:30: Callum and Odette ring each tenant on its contact from Friday’s list: the shared network is cut from their offices; their own systems are theirs to check; the firm can help only if a tenant asks. 08:40: the firm captures memory from AP-OF-03, AP-BIL-01 and AP-DC-01, running and cut off. (game)');
+    await say('08:05: Dario cuts the office network off from the internet and from the tenants’ ports, Callum’s OK on the time, hosts left running; AP-OF-03, still running, is isolated through its EDR. 08:10: ap-admin disabled, clearing nothing. 08:30: Callum and Odette ring each tenant on its contact from Friday’s list: the shared network is cut from their offices; their own systems are theirs to check; the firm can help only if a tenant asks. Their own internet lines and the FBO’s card terminal don’t use the airport’s network (game): what they lose is the shared printer and the direct way to Plinthwise’s tenant pages. 08:40: the firm captures memory from AP-OF-03, AP-BIL-01 and AP-DC-01, running and cut off. (game)');
     await say('09:00: Callum tells Joanna; Joanna tells Rhoswen Adair, the Board’s chair. 09:15: Odette tells Plinthwise under §9 (Slate Badge: on the contact page). 09:30: with Ansel’s agreement, you tell the FBI contact on the plan’s page. 11:00, the firm, through Ansel: the office systems encrypted from AP-OF-03; AP-DC-01 not encrypted; the tenant records exported at 04:28 and 1.4 GB sent out at 04:31 to 05:02. (game)');
     await apStages(S, ['s2']);
-    await say('12:30: Callum, Joanna and Rhoswen heard what is known, what isn’t, and 16:00 for the next update. What tenants are told about their records is Ansel’s decision; any payment would be the Board’s, with Ansel and the insurer. Nobody has asked for one today. (game)');
+    await say('12:30: Callum, Joanna and Rhoswen heard what is known, what isn’t, and 16:00 for the next update. What tenants, the hangar renters among them, are told about their records is Ansel’s decision; any payment would be the Board’s, with Ansel and the insurer. Nobody has asked for one today. (game)');
     await apStages(S, ['s3']);
     await apPlanWeekend();
     await say('Signed. 16:00: the next update, as promised. (game)');
   } else {
     const cu = apCustody();
     await say('Ransomware on the office network. Ansel extended our engagement at 08:20 under a second letter, AIR-02: what did it reach? Did tenant records leave? What can’t the evidence say yet? Tenants’ PCs stay outside it. Your case.', 'Lucia Ferrand');
-    await say('What we know: 07:40, a ransom note on the front-desk PC, and Plinthwise won’t open. 07:48: Callum, the duty manager, put the desk on paper. 08:05: Dario cut the office network off from the internet and from the tenants’ ports, Callum’s OK on the time, hosts left running. 08:10: ap-admin disabled, clearing nothing. With Ansel’s agreement, the acting team lead will tell the FBI contact on the plan’s page at 09:30. (game)', 'Lucia Ferrand');
+    await say('What we know: 07:40, a ransom note on the front-desk PC, and Plinthwise won’t open. 07:48: Callum, the duty manager, put the desk on paper. 08:05: Dario cut the office network off from the internet and from the tenants’ ports, Callum’s OK on the time, hosts left running; AP-OF-03, still running, isolated through its EDR. The tenants’ own internet and the FBO’s card terminal don’t use the airport’s network (game). 08:10: ap-admin disabled, clearing nothing. With Ansel’s agreement, the acting team lead will tell the FBI contact on the plan’s page at 09:30. (game)', 'Lucia Ferrand');
     const S = apDfirBossStages();
     await apStages(S, ['s1']);
-    await say('08:40: A-14, AP-OF-03’s memory. 08:50: A-15, AP-BIL-01’s. 09:00: A-16, AP-DC-01’s, and a snapshot of its directory database (Pulse Badge: memory before any shutdown). 09:20: A-17, the EDR’s file events, 04:00 to 08:00. 09:30: A-18, Plinthwise’s audit as forwarded to the Compact’s platform, handed over by the Compact’s day lead with its collection hash (Bookmark Badge). 09:40: A-19, the flows since midnight. 10:00: A-20, the ransom note and twenty encrypted samples. 12:00: A-21, AP-OF-03’s disk. The 01:00 nightly copy named first and left untouched (Relay Badge). All hashed, sealed. (game)');
-    cu.items += 8; cu.complete += 8;
+    await say('08:40: A-14, AP-OF-03’s memory. 08:50: A-15, AP-BIL-01’s. 09:00: A-16, AP-DC-01’s, and a snapshot of its directory database (Pulse Badge: memory before any shutdown). 09:20: A-17, the EDR’s file events, 04:00 to 08:00. 09:30: A-18, Plinthwise’s audit as forwarded to the Compact’s platform, handed over by the Compact’s day lead with its collection hash (Bookmark Badge). 09:40: A-19, the flows since midnight. 10:00: A-20, the ransom note and twenty encrypted samples. 12:00: A-21, AP-OF-03’s disk. 12:10: A-22, AP-DC-01’s security log for the 14 days it keeps, to 12:00 today: sign-ins, and account, group and policy changes. The 01:00 nightly copy named first and left untouched (Relay Badge). All hashed, sealed. (game)');
+    cu.items += 9; cu.complete += 9;
     await apStages(S, ['s2']);
     await say('13:10: the finding to Ansel; with his agreement, to Joanna, Odette and Callum. (game)');
     const r = await doReport(AP_REPORT_2);
@@ -661,7 +662,7 @@ async function apBoss() {
   }
   c.boss.ok = c.boss.first.every(Boolean); c.boss.done = true;
   G.f.apBoss = true; unlock('tech', 'T1486'); unlock('act', 'apcopy'); unlock('act', 'appaper'); touchCSF('Respond'); touchCSF('Recover'); track();
-  await UI.openModal('Saturday, as counted', '<p>The front desk on paper from <b>07:48</b>, every payment on a paper receipt. The office network cut off at 08:05; the tenants rung by 08:30. The airfield’s own systems separate and not affected. (game)</p>', [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
+  await UI.openModal('Saturday, as counted', '<p>The front desk on paper from <b>07:48</b>, every payment on a paper receipt. The office network cut off at 08:05; the tenants rung by 08:30, without the shared network from 08:05 (the printer, the direct way to Plinthwise’s tenant pages; their own internet and the FBO’s card terminal don’t use it). The airfield’s own systems separate and not affected. (game)</p>', [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
   if (apMgr()) await say('19:00: Lucia has the firm’s status report for you in the meeting room.', 'Callum Breck');
   else await say('End the day when you’re ready. Tomorrow, the rebuild.', 'Lucia Ferrand');
 }
@@ -674,7 +675,9 @@ async function apStatusReport() {
     '            the four office PCs encrypted 05:52–06:20,\n' +
     '            from AP-OF-03 under ap-admin; AP-DC-01 not\n' +
     '            encrypted; the tenant records table exported\n' +
-    '            04:28; 1.4 GB out 04:31–05:02\n' +
+    '            04:28; 1.4 GB out 04:31–05:02; no\n' +
+    '            account, group or policy changed in\n' +
+    '            the directory in its 14 days\n' +
     'Likely      tenant records left the network\n' +
     'Open        how ap-admin was got; MS-PC-01 (the\n' +
     '            tenant’s); whether anything is published;\n' +
@@ -714,14 +717,14 @@ async function apSummary() {
   if (!f.apSummary) {
     f.apSummary = true; touchCSF('Govern');
     Series.markEdition('crossroads', {track: t, airport: true});
-    await say((t === 'manager' ? 'We kept the terminal working on paper, told every tenant what we knew and nothing we didn’t, and came back on a copy somebody checked first. ' : 'I know what was encrypted, what likely left, and what nobody can say yet, and I can tell the tenants without guessing. ') + 'And I know whose each thing is on this network. Thank you.', 'Joanna Ferreday');
+    await say((t === 'manager' ? 'We kept the terminal working on paper, told every tenant what we knew and nothing we didn’t, and came back on a copy and a directory somebody checked first. ' : 'I know what was encrypted, what likely left, and what nobody can say yet, and Ansel can tell the tenants without guessing. ') + 'And I know whose each thing is on this network. Thank you.', 'Joanna Ferreday');
   }
   const body = '<p class="big">Regional Airport: done.</p>' +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b> · Day <b>' + G.day + '</b> (' + (AP_DAY[G.day] || '') + ')</p>' +
     '<h3>Drills (game)</h3><table class="sc"><tr><th>Drill</th><th>Score</th><th>Supported</th></tr>' + apDrillRows() + '</table>' +
     (t === 'dfir' ? '<p>Reports filed: AIR-01 <b>' + (G.cr.reports.ap1 ? G.cr.reports.ap1.score : '—') + '</b> · AIR-02 <b>' + (G.cr.reports.ap2 ? G.cr.reports.ap2.score : '—') + '</b> (game)</p>' : '') +
     '<p>Saturday: ' + (c.boss && c.boss.ok ? 'handled at the first try from your seat' : 'handled, with false starts the debriefs named') + '. The front desk on paper from 07:48 Saturday to 08:00 Monday, 64 receipts entered and checked; the airfield’s own systems separate and not affected (game). ' + (t === 'manager' ? 'Coordinated: Callum ran the terminal, Dario cut the office off, Odette dealt with the vendor, Ansel decided what tenants were told, each tenant decided about its own PCs, and nobody promised what nobody knew.' : 'Found: the office encrypted from one PC under one account; tenant records likely copied out; the tenant’s PC and the way in written as unknown.') + '</p>' +
-    '<p>Lesson (game): one office PC, under one account with admin rights everywhere, reached every office system across a network the tenants shared. The airport kept working on paper because the paper had been practised, and Plinthwise came back from a copy that was checked before it was trusted.</p>' +
+    '<p>Lesson (game): one office PC, under one account with admin rights everywhere, encrypted every office system but the directory, across a network the tenants shared. The airport kept working on paper, helped by Thursday’s practice, and Plinthwise came back from a copy checked before it was trusted, onto a directory reviewed first.</p>' +
     (t === 'manager' ? '<p>Bookmark Badge: the AAR’s actions arrived with their owners agreed. Slate Badge: Plinthwise’s incident clause was on the contact page. Pulse Badge: the paper fallback and its owner were named. Relay Badge: its switch time was measured before Saturday.</p>' : '') +
     '<p>Open risk (game): the airport’s directory trusts the town’s, set up so the Compact’s admins can sign in, so every town account can list the airport’s accounts' + (qtFound('ap-accounts') ? ' (svc-print among them)' : '') + '. Nobody has accepted that risk; it goes to Rae and the council’s risk committee for an owner.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +

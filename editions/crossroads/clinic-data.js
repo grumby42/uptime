@@ -195,7 +195,7 @@ const CN_DIRECTIVE = {
   dfir: [
     {label: 'The fact: named desks could be answered, the exam rooms can’t. Then the options, for her and for Weller', good: true},
     {label: 'Tell her the report requires named logins in each room from today: Marisol must comply', why: 'A report recommends. The practice manager decides, knowing what the case showed.'},
-    {label: 'Say the login is outside the letter counsel signed, and tell her no more', why: 'Renata has agreed the facts can be shared. Silence leaves her deciding blind.'},
+    {label: 'Say the login is outside the letter counsel signed, and give her no facts or options', why: 'Renata has agreed the facts can be shared. Silence leaves her deciding blind.'},
     {label: 'Tell her, and the privacy officer, that the shared login caused the ransomware, so it must go', why: 'It didn’t: the attack came through a front-desk PC. Its cost is that nobody can say who viewed what in the exam rooms.'}]};
 
 /* ---------- DFIR D1: the scoping letter (game) ---------- */

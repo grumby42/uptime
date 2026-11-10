@@ -14,7 +14,7 @@
    manager, on Saturday and Sunday): the terminal, how its front desk works when
    systems are down and when it goes back, and what the airport's network lets
    connect. Odette Varga owns Plinthwise, its data and its contract. Ansel
-   Whitcombe, counsel to the Airport Authority, engages the firm, decides who
+   Whitcombe, counsel to the Thistlecombe Airport Authority, engages the firm, decides who
    receives its reports and what tenants are told about their records. Dario
    Fenn runs the office network and its servers. Each tenant decides about its
    own systems. The Airport Board decides any payment, with counsel and the
@@ -25,7 +25,7 @@
    shown only as what a defender sees afterwards. The game names no real
    airport, FBO, airline or vendor and retells no real incident. CISA's, the
    FAA's and ACRP's lines are quoted only in the Field Manual, in their own
-   words. The Regional Airport Authority, Plinthwise, Kettlebrook Flight School,
+   words. The Thistlecombe Airport Authority, Plinthwise, Kettlebrook Flight School,
    Brackenlow Aero Services, Corrowind Aviation, every host, person, count, time
    and the attack are invented (game). Domains: RFC 2606; addresses: RFC 5737.
    Real facts: CREDITS.md, section "Crossroads". Timeline: scratchpad
@@ -126,7 +126,7 @@ NPCS.push(
   {id: 'teller', name: 'Bronwen Teller', role: 'owner, Brackenlow Aero Services (a tenant)', map: 'airport', x: 9, y: 12, dir: 'up', pal: 'teller'},
   {id: 'fenn', name: 'Dario Fenn', role: 'the airport’s IT coordinator', map: 'airport', x: 13, y: 12, dir: 'up', pal: 'fenn'},
   {id: 'quist', name: 'Yara Quist', role: 'the Authority’s training officer', map: 'airport', x: 18, y: 12, dir: 'up', pal: 'quist'},
-  {id: 'whitcombe', name: 'Ansel Whitcombe', role: 'counsel to the Airport Authority', map: 'airport', x: 24, y: 13, dir: 'up', pal: 'whitcombe'},
+  {id: 'whitcombe', name: 'Ansel Whitcombe', role: 'counsel to the Thistlecombe Airport Authority', map: 'airport', x: 24, y: 13, dir: 'up', pal: 'whitcombe'},
   {id: 'luciaap', name: 'Lucia Ferrand', role: 'engagement lead, Tallowmere Forensics', map: 'airport', x: 24, y: 10, dir: 'down', pal: 'lucia', cond: G => G.trackId === 'dfir' || !!G.f.apBoss},
   {id: 'theoap', name: 'Theo Marchetti', role: 'junior analyst, Tallowmere Forensics', map: 'airport', x: 21, y: 13, dir: 'up', pal: 'theo', cond: G => G.trackId === 'dfir'},
   {id: 'adair', name: 'Rhoswen Adair', role: 'chair of the Airport Board', map: 'apboard', x: 8, y: 3, dir: 'down', pal: 'adair'}
@@ -161,7 +161,7 @@ const AP_ROTA = {
 /* ---------- Manager: the tabletop with the airport manager (Day 24 09:00) ---------- */
 const AP_TT_OBJ = [
   {label: 'Its own risk register: the office down on a busy weekend, both managers there', good: true},
-  {label: 'Replay the most famous attack in this month’s news, for Joanna and Callum to take seriously', why: 'A famous case tests somebody else’s systems. The register says where this airport is weakest.'},
+  {label: 'Replay the most famous attack in this month’s news: Joanna and Callum will take it seriously', why: 'A famous case tests somebody else’s systems. The register says where this airport is weakest.'},
   {label: 'Read the plan’s contents page aloud with Joanna, and tick each section as you reach it', why: 'Reading tests nothing. A scenario has to make people decide something.'},
   {label: 'Switch Plinthwise off for real on Saturday morning, without telling the front desk', why: 'A real outage on a busy day, sprung on the front desk, is an incident, not a test. And the terminal is Callum’s to run.'}];
 const AP_TT_INJECTS = [
@@ -209,26 +209,26 @@ const AP_FACTORS = [
   {id: 'vendor', name: 'The vendor’s door', csf: 'Protect', text: 'Plinthwise’s remote support let the attackers into the office network on Saturday morning.'},
   {id: 'drill', name: 'The tabletop', csf: 'Recover', text: 'Wednesday’s tabletop tired the staff out and made Saturday’s front desk slower.'}];
 const AP_IMPACT = [
-  {label: 'The desk on paper 07:48 Saturday to 08:00 Monday: 64 slips, all entered and checked', good: true},
-  {label: 'No impact to report: the airport stayed open on Saturday and Sunday', why: 'The front desk worked on paper for two days and the office was rebuilt. Say what it cost, as counted.'},
+  {label: 'Desk on paper 07:48 Saturday to 08:00 Monday, 64 slips checked; tenants off our network', good: true},
+  {label: 'No impact to report: the airport stayed open on Saturday and Sunday, the tenants too', why: 'The front desk worked on paper for two days, the tenants lost the shared network, and the office was rebuilt. Say what it cost, as counted.'},
   {label: 'The airport was shut for 48 hours while the office was down', why: 'It wasn’t: the airfield’s own systems are separate, and the desk worked on paper.'},
-  {label: 'Unknown until the receipts have been reconciled at the end of the month', why: 'The receipts were counted and checked this morning. The count is known now.'}];
+  {label: 'Unknown until the receipts have been reconciled at the end of the month, with billing', why: 'The receipts were counted and checked this morning. The count is known now.'}];
 const AP_AAR = [
-  {id: 'seg', name: 'Tenants on their own segment: the tenant portal and the internet, nothing else', owner: 'Joanna Ferreday, with Dario doing it',
-   dates: [{label: 'Day 36, a Monday, with the tenant agreement signed', good: true},
-           {label: 'As soon as possible', why: 'A date nobody can check. Day 36, with the agreement.'},
-           {label: 'When the budget allows', why: 'The switch can do it already. Nothing to buy. Day 36.'},
-           {label: 'Day 30, tomorrow, before the tenant agreement exists', why: 'Cutting tenants over before they have agreed what they can reach is a new outage for them. Day 36.'}]},
+  {id: 'seg', name: 'Tenants’ network access: the options and their costs, set out for Joanna to decide', owner: 'Dario Fenn',
+   dates: [{label: 'Day 30, a Tuesday', good: true},
+           {label: 'As soon as possible', why: 'A date nobody can check. Day 30.'},
+           {label: 'When the budget allows', why: 'Setting out the options costs nothing. Day 30.'},
+           {label: 'Day 50, a Monday', why: 'Saturday showed what a shared network costs. Seven weeks is too long for a set of options: Day 30.'}]},
   {id: 'named', name: 'Named admin accounts with MFA in place of ap-admin, kept that way', owner: 'Dario Fenn',
-   dates: [{label: 'Day 29, today: done on Sunday, confirmed today', good: true},
+   dates: [{label: 'Day 29, today, confirmed', good: true},
            {label: 'As soon as possible', why: 'It is done already. Confirm it today and close it.'},
            {label: 'When the budget allows', why: 'Nothing to buy. It was done on Sunday: today.'},
-           {label: 'Day 60, once a new identity tool has been bought', why: 'The directory can do it now, and it did. Today.'}]},
+           {label: 'Day 60, a Thursday', why: 'Nothing to buy: the directory can do it now, and it did. Today.'}]},
   {id: 'thresh', name: 'A night threshold with the Compact for the airport’s office alerts, in writing', owner: 'Joanna Ferreday',
    dates: [{label: 'Day 31, Wednesday', good: true},
            {label: 'As soon as possible', why: 'An action without a date doesn’t close. Day 31.'},
            {label: 'When the budget allows', why: 'A threshold costs nothing to write. Day 31.'},
-           {label: 'Day 90, a Sunday, after the next budget round', why: 'Saturday’s alert waited for the morning. A quarter is too long: Day 31.'}]}];
+           {label: 'Day 90, a Saturday', why: 'Saturday’s alert waited for the morning. A quarter is too long: Day 31.'}]}];
 
 /* ---------- The directive (game): a tenant wants a permanent direct connection into the office network ---------- */
 const AP_DIRECTIVE = {
@@ -237,10 +237,10 @@ const AP_DIRECTIVE = {
     {label: 'Refuse it, and every tenant connection with it, for good: the airport is better alone', why: 'An absolute with a price nobody has counted. Lay out the options; the owner decides.'},
     {label: 'Agree it, as before: the flight school has been connected for years', why: 'It was connected, and on Saturday the encrypting PC reached a tenant’s PC. The decision is Joanna’s.'},
     {label: 'You decide it now, as the IR manager, and tell Imre what you decided', why: 'You advise. What the airport’s network lets connect is the airport manager’s decision.'},
-    {label: 'Dario decides: he runs the switch, so what it lets through is his to choose, not anyone else’s', why: 'Dario runs it. What may connect is Joanna’s to decide.'}],
+    {label: 'Dario decides: he runs the switch, and what it lets through is his choice, not anyone else’s', why: 'Dario runs it. What may connect is Joanna’s to decide.'}],
   dfir: [
     {label: 'The case: one shared network let the encrypting PC reach a tenant’s PC. Joanna decides', good: true},
-    {label: 'Tell him the report requires a separate network, and Joanna must comply', why: 'A report recommends. The owner decides, knowing what the case showed.'},
+    {label: 'Tell him the report requires a separate network: Joanna must comply', why: 'A report recommends. The owner decides, knowing what the case showed.'},
     {label: 'Say the network’s design is outside the letter Ansel signed, and say no more', why: 'Ansel has agreed the facts can be shared. Silence leaves the decision blind.'},
     {label: 'Tell him the flight school’s own connection let the attack in, and it must be cut this week', why: 'Nothing shows that. How the attacker got in is unknown. Say what the case showed.'}]};
 
@@ -256,7 +256,7 @@ const AP_TAKE = [
   {label: 'The airport’s own records now, the flight school’s copy only as Imre gives it', good: true},
   {label: 'Copy the flight school’s mailbox from its PC while it sits on the airport’s network', why: 'Its PC and its mailbox are the flight school’s. Ask, and take only what it gives.'},
   {label: 'Ask Imre to forward the email again, as a new message, to arrive cleanly', why: 'A new message loses the headers. As an attachment, it keeps them.'},
-  {label: 'Hold off for Plinthwise’s own logs before collecting any of the airport’s', why: 'The airport’s records answer two of the questions now, and its logs roll on. Collect them now.'}];
+  {label: 'Hold off until Plinthwise agrees to send its own logs, then collect the airport’s', why: 'The airport’s records answer two of the questions now, and its logs roll on. Collect them now.'}];
 
 /* ---------- DFIR D3: evidence intake (the airport's store, case AIR) ---------- */
 const AP_INTAKE = {
@@ -267,33 +267,33 @@ const AP_INTAKE = {
            {label: 'Skip the hash: an email can’t change once it has left its sender', why: 'A file can change after it is copied. Hash it like any item.'}]},
   a03: {id: 'A-03', what: 'The remote-support connector’s log on AP-BIL-01, its 30 days', form: 'Exported 09:30 by Dario Fenn; SHA-256 at export recorded.',
     opts: [{label: 'Compare the hashes, log Dario’s handover, seal it as received, work on a copy', good: true},
-           {label: 'Read the connector’s live log instead: Dario says it is the same, and newer', why: 'The live log rolls on. The export is the fixed record.'},
+           {label: 'Skip the handover and read the connector’s live log: Dario says it is the same, and newer', why: 'The live log rolls on. The export is the fixed record.'},
            {label: 'Keep only the lines for Tuesday night, seal those, and hash them against the record', why: 'An edited item isn’t the item. Seal what was exported.'},
            {label: 'Forward a copy to Plinthwise, sealed and hashed, to compare its sessions with ours', why: 'Requests to the vendor go through counsel. The evidence stays in the store.'}]},
   a04: {id: 'A-04', what: 'Plinthwise’s application audit, Day 22 00:00 to Day 23 09:00', form: 'Exported 09:35 by Odette Varga, the system’s owner; SHA-256 at export recorded.',
     opts: [{label: 'Compare the hashes and log her handover: Odette isn’t in question', good: true},
            {label: 'Discard it: an export made by Odette, the system’s owner, can’t be used', why: 'Odette isn’t in question. Record who made it, compare the hashes, and use it.'},
-           {label: 'Skip the comparison and seal it: Odette is staff here, and her export is trusted', why: 'The check is about the file, not the person. Compare every item.'},
+           {label: 'Skip the comparison, log the handover and seal it: Odette is staff here, and trusted', why: 'The check is about the file, not the person. Compare every item.'},
            {label: 'Log it only if it turns out to matter to one of the letter’s three questions', why: 'The log records what was received, before anyone reads it.'}]},
   a06: {id: 'A-06', what: 'AP-DC-01’s directory query log, its 7 days', form: 'Exported 09:45 by Dario Fenn; SHA-256 at export recorded.',
     opts: [{label: 'As each item: compare the hashes, log the handover, seal it, use a copy', good: true},
            {label: 'File it in the town’s case and seal it there: the directory trusts the town’s directory', why: 'It is the airport’s directory and the airport’s log. It goes in the airport’s store, case AIR.'},
-           {label: 'Omit the item from the log: not one of the three questions is about the directory', why: 'It was handed over, so it is logged. Whether it is read is a separate decision.'},
+           {label: 'Log no handover for the item: not one of the three questions is about the directory', why: 'It was handed over, so it is logged. Whether it is read is a separate decision.'},
            {label: 'Ask Dario to clear the log once it is copied, to save space on the server', why: 'The original stays where it is. Nothing is cleared.'}]}
 };
 
 /* ---------- DFIR D5: separate stores per owner (Day 24 10:00) ---------- */
 const AP_STORES = [
-  {label: 'A store of its own for the shop’s log, unread until Bronwen and Ansel agree its use', good: true},
-  {label: 'Into the airport’s case: anything from a device on its network is the airport’s to use', why: 'The log is the shop’s. Its own store, with what it was given for agreed first.'},
+  {label: 'A store of its own for the shop’s log, unread until Bronwen and Ansel settle its use', good: true},
+  {label: 'Into the airport’s own store: anything from a device on its network is the airport’s to use', why: 'The log is the shop’s. Its own store, with what it was given for agreed first.'},
   {label: 'Hash it and read it first, and decide where it goes once we know what is in it', why: 'Reading it first uses it for something nobody agreed. Store it, then agree.'},
   {label: 'Delete it: the maintenance shop isn’t Ansel’s client, and we can’t hold it', why: 'Deleting what a tenant offered destroys evidence. Store it apart and ask Ansel.'}];
 
 /* ---------- DFIR, Day 29 07:30: the airport manager asks the consultant ---------- */
 const AP_SWITCH_DFIR = [
-  {label: 'What the firm found on AP-BIL-02 since the rebuild: the time is Joanna’s call', good: true},
-  {label: 'It is fine: go back now, and enter the paper in its own time next week', why: 'The firm says what it found. When, and how the paper is entered, is the airport manager’s call.'},
-  {label: 'Not until every tenant’s PC has been checked', why: 'Tenants’ PCs are off the airport’s network. Keeping the desk on paper for them is a cost with no reason.'},
+  {label: 'What the firm found on AP-BIL-02 and in the directory. Joanna picks the time', good: true},
+  {label: 'It is fine: go back now, and enter the weekend’s paper in its own time next week', why: 'The firm says what it found. When, and how the paper is entered, is the airport manager’s call.'},
+  {label: 'Not until every tenant’s PC, MS-PC-01 first, has been checked', why: 'Tenants’ PCs are off the airport’s network. Keeping the desk on paper for them is a cost with no reason.'},
   {label: 'The report says the desk stays on paper until the case is finished', why: 'A report recommends, and this one doesn’t say that. The decision is Joanna’s.'}];
 
 /* ---------- Drills (all cases original; artefacts are invented, fields are real kinds of evidence) ---------- */
@@ -327,14 +327,14 @@ const AP_DRILLS = {
                       reveal: 'Tally read a logo and a subject line. It never read the trace, the headers, or asked the business office on a known number.'},
          specific: {q: 'Which domain sent the forwarded copy?', text: 'rvb-airports.example. The airport’s own domain is rvb-airport.example.'}},
     verdicts: [
-      {label: 'Not ours: an impersonation from a lookalike domain, as our records and Odette agree', good: true, needs: ['trace', 'finance'],
+      {label: 'Not ours: an impersonation from a lookalike domain, shown by our trace and by Odette', good: true, needs: ['trace', 'finance'],
        needsWhy: 'the answer rests on two records: the airport’s trace with the copy’s headers, and the business office on a known number. You read only one of them.',
        why: 'The trace says the airport sent nothing, the headers say where it came from, and Odette says nothing changed.'},
       {label: 'Real: the logo is the airport’s, and the email’s charge is a real one', why: 'A copied logo and a real charge fit a fake as well. The trace and the business office decide it.'},
       {label: 'An airport mailbox broken into and used to send it, with every password to be changed', why: 'The trace shows no such message from any airport mailbox, and the headers name another domain’s server.'}],
     reasons: [
-      {label: 'We sent nothing to tenants after 11:00, and Odette says nothing changed: two records agree', good: true, why: 'Our record of what we sent, and the owner of the account on a known number.'},
-      {label: 'The deadline is too short: real notices from the airport give tenants a month or more', why: 'A deadline is a style, not a record.'},
+      {label: 'We sent nothing to tenants after 11:00: Odette says no account changed', good: true, why: 'Our record of what we sent, and the owner of the account on a known number.'},
+      {label: 'The deadline is too short: real notices from the airport give tenants 30 days or more', why: 'A deadline is a style, not a record.'},
       {label: 'The logo is real: somebody at the airport must have sent it', why: 'Logos can be copied from any website.'}],
     alts: [
       {label: 'An airport mailbox used to send it', good: true, why: 'Ruled out: the trace shows nothing from any airport mailbox to tenants after 11:00.'},
@@ -362,7 +362,7 @@ const AP_DRILLS = {
         {q: 'How urgent?', kind: 'trap', res: ['“By Friday.”', '(A tone, not a record.)']}]},
       {id: 'trace', name: 'A-01: the message trace', qs: [
         {q: 'Did any airport mailbox send a message to a tenant on Monday afternoon?', kind: 'focus', key: true,
-         res: ['None after 11:00 on Day 22', 'The last airport message to the flight school: an invoice on Day 18, from billing@rvb-airport.example']}]},
+         res: ['None after 11:00 on Day 22', 'The window’s last airport message to the flight school: an invoice, Day 22 10:40, from billing@rvb-airport.example']}]},
       {id: 'headers', name: 'A-02: the copy’s headers', qs: [
         {q: 'Where did the copy come from?', kind: 'focus', key: true,
          res: ['From and Return-Path: operations@rvb-airports.example', 'Received from a mail server outside the airport’s mail service. The domain isn’t on the airport’s list of its own domains']},
@@ -370,21 +370,21 @@ const AP_DRILLS = {
          wall: ['Received: from relay{i}.example', 'X-Spam-Score: {n}', 'Content-Type: multipart/mixed']}]},
       {id: 'audit', name: 'A-04: Plinthwise’s audit', qs: [
         {q: 'Did the invoice account change?', kind: 'focus', key: true,
-         res: ['The invoice template’s bank account unchanged since 2021. No change to it on Day 22 or 23']}]}
+         res: ['No change to the invoice template’s bank account on Day 22 or 23 (A-04’s window)']}]}
     ],
     verdicts: [
-      {label: 'No: an impersonation from a lookalike domain. A-01 and A-02 show it, A-04 agrees', good: true, needs: ['trace', 'headers'],
+      {label: 'No: an impersonation from a lookalike domain. A-01 and A-02 show it, with A-04 in support', good: true, needs: ['trace', 'headers'],
        needsWhy: 'the finding rests on two sources: A-01 (what the airport sent) and A-02 (where the copy came from). You read only one.',
        why: 'Each decides its half.'},
       {label: 'Yes: the logo, the domain and the charge look like the airport’s own', why: 'A copied logo is not a sender. A-01 and A-02 say who sent it.'},
       {label: 'Unknown until every tenant’s mailbox has been examined', why: 'Tenants’ mail is theirs, and A-01 and A-02 already answer the question.'}],
     reasons: [
       {label: 'A-01: we sent nothing then. A-02: the copy came via another domain’s server', good: true, why: 'Our record, and the copy’s own route.'},
-      {label: 'A-04: the invoices haven’t changed since 2021, which shows the email can’t be ours', why: 'A-04 supports it; it doesn’t show who sent the email.'},
+      {label: 'A-04: no change to the invoice account in its window, which shows the email can’t be ours', why: 'A-04 supports it; it doesn’t show who sent the email.'},
       {label: 'Three tenants got it: the airport must have sent a mailing', why: 'A count of recipients isn’t a sender.'}],
     alts: [
       {label: 'An airport mailbox used to send it', good: true, why: 'Ruled out: A-01 shows none after 11:00.'},
-      {label: 'The copy altered in transit', good: true, why: 'Not supported: it came as an attachment, hashed on receipt, its headers whole.'},
+      {label: 'The copy altered in transit', good: true, why: 'Not supported: it came as an attachment, its headers whole and consistent hop to hop.'},
       {label: 'A tenant playing a joke', why: 'Nothing points to it.'},
       {label: 'The airport’s website being changed', why: 'Beside the point: the logo is a copy either way.'}],
     path: '<p>Two decisive sources: <b>A-01</b> (what the airport’s mail sent) and <b>A-02</b> (the copy’s headers). A-04 agrees. T1657 (Financial Theft) covers business email compromise, where an adversary may impersonate a trusted entity.</p>',
@@ -417,13 +417,13 @@ const AP_DRILLS = {
                       reveal: 'Tally joined an hour and an old password. It never read the ticket, or asked the vendor on the contract’s number.'},
          specific: {q: 'Is 203.0.113.40 in Plinthwise’s documented range?', text: 'Yes: the range is 203.0.113.32 to 47.'}},
     verdicts: [
-      {label: 'Plinthwise’s scheduled update, PW-4471, as the ticket and the vendor’s word agree', good: true, needs: ['log', 'call'],
+      {label: 'Plinthwise’s scheduled update, PW-4471, shown by the ticket and the vendor’s word', good: true, needs: ['log', 'call'],
        needsWhy: 'the answer rests on two records: the connector’s log with the ticket, and the vendor’s word on the contract’s number. You read only one.',
        why: 'The log, the ticket and the vendor agree.'},
       {label: 'An intruder, as confirmed by a 2019 password used at 02:40', why: 'The hour and the password fit a scheduled update too. The ticket and the vendor say what it was.'},
       {label: 'Airport staff, Dario likely among them, testing the vendor’s old account late at night', why: 'The session came from the vendor’s range, under its ticket, and the vendor confirms it.'}],
     reasons: [
-      {label: 'The range, a Day 15 ticket, and the vendor’s word on the contract’s line: they agree', good: true, why: 'The records and the vendor, each from its own source.'},
+      {label: 'The range, a Day 15 ticket, and the vendor’s word on the contract’s own line', good: true, why: 'The records and the vendor, each from its own source.'},
       {label: 'Vendors never work at night: the hour itself settles it', why: 'Monthly updates are run at night so nobody is using the system.'},
       {label: 'An old password confirms somebody other than the vendor must have used the account', why: 'Old is a risk, not a record.'}],
     alts: [
@@ -459,7 +459,7 @@ const AP_DRILLS = {
       {id: 'audit', name: 'A-04 and A-07: what the session did', qs: [
         {q: 'What ran, and what changed?', kind: 'focus', key: true,
          res: ['A-04: the updater at 02:44; the application’s version changed at 03:20; no other change, no new account', 'A-07: the updater and its child processes, files in the program folder only']},
-        {q: 'Every audit line since Sunday', kind: 'broad', rows: 18400,
+        {q: 'Every audit line in its window', kind: 'broad', rows: 18400,
          wall: ['{t}  invoice  create  INV-{n}', '{t}  lease  view  H-{i}', '{t}  signin  billing{i}']}]}
     ],
     verdicts: [
@@ -500,20 +500,20 @@ const AP_DRILLS = {
          res: ['04:19: MS-PC-01 to AP-BIL-01’s database port, three failed database sign-ins', '05:55: AP-OF-03 to MS-PC-01’s file sharing, accepted. What happened on MS-PC-01 is unknown', 'Nothing from MS-PC-01 since 08:05, when the tenants’ ports were shut']}]},
       {id: 'lease', name: 'The lease and Ansel’s note', qs: [
         {q: 'What does the lease allow, and what does counsel say?', kind: 'focus', key: true,
-         res: ['The 2017 lease: tenants may connect “subject to the Authority’s IT rules”. Nothing about examining tenants’ equipment', 'Ansel, 09:30: the airport can’t require an image. It can decide what its own network lets connect']}]}
+         res: ['The 2017 lease: tenants may connect “subject to the Authority’s IT rules”. Nothing about examining tenants’ equipment', 'Ansel, 09:50: the airport can’t require an image. It can decide what its own network lets connect']}]}
     ],
     ai: {everything: {text: 'MS-PC-01 attempted unauthorised database access before the encryption began. It is the most likely point of entry. Recommend imaging it immediately to preserve evidence.', wrong: true,
                       reveal: 'Tally turned three failed sign-ins into a way in, and never read the lease or counsel’s note.'},
          specific: {q: 'Has MS-PC-01 sent anything since 08:05?', text: 'No. Its port was shut with the tenants’ at 08:05.'}},
     verdicts: [
-      {label: 'She picks who preserves it. Keeping it off our network is Joanna’s to decide', good: true, needs: ['flows', 'lease'],
+      {label: 'She picks who preserves it. Keeping it off our network is Callum’s to decide today', good: true, needs: ['flows', 'lease'],
        needsWhy: 'the answer rests on two records: what MS-PC-01 did, and what the lease and counsel allow. You read only one.',
        why: 'What the records show, what the airport may decide, and whose PC it is.'},
-      {label: 'Copy its disk tonight while the shop is shut: Joanna can allow it on the airport’s network', why: 'Its PC is hers. The airport decides its network, not her PC.'},
+      {label: 'Copy its disk tonight while the shop is shut: Callum can allow it on the airport’s network', why: 'Its PC is hers. The airport decides its network, not her PC.'},
       {label: 'Plug it back in, since a tenant’s PC is none of the airport’s business', why: 'It connected to billing’s database at 04:19. The airport can keep it off its own network until it is checked.'},
       {label: 'You order the shop to hand it over under the lease, as the IR manager', why: 'The lease says nothing of the kind, and you decide neither the lease nor her PC.'}],
     reasons: [
-      {label: 'The 04:19 and 05:55 records, and a lease that gives the airport its network: what it may decide', good: true, why: 'What happened, and what the airport may decide.'},
+      {label: 'The 04:19 and 05:55 records, and the lease: our network, her PC', good: true, why: 'What happened, and what the airport may decide.'},
       {label: 'She is angry: she must have something to hide', why: 'Anger is not evidence.'},
       {label: 'An 8-year-old PC is a risk on any network: its age alone makes it the way in', why: 'Old isn’t a record of Saturday.'}],
     alts: [
@@ -522,7 +522,7 @@ const AP_DRILLS = {
       {label: 'Bronwen herself, or someone at her shop', why: 'Nothing points to any person. The records name a PC.'},
       {label: 'The PC’s age', why: 'Beside the point.'}],
     path: '<p>“What can be done, and who decides?” is decided by <b>what MS-PC-01 did, as recorded</b> and <b>what the lease and counsel allow</b>. Her anger and the PC’s age fit either answer.</p>',
-    response: ['Joanna keeps MS-PC-01’s port shut until it is checked', 'Ansel writes to Bronwen: what the airport saw, and what it asks', 'Bronwen’s own IT firm preserves it, memory first: her choice', 'What it finds about the two connections is shared only as she and Ansel agree'],
+    response: ['Callum, on duty, keeps MS-PC-01’s port shut until it is checked; Joanna is told', 'Ansel writes to Bronwen: what the airport saw, and what it asks', 'Bronwen’s own IT firm preserves it, memory first: her choice', 'What it finds about the two connections is shared only as she and Ansel agree'],
     techs: [], acts: ['aptenant']
   },
   lastdfir: {
@@ -556,7 +556,7 @@ const AP_DRILLS = {
        needsWhy: 'the finding rests on two sources: A-11 (what connected from where) and A-12 (that the sign-ins were rejected). You read only one.',
        why: 'What our records show, what the vendor says, and an honest unknown with the request dated.'},
       {label: 'Plinthwise’s log is wrong: our records show its address connected on Wednesday', why: 'Its log records sessions, and there was none. Write what each record shows.'},
-      {label: 'Plinthwise likely tried to get back in on Wednesday afternoon, after its account was disabled', why: 'An address in its range is not the vendor. Who tried is unknown.'},
+      {label: 'Plinthwise likely tried to get back in on Wednesday afternoon, after its account was disabled', why: 'An address in its range points to its network, not to who used it. Who tried is unknown.'},
       {label: 'No activity on Wednesday: the vendor says so, and no session opened', why: 'Our records show two sign-in attempts. They go in the finding whatever the vendor says.'}],
     reasons: [
       {label: 'A-11, A-12: two rejections. A-10, A-13: its word. R-02 is open', good: true, why: 'Each record for what it shows, the vendor’s word as the vendor’s.'},
@@ -575,7 +575,7 @@ const AP_DRILLS = {
 
 /* ---------- DFIR report 1: AIR-01, for counsel (Day 24 17:00) ---------- */
 const AP_REPORT_1 = {
-  title: 'AIR-01: the email, the vendor’s sessions and who owns what', audience: 'Ansel Whitcombe, counsel to the Airport Authority',
+  title: 'AIR-01: the email, the vendor’s sessions and who owns what', audience: 'Ansel Whitcombe, counsel to the Thistlecombe Airport Authority',
   intro: '<p>Eight findings for Ansel, covering his three questions, each from the evidence in the custody log.</p>',
   claims: [
     {id: 'mail', text: 'The “Airport Operations” email did not come from the airport’s mail system.', truth: 'confirmed',
@@ -598,21 +598,23 @@ const AP_REPORT_1 = {
 
 /* ---------- DFIR report 2 (the boss, stage 3): AIR-02, what the ransomware reached (Day 27 15:30) ---------- */
 const AP_REPORT_2 = {
-  title: 'AIR-02: Saturday on the office network', audience: 'Ansel Whitcombe, counsel to the Airport Authority',
-  intro: '<p>Seven findings on the second letter’s three questions, from the evidence logged since 08:40.</p>',
+  title: 'AIR-02: Saturday on the office network', audience: 'Ansel Whitcombe, counsel to the Thistlecombe Airport Authority',
+  intro: '<p>Eight findings on the second letter’s three questions, from the evidence logged since 08:40.</p>',
   claims: [
     {id: 'enc', text: 'AP-FS-01, AP-BIL-01, the two front-desk PCs and the four business office PCs were encrypted 05:52–06:20, from AP-OF-03 under ap-admin.', truth: 'confirmed',
      evidence: ['A-17: the EDR’s file events, 04:00 to 08:00', 'A-20: the ransom note and twenty encrypted sample files'], why: 'Each host’s file events, and the files themselves.'},
     {id: 'dc', text: 'AP-DC-01 was not encrypted between 04:00 and 08:00.', truth: 'confirmed',
      evidence: ['A-17: no file events on AP-DC-01 in that window', 'A-16: its directory database opens normally'], why: 'Its own file events, and its data still opening, over the window they cover.'},
-    {id: 'export', text: 'The tenant records table was exported at 04:28 by ap-admin from AP-OF-03.', truth: 'confirmed',
+    {id: 'dir', text: 'No account, group or policy in the airport’s directory was created or changed in the 14 days to 12:00 Saturday.', truth: 'confirmed',
+     evidence: ['A-22: the directory’s own record of account, group and policy changes: none in its 14 days', 'A-16: the 09:00 snapshot’s accounts and groups match that record'], why: 'The change record and the snapshot agree, over the window they cover.'},
+    {id: 'export', text: 'The tenant records table, with its scanned leases, was exported at 04:28 by ap-admin from AP-OF-03.', truth: 'confirmed',
      evidence: ['A-18: Plinthwise’s audit, as forwarded to the Compact’s platform before 05:52'], why: 'The audit records the export, the account and the host.'},
     {id: 'left', text: 'Tenant records left the airport’s network.', truth: 'likely',
      evidence: ['A-19: 1.4 GB from AP-OF-03 to 203.0.113.58, 04:31–05:02', 'A-18: the export at 04:28 was 1.38 GB'], why: 'The sizes and the times point to it; the contents of the transfer aren’t visible.'},
     {id: 'mspc', text: 'Whether the ransomware reached MS-PC-01.', truth: 'unknown',
      evidence: ['A-19: one accepted connection from AP-OF-03 at 05:55', 'MS-PC-01 is the tenant’s, outside the letter'], why: 'Nothing in scope can say.'},
     {id: 'way', text: 'How the attacker got ap-admin.', truth: 'unknown',
-     evidence: ['A-14, A-17, A-18: ap-admin’s use from 04:28, nothing earlier in the window', 'Nothing in scope shows the way in'], why: 'Nothing read so far can say.'},
+     evidence: ['A-22: ap-admin’s first sign-in from AP-OF-03, at 04:24 Saturday; before it, in the 14 days kept, weekday sign-ins from AP-OF-04, the PC Dario uses', 'Nothing in scope shows how its password was got'], why: 'The sign-in records say when and from where it was first used, not how it was got.'},
     {id: 'pub', text: 'Whether tenant records have been published.', truth: 'unknown',
      evidence: ['No post or claim seen', 'Nothing in scope records it'], why: 'Nothing in scope can say.'}]
 };
@@ -656,17 +658,17 @@ const AP_BOARD_SPECS_MGR = () => [
   {title: 'Round 1: did it touch the airfield?', who: 'Rhoswen Adair',
    ask: '“Did any of this touch the airfield, or a flight?”',
    resp: [{label: 'Only the office systems. The desk ran on paper, and pilots decided their flights', good: true},
-          {label: 'Yes: the whole airport was down from Saturday morning until Monday', why: 'The office was. Access control and fuelling are separate systems, not affected.'},
-          {label: 'We can’t say until the firm has checked the airfield’s own systems as well as the office’s', why: 'The airfield’s systems aren’t on the office network and weren’t part of this. Say what was affected.'}]},
+          {label: 'Yes: the whole airport was down from Saturday morning until Monday', why: 'The office was. The airfield isn’t on the office network (game).'},
+          {label: 'We can’t say until the firm has checked the airfield’s own systems as well as the office’s', why: 'Nothing in the evidence reached beyond the office network; the airfield’s systems are separate (game). Say what was affected.'}]},
   {title: 'Round 2: should we pay?', who: 'Rhoswen Adair',
    ask: '“Should the Board pay the ransom?”',
    resp: [{label: 'The Board decides, with counsel and the insurer. Plinthwise came back without it', good: true},
-          {label: 'Pay it, since there is no other way left to protect the tenants’ records from being published', why: 'Paying can’t call back what left. The Board decides, with counsel and the insurer.'},
+          {label: 'Pay it, since there is no other way left to protect the tenants’ records from being published', why: 'Whatever left can’t be called back by paying. The Board decides, with counsel and the insurer.'},
           {label: 'The IR manager will decide that, once the firm has reported', why: 'You advise. Any payment is the Board’s decision.'}]},
   {title: 'Round 3: what stops it again?', who: 'Rhoswen Adair',
    ask: '“What stops Saturday happening again?”',
    resp: [{label: 'Tenants on their own segment, named admin accounts with MFA, a night threshold', good: true},
-          {label: 'A new antivirus product on every PC, and a training video for all the office staff', why: 'One account reached everything across a shared network. A product fixes neither.'},
+          {label: 'A new antivirus product on every PC, and a training video for all the office staff', why: 'One account reached nearly every office system across a shared network. A product fixes neither.'},
           {label: 'Nothing for us to do: a tenant let them in, and the tenant must fix it', why: 'Nothing shows that, and the shared network is the airport’s risk.'}]}];
 const AP_BOARD_SPECS_DFIR = () => [
   {title: 'Round 1: were tenants’ records stolen?', who: 'Rhoswen Adair',
@@ -689,9 +691,9 @@ const AP_BOARD_SPECS_DFIR = () => [
 function apMgrBossStages() {
   return {
     s1: {title: 'Stage 1 (08:00): coordinate',
-      clues: ['07:40: a ransom note on the front-desk PC, and Plinthwise won’t open. 07:48: Callum, the duty manager, put the desk on paper.', 'The airfield’s own systems are separate and working. Access control and fuelling aren’t part of this. (game)', 'Dario is in the IT closet. Joanna is off today, reachable by phone.'],
+      clues: ['07:40: a ransom note on the front-desk PC, and Plinthwise won’t open. 07:48: Callum, the duty manager, put the desk on paper.', 'The airfield isn’t on the office network, and it is working. (game)', 'Dario is in the IT closet. Joanna is off today, reachable by phone.'],
       ask: 'You are the IR manager. Who does what, first?',
-      resp: [{label: 'Desk on paper, Callum’s call. The office cut off when he agrees. Firm, Joanna told', good: true},
+      resp: [{label: 'Desk on paper, Callum’s call. The office cut off at a time he sets. Firm, Joanna told', good: true},
              {label: 'You decide: shut each office PC and server down at once, before it spreads', why: 'Their memory is evidence, and cutting the office off stops the spread without losing it.'},
              {label: 'Hold off for Joanna and Odette on Monday: they own the systems', why: 'The ransomware doesn’t wait. Containment and the firm come now; the owners are told.'},
              {label: 'You set the front desk’s procedure yourself: Callum is busy with the queue at the desk', why: 'Callum called it at 07:48. The terminal is his today. You coordinate everyone else.'},
@@ -700,10 +702,10 @@ function apMgrBossStages() {
       clues: ['11:00, the firm, through Ansel: the office systems encrypted from AP-OF-03; AP-DC-01 not encrypted; the tenant records exported at 04:28 and 1.4 GB sent out at 04:31–05:02.', 'Measured so far: the desk on paper since 07:48, every payment on a paper receipt. The airfield isn’t affected.', 'Not known: how the attacker got ap-admin, what reached MS-PC-01, who tried the vendor’s account on Wednesday.'],
       ask: 'What do you give them? (Ansel agreed the tenant wording at 12:15.)',
       resp: [{label: 'What’s known, tenant records as likely copied out, 16:00 next, nothing promised', good: true},
-             {label: 'Promise Plinthwise back by Monday morning, for the tenants to plan', why: 'A promise nobody can keep yet. The next update at 16:00, with what is known.'},
-             {label: 'Tell the tenants their records came to no harm, and nobody need panic', why: 'They likely aren’t. Say what is known, in Ansel’s wording.'},
-             {label: 'Tell the tenants their records were stolen and published', why: 'Copying out is likely, not confirmed, and nothing shows publication.'},
-             {label: 'Nothing until the firm’s report is final: Ansel decides when', why: 'Silence leaves the tenants guessing. Say what is known, and when more comes.'}]},
+             {label: 'Promise Plinthwise back by 08:00 Monday, for the tenants to plan', why: 'A promise nobody can keep yet. The next update at 16:00, with what is known.'},
+             {label: 'Tell them the tenants’ records came to no harm, and nobody need panic', why: 'They likely aren’t. Say what is known, in Ansel’s wording.'},
+             {label: 'Tell them the tenants’ records were stolen and published', why: 'Copying out is likely, not confirmed, and nothing shows publication.'},
+             {label: 'Nothing until the firm’s report is final: Ansel decides when', why: 'Silence leaves them guessing. Say what is known, and when more comes.'}]},
     s3: {title: 'Stage 3 (14:00): the weekend',
       clues: ['The desk stays on paper over the weekend: Callum’s call. Plinthwise is rebuilt on Sunday: Dario, with the vendor on a one-time account. pw-support stays disabled.', 'The Compact’s people have been at it since 07:45. Night 27 is in the week-4 rota.', 'Dario’s hours are Joanna’s to set, the front desk’s are Callum’s. Yours are the Compact’s.'],
       ask: 'How does the Compact cover the weekend?',
@@ -713,7 +715,7 @@ function apMgrBossStages() {
 function apDfirBossStages() {
   return {
     s1: {title: 'Stage 1 (08:35): preserve',
-      clues: ['The office network has been cut off since 08:05, its hosts left running. ap-admin was disabled at 08:10.', 'Ansel extended the engagement at 08:20: what did it reach? Did tenant records leave? What can’t the evidence say yet?', 'The 01:00 nightly copy of AP-BIL-01 is held off the network. Odette wants the front desk back on it.'],
+      clues: ['The 01:00 nightly copy of AP-BIL-01 is held off the network. Odette wants the front desk back on it.', 'The office network has been cut off since 08:05, its hosts left running, AP-OF-03 isolated by its EDR. ap-admin was disabled at 08:10.', 'Ansel extended the engagement at 08:20: what did it reach? Did tenant records leave? What can’t the evidence say yet?'],
       ask: 'What do you do first?',
       resp: [{label: 'Memory of AP-OF-03, AP-BIL-01, AP-DC-01 as they run, the copy untouched, then disks', good: true},
              {label: 'Shut it all down and copy the disks: a disk copy is the one that lasts', why: 'Memory goes with the power. Capture it with the hosts running and cut off.'},
@@ -721,7 +723,7 @@ function apDfirBossStages() {
              {label: 'Copy MS-PC-01’s disk too: AP-OF-03 connected to it at 05:55', why: 'It is the tenant’s PC, outside the letter. Only the tenant can agree to that.'},
              {label: 'Hold it until Monday, when the office is open and Odette is in', why: 'The memory and the trail go with time. Collect now; nothing here touches the terminal.'}]},
     s2: {title: 'Stage 2 (13:00): what did it reach?',
-      clues: ['A-17: 05:52–06:20, files encrypted on AP-FS-01, AP-BIL-01, AP-FD-01, AP-FD-02 and AP-OF-01..04, from AP-OF-03 under ap-admin. No file events on AP-DC-01.', 'A-18: 04:28, a full export of the tenant records table, 1.38 GB, by ap-admin from AP-OF-03. A-19: 1.4 GB from AP-OF-03 to 203.0.113.58, 04:31–05:02.', 'A-19: 05:55, AP-OF-03 to MS-PC-01’s file sharing, accepted. MS-PC-01 is the tenant’s.'],
+      clues: ['A-17: 05:52–06:20, files encrypted on AP-FS-01, AP-BIL-01, AP-FD-01, AP-FD-02 and AP-OF-01..04, from AP-OF-03 under ap-admin. No file events on AP-DC-01.', 'A-18: 04:28, a full export of the tenant records table with its scanned leases, 1.38 GB, by ap-admin from AP-OF-03. A-19: 1.4 GB from AP-OF-03 to 203.0.113.58, 04:31–05:02.', 'A-19: 05:55, AP-OF-03 to MS-PC-01’s file sharing, accepted. MS-PC-01 is the tenant’s.'],
       ask: 'From the evidence, what did it reach?',
       resp: [{label: 'The office systems, from AP-OF-03. Tenant records likely left. MS-PC-01 unknown', good: true},
              {label: 'The whole airport, the airfield’s systems included', why: 'The evidence covers the office network. The airfield’s systems are separate and not part of it.'},
@@ -739,18 +741,18 @@ Object.assign(EXTRA_ACTIONS, {
   aptenant: {name: 'Tenants own their systems', desc: 'A tenant’s PC is the tenant’s, even on your network. You can ask the tenant to have it checked, and you decide what your own network lets it reach. Leases and agreements are counsel’s.'},
   apowners: {name: 'Who owns what, written down', desc: 'For every system on a shared network: whose it is, who runs it, who decides what connects. One keeper for the list of connections, one approver for each line.'},
   appaper: {name: 'The front desk on paper', desc: 'When the office systems are down, the manager on duty puts the desk on paper receipts and a paper log, practised beforehand. When the system is back, a test entry first, the manager on duty picks the time, and the paper is entered the same day and checked by a second person.'},
-  apcopy: {name: 'Restore only from a checked copy', desc: 'Preserve first. Then check the copy in isolation before trusting it: scan it, and read its own records for anything the attack did. Restore onto a rebuilt server, with the accounts the attack used replaced.'},
+  apcopy: {name: 'Restore only from a checked copy', desc: 'Preserve first. Then check the copy in isolation before trusting it: scan it, and read its own records for anything the attack did. Check the directory it rejoins too: its accounts, groups, policies and sign-ins since the attack began, with every admin and service password reset. Restore onto a rebuilt server, with the accounts the attack used replaced.'},
   apseg: {name: 'Keep tenants on their own segment', desc: 'Give tenants their own network segment that reaches only what they need (the tenant portal and the internet), under a signed tenant agreement. The airport manager decides what connects, knowing the cost.'},
   apweekend: {name: 'A weekend incident with rest', desc: 'Twelve-hour shifts with written handovers, the night from the rota, outside help for the specialist work, and nobody on the day after their night.'},
-  apaar: {name: 'An AAR the tenants can read', desc: 'Blameless: what let one account reach everything across a shared network, and what kept the airport working. Each action with one owner and a date. The cost as counted.'},
+  apaar: {name: 'An AAR the tenants can read', desc: 'Blameless: what let one account reach nearly every system across a shared network, and what kept the airport working. Each action with one owner and a date. The cost as counted.'},
   apstatus: {name: 'Read the firm’s status report', desc: 'A retained firm reports what it found, what it didn’t, and anything it saw outside its questions, which goes to counsel first.'}
 });
 Object.assign(FACTS, {
   apcisa: {name: 'CISA: the transportation systems sector', desc: 'CISA’s Transportation Systems Sector page says: “Aviation includes aircraft, air traffic control systems, and about 19,700 airports, heliports, and landing strips.” This slice looks only at one airport’s business and office IT (game).', src: 'CISA, Transportation Systems Sector'},
   apnotam: {name: 'NOTAMs, in the FAA’s words', desc: 'The FAA’s page “What is a NOTAM?” says: “A NOTAM is a notice containing information essential to personnel concerned with flight operations”. In the game the office outage changes nothing on the airfield (game).', src: 'FAA, What is a NOTAM'},
-  apacrp: {name: 'ACRP: a guidebook for airport cybersecurity', desc: 'The Airport Cooperative Research Program published ACRP Report 140, Guidebook on Best Practices for Airport Cybersecurity, in 2015. The game names it and quotes nothing from it.', src: 'ACRP Report 140 (2015)'}
+  apacrp: {name: 'ACRP: a guidebook for airport cybersecurity', desc: 'ACRP Report 140, Guidebook on Best Practices for Airport Cybersecurity (2015). The game names it and quotes nothing from it.', src: 'ACRP Report 140 (2015)'}
 });
 GAME_NOTES.push(
-  'The Regional Airport and the Regional Airport Authority, its people, tenants and counts, Plinthwise and Plinthwise Systems, Kettlebrook Flight School, Brackenlow Aero Services, Corrowind Aviation, every host (AP-BIL-01, AP-FS-01, AP-DC-01, AP-OF-03 …), the lookalike email and its domain, the vendor’s sessions, the rejected sign-ins, the ransomware and the busy weekend are invented. Only the airport’s business and office IT appear: access control and fuelling are separate systems, not affected and not part of this work. No real airport, FBO, airline or vendor and no real incident appear. (game)',
-  'The Airport annex, the week-4 rota, the tabletop, the paper procedure and its 11-minute practice, the weekend plan and its forecasts, the AAR, the 64 receipts, the directory’s trust with the town’s, the nightly copy held off the network, the Windsock Badge’s effects and every score are invented. The game never says what any rule requires of the airport: counsel decides what tenants are told, and the Board decides any payment. (game)'
+  'The Regional Airport and the Thistlecombe Airport Authority that runs it, its people, tenants and counts, Plinthwise and Plinthwise Systems, Kettlebrook Flight School, Brackenlow Aero Services, Corrowind Aviation, every host (AP-BIL-01, AP-FS-01, AP-DC-01, AP-OF-03 …), the lookalike email and its domain, the vendor’s sessions, the rejected sign-ins, the ransomware and the busy weekend are invented. Only the airport’s business and office IT appear: access control and fuelling are separate systems, not affected and not part of this work. No real airport, FBO, airline or vendor and no real incident appear. (game)',
+  'The Airport annex, the public tenant directory, the about 140 hangar renters, the tenants’ own internet lines and the FBO’s card terminal off the airport’s network, the directory’s 14-day security log and Sunday’s review of it, the week-4 rota, the tabletop, the paper procedure and its 11-minute practice, the weekend plan and its forecasts, the AAR, the 64 receipts, the directory’s trust with the town’s, the nightly copy held off the network, the Windsock Badge’s effects and every score are invented. The game never says what any rule requires of the airport: counsel decides what tenants are told, and the Board decides any payment. (game)'
 );

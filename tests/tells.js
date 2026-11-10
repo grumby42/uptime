@@ -32,7 +32,8 @@
 // (Fire & EMS Dispatch), the floor/supervisor, cards/paper, measured-time and chief words, held in Dispatch and across
 // Crossroads, with the slice-2 groups and the now/safe words held in Dispatch too; since slice 5 (the Regional Airport), the
 // tenant/lease, duty-manager and mail/header words, held in the Airport and across Crossroads, with the slice-2 groups, the
-// now/safe words and the floor/measure words held in the Airport too).
+// now/safe words and the floor/measure words held in the Airport too; since the slice-5 review, every enforced word and group,
+// and every lone-feature word, is matched on its inflections in Crossroads: see stemRe() and stem() below).
 const fs = require('fs');
 const path = require('path');
 let acorn = null;
@@ -135,6 +136,63 @@ const CR_EXTRA = [
   ['G:mail', /\b(e?mails?|email’s|headers?|trace|domain)\b/i],
 ];
 
+// ---- Stems and inflections (review of Crossroads slice 5, 9 Nov 2026, S11) ----
+// The "agree" template slipped through because "agree", "agrees" and "agreed" were counted as three words. So for
+// Crossroads every enforced word and group is matched on its inflections too: stemRe() rewrites a pattern so that each
+// literal word of three letters or more that ends an alternative (before \b, "|", ")" or the end) also matches its -s,
+// -es, -ed and -ing forms (agree|agrees|agreed|agreeing; lease|leases|leased|leasing; notify|notifies|notified;
+// cut|cuts|cutting), and "Xs?" becomes X with the same endings. Character classes, escapes and quantifiers are left
+// alone, and words that already carry their own endings ("check(ed|s|ing)?") are unchanged. Possessives were already
+// matched (’ is not a word character). The lone-feature check reads each word through stem(), so "agree", "agrees",
+// "agreed" and "agreeing" are one feature. Town Hall keeps its own tables byte-identical: its stem-matched figures are
+// printed in --report only, after everything else.
+const VOW = 'aeiou';
+function inflect(w) {
+  if (w.length < 3) return w;
+  const lo = w.toLowerCase(), last = lo[lo.length - 1], prev = lo[lo.length - 2];
+  if (lo.endsWith('ee')) return w + '(?:s|d|ing)?';
+  if (last === 'e') return w.slice(0, -1) + '(?:' + w.slice(-1) + '(?:s|d)?|ing)';
+  if (last === 'y' && !VOW.includes(prev)) return w.slice(0, -1) + '(?:' + w.slice(-1) + '|ies|ied|ying)';
+  const dbl = !VOW.includes(last) && !'wxy'.includes(last) && VOW.includes(prev) && !VOW.includes(lo[lo.length - 3] || 'a') ? '|' + w.slice(-1) + '(?:ed|ing)' : '';
+  return w + '(?:s|es|ed|ing' + dbl + ')?';
+}
+function stemRe(re) {
+  const src = re.source, groups = []; let out = '', i = 0;
+  const boundary = j => j >= src.length || src[j] === '|' || src[j] === ')' || (src[j] === '\\' && src[j + 1] === 'b');
+  while (i < src.length) {
+    const c = src[i];
+    if (c === '\\') { out += src.slice(i, i + 2); i += 2; continue; }
+    if (c === '[') { let j = i + 1; if (src[j] === '^') j++; if (src[j] === ']') j++; while (j < src.length && src[j] !== ']') { if (src[j] === '\\') j++; j++; } out += src.slice(i, j + 1); i = j + 1; continue; }
+    if (c === '{') { const j = src.indexOf('}', i); out += src.slice(i, j + 1); i = j + 1; continue; }
+    // A group opened straight after a letter holds a word's own endings ("check(ed|s|ing)"): left as written.
+    if (c === '(') groups.push(i > 0 && /[A-Za-z]/.test(src[i - 1]) && src[i - 2] !== '\\');
+    if (c === ')') groups.pop();
+    if (/[A-Za-z]/.test(c)) {
+      let j = i; while (j < src.length && /[A-Za-z]/.test(src[j])) j++;
+      const w = src.slice(i, j);
+      if (groups.includes(true)) { out += w; i = j; continue; }
+      if (src[j] === '?' && w.length >= 4 && w.endsWith('s') && boundary(j + 1)) { out += inflect(w.slice(0, -1)); i = j + 1; continue; }
+      out += boundary(j) && (i === 0 || src[i - 1] !== '\\') ? inflect(w) : w; i = j; continue;
+    }
+    out += c; i++;
+  }
+  return new RegExp(out, re.flags);
+}
+// A light stemmer for the lone-feature words: the possessive, then -ies/-ied, -ing, -ed, -s, a doubled final consonant
+// and a final e, so each inflection of a word gives the same feature.
+function stem(w) {
+  let s = w.replace(/’s$/, '');
+  if (s.length > 4 && /(ies|ied)$/.test(s)) s = s.slice(0, -3) + 'y';
+  else if (s.length > 5 && s.endsWith('ing')) s = s.slice(0, -3);
+  else if (s.length > 5 && s.endsWith('eed')) s = s.slice(0, -1);
+  else if (s.length > 4 && s.endsWith('ed') && !s.endsWith('eed')) s = s.slice(0, -2);
+  else if (s.length > 3 && s.endsWith('s') && !/(ss|us|is)$/.test(s)) s = s.slice(0, -1);
+  if (s.length > 3 && /([^aeiouslz])\1$/.test(s)) s = s.slice(0, -1);
+  if (s.length > 3 && s.endsWith('e')) s = s.slice(0, -1);
+  return s;
+}
+const stemmed = L => L.map(([n, re]) => [n, stemRe(re)]);
+
 const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
   .concat(fs.readdirSync(root + '/engine').filter(f => f.endsWith('.js')).map(f => 'engine/' + f));
 const crFiles = fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : [];
@@ -234,7 +292,8 @@ const argOf = k => (args.find(a => a.startsWith('--' + k + '=')) || '').slice(k.
 const hitsArg = argOf('hits'), dArg = argOf('d'), tArg = argOf('t');
 if (hitsArg) {
   const w = WORDS.concat(EXTRA, CR_EXTRA).find(x => x[0] === hitsArg); if (!w) { console.error('unknown word ' + hitsArg); process.exit(2); }
-  for (const x of opts.concat(crOpts)) if ((!dArg || x.d === dArg) && (!tArg || x.t === tArg) && w[1].test(x.label)) console.log((x.good ? 'GOOD ' : 'bad  ') + x.file.split('/').pop() + ':' + x.line + ' [' + x.t + ']', x.label);
+  const ws = stemRe(w[1]);
+  for (const x of opts.concat(crOpts)) if ((!dArg || x.d === dArg) && (!tArg || x.t === tArg) && (x.d.startsWith('cr-') ? ws : w[1]).test(x.label)) console.log((x.good ? 'GOOD ' : 'bad  ') + x.file.split('/').pop() + ':' + x.line + ' [' + x.t + ']', x.label);
   process.exit(0);
 }
 const fmt = s => (s.n ? (s.g + '/' + s.G + ' ' + s.b + '/' + s.B + ' ' + (s.lean * 100).toFixed(0) + '%') : '-');
@@ -279,7 +338,8 @@ const councilBand = COUNCIL_BAND.map(n => { const st = stat(inScope('council'), 
 const CR_DISTRICTS = ['cr-prologue', 'cr-library', 'cr-school', 'cr-clinic', 'cr-dispatch', 'cr-airport'];
 const crScope = s => s === 'cr-all' ? crOpts : TYPES.includes(s) ? crOpts.filter(x => x.t === s) : crOpts.filter(x => x.d === s);
 const crFails = [], crWarns = [];
-for (const [name, re] of WORDS) for (const s of CR_DISTRICTS.concat(['cr-all'], TYPES)) {
+const CR_WORDS = stemmed(WORDS), CR_GROUPS = stemmed(EXTRA.concat(CR_EXTRA));
+for (const [name, re] of CR_WORDS) for (const s of CR_DISTRICTS.concat(['cr-all'], TYPES)) {
   const st = stat(crScope(s), re); if (st.n < MIN_N) continue;
   const where = (TYPES.includes(s) ? 'crossroads list type ' : '') + s;
   if (st.lean >= THRESH || st.lean <= 1 - THRESH) crFails.push(name + ' in ' + where + ': ' + fmt(st));
@@ -300,10 +360,10 @@ const crBand = [];
 const CR_AP_ONLY = ['G:tenant', 'G:duty', 'G:mail'], CR_DP_AP = ['G:floor', 'G:measure'];
 const CR_SD_ONLY = ['G:vendor', 'G:notify', 'G:student'], CR_CN_ONLY = ['G:patient', 'G:privacy', 'G:downtime', 'G:hhs'], CR_CN_DP = ['G:now', 'G:safe'], CR_DP_ONLY = ['G:floor', 'G:cards', 'G:measure', 'G:chief'];
 const crBandScopes = n => CR_DISTRICTS.concat(['cr-all']).filter(s => CR_AP_ONLY.includes(n) ? (s === 'cr-airport' || s === 'cr-all') : CR_DP_AP.includes(n) ? (s === 'cr-dispatch' || s === 'cr-airport' || s === 'cr-all') : CR_DP_ONLY.includes(n) ? (s === 'cr-dispatch' || s === 'cr-all') : CR_CN_DP.includes(n) ? (s === 'cr-clinic' || s === 'cr-dispatch' || s === 'cr-airport' || s === 'cr-all') : CR_CN_ONLY.includes(n) ? (s === 'cr-clinic' || s === 'cr-all') : CR_SD_ONLY.includes(n) ? (s === 'cr-school' || s === 'cr-clinic' || s === 'cr-dispatch' || s === 'cr-airport' || s === 'cr-all') : true);
-for (const n of CROSSROADS_BAND) for (const s of crBandScopes(n)) { const st = stat(crScope(s), EXTRA.concat(CR_EXTRA).find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
+for (const n of CROSSROADS_BAND) for (const s of crBandScopes(n)) { const st = stat(crScope(s), CR_GROUPS.find(w => w[0] === n)[1]); crBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
 if (report && crOpts.length) {
   console.log('\nCrossroads (' + crGraded.length + ' graded lists, ' + crOpts.length + ' options)\n' + 'word'.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => s.padEnd(19)).join(''));
-  for (const [name, re] of WORDS.concat(EXTRA, CR_EXTRA)) console.log(name.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => fmt(stat(crScope(s), re)).padEnd(19)).join(''));
+  for (const [name, re] of CR_WORDS.concat(CR_GROUPS)) console.log(name.padEnd(18) + CR_DISTRICTS.concat(['cr-all']).map(s => fmt(stat(crScope(s), re)).padEnd(19)).join(''));
   if (crFails.length) console.log('Crossroads tells:\n  ' + crFails.join('\n  '));
   if (crWarns.length) console.log('Crossroads warnings:\n  ' + crWarns.join('\n  '));
 }
@@ -386,7 +446,7 @@ for (const [name, re] of CR_NAMES) for (const s of (name === 'N:named' ? CR_DIST
 // Crossroads (each district and cr-all); printed for Town Hall in --report only, after its other tables. The top leans
 // are printed either way, so a thin margin is visible before it becomes a failure.
 const LF_N = 4, LF_RIGHT = 0.70, LF_WN = 6, LF_WRONG = 0.90, LF_K = 2.5, LF_C = 1;
-function lfFeatures(t) {
+function lfFeatures(t, st) {
   const s = new Set();
   if (/\b(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day\b/.test(t)) s.add('<weekday>');
   if (/\b\d{1,2}:\d\d\b/.test(t)) s.add('<clock>');
@@ -394,14 +454,14 @@ function lfFeatures(t) {
   if (/\d/.test(t)) s.add('<digit>');
   if (/[“”"]/.test(t)) s.add('<quote>');
   if (/n[’']t\b/.test(t)) s.add('<n’t>');
-  for (const w of t.toLowerCase().replace(/'/g, '’').match(/[a-zà-ɏ]+(’[a-z]+)?/g) || []) s.add(w);
+  for (const w of t.toLowerCase().replace(/'/g, '’').match(/[a-zà-ɏ]+(’[a-z]+)?/g) || []) s.add(st ? stem(w) : w);
   return s;
 }
-function loneFeatures(Ls) {
+function loneFeatures(Ls, st) {
   const T = {};
   for (const L of Ls) {
     if (L.key === 'cards') continue;
-    const F = L.items.map(x => lfFeatures(markText(x))), cnt = {};
+    const F = L.items.map(x => lfFeatures(markText(x), st)), cnt = {};
     F.forEach(f => f.forEach(k => { cnt[k] = (cnt[k] || 0) + 1; }));
     const p = L.items.filter(x => x.good).length / L.items.length;
     F.forEach((f, i) => f.forEach(k => {
@@ -418,7 +478,7 @@ function loneFeatures(Ls) {
 }
 const lfFmt = r => r.k + ' ' + (r.rate >= 0.5 ? 'right ' : 'wrong ') + (r.rate >= 0.5 ? r.hit : r.n - r.hit) + '/' + r.n + ' (chance ' + (r.rate >= 0.5 ? r.exp : r.n - r.exp).toFixed(1) + ')';
 const lfTop = (rows, n) => rows.filter(r => r.n >= LF_N).sort((a, b) => Math.abs(b.z) - Math.abs(a.z)).slice(0, n);
-const lfRows = CR_DISTRICTS.concat(['cr-all']).map(s => ({s, rows: loneFeatures(crListsIn(s))}));
+const lfRows = CR_DISTRICTS.concat(['cr-all']).map(s => ({s, rows: loneFeatures(crListsIn(s), true)}));
 const lfFails = lfRows.flatMap(x => x.rows.filter(r => r.fail).map(r => x.s + ' ' + lfFmt(r)));
 if (report) {
   console.log('\nPunctuation (report only in Town Hall; cell = g/G b/B lean-to-wrong%; lone = lists where only one option has the mark: right/lists)\n' + 'mark'.padEnd(16) + scopes.map(s => s.padEnd(19)).join(''));
@@ -443,6 +503,13 @@ if (report) {
     console.log('\nCrossroads lone features (enforced)');
     for (const x of lfRows) console.log(x.s.padEnd(12) + lfTop(x.rows, 8).map(r => (r.fail ? '!' : r.flag ? '*' : '') + lfFmt(r)).join(', '));
   }
+}
+if (report) {
+  // Town Hall, stem-matched (S11): report only, after every other table, so the tables above stay byte-identical.
+  console.log('\nTown Hall, stem-matched (report only; the same words and groups with their inflections, as Crossroads is held to them)\n' + 'word'.padEnd(18) + scopes.map(s => s.padEnd(19)).join(''));
+  for (const [name, re] of stemmed(WORDS.concat(EXTRA))) console.log((enforced(name) ? name : '(' + name + ')').padEnd(18) + scopes.map(s => fmt(stat(inScope(s), re)).padEnd(19)).join(''));
+  console.log('\nTown Hall lone features, stem-matched (report only)');
+  for (const s of scopes) console.log(s.padEnd(12) + lfTop(loneFeatures(s === 'all' ? graded : graded.filter(L => district(L.file) === s), true), 8).map(r => (r.fail ? '!' : r.flag ? '*' : '') + lfFmt(r)).join(', '));
 }
 if (report) process.exit(0);  // --report prints both populations' tables and never fails
 const checks = [

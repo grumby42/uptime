@@ -227,7 +227,7 @@ const DP_DIRECTIVE = {
     {label: 'Refuse it outright: the center never shares anything with the county again', why: 'An absolute with a price nobody has counted. Lay out the options, and the owner decides.'},
     {label: 'Fold it in this month, since it saves money and the floor coped on cards on Thursday', why: 'The floor coped, helped by its drill. CAD failed because it leaned on the county. The decision is Celia’s.'},
     {label: 'You decide it now, as the IR manager, and tell the county administrator what you decided', why: 'You advise. The center’s systems are the 911 authority’s, and Celia decides.'},
-    {label: 'Petra decides: she runs both networks, and the design of each is hers to choose', why: 'Petra runs them. Who owns the 911 decision is the 911 authority, and that is Celia.'}],
+    {label: 'Petra decides: she runs both networks, and the design of each is her choice', why: 'Petra runs them. Who owns the 911 decision is the 911 authority, and that is Celia.'}],
   dfir: [
     {label: 'What the case showed: CAD failed through the county’s directory. Celia decides', good: true},
     {label: 'Tell him what the report requires: a separate network, and Celia must comply with it', why: 'A report recommends. The owner decides, knowing what the case showed.'},
@@ -276,7 +276,7 @@ const DP_INTAKE = {
 const DP_STORES = [
   {label: 'One store per client: Oxlow waits until both counsels and Lucia decide', good: true},
   {label: 'File it in both: Oxlow’s center runs the same CAD, and they need to know today', why: 'Each client’s evidence stays in its own store. Whether Oxlow hears of the address is for Lucia and both counsels.'},
-  {label: 'Merge both clients’ folders into a single Stillmark case, and decide what is shared later', why: 'Two clients, two stores. A merged folder mixes evidence nobody agreed to share.'},
+  {label: 'Merge both clients’ stores into a single Stillmark case, and decide what is shared later', why: 'Two clients, two stores. A merged folder mixes evidence nobody agreed to share.'},
   {label: 'Ring Oxlow’s supervisor and read her the address: they are our backup center', why: 'Our backup center is still another client. Counsel decides what leaves the county’s case.'}];
 
 /* ---------- DFIR, Day 19 07:30: the chief asks the consultant ---------- */
@@ -452,7 +452,7 @@ const DP_DRILLS = {
          wall: ['{t}  signin  pos{i}  CAD-01', '{t}  incident  create  pos{i}', '{t}  unit  status  M{n}  AVL']}]}
     ],
     verdicts: [
-      {label: 'Felix, on call, restarting the receiver: D-03 and D-08, with D-01 agreeing', good: true, needs: ['gateway', 'ticket'],
+      {label: 'Felix, on call, restarting the receiver: D-03 and D-08, with D-01 in support', good: true, needs: ['gateway', 'ticket'],
        needsWhy: 'the finding rests on two sources: D-03 (no vendor session) and D-08 (the ticket and the owner’s word). You read only one.',
        why: 'Each decides its part.'},
       {label: 'Likely an intruder: an admin account, at night, from outside the center, during a lag', why: 'Each of those fits on-call work. D-03 and D-08 say what it was.'},
