@@ -34,7 +34,8 @@ Object.assign(TILES, {
 /* ---------- Maps: the Town Hall war room and the town square ---------- */
 // The war room (prologue): the team board (north-west), the command table, your desk, the door south to the square.
 // The square: Town Hall's door in the north edge, the Library's door in the south edge, the School District's in the east
-// edge, the Community Clinic's in the west edge, Fire & EMS Dispatch's in the north edge beside Town Hall's.
+// edge, the Community Clinic's in the west edge, Fire & EMS Dispatch's in the north edge beside Town Hall's, the Regional
+// Airport's in the south edge beside the Library's.
 const MAPS = {
   cwar: {
     name: 'Town Hall · war room',
@@ -66,7 +67,7 @@ const MAPS = {
       "h..hhhh......hhhh..h",
       "h..................h",
       "h..................h",
-      "hhhhhhhhhDhhhhhhhhhh"
+      "hhhhhhhhhDhhhhhDhhhh"
     ],
     doors: {'9,0': {to: 'cwar', x: 9, y: 9, dir: 'up'},
       '9,10': {to: 'library', x: 15, y: 1, dir: 'down',
@@ -76,7 +77,9 @@ const MAPS = {
       '0,5': {to: 'clinic', x: 28, y: 7, dir: 'left',
         get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.sdSlate) ? undefined : 'Quillfield Community Clinic. Its door opens to you after the School Board (the Slate Badge, game).'; }},
       '15,0': {to: 'dispatch', x: 15, y: 14, dir: 'up',
-        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.cnPulse) ? undefined : 'Fire & EMS Dispatch. Its door opens to you after the Clinic Board (the Pulse Badge, game).'; }}},
+        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.cnPulse) ? undefined : 'Fire & EMS Dispatch. Its door opens to you after the Clinic Board (the Pulse Badge, game).'; }},
+      '15,10': {to: 'airport', x: 15, y: 1, dir: 'down',
+        get locked() { return (typeof G !== 'undefined' && G && G.trackId && G.f && G.f.dpRelay) ? undefined : 'The Regional Airport’s terminal offices. Their door opens to you after the Dispatch Board (the Relay Badge, game).'; }}},
     outdoor: true
   }
 };

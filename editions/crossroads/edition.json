@@ -1,9 +1,9 @@
 {
   "id": "crossroads",
   "name": "Crossroads",
-  "district": "Prologue (the Town Hall war room), the Public Library, the School District, the Community Clinic and Fire & EMS Dispatch",
+  "district": "Prologue (the Town Hall war room), the Public Library, the School District, the Community Clinic, Fire & EMS Dispatch and the Regional Airport",
   "slice": 2,
-  "blurb": "A week after Town Hall, two offers: run the region’s incident response programme as IR manager, or join the outside firm as principal DFIR consultant. Choose once; the Public Library is first, then the School District, the Community Clinic and Fire & EMS Dispatch.",
+  "blurb": "A week after Town Hall, two offers: run the region’s incident response programme as IR manager, or join the outside firm as principal DFIR consultant. Choose once; the Public Library is first, then the School District, the Community Clinic, Fire & EMS Dispatch and the Regional Airport.",
   "files": [
     "data.js",
     "quiet.js",
@@ -17,6 +17,8 @@
     "clinic-data.js",
     "clinic-story.js",
     "dispatch-data.js",
-    "dispatch-story.js"
+    "dispatch-story.js",
+    "airport-data.js",
+    "airport-story.js"
   ]
 }

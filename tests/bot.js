@@ -6,9 +6,9 @@
 // Also checks: no Quiet Thread technique ever shows up as an ordinary alert, and the series save
 // (quietThread) survives the mid-game reload.
 // Crossroads (edition 2): UPTIME_FILE=.../editions/crossroads/index.html (or UPTIME_EDITION=crossroads) plays the
-// prologue, the Public Library, the School District, the Community Clinic and Fire & EMS Dispatch on one track:
-// TRACK=manager (default) or TRACK=dfir. It checks the track lock in the series save, a save/reload mid-Library,
-// mid-district, mid-Clinic and mid-Dispatch, and Dispatch's summary.
+// prologue, the Public Library, the School District, the Community Clinic, Fire & EMS Dispatch and the Regional Airport on
+// one track: TRACK=manager (default) or TRACK=dfir. It checks the track lock in the series save, a save/reload mid-Library,
+// mid-district, mid-Clinic, mid-Dispatch and mid-Airport, and the Airport's summary.
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -192,7 +192,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheckCr = null, savedCheckSd = null, savedCheckCn = null, savedCheckDp = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheckCr = null, savedCheckSd = null, savedCheckCn = null, savedCheckDp = null, savedCheckAp = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -235,6 +235,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (CR && p.map === 'school' && !p.ui && !stats.shots.school && p.started && p.f.sdMet) { stats.shots.school = 1; await shot('school-' + TRACK); }
     if (CR && p.map === 'clinic' && !p.ui && !stats.shots.clinic && p.started && p.f.cnMet) { stats.shots.clinic = 1; await shot('clinic-' + TRACK); }
     if (CR && p.map === 'dispatch' && !p.ui && !stats.shots.dispatch && p.started && p.f.dpMet) { stats.shots.dispatch = 1; await shot('dispatch-' + TRACK); }
+    if (CR && p.map === 'airport' && !p.ui && !stats.shots.airport && p.started && p.f.apMet) { stats.shots.airport = 1; await shot('airport-' + TRACK); }
+    if (CR && p.extra && p.extra.dpSummary && !stats.dpSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.dpSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-dispatch-' + TRACK); }
     if (CR && p.extra && p.extra.cnSummary && !stats.cnSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.cnSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-clinic-' + TRACK); }
     if (CR && p.extra && p.extra.sdSummary && !stats.sdSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.sdSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-school-' + TRACK); }
     if (CR && p.extra && p.extra.lbSummary && !stats.lbSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) { stats.lbSummary = { day: p.day, fm: p.fm, seconds: Math.round((Date.now() - t0) / 1000) }; await shot('summary-library-' + TRACK); }
@@ -301,6 +303,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (CR && !savedCheckSd && p.map === 'school' && p.f.sdDrillB && !p.f.sdDirective) { savedCheckSd = await saveReload(); continue; }
     if (CR && !savedCheckCn && p.map === 'clinic' && p.f.cnDrillA && !p.f.cnDrillB) { savedCheckCn = await saveReload(); continue; }
     if (CR && !savedCheckDp && p.map === 'dispatch' && p.f.dpDrillA && !p.f.dpDrillB) { savedCheckDp = await saveReload(); continue; }
+    if (CR && !savedCheckAp && p.map === 'airport' && p.f.apDrillA && !p.f.apDrillB) { savedCheckAp = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -314,12 +317,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   if (CR) {
     const ser = await page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series') || '{}'));
     const crRes = { edition: 'crossroads', track: TRACK, mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter, errors, requests,
-      saveReloadLibrary: savedCheckCr, saveReloadSchool: savedCheckSd, saveReloadClinic: savedCheckCn, saveReloadDispatch: savedCheckDp, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, quietTechInAlertMix: quietInAlerts,
+      saveReloadLibrary: savedCheckCr, saveReloadSchool: savedCheckSd, saveReloadClinic: savedCheckCn, saveReloadDispatch: savedCheckDp, saveReloadAirport: savedCheckAp, noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, quietTechInAlertMix: quietInAlerts,
       seriesCrossroads: ser.editions && ser.editions.crossroads, final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, qt: fin.qt, cr: fin.extra && fin.extra.cr, objective: fin.objective }, stats };
     console.log(JSON.stringify(crRes, null, 1));
     await browser.close();
-    const lockOk = crRes.seriesCrossroads && crRes.seriesCrossroads.track === TRACK && crRes.seriesCrossroads.library === true && crRes.seriesCrossroads.school === true && crRes.seriesCrossroads.clinic === true && crRes.seriesCrossroads.dispatch === true;
-    process.exit(errors.length || requests.length || !savedCheckCr || !savedCheckCr.restored || !savedCheckCr.exportRoundTrip || !savedCheckSd || !savedCheckSd.restored || !savedCheckSd.exportRoundTrip || !savedCheckCn || !savedCheckCn.restored || !savedCheckCn.exportRoundTrip || !savedCheckDp || !savedCheckDp.restored || !savedCheckDp.exportRoundTrip || !stats.lbSummary || !stats.sdSummary || !stats.cnSummary || !fin.objective.done || !fin.extra.crSummary || !lockOk || fin.extra.track !== TRACK || quietInAlerts.length || !crRes.noHorizontalScroll ? 1 : 0);
+    const lockOk = crRes.seriesCrossroads && crRes.seriesCrossroads.track === TRACK && crRes.seriesCrossroads.library === true && crRes.seriesCrossroads.school === true && crRes.seriesCrossroads.clinic === true && crRes.seriesCrossroads.dispatch === true && crRes.seriesCrossroads.airport === true;
+    process.exit(errors.length || requests.length || !savedCheckCr || !savedCheckCr.restored || !savedCheckCr.exportRoundTrip || !savedCheckSd || !savedCheckSd.restored || !savedCheckSd.exportRoundTrip || !savedCheckCn || !savedCheckCn.restored || !savedCheckCn.exportRoundTrip || !savedCheckDp || !savedCheckDp.restored || !savedCheckDp.exportRoundTrip || !savedCheckAp || !savedCheckAp.restored || !savedCheckAp.exportRoundTrip || !stats.lbSummary || !stats.sdSummary || !stats.cnSummary || !stats.dpSummary || !fin.objective.done || !fin.extra.crSummary || !lockOk || fin.extra.track !== TRACK || quietInAlerts.length || !crRes.noHorizontalScroll ? 1 : 0);
   }
   const result = {
     quietTechInAlertMix: quietInAlerts,

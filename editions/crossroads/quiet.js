@@ -16,6 +16,9 @@
    Fire & EMS Dispatch: svc-print listing the network connections of DP-LOG-01, the Compact's collector at the center, at
    03:11 on Sunday (ATT&CK T1049), seen in the collector's own log (DFIR, D-06) or in the firm's status report (manager);
    counsel first, then Rae.
+   The Regional Airport: svc-print listing the airport directory's accounts at 03:13 on Monday, through the airport
+   directory's trust with the town's (ATT&CK T1087), seen in the directory's query log (DFIR, A-06) or in the firm's status
+   report (manager); counsel first, then Rae.
    The clue situations are invented (game); the technique IDs are real (QT_TECH).
    ============================================================ */
 'use strict';
@@ -31,7 +34,10 @@ const QT_CLUES = {
              seen: 'At 03:14 on Night 11 svc-print, from FD-STAFF-11’s address, listed the folders of the clinic’s Facilities share (building plans, the generator’s service records) for under a minute and opened no file. The ransomware’s writes, two hours later, came from another PC’s session; nothing in the evidence links the two. What listed the folders, and why, is unknown.'},
   // Fire & EMS Dispatch (slice 4): T1049 System Network Connections Discovery (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
   'dp-conns': {tech: 'T1049', where: 'DP-LOG-01’s own process log, Night 13 (Fire & EMS Dispatch)',
-             seen: 'At 03:11 on Night 13 svc-print, from FD-STAFF-11’s address (Town Hall’s front-desk PC) over the Compact’s link, signed in to DP-LOG-01, the Compact’s log collector on the dispatch center’s network, and listed its network connections: which of the center’s hosts send it logs (CAD-01, CAD-02, MQ-01, RMS-01, the vendor gateway, the switch). Under a minute; nothing else run. What it did with the list is unknown; nothing in the evidence links it to the lag, the vendor-account session or the ransomware.'}
+             seen: 'At 03:11 on Night 13 svc-print, from FD-STAFF-11’s address (Town Hall’s front-desk PC) over the Compact’s link, signed in to DP-LOG-01, the Compact’s log collector on the dispatch center’s network, and listed its network connections: which of the center’s hosts send it logs (CAD-01, CAD-02, MQ-01, RMS-01, the vendor gateway, the switch). Under a minute; nothing else run. What it did with the list is unknown; nothing in the evidence links it to the lag, the vendor-account session or the ransomware.'},
+  // The Regional Airport (slice 5): T1087 Account Discovery (verified on attack.mitre.org, 9 Nov 2026, ATT&CK content v20.1).
+  'ap-accounts': {tech: 'T1087', where: 'AP-DC-01’s directory query log, Night 21 (the Regional Airport)',
+             seen: 'At 03:13 on Night 21 (Sunday to Monday) svc-print, a town account, from FD-STAFF-11’s address over the Compact’s link and through the airport directory’s trust with the town’s, listed the airport directory’s accounts: one query, 214 entries returned (account names and display names; no password asked for). Nothing changed. What it did with the list is unknown; nothing in the evidence links it to the email, the vendor’s sign-ins or the ransomware.'}
 };
 
 // One line per Town Hall clue, for the suspicion file you carry (written from the Town Hall clue text; game).

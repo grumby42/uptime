@@ -87,16 +87,25 @@ const CR = /crossroads/.test(FILE);
     const out = {was, x: G.x, y: G.y, solid: !!tileDef('dispatch', G.x, G.y).solid, door: !!doorAt('dispatch', G.x, G.y), blocked: blocked('dispatch', G.x, G.y)};
     G = keep; return out;
   }) : null;
+  const mig5 = CR ? await page.evaluate(() => {
+    const keep = G;
+    G = Object.assign(newState(7), {map: 'airport', x: 27, y: 1, trackId: 'manager', f: {crRota: true, crGrowth: true, lbMet: true, lbSummary: true, sdMet: true, sdSummary: true, cnMet: true, cnSummary: true, dpMet: true, dpSummary: true, apMet: true}});
+    const was = tileDef('airport', 27, 1).solid;
+    G = decodeSave(encodeSave(G)); fixupState();
+    const out = {was, x: G.x, y: G.y, solid: !!tileDef('airport', G.x, G.y).solid, door: !!doorAt('airport', G.x, G.y), blocked: blocked('airport', G.x, G.y)};
+    G = keep; return out;
+  }) : null;
   await b.close();
   const results = [
     { name: CR ? 'old save on a wall tile (library 1,1) loads onto the nearest walkable floor tile' : 'old save on a now-wall tile (hub 1,10) loads onto the nearest walkable floor tile', ok: mig.was && !mig.solid && !mig.door && !mig.blocked && Math.abs(mig.x - mig.ox) + Math.abs(mig.y - mig.oy) <= 2, info: mig },
     { name: 'every door pair: exit wall matches the arrival side, facing away from the door', ok: r.bad.length === 0, info: r.bad },
     { name: 'every exit tile is a working door', ok: r.orphans.length === 0, info: r.orphans },
-    CR ? { name: 'checked all Crossroads doors (war room, square, Library, Library Board, School District, School Board, Clinic, Clinic Board, Dispatch, Dispatch Board: 18 one-way links)', ok: r.pairs.length === 18 && ['cwar', 'csquare', 'library', 'lboard', 'school', 'sboard', 'clinic', 'cnboard', 'dispatch', 'dpboard'].every(m => r.pairs.some(x => x.startsWith(m + ' '))), info: r.pairs }
+    CR ? { name: 'checked all Crossroads doors (war room, square, Library, Library Board, School District, School Board, Clinic, Clinic Board, Dispatch, Dispatch Board, Airport, Airport Board: 22 one-way links)', ok: r.pairs.length === 22 && ['cwar', 'csquare', 'library', 'lboard', 'school', 'sboard', 'clinic', 'cnboard', 'dispatch', 'dpboard', 'airport', 'apboard'].every(m => r.pairs.some(x => x.startsWith(m + ' '))), info: r.pairs }
        : { name: 'checked all doors (at least 38 one-way links, Water Plant and Council Chambers included)', ok: r.pairs.length >= 38 && r.pairs.some(x => /^water /.test(x)) && r.pairs.some(x => /^ptboard /.test(x)) && r.pairs.some(x => /^water 14,15 -> council /.test(x)) && r.pairs.some(x => /^council /.test(x)) && r.pairs.some(x => /^ccboard /.test(x)), info: r.pairs.length },
     CR ? { name: 'an old save standing on a School District cabinet (13,2) loads onto the nearest walkable floor tile', ok: mig2.was && !mig2.solid && !mig2.door && !mig2.blocked && Math.abs(mig2.x - 13) + Math.abs(mig2.y - 2) <= 2, info: mig2 } : null,
     CR ? { name: 'an old save standing on the Clinic’s server rack (14,1) loads onto the nearest walkable floor tile', ok: mig3.was && !mig3.solid && !mig3.door && !mig3.blocked && Math.abs(mig3.x - 14) + Math.abs(mig3.y - 1) <= 2, info: mig3 } : null,
     CR ? { name: 'an old save standing on Dispatch’s CAD rack (21,1) loads onto the nearest walkable floor tile', ok: mig4.was && !mig4.solid && !mig4.door && !mig4.blocked && Math.abs(mig4.x - 21) + Math.abs(mig4.y - 1) <= 2, info: mig4 } : null,
+    CR ? { name: 'an old save standing on the Airport’s Plinthwise server (27,1) loads onto the nearest walkable floor tile', ok: mig5.was && !mig5.solid && !mig5.door && !mig5.blocked && Math.abs(mig5.x - 27) + Math.abs(mig5.y - 1) <= 2, info: mig5 } : null,
     { name: 'no console errors or network requests', ok: errs.length === 0, info: errs }].filter(Boolean);
   const failed = results.filter(x => !x.ok);
   console.log(JSON.stringify({ suite: 'doors', passed: results.length - failed.length, failed: failed.length, results: results.map(x => x.ok ? { name: x.name, ok: true } : x), doors: r.pairs }, null, 1));

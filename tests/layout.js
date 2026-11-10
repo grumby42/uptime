@@ -226,7 +226,7 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
       return { overlap: h.bottom > s.top + 0.5 && h.top < s.bottom, truncated: ob.scrollWidth > ob.clientWidth + 1 || ob.scrollHeight > ob.clientHeight + 1 || st.scrollWidth > st.clientWidth + 1, lines: Math.round(ob.getBoundingClientRect().height / lh), sw: document.documentElement.scrollWidth, W: innerWidth }; });
     const h0 = await hud();
     check('Crossroads ' + name + ': HUD band clear of the map, nothing truncated, no horizontal scroll', !h0.overlap && !h0.truncated && h0.sw <= h0.W, h0);
-    const lo = await p.evaluate(() => { const re = /(?:\bat\(|\btext:\s*)(['"])((?:(?!\1)[^\\]|\\.)*)\1/g, all = []; for (const f of [objective, lbObjective, sdObjective, cnObjective, dpObjective]) { const src = f.toString(); let m; while ((m = re.exec(src))) all.push(m[2]); } all.sort((a, b) => b.length - a.length); return all[0]; });
+    const lo = await p.evaluate(() => { const re = /(?:\bat\(|\btext:\s*)(['"])((?:(?!\1)[^\\]|\\.)*)\1/g, all = []; for (const f of [objective, lbObjective, sdObjective, cnObjective, dpObjective, apObjective]) { const src = f.toString(); let m; while ((m = re.exec(src))) all.push(m[2]); } all.sort((a, b) => b.length - a.length); return all[0]; });
     await p.evaluate(t => { window.__ro = objective; objective = () => ({ text: t, map: 'cwar', x: 1, y: 1 }); }, lo); await sleep(150);
     const h1 = await hud();
     check('Crossroads ' + name + ': the longest objective (' + lo.length + ' chars) wraps in full, at most 3 lines', !h1.truncated && !h1.overlap && h1.lines <= 3, h1);
@@ -425,6 +425,63 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     shots.finding = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-dsp01.png' });
     for (const [k, m] of Object.entries(shots)) check('Crossroads Dispatch ' + name + ': ' + k + ' (' + m.title.trim() + ') fits above the controls, body at least 30% of the box or whole, a full option row shown', ok(m), m);
     check('Crossroads Dispatch ' + name + ': no console errors or network requests', !errs.length, errs);
+    await c.close();
+  }
+  // Crossroads, the Regional Airport (slice 5): who owns what (cards), the weekend plan (with the week-4 rota's table), the
+  // AAR's factor cards, a drill hub and an AIR-01 finding, at phone portrait, two landscape phones and desktop: each fits
+  // above the controls, nothing overflows sideways, and the body keeps at least 30% of the box (or shows whole).
+  for (const [name, opt] of Object.entries({
+    phone360: { viewport: { width: 360, height: 800 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    phoneLand: { viewport: { width: 800, height: 360 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    land844: { viewport: { width: 844, height: 390 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    desktop: { viewport: { width: 1280, height: 800 } } })) {
+    const c = await b.newContext(opt);
+    if (SETTINGS_INIT) await c.addInitScript(v => { try { localStorage.setItem('uptime.settings', v); } catch (e) {} }, SETTINGS_INIT);
+    const p = await c.newPage(); const errs = [];
+    p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+    p.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) errs.push('request ' + r.url()); });
+    const touch = !!opt.hasTouch, portrait = opt.viewport.height > opt.viewport.width;
+    const fresh = async () => {
+      await p.goto(CRF); await p.waitForFunction(() => window.__UPTIME && __UPTIME.peek().ui);
+      await p.evaluate(() => { __UPTIME.seed(5); __UPTIME.turbo(true); }); await sleep(300);
+      await p.evaluate(() => { [...document.querySelectorAll('#mopts .opt')].find(e => /New game/.test(e.textContent)).click(); });
+      for (let i = 0; i < 300; i++) { const q = await p.evaluate(() => __UPTIME.peek()); if (!q.ui && !q.busy && q.started) break; if (q.ui) await p.evaluate(() => { if (UI.mode === 'say') UI.handle('a'); else { const m = UI.modal || UI.choice; const g = m.items.findIndex(o => o.meta && o.meta.good); m.cursor = g < 0 ? 0 : g; UI.handle('a'); } }); await sleep(15); }
+      await p.evaluate(() => { __UPTIME.turbo(false); G.trackId = 'manager'; G.cr.rota = { assign: ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae'], stats: rotaStats(CR_ROTA, ['bea', 'ruth', 'paz', 'odile', 'magda', 'beatriz', 'rae']) };
+        const a = ['beatriz', 'rae', 'bea', 'ruth', 'paz', 'odile', 'magda', 'bea', 'ruth']; G.cr.sd = { rota: { assign: a, stats: rotaStats(SD_ROTA, a) } };
+        const w3 = ['ruth', 'paz', 'magda', 'bea', 'odile', 'beatriz', 'rae', 'magda', 'bea']; dpC().rota = { assign: w3, stats: rotaStats(DP_ROTA, w3) }; dpC().n15 = { n14: 'ruth', n15: 'paz' };
+        const w4 = ['magda', 'bea', 'ruth', 'paz', 'odile', 'beatriz', 'rae', 'magda', 'bea']; apC().rota = { assign: w4, stats: rotaStats(AP_ROTA, w4) };
+        Object.assign(G.f, { lbSummary: true, lbBookmark: true, sdMet: true, sdSummary: true, sdSlate: true, cnMet: true, cnSummary: true, cnPulse: true, dpMet: true, dpSummary: true, dpRelay: true, apMet: true, apDrillA: true, apDrillB: true }); G.map = 'airport'; G.x = 22; G.y = 12; });
+      await sleep(150);
+    };
+    const measure = () => p.evaluate(() => { const box = document.querySelector('#modal .mbox').getBoundingClientRect(), pad = document.getElementById('pad'), mb = document.getElementById('mbody'), mo = document.getElementById('mopts');
+      const padTop = pad.getBoundingClientRect().height ? pad.getBoundingClientRect().top : innerHeight;
+      const btnsOk = [...document.querySelectorAll('[data-btn]')].every(e => { const q = e.getBoundingClientRect(); if (!q.width) return true; const t = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return t && (t === e || e.contains(t)); });
+      const first = mo.querySelector('.opt'), fr = first ? first.getBoundingClientRect() : null, or = mo.getBoundingClientRect();
+      return { title: document.querySelector('#modal .mhead').textContent.slice(0, 40), top: Math.round(box.top), bottom: Math.round(box.bottom), padTop: Math.round(padTop), H: innerHeight, btnsOk, overflow: mb.scrollWidth > mb.clientWidth + 1,
+        box: Math.round(box.height), body: Math.round(mb.getBoundingClientRect().height), bodyAll: mb.scrollHeight <= mb.clientHeight + 1, firstRow: !fr || (fr.top >= or.top - 0.5 && fr.bottom <= or.bottom + 0.5) }; });
+    const ok = m => m.top >= 0 && (touch && portrait ? m.bottom <= m.padTop + 0.5 : m.bottom <= m.H + 0.5) && (!touch || m.btnsOk) && !m.overflow && (m.bodyAll || m.body >= 0.3 * m.box) && m.firstRow;
+    const shots = {};
+    const skipSays = async () => { for (let i = 0; i < 10 && await p.evaluate(() => UI.mode === 'say'); i++) { await p.evaluate(() => UI.handle('a')); await sleep(60); } };
+    await fresh();
+    await p.evaluate(() => { run(apOwnersTask); }); await sleep(250); await skipSays();
+    shots.owners = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-apowners.png' });
+    await fresh();
+    await p.evaluate(() => { apC().boss = { first: [] }; run(apPlanWeekend); }); await sleep(250); await skipSays();
+    shots.weekend = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-apweekend.png' });
+    check('Crossroads Airport ' + name + ': the weekend plan shows Night 27 and the week-4 rota’s table', await p.evaluate(() => /Night 27 \(Saturday to Sunday\)/.test(document.getElementById('mbody').textContent) && !!document.querySelector('#mbody table.rota')), shots.weekend);
+    await fresh();
+    await p.evaluate(() => { G.f.apNight28 = true; G.cr.aar = { total: 9, onTime: 9 }; run(apAar); }); await sleep(250); await skipSays();
+    shots.aarCards = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-apaar.png' });
+    await fresh();
+    await p.evaluate(() => { run(() => doDrill(AP_DRILLS.lastdfir)); }); await sleep(250);
+    await p.evaluate(() => UI.handle('a')); await sleep(250);
+    shots.drillHub = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-apdrill.png' });
+    await fresh();
+    await p.evaluate(() => { run(() => doReport(AP_REPORT_1)); }); await sleep(250);
+    await p.evaluate(() => UI.closeModal(0)); await sleep(250);
+    shots.finding = await measure(); await p.screenshot({ path: OUT + '/layout-crossroads-' + name + '-air01.png' });
+    for (const [k, m] of Object.entries(shots)) check('Crossroads Airport ' + name + ': ' + k + ' (' + m.title.trim() + ') fits above the controls, body at least 30% of the box or whole, a full option row shown', ok(m), m);
+    check('Crossroads Airport ' + name + ': no console errors or network requests', !errs.length, errs);
     await c.close();
   }
   // Modal share (review of Crossroads slice 1, B6), both editions: a long body with six long options, and a long body

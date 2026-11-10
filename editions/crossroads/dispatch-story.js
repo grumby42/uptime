@@ -88,7 +88,7 @@ function dpObjective() {
   }
   if (!f.dpBoard) return at('Take the Dispatch Board challenge: Delphine Okoro, through the west door.', 8, 3, 'dpboard');
   if (!f.dpSummary) return at('Imogen wants to close the week: her desk.', 9, 7);
-  return {text: 'Fire & EMS Dispatch done. Next: Regional Airport.', done: true, district: 'dispatch'};
+  return {text: 'Fire & EMS Dispatch done. Next: the Regional Airport, on the south side of the square.', done: true, district: 'dispatch'};
 }
 
 /* ---------- Triggers, interactions, talk ---------- */
@@ -722,7 +722,7 @@ async function dpSummary() {
     '<p>Open risk (game): the Compact’s own collector at the center, DP-LOG-01, is joined to the town’s directory and reachable from the whole town network over the Compact’s link, so every account with admin rights on the town’s member servers' + (qtFound('dp-conns') ? ' (svc-print among them)' : '') + ' has them on a server on the center’s network. Nobody has accepted that risk; it goes to Rae and the council’s risk committee for an owner.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, the 03:00 pattern' + (qtFound('lb-rdp') ? ', a remote-desktop sign-in on the Library’s server' : '') + (qtFound('sd-probe') ? ', pings to eleven of the district’s addresses' : '') + (qtFound('cn-folders') ? ', a listing of the clinic’s Facilities share' : '') + (qtFound('dp-conns') ? ', and now a listing of the dispatch collector’s connections' : '') + '. It continues.</p>') +
-    '<p class="big">Next: Regional Airport.</p>';
+    '<p class="big">Next: the Regional Airport. Its door is on the south side of the square, beside the Library’s.</p>';
   while (true) {
     const i = await UI.openModal('End of Fire & EMS Dispatch', body, [{label: 'Keep exploring the center', meta: {good: true}}, {label: 'Credits'}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
     if (i === 1) { await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]); continue; }

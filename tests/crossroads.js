@@ -32,7 +32,15 @@
 // consultant works the letter, collects without slowing the floor (from the standby), logs intake (an export by the account
 // owner in question gets a second export, compared), three two-source drills and DSP-01/DSP-02 (an overclaim corrected; the
 // vendor's account written as unknown; the response impact as measured); save/reload mid-Dispatch; the Relay Badge; the
-// Quiet Thread clue dp-conns (T1049); the dispatch measures on the scorecard; the summary ("Next: Regional Airport").
+// Quiet Thread clue dp-conns (T1049); the dispatch measures on the scorecard; the summary ("Next: the Regional Airport").
+// Regional Airport (slice 5), both tracks, business and office IT only: the door opens only with the Relay Badge; Day 23 is a
+// Tuesday; the manager reviews three records drills (one read with a single `needs` source is unsupported), records who owns
+// what, builds the week-4 rota with Nights 21 and 22 carried, runs the tabletop with the airport manager, meets the Airport
+// annex on Saturday (ransomware on the office network) and coordinates the boss with a weekend plan, and runs the AAR; the DFIR
+// consultant works the letter, takes only what each owner gives (a tenant's copy with its consent), logs intake, three
+// two-source drills, separate stores per owner and AIR-01/AIR-02 (an overclaim corrected; tenant records likely left, never
+// confirmed); save/reload mid-Airport; the Windsock Badge; the Quiet Thread clue ap-accounts (T1087); the summary ("Next: the
+// Compact-wide incident").
 // Usage: node tests/crossroads.js   (UPTIME_FILE=file:///.../crossroads/index.html to test another build)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -461,7 +469,7 @@ async function session(ctx, file) {
     check('Dispatch Board cleared: the Relay Badge; Day 19 (Friday); drill C (the chief wants CAD back) right and supported', dpA.relay === true && dpA.day === 19 && dpA.drillC.verdictOk && dpA.drillC.supported, dpA);
     check('Dispatch manager: the AAR adds three actions (owners arrive approved), the impact as measured, first time; Night 18’s call-out added to the plan’s overtime', dpA.aar.total === 9 && dpA.aar.onTime === 9 && dpA.impact.impactFirst === true && dpA.cover.overtime === (dpA.cover.n18 === 'swap' ? 25 : 22) + dpA.n18.overtime, dpA);
     check('Quiet Thread (manager): the firm’s status report shows svc-print listing the dispatch collector’s connections (dp-conns, T1049), not in the alert mix, not evicted', dpA.clue && dpA.tech === 'T1049' && dpA.qt && dpA.inAlerts === 0 && !dpA.evicted, dpA);
-    check('Dispatch summary: “Next: Regional Airport”; the measured times; series records Dispatch; the collector named as an open risk; the objective done', /Next: Regional Airport/.test(dpSum) && /87 s/.test(dpSum) && /Open risk/.test(dpSum) && /DP-LOG-01/.test(dpSum) && dpA.obj.done && dpA.ser.dispatch === true && dpA.ser.clinic === true, dpA.obj);
+    check('Dispatch summary: “Next: the Regional Airport”, with its door; the measured times; series records Dispatch; the collector named as an open risk; the objective moves to the Airport', /Next: the Regional Airport\. Its door is on the south side of the square/.test(dpSum) && /87 s/.test(dpSum) && /Open risk/.test(dpSum) && /DP-LOG-01/.test(dpSum) && !dpA.obj.done && dpA.obj.map === 'airport' && /Regional Airport/.test(dpA.obj.text) && dpA.ser.dispatch === true && dpA.ser.clinic === true, dpA.obj);
     const dbr = await A.page.evaluate(() => {
       const keep = G.cr.dp.boss, out = {};
       const tk = G.trackId;
@@ -502,6 +510,75 @@ async function session(ctx, file) {
       out.t1078 = DP_DRILLS.adminmgr.techs[0] === 'T1078' && /ruled out/.test(DP_DRILLS.adminmgr.path) && DP_DRILLS.vendordfir.techs[0] === 'T1133' && /can’t yet answer/.test(DP_DRILLS.vendordfir.path);
       return out; });
     check('Dispatch rules on the text: over- and under-reaction both wrong; the supervisor decides the floor, the chief response policy, medical direction the protocol; collection never slows the floor; the vendor account written honestly; impact only as measured; reporting left to the 911 authority with counsel; no NFPA text; T1078 ruled out, T1133 open', Object.values(drules).every(Boolean), drules);
+    await A.pickLabel(/^Keep exploring/); await A.settle();
+    // ---- Regional Airport (slice 5), manager track ----
+    const adoor = await A.page.evaluate(() => { const keep = G.f.dpRelay; G.f.dpRelay = false; const d = MAPS.csquare.doors['15,10'], shut = d.locked; G.f.dpRelay = keep; return { shut, open: !d.locked, to: d.to }; });
+    check('Airport: the square’s south door beside the Library’s is locked without the Relay Badge and opens with it', /Relay Badge/.test(adoor.shut || '') && adoor.open && adoor.to === 'airport', adoor);
+    await A.follow(p => p.f.apMet && !p.ui && !p.busy, []);
+    const aarr = await A.page.evaluate(() => ({ day: G.day, act: G.cr.ap.activate, hud: hudStatus(), obj: objective().text, bill: tileDef('airport', 27, 1).pal }));
+    check('Airport arrival: Day 23 (Tuesday); the annex not met (the vendor confirmed the 02:40 session on the contract’s number); no retainer call; next, the email with Odette', aarr.day === 23 && aarr.act === null && /Airport/.test(aarr.hud) && /Odette/.test(aarr.obj) && aarr.bill === 'apBill', aarr);
+    // Drill A read with one of its two `needs` sources: unsupported.
+    await A.goTo('airport', 24, 2);
+    await A.settle([], /Investigation drill/); await A.pickLabel(/^Start investigating$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/^Query: The airport’s message trace/);
+    await A.settle([], /Which question/); await A.pickLabel(/Did any airport mailbox send it/);
+    await A.settle([], /^Result/); await A.pickLabel(/^Back to the investigation$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/^Query: The deadline/);
+    await A.settle([], /Which question/); await A.pickLabel(/How urgent is it/);
+    await A.settle([], /^Result/); await A.pickLabel(/^Back to the investigation$/);
+    await A.settle([], /Budget left/); await A.pickLabel(/I have enough|Budget spent/);
+    await A.settle([], /^Verdict/); await A.pickLabel(/^Not ours: an impersonation/);
+    await A.settle([], /^Reasoning/); await A.pickLabel(/^We sent nothing to tenants/);
+    await A.settle([], /Debrief/);
+    const debAA = await A.modalText();
+    check('Airport manager drill A: the right verdict from the trace and headers alone is unsupported (the business office on a known number is also needed); T1657 tagged', /Unsupported/.test(debAA) && /two records/.test(debAA) && /T1657/.test(debAA), debAA.slice(0, 300));
+    await A.settle();
+    const srAp = await A.saveReload();
+    check('save/reload mid-Airport (manager) restores the state; the export code round-trips', srAp.same && srAp.roundTrip && srAp.before.map === 'airport', srAp);
+    await A.follow(p => p.f.apRota, []);
+    const art = await A.page.evaluate(() => ({ B: G.cr.drills.vendmgr, owners: G.cr.ap.owners, rota: G.cr.ap.rota, pre: apPre(), bill: tileDef('airport', 27, 1).pal, first: AP_ROTA.first, carry: AP_ROTA.carry, calls: Object.keys(AP_ROTA.calls).length }));
+    check('Airport manager: drill B (the 02:40 sign-in: the vendor’s scheduled work) right and supported; vendor support on demand (tick); who owns what, no wrong card; the week-4 rota carries Nights 21 and 22 from week 3 and shows no forecast calls', art.B.verdictOk && art.B.supported && art.bill === 'apBillOk' && art.owners.wrong === 0 && art.first === 21 && art.carry === 2 && art.calls === 0 && art.rota.assign[0] === art.pre[0] && art.rota.assign[1] === art.pre[1] && art.rota.assign.length === 9, art);
+    await A.follow(p => p.f.apTabletop, []);
+    const att = await A.page.evaluate(() => ({ ex: G.cr.ex, day: G.day }));
+    check('Airport manager: the tabletop with the airport manager on Wednesday (Day 24) adds an exercise and three actions', att.day === 24 && att.ex.run === 5 && att.ex.actions === 15, att);
+    await A.follow(p => p.f.apBoss, []);
+    const aboss = await A.page.evaluate(() => ({ day: G.day, boss: G.cr.ap.boss, cover: G.cr.ap.cover, act: G.cr.ap.activate, act2: G.cr.activate, desk: tileDef('airport', 11, 2).pal, patch: tileDef('airport', 14, 10).pal, ex: G.cr.ex, m: metricVals() }));
+    const wk = aboss.cover && aboss.cover.n27 === 'swap' ? 23 : 20;
+    check('Airport boss on Day 27 (Saturday): the annex met as written (ransomware on the office network), the retainer called in 15 game minutes; all three stages right first time; the weekend plan: shifts, 0 gaps, 20 of 30 h (23 if a weak Night 27 was swapped); the tabletop’s actions closed by Friday (the front desk and the tenant panel tick)', aboss.day === 27 && aboss.boss.ok && aboss.act === 15 && aboss.act2 === 15 && aboss.cover.k === 'shifts' && aboss.cover.gaps === 0 && aboss.cover.overtime === wk && aboss.m.crBudget === Math.round((wk - 30) / 30 * 100) && aboss.desk === 'apDeskOk' && aboss.patch === 'apPatchOk' && aboss.ex.closed === 15, aboss);
+    await A.follow(() => false, [], /End of the Regional Airport/);
+    const apA = await A.page.evaluate(() => ({ windsock: G.f.apWindsock, clue: qtFound('ap-accounts'), tech: QT_CLUES['ap-accounts'].tech, qt: !!QT_TECH.T1087, inAlerts: Object.keys(THREATS).length, evicted: Series.qt().evicted, obj: objective(), ser: crSeries(), aar: G.cr.aar, day: G.day, C: G.cr.drills.tenantmgr, impact: G.cr.ap.aar, n27: G.cr.ap.night27, cover: G.cr.ap.cover, badges: EDITION.badgeFlags }));
+    const apSum = await A.modalText();
+    check('Airport Board cleared: the Windsock Badge (in the edition’s badge flags); Day 29 (Monday); drill C (the tenant’s PC) right and supported', apA.windsock === true && apA.badges.includes('apWindsock') && apA.day === 29 && apA.C.verdictOk && apA.C.supported, apA);
+    check('Airport manager: the AAR adds three actions (owners arrive approved), the impact as counted, first time; Night 27’s call-out added to the weekend plan’s overtime', apA.aar.total === 12 && apA.aar.onTime === 12 && apA.impact.impactFirst === true && apA.cover.overtime === (apA.cover.n27 === 'swap' ? 23 : 20) + apA.n27.overtime, apA);
+    check('Quiet Thread (manager): the firm’s status report shows svc-print listing the airport directory’s accounts (ap-accounts, T1087), not in the alert mix, not evicted', apA.clue && apA.tech === 'T1087' && apA.qt && apA.inAlerts === 0 && !apA.evicted, apA);
+    check('Airport summary: “Next: the Compact-wide incident”; series records the Airport; the directory trust named as an open risk; the objective done', /Next: the Compact-wide incident/.test(apSum) && /Open risk/.test(apSum) && /trusts the town’s/.test(apSum) && apA.obj.done && /Compact-wide incident/.test(apA.obj.text) && apA.ser.airport === true && apA.ser.dispatch === true, apA.obj);
+    // The slice's rules, checked on the text: business IT only, one decider per decision, restore only from a checked copy, honest wording.
+    const arules = await A.page.evaluate(() => {
+      const out = {}, goods = [], all = [];
+      const add = (arr) => arr.forEach(o => { all.push(o.label); if (o.good) goods.push(o.label); });
+      [AP_ACTIVATE, AP_TT_OBJ, AP_COVER, AP_IMPACT, AP_DIRECTIVE.manager, AP_DIRECTIVE.dfir, AP_LETTER, AP_TAKE, AP_STORES, AP_SWITCH_DFIR].forEach(add);
+      AP_TT_INJECTS.forEach(i => add(i.opts)); AP_BOARD_SPECS_MGR().concat(AP_BOARD_SPECS_DFIR()).forEach(b => add(b.resp));
+      const mb = apMgrBossStages(), db = apDfirBossStages(); [mb.s1, mb.s2, db.s1, db.s2].forEach(st => add(st.resp));
+      // Over-reaction (shut the terminal, shut every host down) and under-reaction (wait for Monday) both graded wrong.
+      out.overUnder = AP_ACTIVATE.some(o => !o.good && /shut the terminal/.test(o.label)) && mb.s1.resp.some(r => !r.good && /shut each office PC/i.test(r.label)) && mb.s1.resp.some(r => !r.good && /Hold off for Joanna and Odette on Monday/.test(r.label)) && AP_TT_INJECTS[1].opts.some(o => !o.good && /airport is shut/.test(o.label));
+      // One decider: the manager on duty runs the terminal, the airport manager its network, Ansel what tenants are told, the Board any payment.
+      out.deciders = /Callum/.test(mb.s1.resp.find(r => r.good).label) && /Joanna/.test(AP_DRILLS.tenantmgr.verdicts.find(v => v.good).label) && /Ansel decides what tenants are told/.test(AP_BOARD_SPECS_DFIR()[2].resp.find(r => r.good).label) && /The Board decides/.test(AP_BOARD_SPECS_MGR()[1].resp.find(r => r.good).label) && AP_TT_INJECTS[0].opts.some(o => !o.good && /You decide it/.test(o.label));
+      // Pilots decide about their own flights; nobody promises safety.
+      out.pilots = /pilots’ call/.test(AP_TT_INJECTS[1].opts.find(o => o.good).label) && !goods.some(g => /\bsafe\b/i.test(g));
+      // Restore only from a copy checked in isolation; the rebuild keeps pw-support disabled; the check comes after the vendor's session.
+      const n27 = apNight27.toString(), n28 = apNight28.toString();
+      out.restore = db.s1.resp.some(r => !r.good && /Restore Plinthwise from the nightly copy/.test(r.label)) && /in isolation/.test(n27 + n28) && /one-time account/.test(n27) && /pw-support stays disabled/.test(n27) && /after the session/.test(n28) && /13:10/.test(n28);
+      // Tenant records: likely, never confirmed; MS-PC-01, the way in and publication unknown.
+      const r2 = id => AP_REPORT_2.claims.find(c => c.id === id) || {};
+      out.likely = r2('left').truth === 'likely' && r2('pub').truth === 'unknown' && r2('mspc').truth === 'unknown' && r2('way').truth === 'unknown' && /between 04:00 and 08:00/.test(r2('dc').text) && /likely/i.test(mb.s2.resp.find(r => r.good).label) && !goods.some(g => /confirmed stolen/.test(g));
+      // Scope: the airport's business and office IT only, with the one game line; no TSA, no depiction of access control, fuel or Wi-Fi.
+      const txt = JSON.stringify(AP_DRILLS) + JSON.stringify(AP_REPORT_1) + JSON.stringify(AP_REPORT_2) + all.join(' ') + apArrive.toString() + apBoss.toString() + JSON.stringify(FACTS.apnotam) + JSON.stringify(FACTS.apcisa) + JSON.stringify(FACTS.apacrp);
+      out.scope = /Access control and fuelling are separate systems, and they aren’t part of this/.test(apArrive.toString()) && !/\bTSA\b|Wi-?Fi|badge reader|fuel farm|runway|gate log/i.test(txt);
+      // Real facts only in their own words.
+      out.facts = /A NOTAM is a notice containing information essential to personnel concerned with flight operations/.test(FACTS.apnotam.desc) && /Aviation includes aircraft, air traffic control systems, and about 19,700 airports, heliports, and landing strips\./.test(FACTS.apcisa.desc) && /ACRP Report 140, Guidebook on Best Practices for Airport Cybersecurity, in 2015/.test(FACTS.apacrp.desc);
+      out.techs = AP_DRILLS.mailmgr.techs[0] === 'T1657' && AP_DRILLS.vendmgr.techs[0] === 'T1133' && /ruled out/.test(AP_DRILLS.vendmgr.path) && AP_DRILLS.lastdfir.techs[0] === 'T1133' && /can’t yet answer/.test(AP_DRILLS.lastdfir.path) && !Object.values(THREATS).some(t => t.tech === 'T1087');
+      return out; });
+    check('Airport rules on the text: over- and under-reaction both wrong; the manager on duty runs the terminal, the airport manager decides the network, counsel what tenants are told, the Board any payment; pilots decide their flights; restore only from a checked copy, after the vendor’s session, pw-support kept disabled; tenant records likely, never confirmed; business and office IT only; facts in their own words; T1657, T1133 ruled out and open', Object.values(arules).every(Boolean), arules);
     await A.pickLabel(/^Keep exploring/); await A.settle();
     // A fresh save on this browser: the other track is locked; New Game+ opens it.
     await A.page.evaluate(() => { started = false; newGame(); });
@@ -743,8 +820,56 @@ async function session(ctx, file) {
     check('DSP-01: the session through Stillmark’s network goes out as “Likely” (the overclaim corrected and counted); who used the account as “Unknown”; the lag’s measured times as “Confirmed”', /Likely:<\/b> That session came through Stillmark’s own support network/.test(filedD) && /Unknown:<\/b> Who used sm-support that night/.test(filedD) && /Confirmed:<\/b> During the lag, answer-to-dispatch/.test(filedD) && /corrected in review/.test(filedD) && await B.page.evaluate(() => G.cr.reports.dp1.over === 1), filedD.slice(0, 400));
     await B.follow(() => false, [], /End of Fire & EMS Dispatch/);
     const dpB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.dp2, relay: G.f.dpRelay, obj: objective(), ser: crSeries(), corrected: G.cr.corrected, sw: G.f.dpSwitch, stores: G.f.dpStores, m: metricVals(), day: G.day }));
-    check('DFIR Dispatch: DSP-02 filed, 53 custody items (35 + Dispatch 18), the chief’s question answered, separate stores, Relay Badge, the dispatch measures on the scorecard, summary “Next: Regional Airport”', dpB.cu.items === 53 && !!dpB.r2 && dpB.sw && dpB.stores && dpB.relay && dpB.obj.done && dpB.ser.dispatch === true && dpB.day === 19 && dpB.m.crDispatch === 87 && dpB.m.crAnswered === 100 && /Next: Regional Airport/.test(await B.modalText()), dpB);
+    check('DFIR Dispatch: DSP-02 filed, 53 custody items (35 + Dispatch 18), the chief’s question answered, separate stores, Relay Badge, the dispatch measures on the scorecard, summary “Next: the Regional Airport”', dpB.cu.items === 53 && !!dpB.r2 && dpB.sw && dpB.stores && dpB.relay && !dpB.obj.done && dpB.obj.map === 'airport' && dpB.ser.dispatch === true && dpB.day === 19 && dpB.m.crDispatch === 87 && dpB.m.crAnswered === 100 && /Next: the Regional Airport/.test(await B.modalText()), dpB);
     check('DSP-02: no file on CAD encrypted (confirmed); cut off from the county’s directory (confirmed); nothing left on CAD-01 (likely); the response impact as measured; harm unknown', await B.page.evaluate(() => { const c = id => dpReport2().claims.find(x => x.id === id); return c('enc').truth === 'confirmed' && /between 13:00 and 15:00/.test(c('enc').text) && c('enc').evidence.length === 3 && c('cut').truth === 'confirmed' && c('clean').truth === 'likely' && c('time').truth === 'confirmed' && /87 s/.test(c('time').text) && /Oxlow’s answer times/.test(c('time').evidence[0]) && c('harm').truth === 'unknown' && c('link').truth === 'unknown'; }));
+    await B.pickLabel(/^Keep exploring/); await B.settle();
+    // ---- Regional Airport (slice 5), DFIR track ----
+    await B.follow(p => p.f.apTake, []);
+    check('Airport DFIR: the letter first, then what the firm may take: the airport’s own records and a tenant’s copy only as it is given (Day 23, Tuesday)', await B.page.evaluate(() => G.f.apLetter && G.f.apTake && G.day === 23 && /only as Imre gives it/.test(AP_TAKE.find(o => o.good).label)));
+    const cuA0 = await B.page.evaluate(() => JSON.parse(JSON.stringify(G.cr.custody)));
+    await B.follow(p => p.f.apIntake, []);
+    const cuA = await B.page.evaluate(() => ({ cu: G.cr.custody, req: G.cr.ap.requests, clue: qtFound('ap-accounts'), bill: tileDef('airport', 27, 1).pal, a02: AP_INTAKE.a02.opts.find(o => o.good).label }));
+    check('Airport DFIR intake: six items, then A-07 and A-08, all complete; the tenant’s copy logged as the tenant’s, with its consent’s limit; the vendor request logged with its date as it went; vendor support on demand', cuA.cu.items === cuA0.items + 8 && cuA.cu.complete === cuA0.complete + 8 && cuA.cu.gaps === cuA0.gaps && cuA.req && cuA.req.date === 'Day 23 (Tuesday) 11:15' && cuA.bill === 'apBillOk' && /flight school’s, with its consent/.test(cuA.a02), { now: cuA, before: cuA0 });
+    check('Quiet Thread (DFIR): seen in A-06, the directory’s query log (ap-accounts, T1087)', cuA.clue && await B.page.evaluate(() => QT_CLUES['ap-accounts'].tech === 'T1087' && !!QT_TECH.T1087));
+    // Drill A with one of its two needed sources and the supporting one: unsupported.
+    await B.goTo('airport', 22, 11);
+    await B.settle([], /Investigation drill/); await B.pickLabel(/^Start investigating$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/^Query: A-01/);
+    await B.settle([], /Which question/); await B.pickLabel(/Did any airport mailbox send a message/);
+    await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/^Query: A-04/);
+    await B.settle([], /Which question/); await B.pickLabel(/Did the invoice account change/);
+    await B.settle([], /^Result/); await B.pickLabel(/^Back to the investigation$/);
+    await B.settle([], /Budget left/); await B.pickLabel(/I have enough|Budget spent/);
+    await B.settle([], /^Verdict/); await B.pickLabel(/^No: an impersonation/);
+    await B.settle([], /^Reasoning/); await B.pickLabel(/^A-01: we sent nothing/);
+    await B.settle([], /Debrief/);
+    const debAB = await B.modalText();
+    check('Airport DFIR drill A: two decisive sources; A-01 and the supporting A-04 without A-02 is unsupported', /Unsupported/.test(debAB) && /two sources/.test(debAB), debAB.slice(0, 300));
+    await B.settle();
+    const srAB = await B.saveReload();
+    check('save/reload mid-Airport (DFIR) restores the state; the export code round-trips', srAB.same && srAB.roundTrip && srAB.before.track === 'dfir' && srAB.before.map === 'airport', srAB);
+    await B.follow(p => p.f.apDrillC, []);
+    check('Airport DFIR drills B (the 02:40 session: the vendor’s update) and C (the vendor’s log and our flows, worded honestly) right and supported; separate stores per owner', await B.page.evaluate(() => G.cr.drills.venddfir.verdictOk && G.cr.drills.venddfir.supported && G.cr.drills.lastdfir.verdictOk && G.cr.drills.lastdfir.supported && G.f.apStores));
+    // AIR-01: write "network" (likely) as confirmed: an overclaim, corrected and counted.
+    await B.goTo('airport', 22, 11);
+    await B.settle([], /Report · /); await B.pickLabel(/^Start writing$/);
+    const nAir1 = await B.page.evaluate(() => AP_REPORT_1.claims.length);
+    for (let n = 1; n <= nAir1; n++) {
+      await B.settle([], /Finding \d+ of \d+/);
+      const card = (await B.page.textContent('#modal .card')).trim();
+      const cl = await B.page.evaluate(t => { const c = AP_REPORT_1.claims.find(x => x.text === t); return c ? { id: c.id, truth: c.truth } : null; }, card);
+      const want = cl && cl.id === 'network' ? 'Confirmed' : { confirmed: 'Confirmed', likely: 'Likely', unknown: 'Unknown' }[cl && cl.truth];
+      await B.pickLabel(new RegExp('^' + want + '$'));
+      await B.settle([], n < nAir1 ? /Finding \d+ of \d+/ : /Report filed/);
+    }
+    const filedA = await B.page.innerHTML('#modal');
+    await B.settle();
+    check('AIR-01: the Wednesday connections through Plinthwise’s network go out as “Likely” (the overclaim corrected and counted); who sent the email as “Unknown”; the ports map as “Confirmed”', /Likely:<\/b> The Wednesday connections came from Plinthwise’s own support network/.test(filedA) && /Unknown:<\/b> Who sent the email/.test(filedA) && /Confirmed:<\/b> Of the office switch’s 46 ports/.test(filedA) && /corrected in review/.test(filedA) && await B.page.evaluate(() => G.cr.reports.ap1.over === 1), filedA.slice(0, 400));
+    await B.follow(() => false, [], /End of the Regional Airport/);
+    const apB = await B.page.evaluate(() => ({ cu: G.cr.custody, r2: G.cr.reports.ap2, windsock: G.f.apWindsock, obj: objective(), ser: crSeries(), sw: G.f.apSwitch, stores: G.f.apStores, day: G.day }));
+    check('DFIR Airport: AIR-02 filed, 77 custody items (53 + the Airport’s 24: A-01 to A-23 and the shop’s own store, S-01), the airport manager’s question answered, separate stores per owner, Windsock Badge, summary “Next: the Compact-wide incident”', apB.cu.items === 77 && !!apB.r2 && apB.sw && apB.stores && apB.windsock && apB.obj.done && apB.ser.airport === true && apB.day === 29 && /Next: the Compact-wide incident/.test(await B.modalText()), apB);
+    check('AIR-02: the office systems encrypted from AP-OF-03 (confirmed); AP-DC-01 not encrypted over the window covered (confirmed); the export (confirmed); tenant records left (likely); MS-PC-01, the way in and publication unknown', await B.page.evaluate(() => { const c = id => AP_REPORT_2.claims.find(x => x.id === id); return c('enc').truth === 'confirmed' && c('dc').truth === 'confirmed' && /between 04:00 and 08:00/.test(c('dc').text) && c('export').truth === 'confirmed' && c('left').truth === 'likely' && c('mspc').truth === 'unknown' && c('way').truth === 'unknown' && c('pub').truth === 'unknown'; }));
     await B.pickLabel(/^Keep exploring/); await B.settle();
     await B.page.evaluate(() => storeSet(encodeSave(G)));
     const after = await B.page.evaluate(() => localStorage.getItem('uptime.slice1.save'));
