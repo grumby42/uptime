@@ -1,5 +1,5 @@
 // Crossroads (edition 2) checks: the prologue and the Public Library, both tracks, with real keyboard input.
-// Covers: the series menu lists Crossroads between Town Hall and "coming later"; carry-over without a Town Hall save
+// Covers: the series menu lists Crossroads between Town Hall and Charter (then "coming later"); carry-over without a Town Hall save
 // (fresh defaults) and with one (rank, badges as history, the Charter Badge's Focus, the suspicion file), the Town Hall
 // save byte-for-byte unchanged afterwards; the name plate; the rota primitive (Magda's five nights: tired nights 3-5, a
 // forecast in Evidence and Focus, then Focus -10 on the morning after a tired night and a thin first look at the boss);
@@ -48,7 +48,7 @@
 // promised, runs the cross-member AAR and the roadmap; the DFIR consultant keeps four cases in four stores, logs intake (the
 // link's gap as a gap), three two-source drills, four reports (an overclaim corrected), the report under challenge (likely
 // held, then revised on new evidence); Rae's suspicion file laid out, every clue in its own district's words, still open;
-// the Compact Board (the Compass Badge); the edition ending ("Next edition: coming later"), the summary across every district,
+// the Compact Board (the Compass Badge); the edition ending ("Next: Charter", the third edition on the series menu), the summary across every district,
 // the metric names from the career ladder; New Game+ in play: from the ending to a fresh save on the other track in its own
 // slot, the first save and the Town Hall save left byte-for-byte as they were, both reachable from the title screen;
 // save/reload mid-finale on both tracks.
@@ -185,8 +185,8 @@ async function session(ctx, file) {
   // ---- The series menu ----
   {
     const html = fs.readFileSync(MENU, 'utf8');
-    const iT = html.indexOf('editions/town-hall/index.html'), iC = html.indexOf('editions/crossroads/index.html'), iS = html.indexOf('Next edition: coming later');
-    check('series menu: Town Hall, then Crossroads, then “Next edition: coming later”', iT > 0 && iC > iT && iS > iC, { iT, iC, iS });
+    const iT = html.indexOf('editions/town-hall/index.html'), iC = html.indexOf('editions/crossroads/index.html'), iH = html.indexOf('editions/charter/index.html'), iS = html.indexOf('Next edition: coming later');
+    check('series menu: Town Hall, then Crossroads, then Charter, then “Next edition: coming later”', iT > 0 && iC > iT && iH > iC && iS > iH, { iT, iC, iH, iS });
   }
 
   // ======== A: manager track, no Town Hall save ========
@@ -650,7 +650,7 @@ async function session(ctx, file) {
     const fnEndA = await A.modalText();
     check('Finale manager: the cross-member AAR adds three actions (owners arrive approved), the impact as counted, first time; the roadmap’s four lines; Monday', fnA.aar.total === 15 && fnA.aar.onTime === 15 && fnA.fn.aar.impactFirst === true && fnA.fn.aar.factorsWrong === 0 && fnA.fn.roadmap.wrong === 0 && fnA.day === 36, fnA.fn);
     check('The Compact Board cleared: the Compass Badge (in the edition’s badge flags), three rounds right first time', fnA.compass === true && fnA.badges.includes('fnCompass') && fnA.fn.board.first.every(Boolean), fnA.fn.board);
-    check('The edition ending: “Next edition: coming later”; the summary across every district, prologue to finale; the thread still open; series records the finale, done, and New Game+; the objective done', /Next edition: coming later/.test(fnEndA) && /Every district, prologue to finale/.test(fnEndA) && ['The Public Library', 'The School District', 'The Community Clinic', 'Fire & EMS Dispatch', 'The Regional Airport', 'The Compact-wide incident'].every(d => fnEndA.includes(d)) && /Who, and why: open/.test(fnEndA) && fnA.ser.finale === true && fnA.ser.done === true && fnA.ser.ngPlus === true && fnA.obj.done, { obj: fnA.obj, ser: fnA.ser });
+    check('The edition ending: “Next: Charter” (the third edition is on the series menu); the summary across every district, prologue to finale; the thread still open; series records the finale, done, and New Game+; the objective done', /Next: Charter/.test(fnEndA) && !/coming later/.test(fnEndA) && /Every district, prologue to finale/.test(fnEndA) && ['The Public Library', 'The School District', 'The Community Clinic', 'Fire & EMS Dispatch', 'The Regional Airport', 'The Compact-wide incident'].every(d => fnEndA.includes(d)) && /Who, and why: open/.test(fnEndA) && fnA.ser.finale === true && fnA.ser.done === true && fnA.ser.ngPlus === true && fnA.obj.done, { obj: fnA.obj, ser: fnA.ser });
     check('Scorecard metric names follow the career ladder (§2A/§2B)', ['Exercises run: actions closed', 'Time to activate outside help (game min)', 'Rota gaps (hours)', 'AAR actions closed by due date', 'Budget variance (overtime against budget)', 'Findings with every needs met', 'Claims later corrected'].every(l => fnA.labels.includes(l)) && !fnA.labels.includes('Overtime against budget'), fnA.labels);
     // The finale's rules, checked on the text: defender-side only, one decider per decision, the way back, honest wording.
     const frules = await A.page.evaluate(() => {
@@ -1089,7 +1089,7 @@ async function session(ctx, file) {
     await B.follow(() => false, [], /The end of the Crossroads edition/);
     const fnB = await B.page.evaluate(() => ({ compass: G.f.fnCompass, board: G.cr.fn.board, obj: objective(), ser: crSeries(), qt: Series.qt().evicted, reports: Object.keys(G.cr.reports) }));
     const fnEndB = await B.modalText();
-    check('DFIR ending: the Compact Board cleared (the Compass Badge), the report challenge in the summary, “Next edition: coming later”, the reports column in the summary across every district; New Game+ granted; the thread open', fnB.compass && fnB.board.first.every(Boolean) && /The report under challenge/.test(fnEndB) && /Next edition: coming later/.test(fnEndB) && /Reports \(game score\)/.test(fnEndB) && fnB.ser.finale === true && fnB.ser.ngPlus === true && fnB.obj.done && !fnB.qt, fnB);
+    check('DFIR ending: the Compact Board cleared (the Compass Badge), the report challenge in the summary, “Next: Charter”, the reports column in the summary across every district; New Game+ granted; the thread open', fnB.compass && fnB.board.first.every(Boolean) && /The report under challenge/.test(fnEndB) && /Next: Charter/.test(fnEndB) && !/coming later/.test(fnEndB) && /Reports \(game score\)/.test(fnEndB) && fnB.ser.finale === true && fnB.ser.ngPlus === true && fnB.obj.done && !fnB.qt, fnB);
     // New Game+ from the DFIR ending: the manager track on the second slot; the first save and Town Hall's untouched.
     await B.pickLabel(/^New Game\+: the other track, on a fresh save$/);
     await B.settle([], /New Game\+/);

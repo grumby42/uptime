@@ -74,7 +74,7 @@ function fnObjective() {
   }
   if (!f.fnBoard) return at('14:00: the Compact Board. Ivor Penhallow, through the west door.', 8, 3, 'fnboard');
   if (!f.fnSummary) return at('16:00: Edda wants to close the week, at her desk.', 22, 2);
-  return {text: 'The Compact-wide incident is closed, and the edition with it. Next edition: coming later.', done: true, district: 'finale'};
+  return {text: 'The Compact-wide incident is closed, and the edition with it. Next: Charter.', done: true, district: 'finale'};
 }
 
 /* ---------- Triggers, interactions, talk ---------- */
@@ -602,7 +602,7 @@ async function fnSummary() {
     '<h3>Every district, prologue to finale (game)</h3>' + fnHistoryRows() +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: svc-print, FD-STAFF-11’s address, the 03:00 pattern' + (qtCount() ? ', ' + qtCount() + ' notes in the suspicion file' : '') + '. Who, and why: open. It goes onward with the file.</p>') +
-    '<p class="big">Next edition: coming later</p>';
+    '<p class="big">Next: Charter, the third edition (the series menu).</p>';
   const ngSave = crNgSave(), canNg = !G.ngPlus;
   while (true) {
     const items = [{label: 'Keep exploring the operations room', meta: {good: true}}, {label: 'Credits'}];
@@ -610,7 +610,7 @@ async function fnSummary() {
     items.push({label: 'Title screen', meta: {k: 'title'}});
     const i = await UI.openModal('The end of the Crossroads edition', body, items, {nav: 'district-end', closable: false, cls: 'summary'});
     const k = items[i].meta && items[i].meta.k;
-    if (items[i].label === 'Credits') { await UI.openModal('Credits', creditsHtml() + '<p class="big">Next edition: coming later</p>', [{label: 'Back'}]); continue; }
+    if (items[i].label === 'Credits') { await UI.openModal('Credits', creditsHtml() + '<p class="big">Next: Charter, the third edition (the series menu).</p>', [{label: 'Back'}]); continue; }
     storeSet(encodeSave(G));
     if (k === 'ng' && !ngSave) { if (await fnNgPlusStart()) return; continue; }
     if (k === 'ng' || k === 'title') { started = false; titleScreen(); }

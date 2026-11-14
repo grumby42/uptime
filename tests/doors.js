@@ -5,11 +5,11 @@
 //  - arrival: facing the exit direction, one step past a door in the destination that leads back.
 //  - round trip: that door's own exit direction is the opposite one and it lands on the tile you stepped from.
 //  - every exit tile (E) is a real door, and nobody stands on an arrival tile.
-// Usage: node doors.js   (UPTIME_FILE=file:///... to test another build; UPTIME_EDITION=crossroads for edition 2)
+// Usage: node doors.js   (UPTIME_FILE=file:///... to test another build; UPTIME_EDITION=crossroads for edition 2, =charter for edition 3)
 const { chromium } = require('playwright');
 const path = require('path');
 const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../editions/' + (process.env.UPTIME_EDITION || 'town-hall') + '/index.html');
-const CR = /crossroads/.test(FILE);
+const CR = /crossroads/.test(FILE), CH = /charter/.test(FILE);
 (async () => {
   const b = await chromium.launch(); const page = await (await b.newContext()).newPage(); const errs = [];
   page.on('pageerror', e => errs.push(e.message)); page.on('console', m => m.type() === 'error' && errs.push(m.text()));
@@ -48,8 +48,15 @@ const CR = /crossroads/.test(FILE);
     return {pairs, bad, orphans};
   });
   // An old save standing on hub 1,10 (a wall since the door-orientation fix) loads onto the nearest floor tile.
-  const mig = await page.evaluate(CR => {
+  const mig = await page.evaluate(([CR, CH]) => {
     const keep = G;
+    if (CH) {  // Charter: an old save standing on the risk register (3,1) loads onto the nearest floor tile.
+      G = Object.assign(newState(7), {map: 'choffice', x: 3, y: 1});
+      const was = tileDef('choffice', 3, 1).solid;
+      G = decodeSave(encodeSave(G)); fixupState();
+      const out = {was, x: G.x, y: G.y, solid: !!tileDef('choffice', G.x, G.y).solid, door: !!doorAt('choffice', G.x, G.y), blocked: blocked('choffice', G.x, G.y), ox: 3, oy: 1};
+      G = keep; return out;
+    }
     if (CR) {  // Crossroads: an old save standing on a Library shelf (1,1) loads onto the nearest floor tile.
       G = Object.assign(newState(7), {map: 'library', x: 1, y: 1, trackId: 'manager', f: {crRota: true, crGrowth: true, lbMet: true}});
       const was = tileDef('library', 1, 1).solid;
@@ -62,7 +69,7 @@ const CR = /crossroads/.test(FILE);
     G = decodeSave(encodeSave(G)); fixupState();
     const out = {was, x: G.x, y: G.y, solid: !!tileDef('hub', G.x, G.y).solid, door: !!doorAt('hub', G.x, G.y), blocked: blocked('hub', G.x, G.y), ox: 1, oy: 10};
     G = keep; return out;
-  }, CR);
+  }, [CR, CH]);
   const mig2 = CR ? await page.evaluate(() => {
     const keep = G;
     G = Object.assign(newState(7), {map: 'school', x: 13, y: 2, trackId: 'dfir', f: {crRota: true, crGrowth: true, lbMet: true, lbSummary: true, sdMet: true}});
@@ -97,10 +104,11 @@ const CR = /crossroads/.test(FILE);
   }) : null;
   await b.close();
   const results = [
-    { name: CR ? 'old save on a wall tile (library 1,1) loads onto the nearest walkable floor tile' : 'old save on a now-wall tile (hub 1,10) loads onto the nearest walkable floor tile', ok: mig.was && !mig.solid && !mig.door && !mig.blocked && Math.abs(mig.x - mig.ox) + Math.abs(mig.y - mig.oy) <= 2, info: mig },
+    { name: CH ? 'Charter: an old save on the risk register (3,1) loads onto the nearest walkable floor tile' : CR ? 'old save on a wall tile (library 1,1) loads onto the nearest walkable floor tile' : 'old save on a now-wall tile (hub 1,10) loads onto the nearest walkable floor tile', ok: mig.was && !mig.solid && !mig.door && !mig.blocked && Math.abs(mig.x - mig.ox) + Math.abs(mig.y - mig.oy) <= 2, info: mig },
     { name: 'every door pair: exit wall matches the arrival side, facing away from the door', ok: r.bad.length === 0, info: r.bad },
     { name: 'every exit tile is a working door', ok: r.orphans.length === 0, info: r.orphans },
-    CR ? { name: 'checked all Crossroads doors (war room, square, Library, Library Board, School District, School Board, Clinic, Clinic Board, Dispatch, Dispatch Board, Airport, Airport Board, the Compact operations room, the Compact Board: 26 one-way links)', ok: r.pairs.length === 26 && ['cwar', 'csquare', 'library', 'lboard', 'school', 'sboard', 'clinic', 'cnboard', 'dispatch', 'dpboard', 'airport', 'apboard', 'fnops', 'fnboard'].every(m => r.pairs.some(x => x.startsWith(m + ' '))), info: r.pairs }
+    CH ? { name: 'checked all Charter doors (the Compact offices and the Compact Board room: 2 one-way links, each with its matching door back)', ok: r.pairs.length === 2 && ['choffice', 'chboard'].every(m => r.pairs.some(x => x.startsWith(m + ' '))), info: r.pairs }
+    : CR ? { name: 'checked all Crossroads doors (war room, square, Library, Library Board, School District, School Board, Clinic, Clinic Board, Dispatch, Dispatch Board, Airport, Airport Board, the Compact operations room, the Compact Board: 26 one-way links)', ok: r.pairs.length === 26 && ['cwar', 'csquare', 'library', 'lboard', 'school', 'sboard', 'clinic', 'cnboard', 'dispatch', 'dpboard', 'airport', 'apboard', 'fnops', 'fnboard'].every(m => r.pairs.some(x => x.startsWith(m + ' '))), info: r.pairs }
        : { name: 'checked all doors (at least 38 one-way links, Water Plant and Council Chambers included)', ok: r.pairs.length >= 38 && r.pairs.some(x => /^water /.test(x)) && r.pairs.some(x => /^ptboard /.test(x)) && r.pairs.some(x => /^water 14,15 -> council /.test(x)) && r.pairs.some(x => /^council /.test(x)) && r.pairs.some(x => /^ccboard /.test(x)), info: r.pairs.length },
     CR ? { name: 'an old save standing on a School District cabinet (13,2) loads onto the nearest walkable floor tile', ok: mig2.was && !mig2.solid && !mig2.door && !mig2.blocked && Math.abs(mig2.x - 13) + Math.abs(mig2.y - 2) <= 2, info: mig2 } : null,
     CR ? { name: 'an old save standing on the Clinic’s server rack (14,1) loads onto the nearest walkable floor tile', ok: mig3.was && !mig3.solid && !mig3.door && !mig3.blocked && Math.abs(mig3.x - 14) + Math.abs(mig3.y - 1) <= 2, info: mig3 } : null,

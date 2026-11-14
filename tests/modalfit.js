@@ -1,7 +1,7 @@
 // Modal fit (maintenance slice 1): every graded modal, in both editions, at landscape phones 800x360 and 844x390,
 // portrait phones 390x844 and 360x640, and desktop 1280x800. Fails if any answer option is clipped or off-screen.
 //  - The modals: every graded modal the three desktop bots open in a full play (Town Hall; Crossroads, both tracks),
-//    recorded with UPTIME_MODAL_LOG (tests/bot.js), plus the cases tests/modalcases.js builds from each edition's own data:
+//    recorded with UPTIME_MODAL_LOG (tests/bot.js; Charter's prologue and Budget too, since edition 3), plus the cases tests/modalcases.js builds from each edition's own data:
 //    every drill (hub, questions, verdict, reasoning, alternatives) with the findings empty, longest first and shortest
 //    first; every report finding at every position a seed can give it; every clue stage with its clues as written,
 //    longest first and shortest first.
@@ -35,7 +35,7 @@ const MC = require('./modalcases');
 const ROOT = path.resolve(__dirname, '..');
 const OUT = process.env.UPTIME_OUT || __dirname + '/out';
 fs.mkdirSync(OUT, { recursive: true });
-const TH = 'file://' + ROOT + '/editions/town-hall/index.html', CRF = 'file://' + ROOT + '/editions/crossroads/index.html';
+const TH = 'file://' + ROOT + '/editions/town-hall/index.html', CRF = 'file://' + ROOT + '/editions/crossroads/index.html', CHF = 'file://' + ROOT + '/editions/charter/index.html';
 const VIEWPORTS = {
   land800x360: { viewport: { width: 800, height: 360 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
   land844x390: { viewport: { width: 844, height: 390 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
@@ -57,13 +57,14 @@ async function corpus() {
     const rc = await Promise.all([
       runBot({ UPTIME_MODAL_LOG: dir + '/town-hall.jsonl', UPTIME_FILE: TH }, dir + '/bot-th'),
       runBot({ UPTIME_MODAL_LOG: dir + '/cr-manager.jsonl', UPTIME_FILE: CRF, TRACK: 'manager' }, dir + '/bot-crm'),
-      runBot({ UPTIME_MODAL_LOG: dir + '/cr-dfir.jsonl', UPTIME_FILE: CRF, TRACK: 'dfir' }, dir + '/bot-crd')]);
-    check('the three desktop bots that record the graded modals finish (Town Hall, Crossroads manager, Crossroads DFIR)', rc.every(x => x === 0), rc);
+      runBot({ UPTIME_MODAL_LOG: dir + '/cr-dfir.jsonl', UPTIME_FILE: CRF, TRACK: 'dfir' }, dir + '/bot-crd'),
+      runBot({ UPTIME_MODAL_LOG: dir + '/charter.jsonl', UPTIME_FILE: CHF }, dir + '/bot-ch')]);
+    check('the four desktop bots that record the graded modals finish (Town Hall, Crossroads manager, Crossroads DFIR, Charter)', rc.every(x => x === 0), rc);
   }
   const read = f => fs.existsSync(dir + '/' + f) ? fs.readFileSync(dir + '/' + f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
-  const th = read('town-hall.jsonl'), cr = read('cr-manager.jsonl').concat(read('cr-dfir.jsonl'));
+  const th = read('town-hall.jsonl'), cr = read('cr-manager.jsonl').concat(read('cr-dfir.jsonl')), ch = read('charter.jsonl');
   const dedupe = L => { const seen = new Set(); return L.filter(m => { const k = m.title + '\u0001' + m.body + '\u0001' + m.items.map(i => i.label).join('\u0001'); if (seen.has(k)) return false; seen.add(k); return true; }); };
-  return { th: dedupe(th).map((m, i) => Object.assign(m, { id: 'played#' + i + ' ' + m.title.slice(0, 40) })), cr: dedupe(cr).map((m, i) => Object.assign(m, { id: 'played#' + i + ' ' + m.title.slice(0, 40) })) };
+  return { th: dedupe(th).map((m, i) => Object.assign(m, { id: 'played#' + i + ' ' + m.title.slice(0, 40) })), cr: dedupe(cr).map((m, i) => Object.assign(m, { id: 'played#' + i + ' ' + m.title.slice(0, 40) })), ch: dedupe(ch).map((m, i) => Object.assign(m, { id: 'played#' + i + ' ' + m.title.slice(0, 40) })) };
 }
 
 // Page side: open each case and measure it. Returns the failures and a summary.
@@ -287,10 +288,10 @@ function toastCheck() {
   const b = await chromium.launch();
   const SHOTS = process.env.SHOTS;
   if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
-  for (const [ed, file, dir, played] of [['Town Hall', TH, 'town-hall', C.th], ['Crossroads', CRF, 'crossroads', C.cr]]) {
+  for (const [ed, file, dir, played] of [['Town Hall', TH, 'town-hall', C.th], ['Crossroads', CRF, 'crossroads', C.cr], ['Charter', CHF, 'charter', C.ch]]) {
     const N = MC.names(ROOT + '/editions/' + dir);
-    check(ed + ': the generator finds drill sets' + (dir === 'crossroads' ? ', reports' : '') + ' and clue stages (' + N.drills.length + ' drill sets, ' + N.reports.length + ' reports, ' + N.stages.length + ' stage functions)', N.drills.length >= (dir === 'crossroads' ? 6 : 8) && N.stages.length >= (dir === 'crossroads' ? 12 : 1) && (dir !== 'crossroads' || N.reports.length >= 10), N);
-    check(ed + ': the recorded play has graded modals (' + played.length + ')', played.length >= (dir === 'crossroads' ? 150 : 150), played.length);
+    check(ed + ': the generator finds drill sets' + (dir === 'crossroads' ? ', reports' : '') + ' and clue stages (' + N.drills.length + ' drill sets, ' + N.reports.length + ' reports, ' + N.stages.length + ' stage functions)', N.drills.length >= (dir === 'charter' ? 1 : dir === 'crossroads' ? 6 : 8) && N.stages.length >= (dir === 'charter' ? 0 : dir === 'crossroads' ? 12 : 1) && (dir !== 'crossroads' || N.reports.length >= 10), N);
+    check(ed + ': the recorded play has graded modals (' + played.length + ')', played.length >= (dir === 'charter' ? 30 : 150), played.length);
     for (const [vn, opt] of Object.entries(VIEWPORTS)) {
       const c = await b.newContext(opt); const errs = [];
       if (SETTINGS_INIT) await c.addInitScript(v => { try { localStorage.setItem('uptime.settings', v); } catch (e) {} }, SETTINGS_INIT);
@@ -302,8 +303,8 @@ function toastCheck() {
       await p.evaluate(() => { [...document.querySelectorAll('#mopts .opt')].find(e => /New game/.test(e.textContent)).click(); });
       for (let i = 0; i < 400; i++) {
         const q = await p.evaluate(() => __UPTIME.peek());
-        if (!q.ui && !q.busy && q.started && (dir === 'crossroads' || (q.party && q.party.length))) break;
-        if (!q.ui) { if (!q.busy && q.started && dir !== 'crossroads' && !q.party.length) await p.evaluate(() => { G.dir = 'right'; interact(); }); await sleep(30); continue; }
+        if (!q.ui && !q.busy && q.started && (dir !== 'town-hall' || (q.party && q.party.length))) break;
+        if (!q.ui) { if (!q.busy && q.started && dir === 'town-hall' && !q.party.length) await p.evaluate(() => { G.dir = 'right'; interact(); }); await sleep(30); continue; }
         await p.evaluate(() => { if (UI.mode === 'say') UI.handle('a'); else { const m = UI.modal || UI.choice; const g = m.items.findIndex(o => o.meta && o.meta.good); m.cursor = g < 0 ? 0 : g; UI.handle('a'); } });
         await sleep(15);
       }
@@ -313,7 +314,7 @@ function toastCheck() {
         const w4 = ['magda', 'bea', 'ruth', 'paz', 'odile', 'beatriz', 'rae', 'magda', 'bea']; apC().rota = { assign: w4, stats: rotaStats(AP_ROTA, w4) }; fnC().rota = rotaAuto(FN_ROTA, fnPre(), SD_ROTA_ORDER); G.day = 34; });
       await p.evaluate('window.__mfT = {' + [].concat(N.drills, N.reports, N.stages).map(n => n + ': (typeof ' + n + ' !== "undefined" ? ' + n + ' : null)').join(', ') + '}');
       const g = await p.evaluate(MC.gen, N);
-      if (vn === 'land800x360') check(ed + ': every generated case builds (' + g.cases.length + ' cases)', !g.errors.length && g.cases.length > 50, g.errors);
+      if (vn === 'land800x360') check(ed + ': every generated case builds (' + g.cases.length + ' cases)', !g.errors.length && g.cases.length > (dir === 'charter' ? 30 : 50), g.errors);
       const all = g.cases.concat(played);
       const res = { bad: [], bad2: [], stat: { n: 0, keep: 0, scroll: 0, minShare: 1, hidAtOpen: 0, aRevealed: 0, cueO: 0, cueT: 0, toastLane: 0, toastHeld: 0 } };
       for (let i = 0; i < all.length; i += 150) {

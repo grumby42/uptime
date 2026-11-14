@@ -35,6 +35,11 @@
 // now/safe words and the floor/measure words held in the Airport too; since the slice-5 review, every enforced word and group,
 // and every lone-feature word, is matched on its inflections in Crossroads: see stemRe() and stem() below; since slice 6 (the
 // finale, district cr-finale), every Crossroads group is held in the finale too, and its deciders' names are counted).
+// Charter (editions/charter, edition 3) is scanned as a third population (districts ch-prologue and ch-budget), after the
+// Town Hall and Crossroads tables, which are unchanged by it. It is held to Crossroads' rules from its first build: the
+// stem-matched words at 70% and their 35-65% warning band, every Crossroads group and Charter's own groups (appetite,
+// budget/cost, accept/sign, the Board, owner, "you", records) in the band from n >= 3, punctuation, names (every named
+// character, and Edda, Oriel, Ivor, Celia, Joanna, Beatriz and Noor one by one) and lone features.
 const fs = require('fs');
 const path = require('path');
 let acorn = null;
@@ -137,6 +142,18 @@ const CR_EXTRA = [
   ['G:mail', /\b(e?mails?|email’s|headers?|trace|domain)\b/i],
 ];
 
+// Charter-only groups (edition 3, slice 1, 14 Nov 2026): the CISO's words. Measured and enforced inside Charter only, so
+// the Town Hall and Crossroads tables (and --report) are unchanged.
+const CH_EXTRA = [
+  ['G:appetite', /\b(appetite|appetite’s|tolerances?)\b/i],
+  ['G:budget', /\b(budget|budget’s|fund|funds|funded|funding|cost|costs|costing|spend|spends|spent|money|price|cheaper|saves?|saving)\b|\$\d/i],
+  ['G:accept', /\b(accept|accepts|accepted|acceptance|acceptances|sign|signs|signed|signing|signature)\b/i],
+  ['G:board', /\b(Board|Board’s|chair|Ivor|Penhallow)\b/],
+  ['G:owner', /\b(owner|owners|owner’s|owns|own)\b/i],
+  ['G:you', /\b(you|your|yours|CISO|CISO’s)\b/i],
+  ['G:record', /\b(records?|log|logs|logged|register|register’s)\b/i],
+];
+
 // ---- Stems and inflections (review of Crossroads slice 5, 9 Nov 2026, S11) ----
 // The "agree" template slipped through because "agree", "agrees" and "agreed" were counted as three words. So for
 // Crossroads every enforced word and group is matched on its inflections too: stemRe() rewrites a pattern so that each
@@ -197,8 +214,9 @@ const stemmed = L => L.map(([n, re]) => [n, stemRe(re)]);
 const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
   .concat(fs.readdirSync(root + '/engine').filter(f => f.endsWith('.js')).map(f => 'engine/' + f));
 const crFiles = fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : [];
+const chFiles = fs.existsSync(root + '/editions/charter') ? fs.readdirSync(root + '/editions/charter').filter(f => f.endsWith('.js')).map(f => 'editions/charter/' + f) : [];
 const DISTRICTS = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water', 'council'];
-const district = f => { const b = path.basename(f); if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : /^clinic-/.test(b) ? 'cr-clinic' : /^dispatch-/.test(b) ? 'cr-dispatch' : /^airport-/.test(b) ? 'cr-airport' : /^finale-/.test(b) ? 'cr-finale' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
+const district = f => { const b = path.basename(f); if (f.startsWith('editions/charter/')) return /^budget-/.test(b) ? 'ch-budget' : 'ch-prologue'; if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : /^clinic-/.test(b) ? 'cr-clinic' : /^dispatch-/.test(b) ? 'cr-dispatch' : /^airport-/.test(b) ? 'cr-airport' : /^finale-/.test(b) ? 'cr-finale' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
 function strOf(n) {
   if (!n) return null;
   if (n.type === 'Literal' && typeof n.value === 'string') return n.value;
@@ -273,7 +291,9 @@ for (const f of files) {
 scanFiles(files);
 const thLists = lists; lists = [];
 scanFiles(crFiles);
-const crLists = lists; lists = thLists;
+const crLists = lists; lists = [];
+scanFiles(chFiles);
+const chLists = lists; lists = thLists;
 // Non-graded menus: a list is left out when every right option is a bare menu label (End shift, Not yet, Keep exploring
 // …, Title screen, Fix it, Done, Yes, No). Since maintenance slice 1 the Town Hall filter matches the whole label, so a
 // graded answer that merely starts "No:" or "Yes:" (the insurer drill's verdicts, council-data.js) is read like any
@@ -286,6 +306,8 @@ const graded = lists.filter(L => !L.items.filter(x => x.good).every(x => SKIP.te
 const opts = graded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
 const crGraded = crLists.filter(L => !L.items.filter(x => x.good).every(x => CR_SKIP.test(x.label)));
 const crOpts = crGraded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
+const chGraded = chLists.filter(L => !L.items.filter(x => x.good).every(x => CR_SKIP.test(x.label)));
+const chOpts = chGraded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
 
 function stat(set, re) {
   const G = set.filter(x => x.good), B = set.filter(x => !x.good);
@@ -299,9 +321,9 @@ const args = process.argv.slice(2);
 const argOf = k => (args.find(a => a.startsWith('--' + k + '=')) || '').slice(k.length + 3);
 const hitsArg = argOf('hits'), dArg = argOf('d'), tArg = argOf('t');
 if (hitsArg) {
-  const w = WORDS.concat(EXTRA, CR_EXTRA).find(x => x[0] === hitsArg); if (!w) { console.error('unknown word ' + hitsArg); process.exit(2); }
+  const w = WORDS.concat(EXTRA, CR_EXTRA, CH_EXTRA).find(x => x[0] === hitsArg); if (!w) { console.error('unknown word ' + hitsArg); process.exit(2); }
   const ws = stemRe(w[1]);
-  for (const x of opts.concat(crOpts)) if ((!dArg || x.d === dArg) && (!tArg || x.t === tArg) && (x.d.startsWith('cr-') ? ws : w[1]).test(x.label)) console.log((x.good ? 'GOOD ' : 'bad  ') + x.file.split('/').pop() + ':' + x.line + ' [' + x.t + ']', x.label);
+  for (const x of opts.concat(crOpts, chOpts)) if ((!dArg || x.d === dArg) && (!tArg || x.t === tArg) && (/^c[rh]-/.test(x.d) ? ws : w[1]).test(x.label)) console.log((x.good ? 'GOOD ' : 'bad  ') + x.file.split('/').pop() + ':' + x.line + ' [' + x.t + ']', x.label);
   process.exit(0);
 }
 const fmt = s => (s.n ? (s.g + '/' + s.G + ' ' + s.b + '/' + s.B + ' ' + (s.lean * 100).toFixed(0) + '%') : '-');
@@ -532,7 +554,43 @@ if (report) {
   console.log('\nTown Hall lone features, stem-matched (report only)');
   for (const s of scopes) console.log(s.padEnd(12) + lfTop(loneFeatures(s === 'all' ? graded : graded.filter(L => district(L.file) === s), true), 8).map(r => (r.fail ? '!' : r.flag ? '*' : '') + lfFmt(r)).join(', '));
 }
-if (report) process.exit(0);  // --report prints both populations' tables and never fails
+// ---- Charter (edition 3): a third population, held to Crossroads' rules from its first build ----
+const CH_DISTRICTS = ['ch-prologue', 'ch-budget'];
+const chScope = s => s === 'ch-all' ? chOpts : TYPES.includes(s) ? chOpts.filter(x => x.t === s) : chOpts.filter(x => x.d === s);
+const chListsIn = s => s === 'ch-all' ? chGraded : chGraded.filter(L => district(L.file) === s);
+const chFails = [], chWarns = [];
+for (const [name, re] of CR_WORDS) for (const s of CH_DISTRICTS.concat(['ch-all'], TYPES)) {
+  const st = stat(chScope(s), re); if (st.n < MIN_N) continue;
+  const where = (TYPES.includes(s) ? 'charter list type ' : '') + s;
+  if (st.lean >= THRESH || st.lean <= 1 - THRESH) chFails.push(name + ' in ' + where + ': ' + fmt(st));
+  else if (st.lean > WARN || st.lean < 1 - WARN) chWarns.push(name + ' in ' + where + ': ' + fmt(st));
+}
+const CH_GROUPS = stemmed(EXTRA.concat(CR_EXTRA, CH_EXTRA));
+const CHARTER_BAND = CROSSROADS_BAND.concat(CH_EXTRA.map(w => w[0]));
+const chBand = [];
+for (const n of CHARTER_BAND) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = stat(chScope(s), CH_GROUPS.find(w => w[0] === n)[1]); chBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
+const CH_NAMES = [
+  ['N:named', new RegExp(CR_NAMES[0][1].source.replace('|Hugo|Ellerby)', '|Hugo|Ellerby|Oriel|Fanshawe|Dalia)'))],
+  ['N:Edda', /\b(Edda|Thornquist)\b/], ['N:Oriel', /\b(Oriel|Fanshawe)\b/], ['N:Ivor', /\b(Ivor|Penhallow)\b/], ['N:Celia', /\b(Celia|Marrow)\b/],
+  ['N:Joanna', /\b(Joanna|Ferreday)\b/], ['N:Beatriz', /\b(Beatriz|Solano)\b/], ['N:Noor', /\b(Noor|Castellanos)\b/],
+  ['N:ch-deciders', /\b(Edda|Thornquist|Oriel|Fanshawe|Ivor|Penhallow|Celia|Marrow|Joanna|Ferreday|Noor|Castellanos)\b/]];
+const chPunct = [], chNameRows = [];
+for (const [name, re] of PUNCT) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re), ln = lone(chListsIn(s), re); chPunct.push({n: name + '@' + s, st, ln, ok: pOk(st) && ln.ok}); }
+for (const [name, re] of CH_NAMES) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re); chNameRows.push({n: name + '@' + s, st, ok: pOk(st)}); }
+const chLf = CH_DISTRICTS.concat(['ch-all']).map(s => ({s, rows: loneFeatures(chListsIn(s), true)}));
+const chLfFails = chLf.flatMap(x => x.rows.filter(r => r.fail).map(r => x.s + ' ' + lfFmt(r)));
+if (report && chOpts.length) {
+  console.log('\nCharter (' + chGraded.length + ' graded lists, ' + chOpts.length + ' options)\n' + 'word'.padEnd(18) + CH_DISTRICTS.concat(['ch-all']).map(s => s.padEnd(19)).join(''));
+  for (const [name, re] of CR_WORDS.concat(CH_GROUPS)) console.log(name.padEnd(18) + CH_DISTRICTS.concat(['ch-all']).map(s => fmt(stat(chScope(s), re)).padEnd(19)).join(''));
+  console.log('\nCharter punctuation and names (enforced)');
+  for (const r of chPunct.concat(chNameRows)) console.log(r.n.padEnd(26) + pFmt(r.st) + (r.ln ? ' lone ' + loneFmt(r.ln) : '') + (r.ok ? '' : '  OUT'));
+  console.log('\nCharter lone features (enforced)');
+  for (const x of chLf) console.log(x.s.padEnd(12) + lfTop(x.rows, 8).map(r => (r.fail ? '!' : r.flag ? '*' : '') + lfFmt(r)).join(', '));
+  if (chFails.length) console.log('Charter tells:\n  ' + chFails.join('\n  '));
+  if (chWarns.length) console.log('Charter warnings:\n  ' + chWarns.join('\n  '));
+  const bb = chBand.filter(x => !x.ok); if (bb.length) console.log('Charter band:\n  ' + bb.map(x => x.n + ' ' + fmt(x.st)).join('\n  '));
+}
+if (report) process.exit(0);  // --report prints every population's tables and never fails
 const checks = [
   ['source scan found graded lists in every district', DISTRICTS.every(d => graded.some(L => district(L.file) === d))],
   ['source scan found graded lists of every list type', TYPES.every(t => graded.some(L => L.type === t))],
@@ -549,11 +607,22 @@ if (crFiles.length) checks.push(
   ['Crossroads: no punctuation tell (; : dash parentheses) — within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it, and the lone-mark pick no better than chance (' + punctRows.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln)).join(', ') + ')', punctRows.every(x => x.ok)],
   ['Crossroads: no name tell — options naming a character, Kole, Priya, Dr Vale and Marsh in the School District, Marisol, Weller, Renata Osei, Kowal and Kit in the Clinic, Imogen, Celia, Lionel, Petra and Felix in Dispatch, and Joanna, Callum, Odette, Ansel and Dario at the Airport, and Edda and the finale’s deciders, within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it (' + nameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', nameRows.every(x => x.ok)],
   ['Crossroads: no lone-feature tell — no word or pattern (weekday, clock time, ID, digit, quote, n’t) that only one option of a list carries is right in ' + LF_RIGHT * 100 + '% of n>=' + LF_N + ' lists or wrong in ' + LF_WRONG * 100 + '% of n>=' + LF_WN + ' beyond chance (' + LF_K + ' sd + ' + LF_C + '); strongest leans: ' + lfRows.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !lfFails.length]);
+if (chFiles.length) checks.push(
+  ['Charter: source scan found graded lists in the prologue and Budget (' + chGraded.length + ' lists, ' + chOpts.length + ' options)', CH_DISTRICTS.every(d => chGraded.some(L => district(L.file) === d))],
+  ['Charter: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ', stem-matched) in its districts, its list types or overall, and none outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !chFails.length && !chWarns.length],
+  ['Charter stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on every Crossroads group and its own (appetite, budget, accept/sign, Board, owner, you, records), n>=' + CR_BAND_MIN_N + ' (' + chBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', chBand.every(x => x.ok)],
+  ['Charter: no punctuation tell (; : dash parentheses), the lone-mark pick no better than chance (' + chPunct.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln)).join(', ') + ')', chPunct.every(x => x.ok)],
+  ['Charter: no name tell — any named character, and Edda, Oriel, Ivor, Celia, Joanna, Beatriz, Noor and the deciders together (' + chNameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', chNameRows.every(x => x.ok)],
+  ['Charter: no lone-feature tell (the same rule as Crossroads); strongest leans: ' + chLf.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !chLfFails.length]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);
 if (fails.length) console.log('  ' + fails.join('\n  '));
 if (crFails.length || crWarns.length) console.log('  Crossroads: ' + crFails.concat(crWarns).join('\n  Crossroads: '));
 const crBad = crBand.filter(x => !x.ok); if (crBad.length) console.log('  Crossroads band: ' + crBad.map(x => x.n + ' ' + fmt(x.st)).join(', '));
 if (lfFails.length) console.log('  Crossroads lone features: ' + lfFails.join(', '));
+if (chFails.length || chWarns.length) console.log('  Charter: ' + chFails.concat(chWarns).join('\n  Charter: '));
+const chBad = chBand.filter(x => !x.ok); if (chBad.length) console.log('  Charter band: ' + chBad.map(x => x.n + ' ' + fmt(x.st)).join(', '));
+if (chLfFails.length) console.log('  Charter lone features: ' + chLfFails.join(', '));
+const chPBad = chPunct.concat(chNameRows).filter(x => !x.ok); if (chPBad.length) console.log('  Charter punctuation/names: ' + chPBad.map(x => x.n + ' ' + pFmt(x.st) + (x.ln ? ' lone ' + loneFmt(x.ln) : '')).join(', '));
 const pBad = punctRows.concat(nameRows).filter(x => !x.ok); if (pBad.length) console.log('  Crossroads punctuation/names: ' + pBad.map(x => x.n + ' ' + pFmt(x.st) + (x.ln ? ' lone ' + loneFmt(x.ln) : '')).join(', '));
 process.exit(checks.every(c => c[1]) ? 0 : 1);

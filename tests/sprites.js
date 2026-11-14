@@ -372,6 +372,42 @@ function check(name, ok, info) { results.push(ok ? { name, ok: true } : { name, 
     await cp.close();
   }
 
+  // ---------- Charter (edition 3): the same rules on its maps and people ----------
+  {
+    const CHF = 'file://' + path.resolve(__dirname, '../editions/charter/index.html');
+    const cp = await ctx.newPage();
+    cp.on('pageerror', e => errs.push('charter pageerror: ' + e.message));
+    cp.on('console', m => { if (m.type() === 'error') errs.push('charter: ' + m.text()); });
+    cp.on('request', r => { if (!/^(file|data|blob):/.test(r.url())) errs.push('charter request ' + r.url()); });
+    await cp.goto(CHF); await cp.waitForFunction(() => window.__UPTIME && window.__UPTIME.peek().ui);
+    await cp.evaluate(() => { __UPTIME.seed(7); __UPTIME.turbo(true); __UPTIME.drawn(); [...document.querySelectorAll('#mopts .opt')].find(e => /New game/.test(e.textContent)).click(); });
+    for (let i = 0; i < 300; i++) { const q = await cp.evaluate(() => __UPTIME.peek()); if (!q.ui && !q.busy && q.started) break; if (q.ui) await cp.evaluate(() => { if (UI.mode === 'say') UI.handle('a'); else { const m = UI.modal || UI.choice; const g = m.items.findIndex(o => o.meta && o.meta.good); m.cursor = g < 0 ? 0 : g; UI.handle('a'); } }); await sleep(15); }
+    const hf = await cp.evaluate(() => { const V = {up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0]};
+      return NPCS.map(n => { const v = V[n.dir] || [0, 0], t = tileDef(n.map, n.x + v[0], n.y + v[1]); return { id: n.id, map: n.map, solid: !t || !!t.solid, chars: CHAR_SPRITES.includes(n.spr || 'player') }; }); });
+    check('Charter (f): no NPC faces into an adjacent solid tile; every NPC uses a four-facing character sprite', hf.length >= 6 && hf.every(f => !f.solid && f.chars), hf.filter(f => f.solid || !f.chars));
+    const arr = await cp.evaluate(async () => {
+      const out = [];
+      for (const m in MAPS) for (const k in MAPS[m].doors || {}) {
+        const d = MAPS[m].doors[k]; if (!d.to || d.locked) continue;
+        G.dir = {up: 'down', down: 'up', left: 'right', right: 'left'}[d.dir];
+        await warp(d.to, d.x, d.y, d.dir); out.push({ door: m + ' ' + k, want: d.dir, got: G.dir, map: G.map === d.to });
+      }
+      return out;
+    });
+    check('Charter (c): every door’s warp turns the player to face away from it (both links)', arr.length === 2 && arr.every(a => a.got === a.want && a.map), arr);
+    const turn = await cp.evaluate(async () => {
+      G.map = 'choffice'; G.x = 11; G.y = 2; G.dir = 'right';
+      interact(); await new Promise(r => setTimeout(r, 120));
+      const e = __UPTIME.drawn().find(x => x.id === 'beatrizch'); const dir = e && e.dir;
+      for (let i = 0; i < 20 && (UI.mode || UI.modal); i++) { UI.handle('a'); await new Promise(r => setTimeout(r, 30)); }
+      await new Promise(r => setTimeout(r, 80));
+      const e2 = __UPTIME.drawn().find(x => x.id === 'beatrizch');
+      return { during: dir, after: e2 && e2.dir };
+    });
+    check('Charter (d): in the Compact offices, Beatriz Solano turns to the player while talking (faces left), then back (down)', turn.during === 'left' && turn.after === 'down', turn);
+    await cp.close();
+  }
+
   check('no console errors or network requests', errs.length === 0, errs);
   await browser.close();
   const failed = results.filter(r => !r.ok);

@@ -14,13 +14,14 @@
 //     fixed-order graded list that opens on a chosen item ({cursor}) must not open on a good option either.
 // Usage: node highlight.js   (UPTIME_FILE=file:///... to test another build; UPTIME_EDITION=crossroads TRACK=manager|dfir
 //        plays Crossroads instead: it has no alert battles, so the verdict-scale check is not applicable there, and its
-//        run records fewer lists)
+//        run records fewer lists; UPTIME_EDITION=charter plays Charter's prologue and Budget, no alert battles either)
 const { chromium } = require('playwright');
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../editions/' + (process.env.UPTIME_EDITION || 'town-hall') + '/index.html');
-const CR = /crossroads/.test(FILE);
+const CH = /charter/.test(FILE);
+const CR = /crossroads/.test(FILE) || CH;   // Charter, like Crossroads, has no alert battles
 const OUT = process.env.UPTIME_OUT || __dirname + '/out';
 fs.mkdirSync(OUT, { recursive: true });
 const LOG = OUT + '/highlight-log.jsonl';
@@ -51,7 +52,8 @@ function staticScan() {
   const root = path.resolve(__dirname, '..');
   const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWith('.js')).map(f => 'editions/town-hall/' + f)
     .concat(fs.readdirSync(root + '/engine').filter(f => f.endsWith('.js')).map(f => 'engine/' + f))
-    .concat(fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : []);
+    .concat(fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : [])
+    .concat(fs.existsSync(root + '/editions/charter') ? fs.readdirSync(root + '/editions/charter').filter(f => f.endsWith('.js')).map(f => 'editions/charter/' + f) : []);
   const sites = [], bad = [];
   const prop = (o, k) => o && o.type === 'ObjectExpression' && o.properties.find(p => p.key && (p.key.name === k || p.key.value === k));
   for (const f of files) {
@@ -126,7 +128,7 @@ function staticScan() {
     catch (e) { check('bot run finished', false, 'exit ' + e.status); }
   }
   const recs = fs.readFileSync(LOG, 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l));
-  check('recorded the lists of a full run', recs.length > (CR ? 80 : 300), recs.length);
+  check('recorded the lists of a full run', recs.length > (CH ? 30 : CR ? 80 : 300), recs.length);
   const free = r => r.items.filter(i => !i.pin);
   const graded = r => { const f = free(r); return f.some(i => i.good) && f.some(i => !i.good); };
   const G = recs.filter(graded);
@@ -148,7 +150,7 @@ function staticScan() {
   check('run: fixed-order graded lists open on a neutral item (Back / Leave it), never on a good one' + (CR ? ' (Crossroads: the report scale; none on the manager track)' : ''), (fixed.length > 0 || CR) && fixed.every(r => !r.cursorGood), [...new Set(fixed.filter(r => r.cursorGood).map(r => r.title + ' → ' + r.cursorLabel))]);
   // Verdict scale starts on Back.
   const verdicts = recs.filter(r => r.items.some(i => i.verdict));
-  if (CR) check('Crossroads: no alert battles, so no verdict scale is opened (n/a)', verdicts.length === 0, verdicts.length);
+  if (CR) check((CH ? 'Charter' : 'Crossroads') + ': no alert battles, so no verdict scale is opened (n/a)', verdicts.length === 0, verdicts.length);
   else check('verdict scale opens on Back', verdicts.length > 0 && verdicts.every(r => r.items.find(i => i.label === r.cursorLabel && i.back)), verdicts.slice(0, 3).map(r => r.cursorLabel));
   // Many seeds through the engine's own shuffle + cursor code.
   // Keyed by title + labels + good flags, so repeated rounds with the same labels (and different answers) stay distinct.

@@ -12,10 +12,14 @@
 // mid-finale, the Airport's summary and the ending; then it starts New Game+ from the ending and plays its prologue to the
 // offers: the first track shows as taken, the other is taken on the second save slot, and the first save and the Town Hall
 // save are left byte-for-byte as they were. The run is capped at 45 minutes (the Town Hall phone run needs about 26).
+// Charter (edition 3): UPTIME_EDITION=charter plays the prologue (the appointment, the remit, the risk-appetite statement,
+// the register's owners) and Budget (three drills, the allocation, the directive, the terminals, the Board's budget round)
+// to the week's summary, with a save/reload mid-Budget; it checks the series record and the acceptances.
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 const FILE = process.env.UPTIME_FILE || 'file://' + path.resolve(__dirname, '../editions/' + (process.env.UPTIME_EDITION || 'town-hall') + '/index.html');
+const CH = /charter/.test(FILE);
 const CR = /crossroads/.test(FILE), TRACK = process.env.TRACK === 'dfir' ? 'dfir' : 'manager';
 const MODE = process.argv[2] || 'desktop';
 const GAMER = process.env.GAMER === '1';
@@ -140,6 +144,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       if (find(m => m.idx !== undefined) >= 0) return o.length - 1;
     }
     if (CR && o.some(x => x.meta && x.meta.track)) return find(m => m.track === TRACK);
+    // Charter's allocation editor is not graded line by line: meta.bot marks the next step to the recommended allocation.
+    if (CH) { const bt = find(m => m.bot === true); if (bt >= 0) return bt; }
     if (o.some(x => x.meta && x.meta.k === 'new')) {
       const want = p.__wantContinue ? 'cont' : 'new';
       return find(m => m.k === want);
@@ -222,7 +228,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheckCr = null, savedCheckSd = null, savedCheckCn = null, savedCheckDp = null, savedCheckAp = null, savedCheckFn = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheckCh = null, savedCheckCr = null, savedCheckSd = null, savedCheckCn = null, savedCheckDp = null, savedCheckAp = null, savedCheckFn = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -261,6 +267,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     else if (Date.now() - lastProgress > 15000) throw new Error('stuck: ' + sig);
     if (p.extra && p.extra.ccSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
     if (CR && p.extra && p.extra.crSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (CH && p.extra && p.extra.chSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (CH && p.map === 'choffice' && !p.ui && !stats.shots.charter && p.started && p.f.chBudgetBrief) { stats.shots.charter = 1; await shot('charter-office'); }
+    if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.alloc && /Budget · next year/.test(await page.textContent('#modal .mhead'))) { stats.shots.alloc = 1; await shot('charter-allocation'); }
+    if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.appetite && /^Risk appetite ·/.test(await page.textContent('#modal .mhead'))) { stats.shots.appetite = 1; await shot('charter-appetite'); }
     if (CR && p.map === 'library' && !p.ui && !stats.shots.library && p.started && p.f.lbMet) { stats.shots.library = 1; await shot('library-' + TRACK); }
     if (CR && p.map === 'school' && !p.ui && !stats.shots.school && p.started && p.f.sdMet) { stats.shots.school = 1; await shot('school-' + TRACK); }
     if (CR && p.map === 'clinic' && !p.ui && !stats.shots.clinic && p.started && p.f.cnMet) { stats.shots.clinic = 1; await shot('clinic-' + TRACK); }
@@ -337,6 +347,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (CR && !savedCheckDp && p.map === 'dispatch' && p.f.dpDrillA && !p.f.dpDrillB) { savedCheckDp = await saveReload(); continue; }
     if (CR && !savedCheckAp && p.map === 'airport' && p.f.apDrillA && !p.f.apDrillB) { savedCheckAp = await saveReload(); continue; }
     if (CR && !savedCheckFn && p.map === 'fnops' && p.f.fnDrillB && !p.f.fnDrillC) { savedCheckFn = await saveReload(); continue; }
+    if (CH && !savedCheckCh && p.map === 'choffice' && p.f.chDrillA && !p.f.chDrillB) { savedCheckCh = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -347,6 +358,18 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const fin = await peek();
   const hscroll = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth }));
   const quietInAlerts = Object.keys(stats.alertTechs).filter(t => QT_TECHS.includes(t));
+  if (CH) {
+    const ser = await page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series') || '{}'));
+    await shot('summary-charter');
+    const ch = fin.extra && fin.extra.ch;
+    const chRes = { edition: 'charter', mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter, errors, requests, saveReloadBudget: savedCheckCh,
+      noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, seriesCharter: ser.editions && ser.editions.charter,
+      final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, objective: fin.objective, override: ch && ch.decision, accept: ch && ch.accept.map(a => a.line + ':' + a.signedBy), needs: ch && ch.needs, sent: ch && ch.sent, final: ch && ch.final }, stats };
+    console.log(JSON.stringify(chRes, null, 1));
+    await browser.close();
+    const accOk = ch && ch.accept.length >= 1 && ch.accept.every(a => a.signedBy === a.owner && a.signedBy !== 'CISO');
+    process.exit(errors.length || requests.length || !savedCheckCh || !savedCheckCh.restored || !savedCheckCh.exportRoundTrip || !fin.objective.done || !fin.extra.chSummary || !ser.editions || !ser.editions.charter || ser.editions.charter.budget !== true || !accOk || !chRes.noHorizontalScroll ? 1 : 0);
+  }
   if (CR) {
     const ser = await page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series') || '{}'));
     await shot('ending-' + TRACK);
