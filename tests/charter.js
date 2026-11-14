@@ -22,6 +22,16 @@
 // series record; the renamed people and badge (no "Oriel", "Fanshawe" or "Plumb" in the built page); a Crossroads save
 // code refused by Charter's import; the Field Manual's Charter heading and intro; zero console errors and network
 // requests.
+// District 2, Suppliers (slice 2): the tiering rule against the register (by criticality and data/access, not spend: the
+// biggest invoice is Tier 2); the clause primitive (must-haves by tier, C6 only with a way in, insurance and indemnity
+// never offered to the CISO, the envelope and each supplier's goodwill, the recommended plan, dropped must-haves); an
+// acceptance for each must-have left out, decided and signed by the service's owner; the supplier metrics on the advice
+// (the tiers as sent, the plan as sent for the Compact's tier-1 contracts); the incident's timeline (the Compact's own
+// times, the hours lost, nothing about the supplier's side, an RFC 5737 address); played: drill A read from one decisive
+// source is unsupported, a deliberate tier mistake scored on the advice and corrected on the register, a wrong first step
+// in Cobbleton's incident recorded, the directive's wrong first pick, the plan sent without Inkmere's C1 (Marit signs),
+// the return of cp-xfer held until the answer covers 23:52, the Supplier round, the Hawser Badge, the summary ("Next:
+// Policy"), the series record, and the earlier saves unchanged.
 // Usage: node tests/charter.js   (UPTIME_FILE=file:///.../charter/index.html to test another build)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -357,11 +367,119 @@ async function session(ctx, seed) {
   await A.follow(() => false, [], /End of Budget/);
   const sum = await A.modalText();
   const pS = await A.page.evaluate(() => ({ obj: objective(), ser: Series.load().editions.charter, f: G.f, keep: { th: localStorage.getItem('uptime.slice1.save'), cr: localStorage.getItem('uptime.crossroads.save'), ng: localStorage.getItem('uptime.crossroads.ngplus.save') } }));
-  check('the summary: “Next: Suppliers”, the drills, your advice and the Board’s decision on separate lines, the acceptances (the Board’s decisions, signed by their owners; Joanna’s, her own), the lesson on the governing body’s minute, the scorecard, the thread still open; the series records Budget; the objective done',
+  check('the summary: “Next: Suppliers”, the drills, your advice and the Board’s decision on separate lines, the acceptances (the Board’s decisions, signed by their owners; Joanna’s, her own), the lesson on the governing body’s minute, the scorecard, the thread still open; the series records Budget; the objective moves on to Suppliers',
     /Next: Suppliers/.test(sum) && /Two quotes for R1/.test(sum) && /Your advice: the allocation you sent, 6 of 6 lines within appetite and its tolerances/.test(sum) && /overrode your allocation/.test(sum) && /The Board’s decision: 3 of 6 lines within appetite/.test(sum) &&
     /Signed by Edda Thornquist, its owner/.test(sum) && /Signed by Marit Quellan, its owner/.test(sum) && /Signed by Joanna Ferreday, its owner/.test(sum) && /a risk the governing body decides to carry above its own appetite is also minuted as the governing body’s decision/.test(sum) &&
-    /Risks within appetite/.test(sum) && /still open/.test(sum) && pS.ser.budget === true && pS.obj.done && pS.f.chSummary, { ser: pS.ser, obj: pS.obj, sum: sum.slice(0, 1500) });
+    /Risks within appetite/.test(sum) && /still open/.test(sum) && pS.ser.budget === true && !pS.obj.done && /^Next week, Monday: your desk\.$/.test(pS.obj.text) && pS.f.chSummary, { ser: pS.ser, obj: pS.obj, sum: sum.slice(0, 1500) });
   check('the Town Hall, Crossroads and Crossroads New Game+ saves are byte-for-byte as seeded after the whole run', pS.keep.th === TH_SAVE && pS.keep.cr === CR_SAVE && pS.keep.ng === NG_SAVE, null);
+  await A.settle([/^Keep exploring/]);
+
+  // ======== District 2: Suppliers ========
+  const sp = await A.page.evaluate(() => {
+    const rule = CH_SUPPLIERS.map(s => s.id + ':' + chTierRule(s)), spendOrder = CH_SUPPLIERS.map(s => s.spend);
+    const must = Object.fromEntries(CH_SUPPLIERS.map(s => [s.id, chMust(s)]));
+    const offered = [].concat(...CH_SUP_CONTRACTS.map(k => Object.keys(k.offer)));
+    const rec = Object.fromEntries(CH_SUP_CONTRACTS.map(k => [k.id, chPlanRec(k.id)])), sRec = chPlanStats(rec);
+    const plus = JSON.parse(JSON.stringify(rec)); plus.inkmere.push('C3'); const sPlus = chPlanStats(plus);
+    const greedy = JSON.parse(JSON.stringify(rec)); greedy.inkmere.push('C5', 'C8'); const sGreedy = chPlanStats(greedy);
+    const none = Object.fromEntries(CH_SUP_CONTRACTS.map(k => [k.id, []])), sNone = chPlanStats(none);
+    const noC1 = JSON.parse(JSON.stringify(rec)); noC1.cobbleton = noC1.cobbleton.filter(c => c !== 'C1');
+    const sup = chSup(), keep = JSON.parse(JSON.stringify(sup));
+    sup.sent = Object.fromEntries(CH_SUPPLIERS.map(s => [s.id, chTierRule(s)])); sup.planSent = rec; const mRec = chSupStats();
+    sup.planSent = noC1; const mNoC1 = chSupStats();
+    sup.sent = Object.assign({}, sup.sent, {inkmere: 3}); const mTier = chSupStats();
+    G.ch.sup = keep;
+    const acc = chClauseAccept('inkmere', 'C1', 73);
+    return { rule, spendOrder, must, offered, sRec, sPlus: {cost: sPlus.cost, ok: sPlus.ok}, sGreedy: {ok: sGreedy.ok, over: sGreedy.per.inkmere.overGoodwill}, sNone: {ok: sNone.ok, mustIn: sNone.mustIn, mustTotal: sNone.mustTotal},
+      mRec, mNoC1, mTier, acc, tl: chSupTimelineHtml(), counsel: CH_CLAUSE_COUNSEL, sTiers: CH_SUPPLIERS.map(s => [s.id, s.compact, s.owner]) };
+  });
+  check('suppliers: the tiering rule gives Inkmere Tier 2, Cobbleton, Wrenfold, Tarnfield, Wellhollow, Stillmark and Shelfwright Tier 1, Glasswick Tier 3; the register is inherited in order of spend, and the biggest invoice (Inkmere) is not Tier 1',
+    sp.rule.join() === 'inkmere:2,cobbleton:1,wrenfold:1,tarnfield:1,wellhollow:1,stillmark:1,shelfwright:1,glasswick:3' && sp.spendOrder.every((x, i) => !i || x <= sp.spendOrder[i - 1]) && sp.spendOrder[0] === 210, { rule: sp.rule, spend: sp.spendOrder });
+  check('clauses: must-haves follow the tier (Tier 1 with a way in: C1–C8; Wellhollow, no way in: no C6; Tier 2: C1, C2, C4, C7; Tier 3: C2); insurance and indemnity are counsel’s and procurement’s, never offered',
+    sp.must.cobbleton.join() === 'C1,C2,C3,C4,C5,C6,C7,C8' && sp.must.wellhollow.join() === 'C1,C2,C3,C4,C5,C7,C8' && sp.must.inkmere.join() === 'C1,C2,C4,C7' && sp.must.glasswick.join() === 'C2' && sp.counsel.join() === 'Insurance,Indemnity' && !sp.offered.some(c => !/^C[1-8]$/.test(c)), sp.must);
+  check('the clause plan: every missing must-have sought costs $28k of the $30k envelope, within every supplier’s goodwill; adding Inkmere’s log clause goes over the envelope ($31k); asking Inkmere for C5 and C8 too goes over its goodwill; sending nothing leaves 6 of 20 must-haves',
+    sp.sRec.cost === 28 && sp.sRec.ok && sp.sRec.mustIn === 20 && sp.sPlus.cost === 31 && !sp.sPlus.ok && !sp.sGreedy.ok && sp.sGreedy.over && sp.sNone.ok && sp.sNone.mustIn === 6 && sp.sNone.mustTotal === 20, { rec: sp.sRec, plus: sp.sPlus, greedy: sp.sGreedy, none: sp.sNone });
+  check('the supplier metrics read the advice: the recommended tiers and plan give 100/100/100; the plan without Cobbleton’s C1 gives critical 50% and notification 50%; Inkmere tiered 3 gives tiers 88%',
+    sp.mRec.tier === 100 && sp.mRec.crit === 100 && sp.mRec.notify === 100 && sp.mNoC1.crit === 50 && sp.mNoC1.notify === 50 && sp.mTier.tier === 88 && sp.mRec.memFull === 0 && sp.mRec.members === 4, { rec: sp.mRec, noC1: sp.mNoC1, tier: sp.mTier });
+  check('a must-have left out: decided and signed by the service’s owner (Inkmere C1: Marit), never the CISO, with expiry Day 428, review Day 155 and an interim measure',
+    sp.acc.signedBy === 'Marit Quellan' && sp.acc.decidedBy === 'Marit Quellan, its owner' && sp.acc.expiry === 428 && sp.acc.review === 155 && sp.acc.interim.length > 20, sp.acc);
+  check('the incident timeline: the Compact’s own times (21:14, 08:10, 08:40, 23:52, 16:40, 11:00), the hours lost (10 h 56 min, 11 h 20 min, 7 h 30 min, 25 h 50 min, 49 h 50 min), Contract A’s column labelled (game), nothing about how Cobbleton was reached, no ATT&CK ID',
+    ['21:14', '08:10', '08:40', '23:52', '16:40', '11:00', '10 h 56 min', '11 h 20 min', '7 h 30 min', '25 h 50 min', '49 h 50 min', '(game)'].every(t => sp.tl.includes(t)) && !/\bT1\d{3}\b|phish|malware|exploit|ransom/i.test(sp.tl), sp.tl.slice(0, 400));
+  const supAll = await A.page.evaluate(() => [...document.scripts].map(x => x.textContent).join('\n'));
+  const ips = (supAll.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g) || []).filter(x => /^203\.0\.113\.77$/.test(x));
+  check('Suppliers uses only a documentation address for the 23:52 login (203.0.113.77, RFC 5737), and names no ATT&CK technique', ips.length >= 1 && !/(T1\d{3})[^\d]/.test(supAll.slice(supAll.indexOf('CH_SUP_DRILLS'), supAll.indexOf('CH_SUP_LOST') + 2000)), ips.length);
+
+  // Monday: the week opens, drill A read from one decisive source only (unsupported).
+  await A.follow(p => p.f.chSupStart, []);
+  const dS = await A.page.evaluate(() => ({ day: G.day, wd: CH_DAY[G.day], m: metricVals(), sc: editionScorecard() }));
+  check('Suppliers opens on Day 71, a Monday; the supplier metrics show “—” until the tiers and the plan are sent; the scorecard names the Hawser Badge as not yet',
+    dS.day === 71 && dS.wd === 'Monday' && (71 - 1) % 7 === 0 && dS.m.chSupTier === null && dS.m.chSupCrit === null && /Suppliers tiered, with owner and review date/.test(dS.sc) && /Hawser Badge: not yet/.test(dS.sc), dS);
+  await A.goTo('choffice', 12, 2);
+  await A.settle([], /Investigation drill · Inkmere and residents’ data/);
+  await A.settle([], /^Drill ·/);
+  await A.pickLabel(/^Query: The data-flow record/);
+  await A.pickLabel(/^What goes to Inkmere/);
+  await A.settle([], /^Drill ·/);
+  await A.pickLabel(/I have enough: decide/);
+  await A.settle([]);
+  const sA = await A.page.evaluate(() => ({ d: G.ch.sup.drills.supdata, needs: G.ch.sup.needs }));
+  check('supplier drill A (Inkmere and residents’ data): the right verdict read from the data-flow record alone is unsupported (needs: the data-flow record and the account lists)', sA.d.verdictOk && !sA.d.supported && sA.needs.met === 0 && sA.needs.total === 1, sA);
+
+  // The tiers: Inkmere put in Tier 3 on purpose, then sent; scored on the advice, corrected on the register.
+  await A.goTo('choffice', 27, 1);
+  await A.settle([], /The supplier register · tiers/);
+  await A.page.evaluate(() => { const t = G.ch.sup.tiers; for (const s of CH_SUPPLIERS) t[s.id] = chTierRule(s); t.inkmere = 2; });
+  await A.page.evaluate(() => UI.closeModal({lr: true, d: 1, i: 0})); await sleep(120);
+  await A.pickLabel(/^Put the tiers on the register$/);
+  await A.settle([], /The tiers you put on the register/);
+  const tierTxt = await A.modalText();
+  await A.settle([]);
+  const sT = await A.page.evaluate(() => ({ sent: G.ch.sup.sent, m: metricVals(), reg: chSupRegisterHtml() }));
+  check('the tiers as sent (Inkmere in Tier 3, the rest by the rule): the metric reads the advice, 88%; the debrief gives the rule’s Tier 2 and why; the register then shows the rule’s tiers',
+    sT.sent.inkmere === 3 && sT.m.chSupTier === 88 && /Inkmere: Tier 2\. If it stops: Low/.test(tierTxt) && /<td>Inkmere<\/td><td>2<\/td>/.test(sT.reg), { sent: sT.sent, m: sT.m.chSupTier, txt: tierTxt.slice(0, 600) });
+
+  // Tuesday: Cobbleton's notice, with a wrong first step at cp-xfer (export the log first).
+  await A.follow(p => p.f.chSupDay71, []);
+  const inc = await A.follow(p => p.f.chSupIncident, [], /cp-xfer · 08:35/);
+  const wrongInc = inc.ui.options.findIndex(o => /^Export its log first/.test(o.label));
+  await A.pickLabel(new RegExp('^' + esc(inc.ui.options[wrongInc].label) + '$'));
+  await A.follow(p => p.f.chSupIncident, []);
+  const sI = await A.page.evaluate(() => ({ first: G.ch.sup.incident.first, f: G.f, fm: G.fm }));
+  check('Cobbleton’s incident: six steps planned, the five Tuesday ones answered, the wrong first step at cp-xfer recorded (export first), the rest right first time; the Field Manual entry unlocked',
+    JSON.stringify(sI.first) === JSON.stringify([true, false, true, true, true]) && sI.f.chSupIncident && sI.fm['act:chvendorir'], sI.first);
+
+  // Wednesday: drill C, the directive (a wrong first pick), the plan without Inkmere's C1.
+  await A.follow(p => p.f.chSupDrillC, []);
+  const dirS = await A.follow(p => p.f.chSupDirective, [], /Inkmere’s renewal: what do you tell Ilka/);
+  await A.pickLabel(/^Sign it as it stands/);
+  await A.follow(p => p.f.chSupDirective, []);
+  await A.follow(p => false, [], /Clause plan · the Compact’s contracts/);
+  await A.page.evaluate(() => { const p = chPlanInit(); for (const k of CH_SUP_CONTRACTS) p[k.id] = chPlanRec(k.id); p.inkmere = p.inkmere.filter(c => c !== 'C1'); });
+  await A.pickLabel(/^Cobbleton Payroll/); await A.settle([], /^Clauses · Cobbleton/); await A.pickLabel(/^Back to the contracts/);
+  await A.settle([], /Clause plan · the Compact’s contracts/);
+  await A.pickLabel(/^Send it to Ilka and Noor/);
+  await A.settle([], /Send the plan\?/); await A.pickLabel(/^Send it$/);
+  await A.follow(p => p.f.chSupPlan, []);
+  const sP = await A.page.evaluate(() => ({ d: G.ch.sup.directive, plan: G.ch.sup.planSent, acc: G.ch.sup.accept, m: metricVals() }));
+  check('directive and plan: the wrong first pick (sign it as it stands) recorded; the plan sent without Inkmere’s C1 ($24k); Marit, its owner, decides and signs that acceptance; Cobbleton and Wellhollow keep every must-have (critical 100%, notification 100%)',
+    !!dirS && sP.d.first === false && !sP.plan.inkmere.includes('C1') && sP.acc.length === 1 && sP.acc[0].line === 'Inkmere C1' && sP.acc[0].signedBy === 'Marit Quellan' && sP.acc[0].decider === 'Marit' && sP.m.chSupCrit === 100 && sP.m.chSupNotify === 100, sP);
+
+  // Wednesday 16:50 and Thursday: cp-xfer held until the answer covers 23:52, the timeline, the Supplier round.
+  await A.follow(p => p.f.chSupReturn, []);
+  await A.follow(p => p.f.chSupThu, [], /The Compact’s timeline, beside Contract A/);
+  const tlTxt = await A.modalText();
+  const fmS = await A.page.evaluate(() => G.focusMax);
+  await A.follow(p => p.f.chSupBoard, []);
+  const sB = await A.page.evaluate(() => ({ first: G.ch.sup.incident.first, b: G.ch.sup.board, f: G.f, fm: G.focusMax, badges: EDITION.badgeFlags, sc: editionScorecard(), day: G.day }));
+  check('Wednesday 16:50 (cp-xfer stays off until the answer covers 23:52) right first time; the timeline modal with both columns; the Supplier round (three rounds), the Hawser Badge, Focus +4; Thursday; the scorecard on the advice (tiers 88%, critical 100%, notification 100%) with the members’ contracts on their own line',
+    sB.first[5] === true && /As it was/.test(tlTxt) && /Contract A/.test(tlTxt) && /10 h 56 min/.test(tlTxt) && sB.b.first.length === 3 && sB.f.chHawser && sB.badges.includes('chHawser') && sB.fm === fmS + 4 && sB.day === 74 &&
+    /The members’ own contracts are their owners’ decisions: <b>0 of 4<\/b>/.test(sB.sc) && /Hawser Badge: yes/.test(sB.sc), { b: sB.b, fm: [fmS, sB.fm], sc: sB.sc.slice(0, 1200) });
+  await A.follow(() => false, [], /End of Suppliers/);
+  const supSum = await A.modalText();
+  const sS = await A.page.evaluate(() => ({ obj: objective(), ser: Series.load().editions.charter, m: metricVals(), keep: { th: localStorage.getItem('uptime.slice1.save'), cr: localStorage.getItem('uptime.crossroads.save'), ng: localStorage.getItem('uptime.crossroads.ngplus.save') } }));
+  check('the Suppliers summary: “Next: Policy”, the drills, the acceptance Marit signed, the members’ contracts as their owners’ decisions, the lesson, the scorecard; the series records Suppliers; the objective done; the earlier saves byte-for-byte as seeded',
+    /Next: Policy/.test(supSum) && /Tarnfield’s notice clock/.test(supSum) && /Decided and signed by Marit Quellan, its owner/.test(supSum) && /their owners’ decisions/.test(supSum) && /the clock starts where the contract says/.test(supSum) &&
+    sS.ser.suppliers === true && sS.obj.done && /^Suppliers done\. Next: Policy\.$/.test(sS.obj.text) && sS.m.chSupTier === 88 && sS.keep.th === TH_SAVE && sS.keep.cr === CR_SAVE && sS.keep.ng === NG_SAVE, { obj: sS.obj, ser: sS.ser, sum: supSum.slice(0, 1200) });
   await A.settle([/^Keep exploring/]);
 
   // A Crossroads save code is refused by Charter's import; Charter's own still loads.
@@ -372,6 +490,8 @@ async function session(ctx, seed) {
 
   // The Field Manual: the CSF and NICE facts, the game notes.
   const fmT = await A.page.evaluate(() => fmHtml());
+  check('Field Manual (Suppliers): GV.SC-04, -05, -06, -07, -08 and -10 quoted with NIST’s examples, the supplier practices, and the game notes for the suppliers and Cobbleton’s incident',
+    /GV\.SC-04: “Suppliers are known and prioritized by criticality”/.test(fmT) && /GV\.SC-10/.test(fmT) && /A supplier’s incident, from your side/.test(fmT) && /The clock starts where the contract says/.test(fmT) && /Cobbleton’s incident is told only through the Compact’s records/.test(fmT), null);
   check('Field Manual: GV.RM-02 and GV.RR-03 quoted, the NICE tasks, “CISO” a job title (a job may cover one or more work roles, or part of one), the game notes labelled (game); Charter’s practices under “Leadership practices (game)”, not D3FEND, and no ATT&CK claim in its intro',
     /GV\.RM-02/.test(fmT) && /GV\.RR-03/.test(fmT) && /T1059/.test(fmT) && /OG-WRL-007/.test(fmT) && /\(game\)/.test(fmT) && /a job may cover one or more work roles, or part of one/.test(fmT) && !/seniority/.test(fmT) && /<h3>Leadership practices \(game\)<\/h3>/.test(fmT) && !/D3FEND/.test(fmT) && !/IDs are from MITRE/.test(fmT) && /open in later districts/.test(fmT), null);
 

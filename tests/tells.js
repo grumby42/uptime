@@ -39,7 +39,9 @@
 // Town Hall and Crossroads tables, which are unchanged by it. It is held to Crossroads' rules from its first build: the
 // stem-matched words at 70% and their 35-65% warning band, every Crossroads group and Charter's own groups (appetite,
 // budget/cost, accept/sign, the Board, owner, "you", records) in the band from n >= 3, punctuation, names (every named
-// character, and Edda, Marit, Ivor, Celia, Joanna, Beatriz and Noor one by one) and lone features.
+// character, and Edda, Marit, Ivor, Celia, Joanna, Beatriz and Noor one by one) and lone features. Since slice 2 (District
+// 2, Suppliers: the files suppliers-*.js, district ch-suppliers) the same rules hold there too, with a tier/criticality
+// group (G:tier), Ilka (procurement) by name, and the supplier names together (N:suppliers).
 const fs = require('fs');
 const path = require('path');
 let acorn = null;
@@ -152,6 +154,8 @@ const CH_EXTRA = [
   ['G:owner', /\b(owner|owners|owner’s|owns|own)\b/i],
   ['G:you', /\b(you|your|yours|CISO|CISO’s)\b/i],
   ['G:record', /\b(records?|log|logs|logged|register|register’s)\b/i],
+  // Slice 2 (Suppliers, 14 Nov 2026): tiers and criticality.
+  ['G:tier', /\b(tier|tiers|tiered|tiering|critical|criticality)\b/i],
 ];
 
 // ---- Stems and inflections (review of Crossroads slice 5, 9 Nov 2026, S11) ----
@@ -216,7 +220,7 @@ const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWit
 const crFiles = fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : [];
 const chFiles = fs.existsSync(root + '/editions/charter') ? fs.readdirSync(root + '/editions/charter').filter(f => f.endsWith('.js')).map(f => 'editions/charter/' + f) : [];
 const DISTRICTS = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water', 'council'];
-const district = f => { const b = path.basename(f); if (f.startsWith('editions/charter/')) return /^budget-/.test(b) ? 'ch-budget' : 'ch-prologue'; if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : /^clinic-/.test(b) ? 'cr-clinic' : /^dispatch-/.test(b) ? 'cr-dispatch' : /^airport-/.test(b) ? 'cr-airport' : /^finale-/.test(b) ? 'cr-finale' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
+const district = f => { const b = path.basename(f); if (f.startsWith('editions/charter/')) return /^budget-/.test(b) ? 'ch-budget' : /^suppliers-/.test(b) ? 'ch-suppliers' : 'ch-prologue'; if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : /^clinic-/.test(b) ? 'cr-clinic' : /^dispatch-/.test(b) ? 'cr-dispatch' : /^airport-/.test(b) ? 'cr-airport' : /^finale-/.test(b) ? 'cr-finale' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
 function strOf(n) {
   if (!n) return null;
   if (n.type === 'Literal' && typeof n.value === 'string') return n.value;
@@ -557,7 +561,7 @@ if (report) {
   for (const s of scopes) console.log(s.padEnd(12) + lfTop(loneFeatures(s === 'all' ? graded : graded.filter(L => district(L.file) === s), true), 8).map(r => (r.fail ? '!' : r.flag ? '*' : '') + lfFmt(r)).join(', '));
 }
 // ---- Charter (edition 3): a third population, held to Crossroads' rules from its first build ----
-const CH_DISTRICTS = ['ch-prologue', 'ch-budget'];
+const CH_DISTRICTS = ['ch-prologue', 'ch-budget', 'ch-suppliers'];
 const chScope = s => s === 'ch-all' ? chOpts : TYPES.includes(s) ? chOpts.filter(x => x.t === s) : chOpts.filter(x => x.d === s);
 const chListsIn = s => s === 'ch-all' ? chGraded : chGraded.filter(L => district(L.file) === s);
 const chFails = [], chWarns = [];
@@ -572,10 +576,12 @@ const CHARTER_BAND = CROSSROADS_BAND.concat(CH_EXTRA.map(w => w[0]));
 const chBand = [];
 for (const n of CHARTER_BAND) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = stat(chScope(s), CH_GROUPS.find(w => w[0] === n)[1]); chBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
 const CH_NAMES = [
-  ['N:named', new RegExp(CR_NAMES[0][1].source.replace('|Hugo|Ellerby)', '|Hugo|Ellerby|Marit|Quellan|Dalia)'))],
+  ['N:named', new RegExp(CR_NAMES[0][1].source.replace('|Hugo|Ellerby)', '|Hugo|Ellerby|Marit|Quellan|Dalia|Ilka|Thrushcombe)'))],
   ['N:Edda', /\b(Edda|Thornquist)\b/], ['N:Marit', /\b(Marit|Quellan)\b/], ['N:Ivor', /\b(Ivor|Penhallow)\b/], ['N:Celia', /\b(Celia|Marrow)\b/],
   ['N:Joanna', /\b(Joanna|Ferreday)\b/], ['N:Beatriz', /\b(Beatriz|Solano)\b/], ['N:Noor', /\b(Noor|Castellanos)\b/],
-  ['N:ch-deciders', /\b(Edda|Thornquist|Marit|Quellan|Ivor|Penhallow|Celia|Marrow|Joanna|Ferreday|Noor|Castellanos)\b/]];
+  ['N:ch-deciders', /\b(Edda|Thornquist|Marit|Quellan|Ivor|Penhallow|Celia|Marrow|Joanna|Ferreday|Noor|Castellanos|Ilka|Thrushcombe)\b/],
+  ['N:Ilka', /\b(Ilka|Thrushcombe)\b/],
+  ['N:suppliers', /\b(Cobbleton|Inkmere|Wellhollow|Tarnfield|Glasswick|Stillmark|Shelfwright|Wrenfold|Brindlemark)\b/]];
 const chPunct = [], chNameRows = [];
 for (const [name, re] of PUNCT) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re), ln = lone(chListsIn(s), re); chPunct.push({n: name + '@' + s, st, ln, ok: pOk(st) && ln.ok}); }
 for (const [name, re] of CH_NAMES) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re); chNameRows.push({n: name + '@' + s, st, ok: pOk(st)}); }
@@ -610,11 +616,11 @@ if (crFiles.length) checks.push(
   ['Crossroads: no name tell — options naming a character, Kole, Priya, Dr Vale and Marsh in the School District, Marisol, Weller, Renata Osei, Kowal and Kit in the Clinic, Imogen, Celia, Lionel, Petra and Felix in Dispatch, and Joanna, Callum, Odette, Ansel and Dario at the Airport, and Edda and the finale’s deciders, within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it (' + nameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', nameRows.every(x => x.ok)],
   ['Crossroads: no lone-feature tell — no word or pattern (weekday, clock time, ID, digit, quote, n’t) that only one option of a list carries is right in ' + LF_RIGHT * 100 + '% of n>=' + LF_N + ' lists or wrong in ' + LF_WRONG * 100 + '% of n>=' + LF_WN + ' beyond chance (' + LF_K + ' sd + ' + LF_C + '); strongest leans: ' + lfRows.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !lfFails.length]);
 if (chFiles.length) checks.push(
-  ['Charter: source scan found graded lists in the prologue and Budget (' + chGraded.length + ' lists, ' + chOpts.length + ' options)', CH_DISTRICTS.every(d => chGraded.some(L => district(L.file) === d))],
+  ['Charter: source scan found graded lists in the prologue, Budget and Suppliers (' + chGraded.length + ' lists, ' + chOpts.length + ' options)', CH_DISTRICTS.every(d => chGraded.some(L => district(L.file) === d))],
   ['Charter: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ', stem-matched) in its districts, its list types or overall, and none outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !chFails.length && !chWarns.length],
-  ['Charter stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on every Crossroads group and its own (appetite, budget, accept/sign, Board, owner, you, records), n>=' + CR_BAND_MIN_N + ' (' + chBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', chBand.every(x => x.ok)],
+  ['Charter stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on every Crossroads group and its own (appetite, budget, accept/sign, Board, owner, you, records, tier), n>=' + CR_BAND_MIN_N + ' (' + chBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', chBand.every(x => x.ok)],
   ['Charter: no punctuation tell (; : dash parentheses), the lone-mark pick no better than chance (' + chPunct.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln)).join(', ') + ')', chPunct.every(x => x.ok)],
-  ['Charter: no name tell — any named character, and Edda, Marit, Ivor, Celia, Joanna, Beatriz, Noor and the deciders together (' + chNameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', chNameRows.every(x => x.ok)],
+  ['Charter: no name tell — any named character, and Edda, Marit, Ivor, Celia, Joanna, Beatriz, Noor, Ilka, the deciders together and the suppliers together (' + chNameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', chNameRows.every(x => x.ok)],
   ['Charter: no lone-feature tell (the same rule as Crossroads); strongest leans: ' + chLf.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !chLfFails.length]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);

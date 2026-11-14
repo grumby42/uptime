@@ -604,6 +604,37 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     const bd = await modalFit();
     check('Charter ' + name + ': the Board’s decision (final allocation and the acceptances) fits, tables on one line', fits(bd) && !bd.wrapped.length, bd);
     await p.screenshot({ path: OUT + '/layout-charter-' + name + '-decision.png' });
+    // Suppliers (slice 2): the scorecard with its six rows, the tiering page, the clause plan, a contract's clauses, the
+    // must-haves left out and the incident's timeline.
+    const shut = () => p.evaluate(() => { UI.modal = null; UI.modalEl.classList.remove('show'); UI.modalEl.innerHTML = ''; });
+    await shut(); await sleep(100);
+    await p.evaluate(() => { G.f.chSupStart = true; const s = chSup(); s.sent = Object.fromEntries(CH_SUPPLIERS.map(x => [x.id, chTierRule(x)])); s.planSent = Object.fromEntries(CH_SUP_CONTRACTS.map(k => [k.id, chPlanRec(k.id)])); track(); UI.openModal('Scorecard', scorecardHtml(), [{ label: 'Back' }]); }); await sleep(250);
+    const sc2 = await modalFit();
+    check('Charter ' + name + ': the scorecard with the three supplier rows fits, table numbers and targets on one line', fits(sc2) && !sc2.wrapped.length, sc2);
+    await shut(); await sleep(100);
+    await p.evaluate(() => { G.ch.sup.tiers = null; run(() => chTierEdit()); }); await sleep(300);
+    const ti = await modalFit();
+    check('Charter ' + name + ': the supplier tiering page (eight suppliers, the rule, Send) fits above the controls, no overflow', fits(ti), ti);
+    await p.screenshot({ path: OUT + '/layout-charter-' + name + '-tiers.png' });
+    await shut(); await sleep(100);
+    await p.evaluate(() => { G.ch.sup.plan = null; run(() => chPlanEdit()); }); await sleep(300);
+    const pl = await modalFit();
+    check('Charter ' + name + ': the clause plan (four contracts, the envelope, Send) fits above the controls, no overflow', fits(pl), pl);
+    await p.screenshot({ path: OUT + '/layout-charter-' + name + '-plan.png' });
+    await shut(); await sleep(100);
+    await p.evaluate(() => { run(() => chPlanContract(CH_SUP_CONTRACTS[0])); }); await sleep(300);
+    const kc = await modalFit();
+    check('Charter ' + name + ': a contract’s clauses (Cobbleton’s six, the goodwill and envelope line) fit above the controls, no overflow', fits(kc), kc);
+    await p.screenshot({ path: OUT + '/layout-charter-' + name + '-clauses.png' });
+    await shut(); await sleep(100);
+    await p.evaluate(() => { UI.openModal('15:00: must-haves left out', chClauseAcceptHtml([chClauseAccept('inkmere', 'C1', 73), chClauseAccept('cobbleton', 'C3', 73)]), [{ label: 'Continue', meta: { good: true } }], { closable: false, cls: 'summary' }); }); await sleep(250);
+    const ca = await modalFit();
+    check('Charter ' + name + ': the must-haves left out (owner-signed acceptances) fit, table on one line', fits(ca) && !ca.wrapped.length, ca);
+    await shut(); await sleep(100);
+    await p.evaluate(() => { UI.openModal('The Compact’s timeline, beside Contract A', chSupTimelineHtml(), [{ label: 'Continue', meta: { good: true } }], { closable: false, cls: 'summary' }); }); await sleep(250);
+    const tl = await modalFit();
+    check('Charter ' + name + ': the incident timeline (three columns, the hours lost) fits above the controls, no sideways overflow', fits(tl), tl);
+    await p.screenshot({ path: OUT + '/layout-charter-' + name + '-timeline.png' });
     check('Charter ' + name + ': no console errors or network requests', !errs.length, errs);
     await c.close();
   }

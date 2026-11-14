@@ -14,7 +14,9 @@
 // save are left byte-for-byte as they were. The run is capped at 45 minutes (the Town Hall phone run needs about 26).
 // Charter (edition 3): UPTIME_EDITION=charter plays the prologue (the appointment, the remit, the risk-appetite statement,
 // the register's owners) and Budget (three drills, the allocation, the directive, the terminals, the Board's budget round)
-// to the week's summary, with a save/reload mid-Budget; it checks the series record and the acceptances.
+// to the week's summary, with a save/reload mid-Budget, then District 2, Suppliers (the drills, the tiering, Cobbleton's
+// notice, the directive, the clause plan, the terminals, the Supplier round) to its summary, with a save/reload
+// mid-Suppliers; it checks the series record, the acceptances and the supplier scorecard.
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -228,7 +230,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheckCh = null, savedCheckCr = null, savedCheckSd = null, savedCheckCn = null, savedCheckDp = null, savedCheckAp = null, savedCheckFn = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheckCh = null, savedCheckChSup = null, savedCheckCr = null, savedCheckSd = null, savedCheckCn = null, savedCheckDp = null, savedCheckAp = null, savedCheckFn = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -267,10 +269,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     else if (Date.now() - lastProgress > 15000) throw new Error('stuck: ' + sig);
     if (p.extra && p.extra.ccSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
     if (CR && p.extra && p.extra.crSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
-    if (CH && p.extra && p.extra.chSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (CH && p.extra && p.extra.chSupSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
     if (CH && p.map === 'choffice' && !p.ui && !stats.shots.charter && p.started && p.f.chBudgetBrief) { stats.shots.charter = 1; await shot('charter-office'); }
     if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.alloc && /Budget · next year/.test(await page.textContent('#modal .mhead'))) { stats.shots.alloc = 1; await shot('charter-allocation'); }
     if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.appetite && /^Risk appetite ·/.test(await page.textContent('#modal .mhead'))) { stats.shots.appetite = 1; await shot('charter-appetite'); }
+    if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.tiers && /^The supplier register · tiers/.test(await page.textContent('#modal .mhead'))) { stats.shots.tiers = 1; await shot('charter-tiers'); }
+    if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.plan && /^Clause plan ·/.test(await page.textContent('#modal .mhead'))) { stats.shots.plan = 1; await shot('charter-plan'); }
+    if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.timeline && /^The Compact’s timeline/.test(await page.textContent('#modal .mhead'))) { stats.shots.timeline = 1; await shot('charter-timeline'); }
     if (CR && p.map === 'library' && !p.ui && !stats.shots.library && p.started && p.f.lbMet) { stats.shots.library = 1; await shot('library-' + TRACK); }
     if (CR && p.map === 'school' && !p.ui && !stats.shots.school && p.started && p.f.sdMet) { stats.shots.school = 1; await shot('school-' + TRACK); }
     if (CR && p.map === 'clinic' && !p.ui && !stats.shots.clinic && p.started && p.f.cnMet) { stats.shots.clinic = 1; await shot('clinic-' + TRACK); }
@@ -348,6 +353,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (CR && !savedCheckAp && p.map === 'airport' && p.f.apDrillA && !p.f.apDrillB) { savedCheckAp = await saveReload(); continue; }
     if (CR && !savedCheckFn && p.map === 'fnops' && p.f.fnDrillB && !p.f.fnDrillC) { savedCheckFn = await saveReload(); continue; }
     if (CH && !savedCheckCh && p.map === 'choffice' && p.f.chDrillA && !p.f.chDrillB) { savedCheckCh = await saveReload(); continue; }
+    if (CH && !savedCheckChSup && p.map === 'choffice' && p.f.chSupDrillA && !p.f.chSupTier) { savedCheckChSup = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -362,13 +368,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     const ser = await page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series') || '{}'));
     await shot('summary-charter');
     const ch = fin.extra && fin.extra.ch;
-    const chRes = { edition: 'charter', mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter, errors, requests, saveReloadBudget: savedCheckCh,
+    const sup = ch && ch.sup;
+    const chRes = { edition: 'charter', mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter, errors, requests, saveReloadBudget: savedCheckCh, saveReloadSuppliers: savedCheckChSup,
+      suppliers: sup && { tiers: sup.sent, plan: sup.planSent, accept: sup.accept.map(a => a.line + ':' + a.signedBy), needs: sup.needs, incident: sup.incident.first, board: sup.board && sup.board.first, dojo: sup.dojo },
       noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, seriesCharter: ser.editions && ser.editions.charter,
       final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, objective: fin.objective, override: ch && ch.decision, accept: ch && ch.accept.map(a => a.line + ':' + a.signedBy), needs: ch && ch.needs, sent: ch && ch.sent, final: ch && ch.final }, stats };
     console.log(JSON.stringify(chRes, null, 1));
     await browser.close();
-    const accOk = ch && ch.accept.length >= 1 && ch.accept.every(a => a.signedBy === a.owner && a.signedBy !== 'CISO');
-    process.exit(errors.length || requests.length || !savedCheckCh || !savedCheckCh.restored || !savedCheckCh.exportRoundTrip || !fin.objective.done || !fin.extra.chSummary || !ser.editions || !ser.editions.charter || ser.editions.charter.budget !== true || !accOk || !chRes.noHorizontalScroll ? 1 : 0);
+    const accOk = ch && ch.accept.length >= 1 && ch.accept.every(a => a.signedBy === a.owner && a.signedBy !== 'CISO') && sup && sup.accept.every(a => a.signedBy === a.owner);
+    const supOk = sup && sup.sent && sup.planSent && fin.metrics.chSupTier === 100 && fin.metrics.chSupCrit === 100 && fin.metrics.chSupNotify === 100 && fin.f.chHawser;
+    process.exit(errors.length || requests.length || !savedCheckCh || !savedCheckCh.restored || !savedCheckCh.exportRoundTrip || !savedCheckChSup || !savedCheckChSup.restored || !savedCheckChSup.exportRoundTrip || !fin.objective.done || !fin.extra.chSummary || !fin.extra.chSupSummary || !ser.editions || !ser.editions.charter || ser.editions.charter.budget !== true || ser.editions.charter.suppliers !== true || !accOk || !supOk || !chRes.noHorizontalScroll ? 1 : 0);
   }
   if (CR) {
     const ser = await page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series') || '{}'));
