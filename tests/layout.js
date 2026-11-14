@@ -551,7 +551,9 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     await c.close();
   }
   // Charter (edition 3): the HUD band and the longest objective; the scorecard, the appetite builder, the allocation page and
-  // the Board's decision fit above the controls with no sideways overflow, at phone portrait, phone landscape and desktop.
+  // the Board's decision fit above the controls with no sideways overflow, at phone portrait, phone landscape and desktop;
+  // then the Suppliers pages, and the Policy pages (the scorecard's policy rows, the exception register, the intake, the
+  // policy library and its debrief).
   const CHF = 'file://' + path.resolve(__dirname, '../editions/charter/index.html');
   for (const [name, opt] of Object.entries({
     phone360: { viewport: { width: 360, height: 800 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
@@ -635,6 +637,31 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     const tl = await modalFit();
     check('Charter ' + name + ': the incident timeline (three columns, the hours lost) fits above the controls, no sideways overflow', fits(tl), tl);
     await p.screenshot({ path: OUT + '/layout-charter-' + name + '-timeline.png' });
+    // Policy (slice 3): the scorecard with its three policy rows, the exception register (its table and every entry, the
+    // town's quoted), the intake editor, the policy library and the library's debrief.
+    await shut(); await sleep(100);
+    await p.evaluate(() => { G.f.chPolStart = true; const q = chPol(); chExcInit(); q.drills.polvalid = {verdictOk: true}; q.intakeSent = Object.fromEntries(Object.keys(CH_POL_INTAKE).map(id => [id, chIntakeRight(id)])); q.libSent = Object.fromEntries(CH_POL_DOCS.map(d => [d.id, d.bot])); track(); UI.openModal('Scorecard', scorecardHtml(), [{ label: 'Back' }]); }); await sleep(250);
+    const sc3 = await modalFit();
+    check('Charter ' + name + ': the scorecard with the three policy rows fits, table numbers and targets on one line', fits(sc3) && !sc3.wrapped.length, sc3);
+    await shut(); await sleep(100);
+    await p.evaluate(() => { chPolLibEntry(); UI.openModal('The exception register', chExcRegisterHtml(), [{ label: 'Back', meta: { back: true } }], { closable: false, cls: 'drill' }); }); await sleep(250);
+    const rg = await modalFit();
+    check('Charter ' + name + ': the exception register (its table on one line per cell, every entry) fits above the controls, no sideways overflow', fits(rg) && !rg.wrapped.length, rg);
+    await p.screenshot({ path: OUT + '/layout-charter-' + name + '-register.png' });
+    await shut(); await sleep(100);
+    await p.evaluate(() => { G.ch.pol.intake = null; run(() => chExcIntakeEdit()); }); await sleep(300);
+    const ik = await modalFit();
+    check('Charter ' + name + ': the register’s intake (three rows, the rule, Send) fits above the controls, no overflow', fits(ik), ik);
+    await p.screenshot({ path: OUT + '/layout-charter-' + name + '-intake.png' });
+    await shut(); await sleep(100);
+    await p.evaluate(() => { G.ch.pol.lib = null; run(() => chPolLibEdit()); }); await sleep(300);
+    const lb = await modalFit();
+    check('Charter ' + name + ': the policy library (six documents, Send) fits above the controls, no overflow', fits(lb), lb);
+    await p.screenshot({ path: OUT + '/layout-charter-' + name + '-library.png' });
+    await shut(); await sleep(100);
+    await p.evaluate(() => { UI.openModal('The policy library you sent', chPolLibHtml(Object.assign(Object.fromEntries(CH_POL_DOCS.map(d => [d.id, d.bot])), {'STD-2': 'when'})), [{ label: 'Into the Board papers', meta: { good: true } }], { closable: false, cls: 'summary' }); }); await sleep(250);
+    const ld = await modalFit();
+    check('Charter ' + name + ': the library’s debrief table fits, cells on one line', fits(ld) && !ld.wrapped.length, ld);
     check('Charter ' + name + ': no console errors or network requests', !errs.length, errs);
     await c.close();
   }

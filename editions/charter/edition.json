@@ -1,18 +1,21 @@
 {
   "id": "charter",
   "name": "Charter",
-  "district": "Prologue (the appointment and the risk-appetite statement), Budget, and Suppliers",
+  "district": "Prologue (the appointment and the risk-appetite statement), Budget, Suppliers, and Policy",
   "slice": 3,
-  "blurb": "Four weeks after the Compact-wide incident, the Compact Board appoints its first CISO: you. Set the risk appetite with the Board, then the budget: one fixed sum across the register’s risks, a fair case for an upgrade, and the Board’s decision. Then the suppliers: tiers, contract clauses within one envelope, and a supplier’s incident told from the Compact’s own records. Next: Policy.",
+  "blurb": "Four weeks after the Compact-wide incident, the Compact Board appoints its first CISO: you. Set the risk appetite with the Board, then the budget: one fixed sum across the register’s risks, a fair case for an upgrade, and the Board’s decision. Then the suppliers: tiers, contract clauses within one envelope, and a supplier’s incident told from the Compact’s own records. Then policy: an exception register with owners, expiries and reviews, a policy the Board approves, and standards measured against their own words. Next: The Board report.",
   "files": [
     "data.js",
     "risk.js",
     "supplier.js",
+    "policy.js",
     "prologue-data.js",
     "story.js",
     "budget-data.js",
     "budget-story.js",
     "suppliers-data.js",
-    "suppliers-story.js"
+    "suppliers-story.js",
+    "policy-data.js",
+    "policy-story.js"
   ]
 }
