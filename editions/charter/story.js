@@ -15,9 +15,11 @@ const EDITION = {
   saveKey: 'uptime.charter.save',
   ownMetrics: true,           // the analyst scorecard is replaced by the CISO's (EDITION_METRICS)
   noTools: true,              // no tool console: the CISO's tools are the register, the budget and the Board
-  badgeFlags: ['chPlumb'],
+  badgeFlags: ['chBallast'],
   title: 'Charter edition',
   blurb: 'Four weeks after the Compact-wide incident, the Compact Board appoints its first CISO: you. Set the risk appetite with the Board, then the budget: one sum, six risks, and an upgrade that wants the money too.',
+  fmActionsCat: 'Leadership practices (game)',   // the Field Manual's heading for EXTRA_ACTIONS (engine default: D3FEND-style)
+  fmIntro: 'Descriptions are our own words. No ATT&amp;CK technique in this slice; the CSF functions not met yet open in later districts.',
   creditsName: 'Charter edition',
   creditsFacts: 'Charter (the prologue and Budget): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088 and T1906, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, from NIST’s CSF 2.0 Implementation Examples (26 February 2024). No ATT&CK technique in this slice. Facts recalled from Crossroads are quoted from Crossroads.'
 };
@@ -54,15 +56,16 @@ function chCarry() {
   const th = chRead(CH_TH_KEY), cr = chRead(CH_CR_KEY), ng = chRead(CH_NG_KEY), ser = Series.load(), sc = ser.editions.crossroads || {}, sth = ser.editions['town-hall'] || {};
   for (const g of [th, cr, ng]) if (g && g.qt) Series.merge(g.qt);   // the series record is shared; the saves themselves are never written
   const tracks = [];
-  for (const t of [cr && cr.trackId, ng && ng.trackId].concat(Array.isArray(sc.tracksPlayed) ? sc.tracksPlayed : [])) if (CH_TRACK[t] && !tracks.includes(t)) tracks.push(t);
-  tracks.sort();   // manager before dfir, whichever was played first
+  // A New Game+ save exists only after a first save reached the ending; its ngFrom is the first save's track.
+  for (const t of [cr && cr.trackId, ng && ng.trackId, ng && ng.ngFrom].concat(Array.isArray(sc.tracksPlayed) ? sc.tracksPlayed : [])) if (CH_TRACK[t] && !tracks.includes(t)) tracks.push(t);
+  tracks.sort();   // alphabetical (dfir before manager), whichever was played first
   const crBadges = CH_CR_BADGES.filter(([, k]) => (cr && cr.f && cr.f[k]) || (ng && ng.f && ng.f[k])).map(([n]) => n);
   const nm = [cr, ng].map(g => g && typeof g.name === 'string' ? g.name.trim().slice(0, 24) : '').find(n => n && n !== 'Lead');
   const clues = Series.qt().cluesFound, crIds = clues.filter(id => /^(lb|sd|cn|dp|ap)-/.test(id));
   return {
     th: th ? 'save' : (sth.done || sth.editionComplete ? 'series' : 'none'), cr: cr || ng ? 'save' : (sc.track ? 'series' : 'none'),
     thBadges: th ? CH_TH_BADGES.filter(([, t]) => t(th)).map(([n]) => n) : [], crBadges: crBadges,
-    tracks: tracks, crDone: !!((cr && cr.f && cr.f.fnSummary) || (ng && ng.f && ng.f.fnSummary) || sc.editionComplete),
+    tracks: tracks, crDone: !!((cr && cr.f && cr.f.fnSummary) || (ng && ng.f && ng.f.fnSummary) || sc.editionComplete || (ng && ng.ngPlus)),
     name: nm || null, clues: clues.length, crClues: crIds.length, thClues: clues.length - crIds.length
   };
 }
@@ -84,8 +87,9 @@ function editionTile(d, ch) { if (ch === 'µ' && G.f.chRegister) d.pal = 'chRegO
 function surfaceMissed() { return Promise.resolve(); }   // no wild alerts here, so nothing can be missed
 async function evolveCheck() {}
 function triggers() { return false; }
-// The allocation the scorecard reads: the Board's final one once decided, else the one sent, else the one being built.
-function chScored() { const c = G.ch || {}; return c.final || c.sent || null; }
+// The allocation the scorecard reads: the CISO's advice, the allocation as sent (— before it is sent). The Board's
+// final allocation is the Board's decision, shown on its own line, never scored as the CISO's.
+function chScored() { const c = G.ch || {}; return c.sent || null; }
 function chOwnedPct() {
   const r = G.ch && G.ch.register; if (!r) return 0;
   return Math.round(CH_LINES.filter(l => r.owners[l.id] && !/^(IT|Finance|Dispatch)$/.test(r.owners[l.id]) && r.review[l.id]).length / CH_LINES.length * 100);
@@ -95,7 +99,7 @@ function editionMetricVals() {
   return {chWithin: s ? s.withinPct : null, chOwned: G.f.chBudgetBrief ? chOwnedPct() : null, chTop5: s ? s.topPct : null};
 }
 const EDITION_METRICS = [
-  {k: 'chWithin', label: 'Risks within appetite', unit: '%', higher: true},
+  {k: 'chWithin', label: 'Risks within appetite (your advice)', unit: '%', higher: true},
   {k: 'chOwned', label: 'Register risks with a business owner and review date', unit: '%', higher: true},
   {k: 'chTop5', label: 'Budget spent against top-five risks', unit: '%', higher: true}
 ];
@@ -104,8 +108,8 @@ function editionScorecard() {
   const fmt = (d, x) => x === null || x === undefined ? '—' : x + d.unit;
   const rows = METRICS.map(d => { const tr = G.track[d.k] || {}; return '<tr><td>' + d.label + '</td><td><b>' + fmt(d, v[d.k]) + '</b></td><td>' + fmt(d, tr.best) + '</td><td>' + fmt(d, tr.worst) + '</td><td>≥ ' + G.targets[d.k] + d.unit + '</td></tr>'; }).join('');
   return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
-    '<p>' + (c.final ? 'Scored on the Board’s final allocation.' : c.sent ? 'Scored on the allocation you sent; the Board decides on Thursday.' : 'No allocation sent yet.') + ' Drills with every needs met: <b>' + c.needs.met + ' of ' + c.needs.total + '</b>. Acceptances on the register: <b>' + (c.accept || []).length + '</b>' + ((c.accept || []).length ? ' (signed by ' + [...new Set(c.accept.map(x => x.signedBy))].map(esc).join(', ') + ')' : '') + '.</p>' +
-    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Plumb Badge: ' + (G.f.chPlumb ? 'yes' : 'not yet') + '</p>' +
+    '<p>' + (c.sent ? 'Scored on your advice: the allocation you sent, against Monday’s appetite and tolerances.' : 'No allocation sent yet.') + (c.final ? ' The Board’s decision: <b>' + chAllocStats(c.final).within + ' of ' + CH_LINES.length + '</b> lines within appetite' + (c.decision && c.decision.override ? ', overriding your advice' : '') + '.' : c.sent ? ' The Board decides on Thursday.' : '') + ' Drills with every needs met: <b>' + c.needs.met + ' of ' + c.needs.total + '</b>. Acceptances on the register: <b>' + (c.accept || []).length + '</b>' + ((c.accept || []).length ? ' (signed by ' + [...new Set(c.accept.map(x => x.signedBy))].map(esc).join(', ') + ')' : '') + '.</p>' +
+    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + '</p>' +
     (c.carry ? '<p class="small">Carried: ' + esc(chTracksText(c.carry)) + (c.carry.crBadges.length ? ' · Crossroads badges ' + c.carry.crBadges.join(', ') : '') + (c.carry.thBadges.length ? ' · Town Hall badges ' + c.carry.thBadges.join(', ') : '') + ' · suspicion file ' + qtCount() + ' notes.</p>' : '') +
     '<p class="small">Every number here is a game model (game). Objective: ' + esc(objective().text) + '</p>';
 }
@@ -140,16 +144,16 @@ function chDojoNext() { return G.ch.dojo.findIndex(x => !x); }
 function objective() {
   const f = G.f, at = (text, map, x, y) => ({text: text, map: map, x: x, y: y});
   if (!f.chAppetite) return at('09:00: the Compact Board room, through the west door. Ivor Penhallow is waiting.', 'chboard', 8, 3);
-  if (!f.chBudgetBrief) return at('13:30: Oriel Fanshawe, finance, at her desk in the offices.', 'choffice', 24, 2);
+  if (!f.chBudgetBrief) return at('13:30: Marit Quellan, finance, at her desk in the offices.', 'choffice', 24, 2);
   if (!f.chRegister) return at('The risk register on the wall: three owners to name, and a review date for every line.', 'choffice', 3, 1);
   if (!f.chDay64) return at('End the day at your desk.', 'choffice', 26, 9);
   if (!f.chDrillA) return at('Tuesday 09:00: Beatriz Solano, at the identity desk: the claim about MFA.', 'choffice', 12, 2);
   if (!f.chDrillB) return at('11:00: Edda Thornquist’s desk: the night-cover line.', 'choffice', 18, 2);
-  if (!f.chDrillC) return at('14:00: Oriel’s desk: two quotes for R1.', 'choffice', 24, 2);
+  if (!f.chDrillC) return at('14:00: Marit’s desk: two quotes for R1.', 'choffice', 24, 2);
   if (!f.chDay65) return at('End the day at your desk.', 'choffice', 26, 9);
-  if (!f.chAlloc) return at('Wednesday 09:00: your desk. The allocation is due with Oriel by 17:00.', 'choffice', 26, 9);
+  if (!f.chAlloc) return at('Wednesday 09:00: your desk. The allocation is due with Marit by 17:00.', 'choffice', 26, 9);
   if (!f.chDirective) return at('11:30: Joanna Ferreday is waiting by the register.', 'choffice', 6, 3);
-  if (!f.chDojoMet) return at('13:00: Oriel has three terminals for you. Talk to her first.', 'choffice', 24, 2);
+  if (!f.chDojoMet) return at('13:00: Marit has three terminals for you. Talk to her first.', 'choffice', 24, 2);
   if (!f.chDojoDone) return at('The Risk & Budget terminals, south-west: ' + (3 - G.ch.dojo.filter(Boolean).length) + ' left.', 'choffice', 3 + 2 * Math.max(0, chDojoNext()), 9);
   if (!f.chDay66) return at('End the day at your desk.', 'choffice', 26, 9);
   if (!f.chBoard) return at('Thursday 14:00: the Compact Board room: the budget round.', 'chboard', 8, 3);
@@ -170,7 +174,7 @@ function interact() {
   else if (ch === 'Y') run(chDesk);
   else if (ch === '¤') run(() => chDojoPuzzle([3, 5, 7].indexOf(tx)));
   else if (ch === '£') run(async () => { await say(f.chDrillC ? 'The contracts cabinet. The two quotes for R1 are filed together now, Quote B’s on top.' : 'The contracts cabinet: the members’ vendor contracts, and two new quotes in a folder marked R1.'); });
-  else if (ch === 'Ɓ') run(async () => { await say(tx < 15 ? 'The identity desk: the shared directory’s console, and Beatriz’s exports.' : tx < 21 ? 'The shared-services desk: the platform’s support notice is pinned to it.' : 'The finance desk: next year’s budget papers, in Oriel’s neat piles.'); });
+  else if (ch === 'Ɓ') run(async () => { await say(tx < 15 ? 'The identity desk: the shared directory’s console, and Beatriz’s exports.' : tx < 21 ? 'The shared-services desk: the platform’s support notice is pinned to it.' : 'The finance desk: next year’s budget papers, in Marit’s neat piles.'); });
   else if (ch === '±') run(async () => { await say('The Compact Board’s minutes, by year. This year’s binder ends with the weekend of Night 33.'); });
   else if (ch === 'Ɠ') run(async () => { await say('The Board table: one seat for each member’s representative, the chair’s at the head.'); });
 }
@@ -180,20 +184,20 @@ async function talk(npc) {
     case 'penhallow':
       if (!f.chAppetite) { await chAppointment(); return; }
       if (f.chDay66 && !f.chBoard) { await chBoardRound(); return; }
-      await say(f.chBoard ? 'The Plumb Badge says this Board can hold you to a measure. Keep giving it one.' : 'Thursday at 14:00. Bring both cases, laid out the same way.', who); return;
+      await say(f.chBoard ? 'The Ballast Badge says this Board can hold you to a measure. Keep giving it one.' : 'Thursday at 14:00. Bring both cases, laid out the same way.', who); return;
     case 'noorch':
       await say(f.chAppetite ? 'I’m here for anything legal. The budget is the Board’s.' : 'Bring me the facts, on time. Whether the law asks for anything is mine to answer, or a member’s own counsel’s.', who); return;
     case 'beatrizch':
       if (f.chDay64 && !f.chDrillA) { await chDrillA(); return; }
-      await say(f.chDrillA ? 'fin-ap goes to Oriel, board-display has an owner and an expiry, and the six service accounts keep theirs, owned and dated.' : 'Exports and resets for Edda. Tomorrow you’ll want the sign-in records, I expect.', who); return;
+      await say(f.chDrillA ? 'fin-ap goes to Marit, board-display has an owner and an expiry, and the six service accounts keep theirs, owned and dated.' : 'Exports and resets for Edda. Tomorrow you’ll want the sign-in records, I expect.', who); return;
     case 'edda':
       if (f.chDrillA && !f.chDrillB) { await chDrillB(); return; }
-      await say(!f.chAppetite ? 'Edda Thornquist. I run the shared services. You’ll want me at the Board at nine.' : f.chBoard ? (G.ch.decision && G.ch.decision.override ? 'The upgrade is funded, and I signed for what it leaves. That was the deal, and it should be.' : G.ch.final && G.ch.final.R6 === 2 ? 'The upgrade is funded as you sent it. What it leaves, the owners have signed.' : 'The upgrade waits a year and the extension carries us. Fair, laid out the way you laid it out.') : 'My request is with Oriel: the platform leaves its vendor’s support next year. It’s a fair case. Make yours as plainly.', who); return;
-    case 'fanshawe':
+      await say(!f.chAppetite ? 'Edda Thornquist. I run the shared services. You’ll want me at the Board at nine.' : f.chBoard ? (G.ch.decision && G.ch.decision.override ? 'The upgrade is funded. The Board chose the trade-off, with your advice against it in the minute, and I signed for running the interim checks.' : G.ch.final && G.ch.final.R6 === 2 ? 'The upgrade is funded as you sent it. What it leaves, the owners have signed.' : 'The upgrade waits a year and the extension carries us. Fair, laid out the way you laid it out.') : 'My request is with Marit: the platform leaves its vendor’s support next year. It’s a fair case. Make yours as plainly.', who); return;
+    case 'quellan':
       if (f.chAppetite && !f.chBudgetBrief) { await chBudgetBrief(); return; }
       if (f.chDrillB && !f.chDrillC) { await chDrillC(); return; }
       if (f.chDirective && !f.chDojoMet) { await chDojoIntro(); return; }
-      await say(f.chDojoMet && !f.chDojoDone ? 'The three terminals, south-west. Residual risk, cost against benefit, and who signs.' : !f.chAppetite ? 'Oriel Fanshawe, finance. After the Board’s session, come and see me about the money.' : 'The papers go to the Board on Wednesday at 17:00. Numbers, and what each one buys.', who); return;
+      await say(f.chDojoMet && !f.chDojoDone ? 'The three terminals, south-west. Residual risk, cost against benefit, and who signs.' : !f.chAppetite ? 'Marit Quellan, finance. After the Board’s session, come and see me about the money.' : 'Your section joins the Board papers on Wednesday at 17:00. Numbers, and what each one buys.', who); return;
     case 'ferreday':
       await chDirective(); return;
   }
@@ -216,7 +220,7 @@ async function chStages(list, rec) {
 async function chAppointment() {
   const who = 'Ivor Penhallow', f = G.f, c = G.ch;
   if (!f.chAppoint) {
-    await say('09:00. Welcome. Noor and Edda you know. The Board has wanted one person to own the Compact’s risk since the weekend of Night 33. That is you, from today.', who);
+    await say('09:00. Welcome. Noor and Edda you know. The Board has wanted one person to run the Compact’s risk programme since the weekend of Night 33. That is you, from today.', who);
     await UI.openModal('The remit (game)', '<ul><li>You report to the Compact Board, through me as its chair.</li><li>Edda Thornquist runs the shared services’ IT: their operations are hers.</li><li>Each member’s own leadership decides for that member. The Compact coordinates; it doesn’t command.</li><li>Counsel decides legal questions: Noor for the town and the shared services, each member’s own counsel for that member.</li><li>You own the risk programme: the register, policy, and reporting to this Board. Everyone else, you advise.</li></ul>',
       [{label: 'Understood', meta: {good: true}}], {closable: false, cls: 'summary'});
     await say('Four questions, so we both know you heard it.', who);
@@ -229,20 +233,20 @@ async function chAppointment() {
   const ap = await chAppetiteBuild(CH_APPETITE);
   c.appetite = {levels: ap.levels, tol: ap.tol, first: ap.first, approved: 'Day 64, 12:00'};
   await UI.openModal('The risk-appetite statement', chAppetiteHtml(ap, CH_APPETITE) +
-    '<p>And one rule in it: a risk above appetite stays only with an acceptance signed by its business owner, with an expiry and a review date. The Board sees each one. (game)</p>' +
+    '<p>And one rule in it: a risk above appetite stays only with an acceptance signed by its business owner, with an expiry, a review date and interim measures. The Board sees each one, and a risk the Board itself decides to carry above appetite is minuted as the Board’s decision and approved by it. (game)</p>' +
     '<p class="small">CSF 2.0 GV.RM-02: “Risk appetite and risk tolerance statements are established, communicated, and maintained”. One of NIST’s examples: “Translate risk appetite statements into specific, measurable, and broadly understandable risk tolerance statements”.</p>',
     [{label: '12:00: the Board approves it, and Ivor signs', meta: {good: true}}], {closable: false, cls: 'summary'});
   f.chAppetite = true; unlock('act', 'chappetite'); unlock('fact', 'chcsf'); touchCSF('Govern'); track();
   await say('Every decision this week is measured against that. Thursday at 14:00, the budget round.', who);
-  await say('My request is with Oriel already. You’ll see it.', 'Edda Thornquist');
-  await say('13:30: Oriel Fanshawe, finance, at her desk in the offices.');
+  await say('My request is with Marit already. You’ll see it.', 'Edda Thornquist');
+  await say('13:30: Marit Quellan, finance, at her desk in the offices.');
 }
 
 /* ---------- Prologue (Day 64 13:30): the budget brief ---------- */
 async function chBudgetBrief() {
-  const who = 'Oriel Fanshawe';
-  await say('Oriel Fanshawe, finance. Next year’s security programme lines get $480k, on top of what it costs to run what we have. (game)', who);
-  await say('The Board’s budget round is Thursday at 14:00. Your papers reach me by Wednesday at 17:00.', who);
+  const who = 'Marit Quellan';
+  await say('Marit Quellan, finance. Next year’s security programme lines get $480k, one-off and recurring costs together this year. The upgrade would be a one-off. (game)', who);
+  await say('The Board’s budget round is Thursday at 14:00. The agenda goes out with the papers this evening; your section reaches me by Wednesday at 17:00 and joins them. (game)', who);
   await say('Edda’s request came in on Friday: the platform upgrade, $250k. Two quotes for the vendor-access line came in the same day.', who);
   await say('I don’t need a security case. I need each line priced against what it buys and what it leaves.', who);
   G.f.chBudgetBrief = true; touchCSF('Govern'); track();
@@ -304,11 +308,11 @@ async function chDesk() {
   if (f.chDrillC && !f.chDay65) {
     await UI.openModal('Tuesday, done', '<p>Three claims read against the records: the MFA line, the night-cover line, and the two quotes. (game)</p>', [{label: 'Wednesday', meta: {good: true}}], {closable: false, cls: 'summary'});
     f.chDay65 = true; G.day = 66; G.focus = G.focusMax; track();
-    await say('Day 66, Wednesday, 09:00. The allocation is due with Oriel by 17:00. Your desk.'); return;
+    await say('Day 66, Wednesday, 09:00. The allocation is due with Marit by 17:00. Your desk.'); return;
   }
   if (f.chDay65 && !f.chAlloc) { await chAllocTask(); return; }
   if (f.chDojoDone && !f.chDay66) {
-    await UI.openModal('Wednesday, done', '<p>17:00: the Board papers go out, your allocation and Edda’s alternative side by side. (game)</p>', [{label: 'Thursday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    await UI.openModal('Wednesday, done', '<p>17:00: your section joins the Board papers, your allocation and Edda’s alternative side by side. (game)</p>', [{label: 'Thursday', meta: {good: true}}], {closable: false, cls: 'summary'});
     f.chDay66 = true; G.day = 67; G.focus = G.focusMax; track();
     await say('Day 67, Thursday. 14:00: the Compact Board room, the budget round.'); return;
   }

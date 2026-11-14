@@ -39,7 +39,7 @@
 // Town Hall and Crossroads tables, which are unchanged by it. It is held to Crossroads' rules from its first build: the
 // stem-matched words at 70% and their 35-65% warning band, every Crossroads group and Charter's own groups (appetite,
 // budget/cost, accept/sign, the Board, owner, "you", records) in the band from n >= 3, punctuation, names (every named
-// character, and Edda, Oriel, Ivor, Celia, Joanna, Beatriz and Noor one by one) and lone features.
+// character, and Edda, Marit, Ivor, Celia, Joanna, Beatriz and Noor one by one) and lone features.
 const fs = require('fs');
 const path = require('path');
 let acorn = null;
@@ -306,7 +306,9 @@ const graded = lists.filter(L => !L.items.filter(x => x.good).every(x => SKIP.te
 const opts = graded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
 const crGraded = crLists.filter(L => !L.items.filter(x => x.good).every(x => CR_SKIP.test(x.label)));
 const crOpts = crGraded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
-const chGraded = chLists.filter(L => !L.items.filter(x => x.good).every(x => CR_SKIP.test(x.label)));
+// Charter uses the whole-label filter (SKIP), as Town Hall does: with the word match a graded answer that opens "No:" (the
+// Board's Round 3 since the slice-1 review) dropped its list from the scan.
+const chGraded = chLists.filter(L => !L.items.filter(x => x.good).every(x => SKIP.test(x.label)));
 const chOpts = chGraded.flatMap(L => L.items.map(x => Object.assign({file: L.file, d: district(L.file), key: L.key, t: L.type}, x)));
 
 function stat(set, re) {
@@ -570,10 +572,10 @@ const CHARTER_BAND = CROSSROADS_BAND.concat(CH_EXTRA.map(w => w[0]));
 const chBand = [];
 for (const n of CHARTER_BAND) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = stat(chScope(s), CH_GROUPS.find(w => w[0] === n)[1]); chBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
 const CH_NAMES = [
-  ['N:named', new RegExp(CR_NAMES[0][1].source.replace('|Hugo|Ellerby)', '|Hugo|Ellerby|Oriel|Fanshawe|Dalia)'))],
-  ['N:Edda', /\b(Edda|Thornquist)\b/], ['N:Oriel', /\b(Oriel|Fanshawe)\b/], ['N:Ivor', /\b(Ivor|Penhallow)\b/], ['N:Celia', /\b(Celia|Marrow)\b/],
+  ['N:named', new RegExp(CR_NAMES[0][1].source.replace('|Hugo|Ellerby)', '|Hugo|Ellerby|Marit|Quellan|Dalia)'))],
+  ['N:Edda', /\b(Edda|Thornquist)\b/], ['N:Marit', /\b(Marit|Quellan)\b/], ['N:Ivor', /\b(Ivor|Penhallow)\b/], ['N:Celia', /\b(Celia|Marrow)\b/],
   ['N:Joanna', /\b(Joanna|Ferreday)\b/], ['N:Beatriz', /\b(Beatriz|Solano)\b/], ['N:Noor', /\b(Noor|Castellanos)\b/],
-  ['N:ch-deciders', /\b(Edda|Thornquist|Oriel|Fanshawe|Ivor|Penhallow|Celia|Marrow|Joanna|Ferreday|Noor|Castellanos)\b/]];
+  ['N:ch-deciders', /\b(Edda|Thornquist|Marit|Quellan|Ivor|Penhallow|Celia|Marrow|Joanna|Ferreday|Noor|Castellanos)\b/]];
 const chPunct = [], chNameRows = [];
 for (const [name, re] of PUNCT) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re), ln = lone(chListsIn(s), re); chPunct.push({n: name + '@' + s, st, ln, ok: pOk(st) && ln.ok}); }
 for (const [name, re] of CH_NAMES) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re); chNameRows.push({n: name + '@' + s, st, ok: pOk(st)}); }
@@ -612,7 +614,7 @@ if (chFiles.length) checks.push(
   ['Charter: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ', stem-matched) in its districts, its list types or overall, and none outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !chFails.length && !chWarns.length],
   ['Charter stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on every Crossroads group and its own (appetite, budget, accept/sign, Board, owner, you, records), n>=' + CR_BAND_MIN_N + ' (' + chBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', chBand.every(x => x.ok)],
   ['Charter: no punctuation tell (; : dash parentheses), the lone-mark pick no better than chance (' + chPunct.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln)).join(', ') + ')', chPunct.every(x => x.ok)],
-  ['Charter: no name tell — any named character, and Edda, Oriel, Ivor, Celia, Joanna, Beatriz, Noor and the deciders together (' + chNameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', chNameRows.every(x => x.ok)],
+  ['Charter: no name tell — any named character, and Edda, Marit, Ivor, Celia, Joanna, Beatriz, Noor and the deciders together (' + chNameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', chNameRows.every(x => x.ok)],
   ['Charter: no lone-feature tell (the same rule as Crossroads); strongest leans: ' + chLf.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !chLfFails.length]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);

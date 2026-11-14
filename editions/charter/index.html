@@ -236,7 +236,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261114-0643Z', BUILD_TS = '2026-11-14 06:43 UTC';
+const BUILD_ID = 'ARCD-20261114-0858Z', BUILD_TS = '2026-11-14 08:58 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -1517,7 +1517,7 @@ Object.assign(PAL, {
   solano: ['#1a1a2e', '#3b2418', '#c98a54', '#3a6e8a'],
   noor: ['#1a1a2e', '#141414', '#a8703f', '#3a4a6b'],
   ferreday: ['#1a1a2e', '#3b2418', '#c98a54', '#2a5a8a'],
-  fanshawe: ['#1a1a2e', '#5b3a26', '#f0c8a0', '#6e2a4a']
+  quellan: ['#1a1a2e', '#5b3a26', '#f0c8a0', '#6e2a4a']
 });
 
 /* ---------- Tiles (single UTF-16 units, so map rows keep their lengths) ---------- */
@@ -1580,7 +1580,7 @@ const NPCS = [
   {id: 'noorch', name: 'Noor Castellanos', role: 'town attorney, counsel for the town and the shared services', map: 'chboard', x: 4, y: 4, dir: 'down', pal: 'noor', cond: G => !G.f.chAppetite || (!!G.f.chDay66 && !G.f.chBoard)},
   {id: 'beatrizch', name: 'Beatriz Solano', role: 'identity team lead (the shared directory)', map: 'choffice', x: 12, y: 2, dir: 'down', pal: 'solano'},
   {id: 'edda', name: 'Edda Thornquist', role: 'the Compact’s shared-services director', map: 'choffice', x: 18, y: 2, dir: 'down', pal: 'thornquist'},
-  {id: 'fanshawe', name: 'Oriel Fanshawe', role: 'the Compact’s finance director', map: 'choffice', x: 24, y: 2, dir: 'down', pal: 'fanshawe'},
+  {id: 'quellan', name: 'Marit Quellan', role: 'the Compact’s finance director', map: 'choffice', x: 24, y: 2, dir: 'down', pal: 'quellan'},
   {id: 'ferreday', name: 'Joanna Ferreday', role: 'airport manager, the Regional Airport', map: 'choffice', x: 6, y: 3, dir: 'left', pal: 'ferreday', cond: G => !!G.f.chAlloc && !G.f.chDirective}
 ];
 
@@ -1603,20 +1603,20 @@ const EXTRA_ACTIONS = {
   chmeasure: {name: 'Did the spend work?', desc: 'Compare the measure the spend was meant to move, before and after, and list what else changed in between. Credit is shared with every other change; two incidents are a sample, not a trend.'},
   chquote: {name: 'A quote against the requirement', desc: 'Read each quote’s scope against the written requirement line by line. Price comes after cover: a cheaper quote that leaves part of the requirement out buys less, not the same for less.'},
   challoc: {name: 'Budget as risk allocation', desc: 'Spend follows the register. For each line show the cost, the risk left after it (the residual) and the appetite it is measured against, so the board can see what each choice buys and what it leaves.'},
-  chaccept: {name: 'A risk acceptance, signed by its owner', desc: 'A risk left above appetite stays only with an acceptance signed by its business owner, with an expiry, a review date and any interim measures. The CISO writes it up and records it; the CISO does not sign for someone else’s risk.'},
+  chaccept: {name: 'A risk acceptance, signed by its owner', desc: 'A risk left above appetite stays only with an acceptance signed by its business owner, with an expiry, a review date and any interim measures; a risk the governing body decides to carry above its own appetite is also minuted as the governing body’s decision, and approved by it. The CISO writes it up and records it; the CISO does not sign for someone else’s risk.'},
   chboard: {name: 'Both cases, in business terms', desc: 'When two asks compete for one budget, present both the same way: what each costs, what it buys and what risk each leaves against the approved appetite. Then the board decides.'}
 };
 const FACTS = {
-  chnice: {name: 'CISO in the NICE Framework', desc: 'The closest NICE work role is Executive Cybersecurity Leadership (OG-WRL-007). Its tasks include T1227, “Manage cybersecurity budget, staffing, and contracting”; T1059, “Perform cost/benefit analyses of cybersecurity programs, policies, processes, systems, and elements”; T1060, “Advise senior management on organizational cybersecurity efforts”; T1088, “Communicate the value of cybersecurity to organizational stakeholders”; and T1906, “Establish a cybersecurity risk management program”. “CISO” is a job title: NICE work roles group work and carry no title or seniority.', src: 'CISA NICCS, Executive Cybersecurity Leadership work role page and task pages T1059 and T1060 (the role page shows NICE Framework version 2.0.0); NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to this role or these tasks'},
+  chnice: {name: 'CISO in the NICE Framework', desc: 'The closest NICE work role is Executive Cybersecurity Leadership (OG-WRL-007). Its tasks include T1227, “Manage cybersecurity budget, staffing, and contracting”; T1059, “Perform cost/benefit analyses of cybersecurity programs, policies, processes, systems, and elements”; T1060, “Advise senior management on organizational cybersecurity efforts”; T1088, “Communicate the value of cybersecurity to organizational stakeholders”; and T1906, “Establish a cybersecurity risk management program”. “CISO” is a job title, not a NICE work role: a job may cover one or more work roles, or part of one.', src: 'CISA NICCS, Executive Cybersecurity Leadership work role page and task pages T1059 and T1060 (the role page shows NICE Framework version 2.0.0); NIST NICE Framework Resource Center, “Occupations, Jobs, and Work Roles”; NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to this role or these tasks'},
   chcsf: {name: 'Risk appetite and resources in CSF 2.0 Govern', desc: 'CSF 2.0 subcategory GV.RM-02: “Risk appetite and risk tolerance statements are established, communicated, and maintained”. One of NIST’s implementation examples for it: “Translate risk appetite statements into specific, measurable, and broadly understandable risk tolerance statements”. GV.RR-03: “Adequate resources are allocated commensurate with the cybersecurity risk strategy, roles, responsibilities, and policies”, with the example “Identify resource allocation and investment in line with risk tolerance and response”.', src: 'NIST, CSF 2.0 Implementation Examples (26 February 2024)'}
 };
 const GAME_NOTES = [
   'Charter keeps the series’ day count from Crossroads (Day 1 was Crossroads’ first Monday), so Charter starts on Day 64, a Monday, and every recalled Crossroads date keeps its number. (game)',
   'The Compact Board’s appointment of a CISO, the reporting line, the remit, the risk register, its six lines, ratings, ranks, owners and options, the appetite scale (Low: only a Low residual is within appetite; Moderate: Medium or Low), every tolerance, the $480k budget, every price and the two quotes are invented. (game)',
-  'The Board’s rule when it overrides an allocation (the upgrade in full, the service-account review and the restore space deferred, then the payment line and vendor access trimmed if the total is still over, the 911 center’s line never cut) is invented. (game)',
+  'The Board’s rule is invented (game): it never leaves the 911 center’s line unfunded, correcting any allocation that does in its minute; it approves the CISO’s allocation as sent when the upgrade is funded in full, or when the allocation keeps every line within appetite and tolerances and the first two rounds were answered right first time; otherwise it overrides (the upgrade in full, the service-account review and the restore space deferred), and it trims the service-account review, the restore space, the payment line and vendor access, in that order, while the total is over. A line that breaks one of Monday’s tolerances counts as above appetite. (game)',
   'Every person, the Riverbend Shared Services Compact, its members, accounts (fin-ap, board-display, the group MFA-Exempt), counts and times are invented. Recalled Crossroads facts are quoted from Crossroads. (game)',
   'Charter never says what any law requires. Counsel decides legal questions: Noor for the town and the shared services, each member’s own counsel for that member. (game)',
-  'The carry-over effects (Focus +2 for each Crossroads track played, +2 if Crossroads was finished) and the Plumb Badge’s effects (every register line arriving with its owner and review date; Focus +4) are invented. (game)'
+  'The carry-over effects (Focus +2 for each Crossroads track played, +2 if Crossroads was finished) and the Ballast Badge’s effects (every register line arriving with its owner and review date; Focus +4) are invented. (game)'
 ];
 
 /* ---- editions/charter/risk.js ---- */
@@ -1628,12 +1628,16 @@ const GAME_NOTES = [
      later decision is measured against it (CSF 2.0 GV.RM-02, cited in CREDITS.md);
    - budget allocation: a fixed sum across the register's lines; each line's
      option shows its cost, the risk left after it (the residual) and the
-     appetite it is measured against; a line above appetite needs an acceptance
-     signed by its business owner (never by the CISO); the Board can override
-     an allocation (its rule is chBoardDecide) and its owners sign for what the
-     override leaves above appetite;
-   - risk acceptances: owner, residual, appetite, expiry, review date, interim
-     measures, who decided.
+     appetite and tolerance it is measured against (a line within the level
+     that breaks an approved tolerance is above appetite); a line above
+     appetite needs an acceptance signed by its business owner (never by the
+     CISO); the Board can override an allocation (its rule is chBoardDecide),
+     and what its decision leaves above appetite is minuted as the Board's
+     decision and approved by the Board, each owner signing for the interim
+     measures and the treatment plan;
+   - risk acceptances: owner, residual, appetite, tolerances broken, who
+     decided, who approved, who signed and for what, expiry, review date,
+     interim measures.
    Hooks for later slices (not built here): the board-report assembly (claims
    graded against records), the contract-clause negotiation within a budget, and
    the policy exception register with expiries. Each will read the same records:
@@ -1656,7 +1660,20 @@ function chAppetite(cat) {
   const c = CH_APPETITE.find(x => x.id === cat), g = c && c.opts.find(o => o.good);
   return g ? g.level : 'Moderate';
 }
-function chWithin(cat, residual) { return CH_LEVELS.indexOf(residual) <= CH_LEVELS.indexOf(CH_APPETITE_MAX[chAppetite(cat)]); }
+// The approved tolerance text for a category (the statement's; the good option's until it is approved), and its short form.
+function chTol(cat) {
+  const t = G && G.ch && G.ch.appetite && G.ch.appetite.tol;
+  if (t && t[cat]) return t[cat];
+  const c = CH_APPETITE.find(x => x.id === cat), g = c && c.opts.find(o => o.good);
+  return g ? g.tol : '';
+}
+function chLevelWithin(cat, residual) { return CH_LEVELS.indexOf(residual) <= CH_LEVELS.indexOf(CH_APPETITE_MAX[chAppetite(cat)]); }
+// Within appetite: the residual no higher than the level allows AND no approved tolerance broken. The tolerances bind
+// (GV.RM-02's example: appetite turned into measurable tolerances), so an option that breaks one is above appetite
+// whatever its residual. `breaks` lists the tolerances an option breaks, in the statement's words.
+function chWithin(cat, residual, breaks) { return chLevelWithin(cat, residual) && !(breaks && breaks.length); }
+function chOptWithin(l, o) { return chWithin(l.cat, o.res, o.breaks); }
+function chBreaks(o) { return (o && o.breaks) || []; }
 // Build the statement: one graded list per category, retried until the Board can approve it; first tries are recorded.
 async function chAppetiteBuild(cats) {
   const out = {levels: {}, tol: {}, first: []};
@@ -1689,24 +1706,24 @@ function chAllocStats(alloc) {
   let total = 0, top = 0, within = 0; const above = [];
   for (const l of CH_LINES) {
     const o = chOpt(alloc, l); total += o.cost; if (l.rank <= 5) top += o.cost;
-    if (chWithin(l.cat, o.res)) within++; else above.push(l);
+    if (chOptWithin(l, o)) within++; else above.push(l);
   }
   return {total, top, topPct: total ? Math.round(top / total * 100) : null, within, withinPct: Math.round(within / CH_LINES.length * 100), above};
 }
 function chAllocTable(alloc) {
   return '<table class="sc"><tr><th>Line</th><th>Cost</th><th>Left</th><th>Appetite</th></tr>' + CH_LINES.map(l => {
-    const o = chOpt(alloc, l), ok = chWithin(l.cat, o.res);
-    return '<tr><td>' + l.id + '</td><td>' + chMoney(o.cost) + '</td><td>' + o.res + '</td><td>' + (ok ? 'within' : '<b>above</b>') + '</td></tr>';
+    const o = chOpt(alloc, l), ok = chOptWithin(l, o);
+    return '<tr><td>' + l.id + '</td><td>' + chMoney(o.cost) + '</td><td>' + o.res + '</td><td>' + (ok ? 'within' : chBreaks(o).length ? '<b>above</b> (a tolerance)' : '<b>above</b>') + '</td></tr>';
   }).join('') + '</table>';
 }
 function chAllocSummary(alloc) {
   const s = chAllocStats(alloc);
   return '<p>Allocated <b>' + chMoney(s.total) + '</b> of ' + chMoney(CH_BUDGET) + ' · within appetite <b>' + s.within + ' of ' + CH_LINES.length + '</b> · top five <b>' + (s.topPct === null ? '—' : s.topPct + '%') + '</b> (game)</p>' +
-    (s.above.length ? '<p>Above appetite, so each needs an acceptance signed by its owner: ' + s.above.map(l => '<b>' + l.id + '</b> (' + esc(l.owner) + ')').join(', ') + '.</p>' : '<p>Every line within the appetite the Board approved on Monday.</p>');
+    (s.above.length ? '<p>Above appetite, so each needs an acceptance signed by its owner: ' + s.above.map(l => '<b>' + l.id + '</b> (' + esc(l.owner) + ')' + (chBreaks(chOpt(alloc, l)).length ? ', breaking a tolerance' : '')).join(', ') + '.</p>' : '<p>Every line within the appetite the Board approved on Monday, its tolerances kept.</p>');
 }
 function chOptionsHtml() {
-  return CH_LINES.map(l => '<h3>' + l.id + ' ' + esc(l.name) + '</h3><p class="small">' + esc(l.catName) + ', appetite ' + esc(chAppetite(l.cat)) + ' · owner ' + esc(l.owner) + ' · rank ' + l.rank + '</p><ul>' +
-    l.opts.map(o => '<li>' + chMoney(o.cost) + ': ' + esc(o.what) + ' Left: ' + o.res + (chWithin(l.cat, o.res) ? ', within appetite.' : ', above appetite.') + '</li>').join('') + '</ul>' + (l.note ? '<p class="small">' + esc(l.note) + '</p>' : '')).join('');
+  return '<p class="small">Every price, rating and figure on this page is game data (game).</p>' + CH_LINES.map(l => '<h3>' + l.id + ' ' + esc(l.name) + '</h3><p class="small">' + esc(l.catName) + ', appetite ' + esc(chAppetite(l.cat)) + ' · owner ' + esc(l.owner) + ' · rank ' + l.rank + '</p><p class="small">Tolerance (Monday): ' + esc(chTol(l.cat)) + '.</p><ul>' +
+    l.opts.map(o => '<li>' + chMoney(o.cost) + ': ' + esc(o.what) + ' Left: ' + o.res + (chOptWithin(l, o) ? ', within appetite.' : chBreaks(o).length ? ', above appetite: it breaks the tolerance “' + esc(chBreaks(o).join('”, “')) + '”.' : ', above appetite.') + '</li>').join('') + '</ul>' + (l.note ? '<p class="small">' + esc(l.note) + '</p>' : '')).join('');
 }
 // The allocation editor: left/right (or A) changes a line's option; the page reopens in place. Not graded line by line:
 // the scorecard measures the result. meta.bot marks the bot's next step (the recommended allocation); it is never shown.
@@ -1717,18 +1734,19 @@ async function chAllocate() {
     const s = chAllocStats(a), done = CH_LINES.every(l => a[l.id] === l.rec);
     const items = CH_LINES.map(l => {
       const o = chOpt(a, l);
-      return {label: l.id + ' ' + l.name + ': ' + chMoney(o.cost) + ', ' + o.res + (chWithin(l.cat, o.res) ? '' : ', above appetite'), note: o.what, meta: {k: l.id, lr: true, bot: a[l.id] !== l.rec}};
+      return {label: l.id + ' ' + l.name + ': ' + chMoney(o.cost) + ', ' + o.res + (chOptWithin(l, o) ? '' : chBreaks(o).length ? ', breaks a tolerance' : ', above appetite'),
+        note: o.what + ' Tolerance: ' + CH_TOL_SHORT[l.cat] + '.' + (chBreaks(o).length ? ' This option breaks it.' : '') + ' (A cycles)', meta: {k: l.id, lr: true, bot: a[l.id] !== l.rec}};
     });
     items.push({label: 'Each line’s options, in business terms', meta: {k: 'help'}});
-    items.push({label: s.total > CH_BUDGET ? 'Over the budget by ' + chMoney(s.total - CH_BUDGET) + ': change a line' : 'Send it to Oriel for the Board papers', disabled: s.total > CH_BUDGET, meta: {k: 'send', bot: done}});
-    const body = '<p>' + chMoney(CH_BUDGET) + ' for next year’s programme lines (game). Each line: what it costs, the risk it leaves, and the appetite the Board approved on Monday. Left/right (or A) changes a line’s option.</p>' + chAllocSummary(a);
+    items.push({label: s.total > CH_BUDGET ? 'Over the budget by ' + chMoney(s.total - CH_BUDGET) + ': change a line' : 'Send it to Marit for the Board papers', disabled: s.total > CH_BUDGET, meta: {k: 'send', bot: done}});
+    const body = '<p>' + chMoney(CH_BUDGET) + ' for next year’s programme lines (game). Each line: what it costs, the risk it leaves, and the appetite and tolerance the Board approved on Monday. Left/right (or A) changes a line’s option.</p>' + chAllocSummary(a);
     const r = await UI.openModal('Budget · next year’s lines', body, items, {closable: false, cursor: cur, inView: true, lr: true, cls: 'drill'});
     if (r && typeof r === 'object' && r.lr) { const l = CH_LINES[r.i]; if (l) { a[l.id] = (a[l.id] + r.d + l.opts.length) % l.opts.length; cur = r.i; } continue; }
     if (r >= 0 && r < CH_LINES.length) { const l = CH_LINES[r]; a[l.id] = (a[l.id] + 1) % l.opts.length; cur = r; continue; }
     const k = items[r] && items[r].meta.k;
     if (k === 'help') { await UI.openModal('The lines in business terms', chOptionsHtml(), [{label: 'Back to the allocation', meta: {back: true}}], {closable: false, cls: 'drill'}); cur = r; continue; }
     if (k === 'send') {
-      const j = await UI.openModal('Send the allocation?', chAllocTable(a) + chAllocSummary(a) + '<p>Oriel puts it in the Board papers beside Edda’s alternative. The Board decides on Thursday.</p>',
+      const j = await UI.openModal('Send the allocation?', chAllocTable(a) + chAllocSummary(a) + '<p>Marit puts it in the Board papers beside Edda’s alternative. The Board decides on Thursday.</p>',
         [{label: 'Send it', meta: {k: 'go', bot: true}}, {label: 'Back to the lines', meta: {k: 'back'}}], {closable: false, cursor: 1});
       if (j === 0) return a;
       cur = r;
@@ -1737,27 +1755,46 @@ async function chAllocate() {
 }
 
 /* ---------- The Board's decision and the acceptances ---------- */
-// The Board's rule (game): if the upgrade is not funded in full, it funds it, defers R2 and R3, then trims R4 and R1 to
-// $0 if the total is still over; it never cuts R5. Otherwise it approves the allocation as sent.
-function chBoardDecide(alloc) {
+// The Board's rule (game), on every path:
+// 1. R5 is never left unfunded: an allocation with R5 at $0 is corrected in the minute (R5 funded), as the chair won't
+//    ask Celia to sign that (`restored`).
+// 2. Persuaded (the CISO's allocation within appetite on every line, tolerances kept, and Rounds 1 and 2 answered right
+//    first time), the Board approves the allocation as sent: the extension carries R6 for a year.
+// 3. Otherwise, if the upgrade is not funded in full, the Board overrides: the upgrade in full, R2 and R3 deferred.
+// 4. Then, while the total is over the budget, R2, R3, R4 and R1 are trimmed to $0, in that order (R1 is never trimmed
+//    to Quote A: it would leave R1 at Medium, still above appetite).
+// Whatever the path, the Board decides; the CISO's allocation is its advice.
+function chBoardDecide(alloc, persuaded) {
   const f = Object.assign({}, alloc), up = chLine('R6').opts.length - 1;
   const total = () => CH_LINES.reduce((n, l) => n + chOpt(f, l).cost, 0);
-  if (f.R6 === up) return {final: f, override: false, cut: []};
-  const cut = [];
-  f.R6 = up;
-  for (const id of ['R2', 'R3']) { if (f[id]) cut.push(id); f[id] = 0; }
-  for (const id of ['R4', 'R1']) if (total() > CH_BUDGET && f[id]) { f[id] = 0; cut.push(id); }
-  return {final: f, override: true, cut};
+  const restored = [], cut = [];
+  if (!f.R5) { f.R5 = chLine('R5').opts.length - 1; restored.push('R5'); }
+  const won = !!persuaded && chAllocStats(alloc).within === CH_LINES.length;
+  let override = false;
+  if (f.R6 !== up && !won) {
+    override = true; f.R6 = up;
+    for (const id of ['R2', 'R3']) { if (f[id]) cut.push(id); f[id] = 0; }
+  }
+  for (const id of ['R2', 'R3', 'R4', 'R1']) if (total() > CH_BUDGET && f[id]) { f[id] = 0; cut.push(id); }
+  return {final: f, override, cut, restored, persuaded: won};
 }
-function chAboveAppetite(alloc) { return CH_LINES.filter(l => !chWithin(l.cat, chOpt(alloc, l).res)); }
-function chAcceptance(l, alloc, by, day) {
-  return {line: l.id, name: l.name, owner: l.owner, residual: chOpt(alloc, l).res, appetite: chAppetite(l.cat), signedBy: l.owner, decidedBy: by, day: day,
+function chAboveAppetite(alloc) { return CH_LINES.filter(l => !chOptWithin(l, chOpt(alloc, l))); }
+// An acceptance for a line the Board's decision leaves above appetite. One decider per decision: the Board decided to
+// carry the risk and approved accepting the residual (its minute, with the CISO's advice and objection noted); the
+// business owner signs for the interim measures and owns the treatment plan; the CISO advised and records both.
+function chAcceptance(l, alloc, dec, day) {
+  const o = chOpt(alloc, l), d = typeof dec === 'string' ? {decidedBy: dec} : (dec || {});
+  return {line: l.id, name: l.name, owner: l.owner, residual: o.res, appetite: chAppetite(l.cat), breaks: chBreaks(o).slice(),
+    decider: d.decider || 'Board', decidedBy: d.decidedBy || 'the Compact Board (minute, Day ' + day + ')', approvedBy: d.approvedBy === undefined ? 'the Compact Board' : d.approvedBy,
+    signedBy: l.owner, signedFor: 'the interim measures and the treatment plan', day: day,
     expiry: CH_EXPIRY_DAY, review: CH_REVIEW_DAY, interim: l.interim || ''};
 }
 function chAcceptHtml(list) {
   if (!list.length) return '<p>No line above appetite: nothing to accept.</p>';
-  return '<table class="sc"><tr><th>Line</th><th>Left</th><th>Signed</th><th>Review</th></tr>' + list.map(x => '<tr><td>' + esc(x.line) + '</td><td>' + esc(x.residual) + '</td><td>' + esc(x.signedBy.split(' ')[0]) + '</td><td>Day ' + x.review + '</td></tr>').join('') + '</table>' +
-    '<ul>' + list.map(x => '<li><b>' + esc(x.line) + ' ' + esc(x.name) + '</b>: residual ' + esc(x.residual) + ' against a ' + esc(x.appetite) + ' appetite. Signed by ' + esc(x.signedBy) + ', its owner. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '.' + (x.interim ? ' Meanwhile: ' + esc(x.interim) : '') + '</li>').join('') + '</ul>';
+  return '<table class="sc"><tr><th>Line</th><th>Left</th><th>Decided</th><th>Signed</th><th>Review</th></tr>' + list.map(x => '<tr><td>' + esc(x.line) + '</td><td>' + esc(x.residual) + '</td><td>' + esc(x.decider || x.decidedBy.split(' ')[0]) + '</td><td>' + esc(x.signedBy.split(' ')[0]) + '</td><td>Day ' + x.review + '</td></tr>').join('') + '</table>' +
+    '<ul>' + list.map(x => '<li><b>' + esc(x.line) + ' ' + esc(x.name) + '</b>: residual ' + esc(x.residual) + ' against a ' + esc(x.appetite) + ' appetite' + (x.breaks && x.breaks.length ? ', and it breaks the tolerance “' + esc(x.breaks.join('”, “')) + '”' : '') + '. ' +
+      'Decided by ' + esc(x.decidedBy) + (x.approvedBy ? '; carrying the residual risk approved by ' + esc(x.approvedBy) : '') + '. ' +
+      'Signed by ' + esc(x.signedBy) + ', its owner' + (x.signedFor ? ', for ' + esc(x.signedFor) : '') + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '.' + (x.interim ? ' Meanwhile: ' + esc(x.interim) : '') + '</li>').join('') + '</ul>';
 }
 
 /* ---- editions/charter/prologue-data.js ---- */
@@ -1789,15 +1826,15 @@ const CH_REMIT = [
           {label: 'The Board answers it, as it governs the programme the incident fell in', why: 'A legal question is counsel’s. The Board governs the programme.'},
           {label: 'Edda answers it: the systems the incident touched are the shared services', why: 'Edda runs the systems. Counsel decides what the law asks.'}]},
   {title: 'The remit · 3 of 4', ask: 'Who sets the shared directory’s maintenance window?',
-   resp: [{label: 'Edda, as she runs the shared services. You set the requirement it meets', good: true},
-          {label: 'You decide it, as the directory is the security system the Compact leans on most', why: 'You set what the window must meet. Running the shared services, and their windows, is Edda’s.'},
+   resp: [{label: 'Edda, as she runs the shared services. You set the security requirement it meets', good: true},
+          {label: 'You decide it, as the directory is the security system that the Compact leans on most', why: 'You set what the window must meet. Running the shared services, and their windows, is Edda’s.'},
           {label: 'Each member votes on it, and the window most of them choose wins', why: 'A vote makes six deciders. The shared services have one: Edda.'},
           {label: 'Beatriz sets it alone, as she does the directory’s exports and changes', why: 'Beatriz does the work for Edda. Edda decides for the shared services.'}]},
   {title: 'The remit · 4 of 4', ask: 'Who keeps the risk register and reports on it to the Board?',
-   resp: [{label: 'You do, so the register, the risk programme and the reporting stay in one place', good: true},
+   resp: [{label: 'You do, as the CISO, so the register, the programme and the reporting stay in one place', good: true},
           {label: 'Edda does: most of the register’s risks sit in the services she runs', why: 'She owns many of its risks. Keeping the register and reporting it is the CISO’s job.'},
           {label: 'Each member keeps its own part and reports it to the Board its own way', why: 'Six registers in six formats can’t be compared. The CISO keeps one and reports it.'},
-          {label: 'Noor does: a register can carry legal exposure, so counsel should hold it for you', why: 'Counsel advises on what it says. Keeping it is the CISO’s job.'}]}];
+          {label: 'Noor does: a register can carry legal exposure, so counsel should hold it for the Compact', why: 'Counsel advises on what it says. Keeping it is the CISO’s job.'}]}];
 
 /* ---------- The risk-appetite statement (Day 64 10:30; the members' representatives at the table) ---------- */
 // Each category: an appetite level (Low: only a Low residual is within appetite; Moderate: Medium or Low) and measurable
@@ -1807,12 +1844,12 @@ const CH_APPETITE = [
    ask: 'Which statement should the Board approve for service availability?',
    opts: [{label: 'Moderate: no member’s main service down over 24 hours, paper covering it', good: true, level: 'Moderate', tol: 'no member’s main service down more than 24 hours, paper covering it meanwhile'},
           {label: 'Low: no member’s service down for a minute, at any cost, ever again after this year', why: 'A limit nobody can meet or pay for isn’t a tolerance. Say what the Board will carry, in hours.'},
-          {label: 'Moderate: how long a service may be down is set by each incident, at the time', why: 'A tolerance set at the time is no tolerance. GV.RM-02’s example: measurable, in advance.'},
+          {label: 'Moderate: how long a service may be down is set by each incident, at the time', why: 'A tolerance set at the time is no tolerance. GV.RM-02’s example asks for measurable tolerance statements. Set them before an incident, not during one.'},
           {label: 'High: members can work on paper for 7 days, so no tighter limit', why: 'Paper buys time, not forever. Without a limit, nothing can be measured against it.'}]},
   {id: 'privacy', name: 'Data privacy', intro: 'Residents’, patrons’, patients’ and students’ records, held in members’ systems the Compact runs.',
    ask: 'Which statement should the Board approve for data privacy?',
-   opts: [{label: 'Low: no system with those records reached from outside without MFA, so each session is logged', good: true, level: 'Low', tol: 'no system holding personal records reachable from outside without MFA, and every such session logged'},
-          {label: 'Moderate: a few records exposed each year is the price of running six members’ systems for them', why: 'People’s records are the category to carry least of. And “a few” isn’t measurable.'},
+   opts: [{label: 'Low: no system with those records reachable from outside without MFA, and every session logged', good: true, level: 'Low', tol: 'no system holding personal records reachable from outside without MFA, and every such session logged'},
+          {label: 'Moderate: a few records exposed each year is the price that comes with running six members’ systems', why: 'People’s records are the category to carry least of. And “a few” isn’t measurable.'},
           {label: 'Low: not one record may ever be exposed, whatever it costs, and you make sure of it', why: 'A promise nobody can keep, made for the Board by you. Low, with limits that can be measured.'},
           {label: 'Low: the tolerance is whatever each member’s counsel says after an incident', why: 'Counsel decides legal questions after the fact. The Board sets its tolerance before.'}]},
   {id: 'safety', name: 'Safety-of-life services', intro: 'Fire & EMS Dispatch, and care at the Clinic.',
@@ -1834,12 +1871,12 @@ const CH_OWNERS = [
    resp: [{label: 'Edda Thornquist, who runs the shared services those accounts belong to', good: true},
           {label: 'You, as the CISO: service accounts are a security matter', why: 'You keep the register. The owner is whoever runs what carries the risk: Edda.'},
           {label: 'Beatriz Solano, who resets and exports the shared directory every week', why: 'Beatriz works for Edda. The owner decides; Edda runs the shared services.'},
-          {label: 'Oriel Fanshawe: she pays for the accounts’ upkeep', why: 'Paying isn’t owning. Edda runs the services the accounts serve.'}]},
+          {label: 'Marit Quellan: she pays for the accounts’ upkeep', why: 'Paying isn’t owning. Edda runs the services the accounts serve.'}]},
   {line: 'R4', was: 'Finance', ask: 'R4, payment fraud by email. Who owns it?',
-   resp: [{label: 'Oriel Fanshawe, who runs the payment process', good: true},
-          {label: 'You, as the CISO: fraud by email starts in the mail system', why: 'It starts in email and ends in a payment. The payment process is Oriel’s.'},
-          {label: 'Edda Thornquist, who runs the mail system the fraud arrives by', why: 'Edda runs the mail. The loss lands in the payment process: Oriel’s.'},
-          {label: 'The Compact’s bank, which carries out the payments', why: 'The bank moves what the Compact tells it to. The process is Oriel’s.'}]},
+   resp: [{label: 'Marit Quellan, who runs payments and their security checks', good: true},
+          {label: 'You, as the CISO: fraud by email starts in the mail system', why: 'It starts in email and ends in a payment. The payment process is Marit’s.'},
+          {label: 'Edda Thornquist, who runs the mail system the fraud arrives by', why: 'Edda runs the mail. The loss lands in the payment process: Marit’s.'},
+          {label: 'The Compact’s bank, which carries out the payments', why: 'The bank moves what the Compact tells it to. The process is Marit’s.'}]},
   {line: 'R5', was: 'Dispatch', ask: 'R5, the 911 center’s own segment. Who owns it?',
    resp: [{label: 'Celia Marrow, director of the 911 authority, whose decision it was: you advise her', good: true},
           {label: 'Imogen Hale, the day supervisor, who runs the floor the segment serves', why: 'The supervisor runs the floor. The segment was the 911 authority’s decision: Celia’s.'},
@@ -1848,7 +1885,7 @@ const CH_OWNERS = [
 const CH_REVIEW = [
   {label: 'Day 155, a Monday: the next quarterly Board, every line', good: true},
   {label: 'When something changes: each line is reviewed as events call for it', why: 'A review “when something changes” never comes on a quiet line. Day 155.'},
-  {label: 'Day 428, a Monday: next year’s budget round, for every line', why: 'A year is too long for High lines. The quarterly Board, Day 155.'},
+  {label: 'Day 428, a Monday: the start of next year’s budget cycle, for every line', why: 'A year is too long for High lines. The quarterly Board, Day 155.'},
   {label: 'Whenever the CISO has the time, since the register is yours to keep', why: 'A date the Board can hold you to: Day 155.'}];
 
 /* ---- editions/charter/story.js ---- */
@@ -1869,9 +1906,11 @@ const EDITION = {
   saveKey: 'uptime.charter.save',
   ownMetrics: true,           // the analyst scorecard is replaced by the CISO's (EDITION_METRICS)
   noTools: true,              // no tool console: the CISO's tools are the register, the budget and the Board
-  badgeFlags: ['chPlumb'],
+  badgeFlags: ['chBallast'],
   title: 'Charter edition',
   blurb: 'Four weeks after the Compact-wide incident, the Compact Board appoints its first CISO: you. Set the risk appetite with the Board, then the budget: one sum, six risks, and an upgrade that wants the money too.',
+  fmActionsCat: 'Leadership practices (game)',   // the Field Manual's heading for EXTRA_ACTIONS (engine default: D3FEND-style)
+  fmIntro: 'Descriptions are our own words. No ATT&amp;CK technique in this slice; the CSF functions not met yet open in later districts.',
   creditsName: 'Charter edition',
   creditsFacts: 'Charter (the prologue and Budget): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088 and T1906, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, from NIST’s CSF 2.0 Implementation Examples (26 February 2024). No ATT&CK technique in this slice. Facts recalled from Crossroads are quoted from Crossroads.'
 };
@@ -1908,15 +1947,16 @@ function chCarry() {
   const th = chRead(CH_TH_KEY), cr = chRead(CH_CR_KEY), ng = chRead(CH_NG_KEY), ser = Series.load(), sc = ser.editions.crossroads || {}, sth = ser.editions['town-hall'] || {};
   for (const g of [th, cr, ng]) if (g && g.qt) Series.merge(g.qt);   // the series record is shared; the saves themselves are never written
   const tracks = [];
-  for (const t of [cr && cr.trackId, ng && ng.trackId].concat(Array.isArray(sc.tracksPlayed) ? sc.tracksPlayed : [])) if (CH_TRACK[t] && !tracks.includes(t)) tracks.push(t);
-  tracks.sort();   // manager before dfir, whichever was played first
+  // A New Game+ save exists only after a first save reached the ending; its ngFrom is the first save's track.
+  for (const t of [cr && cr.trackId, ng && ng.trackId, ng && ng.ngFrom].concat(Array.isArray(sc.tracksPlayed) ? sc.tracksPlayed : [])) if (CH_TRACK[t] && !tracks.includes(t)) tracks.push(t);
+  tracks.sort();   // alphabetical (dfir before manager), whichever was played first
   const crBadges = CH_CR_BADGES.filter(([, k]) => (cr && cr.f && cr.f[k]) || (ng && ng.f && ng.f[k])).map(([n]) => n);
   const nm = [cr, ng].map(g => g && typeof g.name === 'string' ? g.name.trim().slice(0, 24) : '').find(n => n && n !== 'Lead');
   const clues = Series.qt().cluesFound, crIds = clues.filter(id => /^(lb|sd|cn|dp|ap)-/.test(id));
   return {
     th: th ? 'save' : (sth.done || sth.editionComplete ? 'series' : 'none'), cr: cr || ng ? 'save' : (sc.track ? 'series' : 'none'),
     thBadges: th ? CH_TH_BADGES.filter(([, t]) => t(th)).map(([n]) => n) : [], crBadges: crBadges,
-    tracks: tracks, crDone: !!((cr && cr.f && cr.f.fnSummary) || (ng && ng.f && ng.f.fnSummary) || sc.editionComplete),
+    tracks: tracks, crDone: !!((cr && cr.f && cr.f.fnSummary) || (ng && ng.f && ng.f.fnSummary) || sc.editionComplete || (ng && ng.ngPlus)),
     name: nm || null, clues: clues.length, crClues: crIds.length, thClues: clues.length - crIds.length
   };
 }
@@ -1938,8 +1978,9 @@ function editionTile(d, ch) { if (ch === 'µ' && G.f.chRegister) d.pal = 'chRegO
 function surfaceMissed() { return Promise.resolve(); }   // no wild alerts here, so nothing can be missed
 async function evolveCheck() {}
 function triggers() { return false; }
-// The allocation the scorecard reads: the Board's final one once decided, else the one sent, else the one being built.
-function chScored() { const c = G.ch || {}; return c.final || c.sent || null; }
+// The allocation the scorecard reads: the CISO's advice, the allocation as sent (— before it is sent). The Board's
+// final allocation is the Board's decision, shown on its own line, never scored as the CISO's.
+function chScored() { const c = G.ch || {}; return c.sent || null; }
 function chOwnedPct() {
   const r = G.ch && G.ch.register; if (!r) return 0;
   return Math.round(CH_LINES.filter(l => r.owners[l.id] && !/^(IT|Finance|Dispatch)$/.test(r.owners[l.id]) && r.review[l.id]).length / CH_LINES.length * 100);
@@ -1949,7 +1990,7 @@ function editionMetricVals() {
   return {chWithin: s ? s.withinPct : null, chOwned: G.f.chBudgetBrief ? chOwnedPct() : null, chTop5: s ? s.topPct : null};
 }
 const EDITION_METRICS = [
-  {k: 'chWithin', label: 'Risks within appetite', unit: '%', higher: true},
+  {k: 'chWithin', label: 'Risks within appetite (your advice)', unit: '%', higher: true},
   {k: 'chOwned', label: 'Register risks with a business owner and review date', unit: '%', higher: true},
   {k: 'chTop5', label: 'Budget spent against top-five risks', unit: '%', higher: true}
 ];
@@ -1958,8 +1999,8 @@ function editionScorecard() {
   const fmt = (d, x) => x === null || x === undefined ? '—' : x + d.unit;
   const rows = METRICS.map(d => { const tr = G.track[d.k] || {}; return '<tr><td>' + d.label + '</td><td><b>' + fmt(d, v[d.k]) + '</b></td><td>' + fmt(d, tr.best) + '</td><td>' + fmt(d, tr.worst) + '</td><td>≥ ' + G.targets[d.k] + d.unit + '</td></tr>'; }).join('');
   return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
-    '<p>' + (c.final ? 'Scored on the Board’s final allocation.' : c.sent ? 'Scored on the allocation you sent; the Board decides on Thursday.' : 'No allocation sent yet.') + ' Drills with every needs met: <b>' + c.needs.met + ' of ' + c.needs.total + '</b>. Acceptances on the register: <b>' + (c.accept || []).length + '</b>' + ((c.accept || []).length ? ' (signed by ' + [...new Set(c.accept.map(x => x.signedBy))].map(esc).join(', ') + ')' : '') + '.</p>' +
-    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Plumb Badge: ' + (G.f.chPlumb ? 'yes' : 'not yet') + '</p>' +
+    '<p>' + (c.sent ? 'Scored on your advice: the allocation you sent, against Monday’s appetite and tolerances.' : 'No allocation sent yet.') + (c.final ? ' The Board’s decision: <b>' + chAllocStats(c.final).within + ' of ' + CH_LINES.length + '</b> lines within appetite' + (c.decision && c.decision.override ? ', overriding your advice' : '') + '.' : c.sent ? ' The Board decides on Thursday.' : '') + ' Drills with every needs met: <b>' + c.needs.met + ' of ' + c.needs.total + '</b>. Acceptances on the register: <b>' + (c.accept || []).length + '</b>' + ((c.accept || []).length ? ' (signed by ' + [...new Set(c.accept.map(x => x.signedBy))].map(esc).join(', ') + ')' : '') + '.</p>' +
+    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + '</p>' +
     (c.carry ? '<p class="small">Carried: ' + esc(chTracksText(c.carry)) + (c.carry.crBadges.length ? ' · Crossroads badges ' + c.carry.crBadges.join(', ') : '') + (c.carry.thBadges.length ? ' · Town Hall badges ' + c.carry.thBadges.join(', ') : '') + ' · suspicion file ' + qtCount() + ' notes.</p>' : '') +
     '<p class="small">Every number here is a game model (game). Objective: ' + esc(objective().text) + '</p>';
 }
@@ -1994,16 +2035,16 @@ function chDojoNext() { return G.ch.dojo.findIndex(x => !x); }
 function objective() {
   const f = G.f, at = (text, map, x, y) => ({text: text, map: map, x: x, y: y});
   if (!f.chAppetite) return at('09:00: the Compact Board room, through the west door. Ivor Penhallow is waiting.', 'chboard', 8, 3);
-  if (!f.chBudgetBrief) return at('13:30: Oriel Fanshawe, finance, at her desk in the offices.', 'choffice', 24, 2);
+  if (!f.chBudgetBrief) return at('13:30: Marit Quellan, finance, at her desk in the offices.', 'choffice', 24, 2);
   if (!f.chRegister) return at('The risk register on the wall: three owners to name, and a review date for every line.', 'choffice', 3, 1);
   if (!f.chDay64) return at('End the day at your desk.', 'choffice', 26, 9);
   if (!f.chDrillA) return at('Tuesday 09:00: Beatriz Solano, at the identity desk: the claim about MFA.', 'choffice', 12, 2);
   if (!f.chDrillB) return at('11:00: Edda Thornquist’s desk: the night-cover line.', 'choffice', 18, 2);
-  if (!f.chDrillC) return at('14:00: Oriel’s desk: two quotes for R1.', 'choffice', 24, 2);
+  if (!f.chDrillC) return at('14:00: Marit’s desk: two quotes for R1.', 'choffice', 24, 2);
   if (!f.chDay65) return at('End the day at your desk.', 'choffice', 26, 9);
-  if (!f.chAlloc) return at('Wednesday 09:00: your desk. The allocation is due with Oriel by 17:00.', 'choffice', 26, 9);
+  if (!f.chAlloc) return at('Wednesday 09:00: your desk. The allocation is due with Marit by 17:00.', 'choffice', 26, 9);
   if (!f.chDirective) return at('11:30: Joanna Ferreday is waiting by the register.', 'choffice', 6, 3);
-  if (!f.chDojoMet) return at('13:00: Oriel has three terminals for you. Talk to her first.', 'choffice', 24, 2);
+  if (!f.chDojoMet) return at('13:00: Marit has three terminals for you. Talk to her first.', 'choffice', 24, 2);
   if (!f.chDojoDone) return at('The Risk & Budget terminals, south-west: ' + (3 - G.ch.dojo.filter(Boolean).length) + ' left.', 'choffice', 3 + 2 * Math.max(0, chDojoNext()), 9);
   if (!f.chDay66) return at('End the day at your desk.', 'choffice', 26, 9);
   if (!f.chBoard) return at('Thursday 14:00: the Compact Board room: the budget round.', 'chboard', 8, 3);
@@ -2024,7 +2065,7 @@ function interact() {
   else if (ch === 'Y') run(chDesk);
   else if (ch === '¤') run(() => chDojoPuzzle([3, 5, 7].indexOf(tx)));
   else if (ch === '£') run(async () => { await say(f.chDrillC ? 'The contracts cabinet. The two quotes for R1 are filed together now, Quote B’s on top.' : 'The contracts cabinet: the members’ vendor contracts, and two new quotes in a folder marked R1.'); });
-  else if (ch === 'Ɓ') run(async () => { await say(tx < 15 ? 'The identity desk: the shared directory’s console, and Beatriz’s exports.' : tx < 21 ? 'The shared-services desk: the platform’s support notice is pinned to it.' : 'The finance desk: next year’s budget papers, in Oriel’s neat piles.'); });
+  else if (ch === 'Ɓ') run(async () => { await say(tx < 15 ? 'The identity desk: the shared directory’s console, and Beatriz’s exports.' : tx < 21 ? 'The shared-services desk: the platform’s support notice is pinned to it.' : 'The finance desk: next year’s budget papers, in Marit’s neat piles.'); });
   else if (ch === '±') run(async () => { await say('The Compact Board’s minutes, by year. This year’s binder ends with the weekend of Night 33.'); });
   else if (ch === 'Ɠ') run(async () => { await say('The Board table: one seat for each member’s representative, the chair’s at the head.'); });
 }
@@ -2034,20 +2075,20 @@ async function talk(npc) {
     case 'penhallow':
       if (!f.chAppetite) { await chAppointment(); return; }
       if (f.chDay66 && !f.chBoard) { await chBoardRound(); return; }
-      await say(f.chBoard ? 'The Plumb Badge says this Board can hold you to a measure. Keep giving it one.' : 'Thursday at 14:00. Bring both cases, laid out the same way.', who); return;
+      await say(f.chBoard ? 'The Ballast Badge says this Board can hold you to a measure. Keep giving it one.' : 'Thursday at 14:00. Bring both cases, laid out the same way.', who); return;
     case 'noorch':
       await say(f.chAppetite ? 'I’m here for anything legal. The budget is the Board’s.' : 'Bring me the facts, on time. Whether the law asks for anything is mine to answer, or a member’s own counsel’s.', who); return;
     case 'beatrizch':
       if (f.chDay64 && !f.chDrillA) { await chDrillA(); return; }
-      await say(f.chDrillA ? 'fin-ap goes to Oriel, board-display has an owner and an expiry, and the six service accounts keep theirs, owned and dated.' : 'Exports and resets for Edda. Tomorrow you’ll want the sign-in records, I expect.', who); return;
+      await say(f.chDrillA ? 'fin-ap goes to Marit, board-display has an owner and an expiry, and the six service accounts keep theirs, owned and dated.' : 'Exports and resets for Edda. Tomorrow you’ll want the sign-in records, I expect.', who); return;
     case 'edda':
       if (f.chDrillA && !f.chDrillB) { await chDrillB(); return; }
-      await say(!f.chAppetite ? 'Edda Thornquist. I run the shared services. You’ll want me at the Board at nine.' : f.chBoard ? (G.ch.decision && G.ch.decision.override ? 'The upgrade is funded, and I signed for what it leaves. That was the deal, and it should be.' : G.ch.final && G.ch.final.R6 === 2 ? 'The upgrade is funded as you sent it. What it leaves, the owners have signed.' : 'The upgrade waits a year and the extension carries us. Fair, laid out the way you laid it out.') : 'My request is with Oriel: the platform leaves its vendor’s support next year. It’s a fair case. Make yours as plainly.', who); return;
-    case 'fanshawe':
+      await say(!f.chAppetite ? 'Edda Thornquist. I run the shared services. You’ll want me at the Board at nine.' : f.chBoard ? (G.ch.decision && G.ch.decision.override ? 'The upgrade is funded. The Board chose the trade-off, with your advice against it in the minute, and I signed for running the interim checks.' : G.ch.final && G.ch.final.R6 === 2 ? 'The upgrade is funded as you sent it. What it leaves, the owners have signed.' : 'The upgrade waits a year and the extension carries us. Fair, laid out the way you laid it out.') : 'My request is with Marit: the platform leaves its vendor’s support next year. It’s a fair case. Make yours as plainly.', who); return;
+    case 'quellan':
       if (f.chAppetite && !f.chBudgetBrief) { await chBudgetBrief(); return; }
       if (f.chDrillB && !f.chDrillC) { await chDrillC(); return; }
       if (f.chDirective && !f.chDojoMet) { await chDojoIntro(); return; }
-      await say(f.chDojoMet && !f.chDojoDone ? 'The three terminals, south-west. Residual risk, cost against benefit, and who signs.' : !f.chAppetite ? 'Oriel Fanshawe, finance. After the Board’s session, come and see me about the money.' : 'The papers go to the Board on Wednesday at 17:00. Numbers, and what each one buys.', who); return;
+      await say(f.chDojoMet && !f.chDojoDone ? 'The three terminals, south-west. Residual risk, cost against benefit, and who signs.' : !f.chAppetite ? 'Marit Quellan, finance. After the Board’s session, come and see me about the money.' : 'Your section joins the Board papers on Wednesday at 17:00. Numbers, and what each one buys.', who); return;
     case 'ferreday':
       await chDirective(); return;
   }
@@ -2070,7 +2111,7 @@ async function chStages(list, rec) {
 async function chAppointment() {
   const who = 'Ivor Penhallow', f = G.f, c = G.ch;
   if (!f.chAppoint) {
-    await say('09:00. Welcome. Noor and Edda you know. The Board has wanted one person to own the Compact’s risk since the weekend of Night 33. That is you, from today.', who);
+    await say('09:00. Welcome. Noor and Edda you know. The Board has wanted one person to run the Compact’s risk programme since the weekend of Night 33. That is you, from today.', who);
     await UI.openModal('The remit (game)', '<ul><li>You report to the Compact Board, through me as its chair.</li><li>Edda Thornquist runs the shared services’ IT: their operations are hers.</li><li>Each member’s own leadership decides for that member. The Compact coordinates; it doesn’t command.</li><li>Counsel decides legal questions: Noor for the town and the shared services, each member’s own counsel for that member.</li><li>You own the risk programme: the register, policy, and reporting to this Board. Everyone else, you advise.</li></ul>',
       [{label: 'Understood', meta: {good: true}}], {closable: false, cls: 'summary'});
     await say('Four questions, so we both know you heard it.', who);
@@ -2083,20 +2124,20 @@ async function chAppointment() {
   const ap = await chAppetiteBuild(CH_APPETITE);
   c.appetite = {levels: ap.levels, tol: ap.tol, first: ap.first, approved: 'Day 64, 12:00'};
   await UI.openModal('The risk-appetite statement', chAppetiteHtml(ap, CH_APPETITE) +
-    '<p>And one rule in it: a risk above appetite stays only with an acceptance signed by its business owner, with an expiry and a review date. The Board sees each one. (game)</p>' +
+    '<p>And one rule in it: a risk above appetite stays only with an acceptance signed by its business owner, with an expiry, a review date and interim measures. The Board sees each one, and a risk the Board itself decides to carry above appetite is minuted as the Board’s decision and approved by it. (game)</p>' +
     '<p class="small">CSF 2.0 GV.RM-02: “Risk appetite and risk tolerance statements are established, communicated, and maintained”. One of NIST’s examples: “Translate risk appetite statements into specific, measurable, and broadly understandable risk tolerance statements”.</p>',
     [{label: '12:00: the Board approves it, and Ivor signs', meta: {good: true}}], {closable: false, cls: 'summary'});
   f.chAppetite = true; unlock('act', 'chappetite'); unlock('fact', 'chcsf'); touchCSF('Govern'); track();
   await say('Every decision this week is measured against that. Thursday at 14:00, the budget round.', who);
-  await say('My request is with Oriel already. You’ll see it.', 'Edda Thornquist');
-  await say('13:30: Oriel Fanshawe, finance, at her desk in the offices.');
+  await say('My request is with Marit already. You’ll see it.', 'Edda Thornquist');
+  await say('13:30: Marit Quellan, finance, at her desk in the offices.');
 }
 
 /* ---------- Prologue (Day 64 13:30): the budget brief ---------- */
 async function chBudgetBrief() {
-  const who = 'Oriel Fanshawe';
-  await say('Oriel Fanshawe, finance. Next year’s security programme lines get $480k, on top of what it costs to run what we have. (game)', who);
-  await say('The Board’s budget round is Thursday at 14:00. Your papers reach me by Wednesday at 17:00.', who);
+  const who = 'Marit Quellan';
+  await say('Marit Quellan, finance. Next year’s security programme lines get $480k, one-off and recurring costs together this year. The upgrade would be a one-off. (game)', who);
+  await say('The Board’s budget round is Thursday at 14:00. The agenda goes out with the papers this evening; your section reaches me by Wednesday at 17:00 and joins them. (game)', who);
   await say('Edda’s request came in on Friday: the platform upgrade, $250k. Two quotes for the vendor-access line came in the same day.', who);
   await say('I don’t need a security case. I need each line priced against what it buys and what it leaves.', who);
   G.f.chBudgetBrief = true; touchCSF('Govern'); track();
@@ -2158,11 +2199,11 @@ async function chDesk() {
   if (f.chDrillC && !f.chDay65) {
     await UI.openModal('Tuesday, done', '<p>Three claims read against the records: the MFA line, the night-cover line, and the two quotes. (game)</p>', [{label: 'Wednesday', meta: {good: true}}], {closable: false, cls: 'summary'});
     f.chDay65 = true; G.day = 66; G.focus = G.focusMax; track();
-    await say('Day 66, Wednesday, 09:00. The allocation is due with Oriel by 17:00. Your desk.'); return;
+    await say('Day 66, Wednesday, 09:00. The allocation is due with Marit by 17:00. Your desk.'); return;
   }
   if (f.chDay65 && !f.chAlloc) { await chAllocTask(); return; }
   if (f.chDojoDone && !f.chDay66) {
-    await UI.openModal('Wednesday, done', '<p>17:00: the Board papers go out, your allocation and Edda’s alternative side by side. (game)</p>', [{label: 'Thursday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    await UI.openModal('Wednesday, done', '<p>17:00: your section joins the Board papers, your allocation and Edda’s alternative side by side. (game)</p>', [{label: 'Thursday', meta: {good: true}}], {closable: false, cls: 'summary'});
     f.chDay66 = true; G.day = 67; G.focus = G.focusMax; track();
     await say('Day 67, Thursday. 14:00: the Compact Board room, the budget round.'); return;
   }
@@ -2177,8 +2218,10 @@ async function chDesk() {
    their options (cost, the risk left, what it buys), three drills whose
    evidence is records, the Compact Board's budget round, the Risk & Budget
    terminals, and the directive (an owner asks the CISO to sign her acceptance).
-   One decider per decision: the Board decides the budget; each line's business
-   owner signs any acceptance for it; Edda decides for the shared services; each
+   One decider per decision: the Board decides the budget, and minutes and
+   approves carrying any risk its own decision leaves above appetite; each
+   line's business owner signs its acceptance, for the interim measures and the
+   treatment plan; Edda decides for the shared services; each
    member decides for itself; counsel decides legal questions; the CISO advises,
    keeps the register and writes each acceptance up.
    Every price, rating, count, time, account and quote is invented (game). The
@@ -2190,19 +2233,26 @@ async function chDesk() {
 
 const CH_BUDGET = 480;            // $k for next year's programme lines (game)
 const CH_REVIEW_DAY = 155;        // the Board's next quarterly meeting, a Monday
-const CH_EXPIRY_DAY = 428;        // next year's budget round, a Monday
+const CH_EXPIRY_DAY = 428;        // the start of next year's budget cycle, a Monday
+// Monday's tolerances, short, for the allocation page (the statement's own words are in G.ch.appetite.tol; chTol).
+const CH_TOL_SHORT = {
+  avail: 'no member’s main service down over 24 hours, paper covering it',
+  privacy: 'no outside access to personal records without MFA, every session logged',
+  safety: 'no cyber cause adds time to answer-to-dispatch, the fallback timed monthly',
+  fin: 'no loss over $25k without the Board, no payment detail changed without a call-back on a known number'};
+const CH_TOL_CALLBACK = 'no payment detail changed without a call-back on a known number';
 
 /* ---------- The register's six top lines (game). rank 1 = highest; the top five are ranks 1-5 ---------- */
 const CH_LINES = [
   {id: 'R1', name: 'Vendor support by hand', cat: 'privacy', catName: 'Data privacy', owner: 'Edda Thornquist', rank: 5, rec: 2,
-   interim: 'each member enables vendor support by hand per ticket, as now.',
+   interim: 'each member logs who opened vendor access and when, sent to the Compact monthly.',
    opts: [{cost: 0, res: 'Medium', what: 'As now: each member enables vendor support by hand, per ticket; the logs sit in four places.'},
-          {cost: 70, res: 'Medium', what: 'Quote A: three members, sessions kept 30 days. Short of the requirement, so the risk stays where it is.'},
+          {cost: 70, res: 'Medium', what: 'Quote A: three members, sessions kept 30 days. Short of the requirement, so the line stays Medium.'},
           {cost: 110, res: 'Low', what: 'Quote B: all four members, MFA for every vendor user, sessions kept 13 months.'}]},
   {id: 'R2', name: 'Service accounts unreviewed', cat: 'avail', catName: 'Service availability', owner: 'Edda Thornquist', rank: 3, rec: 1,
    interim: 'Beatriz reads the 38 accounts’ sign-ins each month, and anything new goes to Edda.',
    note: 'svc-print stays outside this review, under Rae’s plan.',
-   opts: [{cost: 0, res: 'High', what: 'As now: 38 Compact service accounts, none reviewed since svc-fileops was replaced.'},
+   opts: [{cost: 0, res: 'High', what: 'As now: 38 Compact service accounts. Passwords reset after Night 33, but what each may do never reviewed since the per-member accounts replaced svc-fileops (Day 43, game).'},
           {cost: 60, res: 'Medium', what: 'One review: each account split to the member it serves, and its rights cut to what it uses.'},
           {cost: 90, res: 'Low', what: 'That review, then a review with each member every quarter.'}]},
   {id: 'R3', name: 'One restore space', cat: 'avail', catName: 'Service availability', owner: 'Edda Thornquist', rank: 4, rec: 2,
@@ -2210,18 +2260,18 @@ const CH_LINES = [
    opts: [{cost: 0, res: 'High', what: 'As now: one test server holds one member’s copies at a time, for checking before a restore.'},
           {cost: 40, res: 'Medium', what: 'A second test server: two members checked in the same week.'},
           {cost: 80, res: 'Low', what: 'An isolated restore space, sized for every member at once.'}]},
-  {id: 'R4', name: 'Payment fraud by email', cat: 'fin', catName: 'Financial', owner: 'Oriel Fanshawe', rank: 6, rec: 1,
-   interim: 'a call-back on a known number before any bank detail changes.',
-   opts: [{cost: 0, res: 'Medium', what: 'As now: fin-ap, the shared accounts-payable mailbox, excepted from MFA; no call-back rule.'},
-          {cost: 20, res: 'Low', what: 'Named finance mailboxes with MFA, a scanner that supports it, and a call-back rule.'}]},
+  {id: 'R4', name: 'Payment fraud by email', cat: 'fin', catName: 'Financial', owner: 'Marit Quellan', rank: 6, rec: 1,
+   interim: 'Marit approves every change to a payment detail herself and holds it five working days, until the line is funded.',
+   opts: [{cost: 0, res: 'Medium', what: 'As now: fin-ap, the shared accounts-payable mailbox, excepted from MFA; no call-back rule, and no checked list of the suppliers’ known numbers to call.', breaks: [CH_TOL_CALLBACK]},
+          {cost: 20, res: 'Low', what: 'Named finance mailboxes with MFA, a scanner that supports it, and a call-back rule, every supplier’s known number checked first.'}]},
   {id: 'R5', name: 'The 911 center’s own segment', cat: 'safety', catName: 'Safety-of-life services', owner: 'Celia Marrow', rank: 1, rec: 1,
    interim: '',
    note: 'Celia’s decision on the Dispatch week: “The center keeps its own segment and its own sign-in … Review at the next budget.”',
-   opts: [{cost: 0, res: 'High', what: 'The center folds back onto the county’s general network, as before the Dispatch week.'},
+   opts: [{cost: 0, res: 'High', what: 'Without the Compact’s share, the county must find it, or Celia folds the center back onto the county’s general network (her decision).'},
           {cost: 120, res: 'Low', what: 'The Compact’s share of running the center’s own segment and its own sign-in.'}]},
   {id: 'R6', name: 'Platform out of support', cat: 'avail', catName: 'Service availability', owner: 'Edda Thornquist', rank: 2, rec: 1,
    interim: '',
-   note: 'Oriel’s figures: $90k now and $250k next year is $340k for the same platform; $250k now saves $90k.',
+   note: 'Marit’s figures: $90k now and $250k next year is $340k for the same platform; $250k now saves $90k over the two years.',
    opts: [{cost: 0, res: 'High', what: 'As now: the shared-services platform leaves its vendor’s support next year.'},
           {cost: 90, res: 'Medium', what: 'One more year of the vendor’s support. The upgrade waits a year.'},
           {cost: 250, res: 'Low', what: 'The upgrade, in full: Edda’s request.'}]}];
@@ -2230,10 +2280,10 @@ const CH_LINES = [
 const CH_DRILLS = {
   mfaclaim: {
     id: 'mfaclaim', title: '“MFA on every sign-in”', budget: 3,
-    intro: '<p>Edda’s request, filed with Oriel on Friday (Day 61), asks for the platform upgrade in full and says the identity line can wait a year. Beatriz exported the records at 08:40. Is the request’s claim true as written?</p>',
+    intro: '<p>Edda’s request, filed with Marit on Friday (Day 61), asks for the platform upgrade in full and says R2, the service-account review, can wait a year. Beatriz exported the records at 08:40. Is the request’s claim true as written?</p>',
     artefact: '<pre class="art">Request · the shared-services platform (Day 61, game data)\n' +
       'Ask        $250k: the upgrade, in full\n' +
-      'Identity   can wait a year:\n' +
+      'R2         can wait a year:\n' +
       '           “MFA is on for every sign-in\n' +
       '            to the shared services.”</pre>' +
       '<p class="small">The sign-in policy says who must use MFA and who is excepted; the sign-in records say what happened.</p>',
@@ -2245,12 +2295,12 @@ const CH_DRILLS = {
         {q: 'Can it require MFA for every sign-in?', kind: 'trap', res: ['“Supports MFA for every sign-in, for every user.”', '(What it can do, not what the policy makes it do.)']}]},
       {id: 'policy', name: 'The sign-in policy and its exceptions (08:40 export)', qs: [
         {q: 'Who is excepted from MFA, and since when?', kind: 'focus', key: true,
-         res: ['Policy: MFA for every account in the shared directory, except the group MFA-Exempt', 'MFA-Exempt, 8 accounts: six Compact service accounts; fin-ap, the finance office’s shared accounts-payable mailbox; board-display, the Board room’s display PC', 'No exception has an expiry or an owner recorded']},
+         res: ['Policy: MFA for every account in the shared directory, except the group MFA-Exempt', 'MFA-Exempt, 8 accounts: six Compact service accounts that sign in through the directory (the other 32 run locally on their servers and never meet the sign-in policy); fin-ap, the finance office’s shared accounts-payable mailbox; board-display, the Board room’s display PC', 'No exception has an expiry or an owner recorded']},
         {q: 'Every setting in the policy, in full', kind: 'broad', rows: 860,
          wall: ['{t}  setting {i}  session lifetime {n} min', '{t}  setting {i}  allowed method: app', '{t}  setting {i}  named location {n}']}]},
       {id: 'signins', name: 'The shared directory’s sign-in records (30 days to 08:00)', qs: [
         {q: 'Did any excepted account sign in without MFA, and from where?', kind: 'focus', key: true,
-         res: ['fin-ap: 212 interactive sign-ins without MFA, all from the finance office’s three PCs', 'board-display: 40, from the Board room’s PC', 'The six service accounts: non-interactive sign-ins only, from their own servers']}]}
+         res: ['fin-ap: 212 interactive sign-ins without MFA, all from the finance office’s three PCs', 'board-display: 40 interactive sign-ins without MFA, from the Board room’s PC', 'The six service accounts: non-interactive sign-ins only, from their own servers']}]}
     ],
     verdicts: [
       {label: 'Not true: two accounts people use are excepted, and were used 252 times without MFA', good: true, needs: ['policy', 'signins'],
@@ -2268,12 +2318,12 @@ const CH_DRILLS = {
       {label: 'The datasheet is out of date for this version of the product', why: 'Beside the point: the policy and the records decide it.'},
       {label: 'Edda knew of the gap and left it out', why: 'Nothing points to it: an honest claim, from memory.'}],
     path: '<p>“Is the claim true?” is decided by <b>the sign-in policy’s exceptions</b> and <b>the sign-in records</b>. A datasheet says what a product can do, and a person’s memory says what they believe. The records say what the policy does and what happened.</p>',
-    response: ['Edda corrects her request’s line before the papers go out: her paper, her decision', 'fin-ap goes to its owner, Oriel: named mailboxes with MFA, in line R4', 'board-display gets an owner (Edda) and an expiry', 'The six service accounts keep their exception, each with an owner and an expiry'],
+    response: ['Edda corrects her request’s line before the papers go out: her paper, her decision', 'fin-ap goes to its owner, Marit: named mailboxes with MFA, in line R4', 'board-display gets an owner (Edda) and an expiry', 'The six service accounts keep their exception, each with an owner and an expiry'],
     techs: [], acts: ['chclaim']
   },
   nightline: {
     id: 'nightline', title: 'The night-cover line', budget: 3,
-    intro: '<p>This year’s night-cover line paid for the members’ night thresholds paging the Compact’s on-call lead, and for the rota’s overtime (game). It was meant to cut the time from the first encrypted file to someone acting. Oriel asks before she prices it again: did it?</p>',
+    intro: '<p>This year’s night-cover line paid for the members’ night thresholds paging the Compact’s on-call lead, and for the rota’s overtime (game). It was meant to cut the time from the first encrypted file to someone acting. Marit asks before she prices it again: did it?</p>',
     artefact: '<pre class="art">Night-cover line (this year, game data)\n' +
       'Meant to   cut the time from the first\n' +
       '           encrypted file to someone acting\n' +
@@ -2287,35 +2337,36 @@ const CH_DRILLS = {
         {q: 'Are the members pleased with it?', kind: 'trap', res: ['Three notes thanking the on-call leads for night calls.', '(Goodwill, not a measure.)']}]},
       {id: 'log', name: 'The Compact’s incident log', qs: [
         {q: 'The first encrypted file, and the first act: the Airport’s Saturday and Night 33', kind: 'focus', key: true,
-         res: ['The Airport, Day 27: files encrypted 05:52–06:20; the note found at the front desk 07:40; ap-admin disabled 08:10', 'Night 33: files encrypted 02:31–02:40; the page 02:35; svc-fileops disabled 02:41']},
+         res: ['The Airport, Day 27: the 04:40 alert on a large transfer out waited for the morning (no night threshold); files encrypted 05:52–06:20; the note found at the front desk 07:40; ap-admin disabled 08:10', 'Night 33: files encrypted 02:31–02:40; the page 02:35; svc-fileops disabled 02:41']},
         {q: 'Every entry in the log this year', kind: 'broad', rows: 1120,
          wall: ['Day {i}  {t}  page  member {n}', 'Day {i}  {t}  ticket closed', 'Day {i}  {t}  night threshold: no page']}]},
       {id: 'changes', name: 'The change record between those two nights', qs: [
         {q: 'What else changed between Day 27 and Night 33?', kind: 'focus', key: true,
-         res: ['Day 31: the Airport’s night threshold with the Compact, in writing (its office alerts had none before)', 'Day 31: the operations room opens', 'In force on Night 33: Edda’s runbook. A service account seen encrypting is disabled at once by the on-call lead']}]}
+         res: ['Day 31: the Airport’s night threshold with the Compact, in writing (its office alerts had none before)', 'Day 31: the operations room opens', 'Different on Night 33: Edda’s runbook. A service account seen encrypting is disabled at once by the on-call lead']}]}
     ],
     verdicts: [
-      {label: 'For these two nights, yes: the first look fell from 108 minutes to 4, the runbook helping', good: true, needs: ['log', 'changes'],
+      {label: 'For these two nights, yes: first file to the account disabled fell from 138 minutes to 10, with the runbook', good: true, needs: ['log', 'changes'],
        needsWhy: 'the answer rests on two records: the log’s times and what else changed between the nights. You read only one of them.',
-       why: 'Nobody acted at the Airport for 108 minutes; on Night 33 the page came 4 minutes in. The 6 minutes to the disable rest on the runbook as well, and two nights are a sample.'},
+       why: 'At the Airport nobody was paged: the 04:40 alert waited for the morning, the note was found at 07:40 and ap-admin disabled at 08:10. On Night 33 the page came at 02:35 and the lead disabled the account at 02:41. The runbook shares the credit; two nights are a sample.'},
       {label: 'Yes, and the paging did it alone, and the line should be twice the size next year', why: 'The disable rested on the runbook too, and two nights are a sample, not a trend.'},
-      {label: 'No: three shares were still encrypted on Night 33, and the line bought no change at all', why: 'The log shows a page 4 minutes in and the account off 10 minutes in, against 108 minutes before anyone looked at the Airport.'}],
+      {label: 'No: three shares were still encrypted on Night 33, and the line bought no change at all', why: 'The log shows the account disabled 10 minutes after the first encrypted file, against 138 minutes at the Airport.'},
+      {label: 'Can’t say from two nights alone: keep pricing it on the spend report until there are more nights to compare', why: 'The spend report counts activity, not the time to act. Two nights are a sample: say what they show, and measure again.'}],
     reasons: [
       {label: 'The log gives both times: the change record shows what else changed between them', good: true, why: 'The measure before and after, and the other causes.'},
       {label: 'Forty-one pages went out this year, which proves the line was used and needed', why: 'Use is activity. The question was the time to act.'},
       {label: 'The members wrote three notes to thank the on-call leads for their night calls this year', why: 'Thanks are goodwill, not a measure.'}],
     alts: [
       {label: 'The runbook, not the page, made Night 33 fast', good: true, why: 'Weighed, and named in the verdict: the page brought the lead in at 02:35, and the runbook let them disable at 02:41.'},
-      {label: 'Night 33 was a different kind of night', good: true, why: 'Weighed, and named: other accounts and other members. Two nights are a sample, not a trend.'},
+      {label: 'Night 33 was a different kind of night', good: true, why: 'Weighed, and named: another account, and two other members. Two nights are a sample, not a trend.'},
       {label: 'The pages went to the wrong lead', why: 'Nothing points to it: the lead disabled the account at 02:41.'},
       {label: 'The Airport’s clock was wrong that morning', why: 'Nothing points to it: both times come from the same log.'}],
     path: '<p>“Did the spend work?” is decided by <b>the measure before and after</b> and <b>what else changed in between</b>. A spend report counts activity, and thanks count goodwill. Neither is the outcome.</p>',
-    response: ['Oriel’s paper says what the log shows: the first look fell from 108 minutes to 4 on these two nights', 'The runbook is credited beside the paging', 'Measure it again at each incident: two nights are a sample'],
+    response: ['Marit’s paper says what the log shows: from the first encrypted file to the account disabled, 138 minutes to 10 on these two nights', 'The runbook is credited beside the paging', 'Measure it again at each incident: two nights are a sample'],
     techs: [], acts: ['chmeasure']
   },
   quotes: {
     id: 'quotes', title: 'Two quotes for R1', budget: 3,
-    intro: '<p>Two quotes for R1’s gateway reached Oriel on Friday (Day 61). Which one covers the requirement? The price comes after.</p>',
+    intro: '<p>Two quotes for R1’s gateway reached Marit on Friday (Day 61). Which one covers the requirement? The price comes after.</p>',
     artefact: '<pre class="art">R1 · vendor support by hand at four members\n' +
       'Quote A    $70k (game data)\n' +
       'Quote B    $110k (game data)</pre>' +
@@ -2328,10 +2379,10 @@ const CH_DRILLS = {
         {q: 'Which supplier sounds stronger?', kind: 'trap', res: ['Both: “trusted by public bodies”.', '(Marketing, not scope.)']}]},
       {id: 'req', name: 'R1’s requirement (the register)', qs: [
         {q: 'What must the gateway do?', kind: 'focus', key: true,
-         res: ['One way in for vendor support at the Library, the Clinic, Dispatch and the Airport', 'Off until a member’s ticket opens it; MFA for every vendor user', 'Every session recorded and kept 12 months']}]},
+         res: ['Written on Day 50, with the request for quotes (game)', 'One way in for vendor support at the Library, the Clinic, Dispatch and the Airport', 'Off until a member’s ticket opens it; MFA for every vendor user', 'Every session recorded and kept 12 months']}]},
       {id: 'scope', name: 'The two quotes’ scope schedules', qs: [
         {q: 'What does each quote cover?', kind: 'focus', key: true,
-         res: ['Quote A: the Library, the Clinic, the Airport; on demand per ticket; MFA for every vendor user; sessions kept 30 days. Dispatch: not in scope, priced on request', 'Quote B: all four members; on demand per ticket; MFA for every vendor user; sessions kept 13 months']},
+         res: ['Quote A: one gateway for the members in scope: the Library, the Clinic, the Airport; on demand per ticket; MFA for every vendor user; sessions kept 30 days. Dispatch: not in scope, priced on request', 'Quote B: one gateway for all four members in scope; on demand per ticket; MFA for every vendor user; sessions kept 13 months']},
         {q: 'Every page of both quotes', kind: 'broad', rows: 96,
          wall: ['Quote {i}  page {n}  terms', 'Quote {i}  page {n}  references', 'Quote {i}  page {n}  pricing notes']}]}
     ],
@@ -2351,7 +2402,7 @@ const CH_DRILLS = {
       {label: 'Company B is the bigger one', why: 'Beside the point: size is not scope.'},
       {label: 'Quote B’s price will rise sharply next year, after the first year', why: 'Nothing in the quote says so.'}],
     path: '<p>“Which quote covers it?” is decided by <b>the requirement</b> and <b>each quote’s scope</b>, line by line. The price comes after: a cheaper quote that covers less buys less.</p>',
-    response: ['R1’s options in the allocation: Quote B at $110k brings it to Low', 'Quote A stays on file at $70k: it leaves R1 where it is', 'Supplier A is asked for Dispatch’s price and a year of sessions, for the record'],
+    response: ['R1’s options in the allocation: Quote B at $110k brings it to Low', 'Quote A stays on file at $70k: it leaves R1 at Medium', 'Supplier A is asked for Dispatch’s price and a year of sessions, for the record'],
     techs: [], acts: ['chquote']
   }
 };
@@ -2360,25 +2411,25 @@ const CH_DRILLS = {
 const CH_DIRECTIVE = [
   {label: 'Yours to sign, since it’s your airport: I’ll write it up with you', good: true},
   {label: 'Sign it for her: you understand the risk better than she does, and she asked', why: 'Understanding it isn’t owning it. Her airport, her risk, her signature; you write it up with her.'},
-  {label: 'Refuse it outright: a trust between directories is never acceptable', why: 'An absolute with a price nobody has counted. She decided to keep it; the acceptance records how and until when.'},
-  {label: 'Send it to the Board to sign as the owner of last resort, so the airport isn’t on the hook', why: 'The Board sees every acceptance. Its owner signs it: Joanna.'},
+  {label: 'Refuse it outright: a directory trust with the town’s is never acceptable', why: 'An absolute with a price nobody has counted. She decided to keep it; the acceptance records how and until when.'},
+  {label: 'Send it to the Board to sign as the owner of last resort, so the airport isn’t on the hook', why: 'The Board sees every acceptance, and approves one only where the choice was its own. This choice is Joanna’s, so she signs.'},
   {label: 'Sign it, and keep it off the register: it would only alarm the members', why: 'An acceptance the Board can’t see isn’t one. It goes on the register, signed by its owner.'}];
 
-/* ---------- The Risk & Budget terminals (Oriel; three puzzles) ---------- */
+/* ---------- The Risk & Budget terminals (Marit; three puzzles) ---------- */
 const CH_DOJO = [
   {q: 'A line is High before a fix and Medium after it. What is the Medium?',
    opts: ['The residual risk: what is left after the fix is in place',
           'The inherent risk: what the line would be with no fix in place',
           'The fix’s cost, written as a rating to compare with other lines'], good: 0,
    explain: 'Residual is what is left. The appetite says how much of it the Board will carry.'},
-  {q: 'Fix A costs $70k and leaves a line where it was. Fix B costs $110k and brings it within appetite. Which costs less?',
-   opts: ['B: A spends $70k and changes nothing in the risk that is left',
-          'A: it is $40k cheaper, and the saving can go to another line',
+  {q: 'Fix A costs $70k and leaves a line at Medium, above appetite. Fix B costs $110k and brings it within appetite. Which is the better buy?',
+   opts: ['B: A spends $70k and leaves the line at Medium, still above appetite',
+          'A: it is $40k cheaper, and the saving can bring another line within appetite',
           'Neither: a fix that costs money is never worth it on a quiet line'], good: 0,
-   explain: 'Cost per unit of risk reduced. Spending for no change is the dearest choice.'},
+   explain: 'Weigh what each buys against the appetite. A trims exposure inside the band and still needs an acceptance; B brings the line within.'},
   {q: 'A line stays above appetite. Who signs the acceptance?',
    opts: ['Its business owner, as the risk is theirs, with an expiry and a review',
-          'The CISO, who owns the register and understands the risk best',
+          'The CISO, who owns the register, with an expiry and a review date',
           'The company whose product carries the risk, under its terms'], good: 0,
    explain: 'The owner decides about the owner’s risk. The CISO writes it up and keeps it on the register.'}];
 
@@ -2392,16 +2443,16 @@ const CH_BOARD_SPECS = () => [
           {label: 'Split the money evenly between the two asks, so neither side loses', why: 'Half of each can leave both above appetite. Show what each choice buys.'}]},
   {title: 'Round 2: the cost of the upgrade', who: 'Ivor Penhallow',
    ask: '“If we fund Edda’s upgrade in full, what does it cost us?”',
-   resp: [{label: 'The deferred lines go above Monday’s appetite for a year: each owner signs. Edda’s plan saves $90k', good: true},
-          {label: 'Nothing that matters: the platform comes first, and the register’s other lines can wait their turn', why: 'They can wait only above the appetite the Board set. Say which, and who signs.'},
-          {label: 'Every member’s security, for a year, since no line should go above the appetite', why: 'The Board may choose to. Say what it costs, line by line, and who signs.'},
+   resp: [{label: 'Deferred lines go above appetite for a year: owners sign, the Board approves. Against the extension, $90k saved over two years', good: true},
+          {label: 'Nothing that matters this year: the platform comes first, and the register’s other lines can simply wait their turn until next year', why: 'They can wait only above the appetite the Board set. Say which, and who signs.'},
+          {label: 'Every member’s security, for a year, as no line should go above the appetite', why: 'The Board may choose to. Say what it costs, line by line, and who signs.'},
           {label: 'A breach within 12 months: you can promise the members that much', why: 'Nobody can promise that. Say what each line leaves, against the appetite.'}]},
   {title: 'Round 3: who signs', who: 'Ivor Penhallow',
    ask: '“Will you sign those acceptances for us, as our CISO?”',
-   resp: [{label: 'Their owner signs each, not me, so I record it for the Board with a review date', good: true},
+   resp: [{label: 'No: each owner signs for running it, and the minute records that the Board chose and accepted it. I record both', good: true},
           {label: 'Yes: you know these risks better than anyone else in the room', why: 'Knowing a risk isn’t owning it. The owner signs; you write it up.'},
-          {label: 'The Board signs them all, as the owner of the whole programme', why: 'The Board sees each one. The owner, who carries the risk, signs it.'},
-          {label: 'None is needed: once the Board has decided, the appetite has moved', why: 'A decision leaves a risk. The acceptance says whose it is and until when.'}]}];
+          {label: 'The Board signs them all instead of the owners, and nobody runs the interim checks', why: 'Then nobody answers for the checks. The Board minutes its choice and approves carrying the risk; each owner signs for running the interim measures.'},
+          {label: 'None is needed: once the Board has decided and minuted it, its appetite has simply moved with the decision it made', why: 'A decision leaves a risk. The acceptance says whose it is and until when.'}]}];
 
 /* ---- editions/charter/budget-story.js ---- */
 /* ============================================================
@@ -2409,9 +2460,11 @@ const CH_BOARD_SPECS = () => [
    Charter district 1: Budget (Days 65 to 67). The three drills (Tuesday), the
    allocation (Wednesday 09:00), the directive (Joanna asks you to sign her
    acceptance), the Risk & Budget terminals, the Compact Board's budget round
-   (Thursday 14:00) with its decision and the acceptances it leaves, the Plumb
+   (Thursday 14:00) with its decision and the acceptances it leaves, the Ballast
    Badge, and the week's summary ("Next: Suppliers").
-   The Board decides the budget; each line's owner signs any acceptance for it;
+   The Board decides the budget, and minutes and approves carrying what its
+   decision leaves above appetite; each line's owner signs the acceptance, for
+   the interim measures and the treatment plan;
    the CISO advises, keeps the register and writes each acceptance up.
    Timeline: scratchpad charter-timeline.md (Days 65 to 67).
    ============================================================ */
@@ -2430,35 +2483,35 @@ async function chDrillA() {
   const who = 'Beatriz Solano';
   await say('09:00. The sign-in policy and its exceptions, exported at 08:40, and the shared directory’s sign-in records for the 30 days to 08:00. Edda’s request says MFA is on for every sign-in. Read it like a finding.', who);
   await chDrill('mfaclaim');
-  await say('10:15: Edda reads the records. “I wrote it from memory. I’ll correct my line before the papers go.” fin-ap goes to its owner, Oriel: line R4. board-display gets an owner, Edda, and an expiry. The six service accounts keep their exception, each with an owner and an expiry. (game)');
+  await say('10:15: Edda reads the records. “I wrote it from memory. I’ll correct my line before the papers go.” fin-ap goes to its owner, Marit: line R4. board-display gets an owner, Edda, and an expiry. The six service accounts keep their exception, each with an owner and an expiry. (game)');
   G.f.chDrillA = true; track();
   await say('11:00: Edda has the incident log at her desk.');
 }
 async function chDrillB() {
   const who = 'Edda Thornquist';
-  await say('11:00. This year’s night-cover line: the members’ night thresholds paging our on-call lead, and the rota’s overtime. Oriel wants to know if it worked before she prices it again. The log and the change record are here.', who);
+  await say('11:00. This year’s night-cover line: the members’ night thresholds paging our on-call lead, and the rota’s overtime. Marit wants to know if it worked before she prices it again. The log and the change record are here.', who);
   await chDrill('nightline');
   await say('Put the runbook in the paper beside the paging, then. Fair. It was both.', who);
   G.f.chDrillB = true; track();
-  await say('14:00: Oriel, and the two quotes for R1.');
+  await say('14:00: Marit, and the two quotes for R1.');
 }
 async function chDrillC() {
-  const who = 'Oriel Fanshawe';
+  const who = 'Marit Quellan';
   await say('14:00. Two quotes for R1, Quote A at $70k and Quote B at $110k. Before I look at the price: which one buys what the register asks for?', who);
   await chDrill('quotes');
-  await say('Quote B, then, at $110k, if the Board funds the line. Quote A stays on file. I’ll ask its supplier for Dispatch’s price, for the record.', who);
+  await say('Quote B, then, at $110k, if the Board funds the line. I run the purchase under the Compact’s procurement rules (game). Quote A stays on file, and I’ll ask its supplier for Dispatch’s price, for the record.', who);
   G.f.chDrillC = true; unlock('act', 'chquote'); track();
   await say('End the day at your desk. Tomorrow at 09:00, the allocation.');
 }
 
 /* ---------- The allocation (Day 66, Wednesday 09:00) ---------- */
 async function chAllocTask() {
-  await say('09:00. Six lines, $480k, and the appetite the Board signed on Monday. Each line shows what it costs, the risk it leaves, and whose risk it is. (game)');
+  await say('09:00. Six lines, $480k, and the appetite and tolerances the Board signed on Monday. Each line shows what it costs, the risk it leaves, the tolerance it serves, and whose risk it is. (game)');
   const a = await chAllocate();
   G.ch.sent = Object.assign({}, a);
   G.f.chAlloc = true; unlock('act', 'challoc'); touchCSF('Govern'); track();
   const s = chAllocStats(a);
-  await say('10:00: Oriel puts your allocation in the Board papers: ' + chMoney(s.total) + ', ' + s.within + ' of 6 lines within appetite. Beside it, Edda’s alternative: the upgrade in full, $250k. (game)');
+  await say('10:00: Marit puts your allocation in the Board papers: ' + chMoney(s.total) + ', ' + s.within + ' of 6 lines within appetite. Beside it, Edda’s alternative: the upgrade in full, $250k. (game)');
   await say('11:30: Joanna Ferreday, the airport manager, is waiting by the register.');
 }
 
@@ -2466,7 +2519,8 @@ async function chAllocTask() {
 async function chDirective() {
   const who = 'Joanna Ferreday', f = G.f;
   if (f.chDirective) { await say('Signed, with a date to look at it again. Thank you for not signing it for me.', who); return; }
-  await say('The open risk from our weekend: the airport’s directory trusts the town’s, so the Compact’s admins can sign in. Nobody ever accepted it. I’ve decided to keep the trust until the Compact’s admins have another way in.', who);
+  await say('The council’s risk committee named the airport its owner, and the Airport Authority made me its signatory (game).', who);
+  await say('The open risk from our weekend: the airport’s directory trusts the town’s, so the Compact’s admins can sign in. Nobody had accepted it. I’ve decided to keep the trust until the Compact’s admins have another way in.', who);
   await say('You understand it far better than I do. Just sign it off for me, would you?', who);
   const items = CH_DIRECTIVE.map(o => ({label: o.label, meta: {good: !!o.good}}));
   let first = true;
@@ -2477,22 +2531,23 @@ async function chDirective() {
     await say(CH_DIRECTIVE[i].why);
   }
   G.ch.directive = {first: first};
-  G.ch.accept.push({line: 'AP', name: 'The airport’s directory trusts the town’s', owner: 'Joanna Ferreday', residual: 'Medium', appetite: chAppetite('privacy'), signedBy: 'Joanna Ferreday', decidedBy: 'Joanna Ferreday, for the airport', day: 66,
-    expiry: CH_EXPIRY_DAY, review: CH_REVIEW_DAY, interim: 'the trust stays; it closes when the Compact’s admins can sign in to the airport another way.'});
-  await say('11:50: written up together. The trust, residual Medium against the Low privacy appetite; Joanna signs, as its owner; it expires on Day 428 and is reviewed on Day 155; what closes it is written in. On the register, and the Board sees it on Thursday. (game)');
+  G.ch.accept.push({line: 'AP', name: 'The airport’s directory trusts the town’s', owner: 'Joanna Ferreday', residual: 'Medium', appetite: chAppetite('privacy'), signedBy: 'Joanna Ferreday', breaks: [], decider: 'Joanna', decidedBy: 'Joanna Ferreday, for the airport', approvedBy: null, day: 66,
+    expiry: CH_EXPIRY_DAY, review: CH_REVIEW_DAY, interim: 'Dario reviews the airport directory’s lookups by town accounts each month. It closes when the Compact’s admins can sign in to the airport another way.'});
+  await say('11:50: written up together. On the Compact’s register because the trust exists for the Compact’s admins; measured against the Compact’s privacy appetite, which the airport’s representative voted for on Monday. (game)');
+  await say('The trust, residual Medium against the Low privacy appetite. Joanna signs, as its owner. Meanwhile Dario reviews the directory’s lookups by town accounts each month; it expires on Day 428 and is reviewed on Day 155; what closes it is written in. The Board sees it on Thursday. (game)');
   f.chDirective = true; unlock('act', 'chaccept'); touchCSF('Govern'); track();
-  await say('13:00: Oriel has three terminals for you.');
+  await say('13:00: Marit has three terminals for you.');
 }
 
-/* ---------- The Risk & Budget terminals (Oriel) ---------- */
+/* ---------- The Risk & Budget terminals (Marit) ---------- */
 async function chDojoIntro() {
   G.f.chDojoMet = true;
-  await say('While the papers print: three terminals, south-west. Residual risk, cost against benefit, and who signs. They’re mine; I use them on every new budget holder.', 'Oriel Fanshawe');
+  await say('While the papers print: three terminals, south-west. Residual risk, cost against benefit, and who signs. They’re mine; I use them on every new budget holder.', 'Marit Quellan');
 }
 async function chDojoPuzzle(i) {
   const f = G.f, c = G.ch;
   if (i < 0) return;
-  if (!f.chDojoMet) { await say('A training terminal: “Risk & Budget”. Oriel’s. Talk to her first.'); return; }
+  if (!f.chDojoMet) { await say('A training terminal: “Risk & Budget”. Marit’s. Talk to her first.'); return; }
   const p = CH_DOJO[i];
   if (c.dojo[i]) { await say('Solved. ' + p.explain); return; }
   while (true) {
@@ -2504,32 +2559,49 @@ async function chDojoPuzzle(i) {
   c.dojo[i] = true; touchCSF('Govern');
   if (!c.dojo.every(Boolean) || f.chDojoDone) return;
   f.chDojoDone = true; G.focusMax += 2; G.focus = Math.min(G.focusMax, G.focus + 2); track();
-  await say('All three. Focus ' + G.focusMax + ' (game). End the day at your desk.', 'Oriel Fanshawe');
+  await say('All three. Focus ' + G.focusMax + ' (game). End the day at your desk.', 'Marit Quellan');
 }
 
 /* ---------- The Compact Board's budget round (Day 67 14:00) ---------- */
 async function chBoardRound() {
-  const who = 'Ivor Penhallow', f = G.f, c = G.ch;
-  await say('14:00. The members’ representatives, Edda, Oriel, and Noor for anything legal. Two asks for one budget. Three questions first.', who);
+  const who = 'Ivor Penhallow', f = G.f, c = G.ch, up = chLine('R6').opts.length - 1;
+  await say('14:00. The members’ representatives, Edda, Marit, and Noor for anything legal. Two asks for one budget. Three questions first.', who);
   c.board = {first: []};
   await chStages(CH_BOARD_SPECS(), c.board.first);
-  const d = chBoardDecide(c.sent);
-  c.decision = {override: d.override, cut: d.cut};
+  // The advice counts: both cases laid out alike (Round 1) and the upgrade's cost stated plainly (Round 2), at the first
+  // try, with an allocation inside Monday's appetite and tolerances, and the Board takes the extension (chBoardDecide).
+  const d = chBoardDecide(c.sent, c.board.first[0] && c.board.first[1]);
+  c.decision = {override: d.override, cut: d.cut, restored: d.restored, persuaded: d.persuaded};
   c.final = d.final;
-  if (d.override) {
-    await say('15:00. The Board funds the upgrade in full, $250k. Oriel’s figures: a year of support now and the upgrade next year is $340k for the same platform. To pay for it, ' + d.cut.map(id => id + ' (' + chLine(id).name + ')').join(', ') + (d.cut.length === 1 ? ' waits' : ' wait') + ' a year. The center’s segment stays funded: I won’t ask Celia to sign for that. (game)', who);
-  } else await say('15:00. The Board approves your allocation as sent. (game)', who);
+  const names = ids => ids.map(id => id + ' (' + chLine(id).name + ')').join(', ');
+  let msg = '15:00. ';
+  if (d.restored.length) msg += 'Your allocation leaves R5, the 911 center’s segment, at $0. The Board funds it, $120k, and the minute says so: I won’t ask Celia to sign that. ';
+  if (d.override) msg += 'The Board funds the upgrade in full, $250k. Marit’s figures: a year of support now and the upgrade next year is $340k for the same platform.' + (d.cut.length ? ' To pay for it, ' + names(d.cut) + (d.cut.length === 1 ? ' waits' : ' wait') + ' a year.' : '') + (d.restored.length ? '' : ' The center’s segment stays funded: I won’t ask Celia to sign for that.');
+  else if (d.persuaded && c.sent.R6 !== up) msg += 'The Board approves your allocation as sent. The extension carries the platform for a year, and the upgrade comes back at the start of next year’s budget cycle. Laid out side by side, it keeps every line inside what we signed on Monday.';
+  else msg += 'The Board approves your allocation' + (d.cut.length ? ', less ' + names(d.cut) + ', to fit $480k' : ' as sent') + '.';
+  await say(msg + ' (game)', who);
+  // What the decision leaves above appetite: the Board's decision and its approval of the residual risk, in the minute (the
+  // CISO's advice and objection noted when it overrode); each owner signs for the interim measures and the treatment plan.
   const above = chAboveAppetite(c.final);
-  for (const l of above) c.accept.push(chAcceptance(l, c.final, d.override ? 'the Board, overriding the CISO’s allocation' : 'the Board', 67));
-  await UI.openModal('The Board’s decision', '<p>' + (d.override ? 'The Board overrode your allocation: the upgrade in full, paid for by deferring ' + d.cut.join(', ') + '. ' : 'The Board approved your allocation. ') + 'The minute records the decision and every acceptance it leaves. (game)</p>' + chAllocTable(c.final) + chAllocSummary(c.final) +
-    (above.length ? '<h3>15:20: the acceptances, signed by their owners</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 67)) : '') +
+  const dec = {decidedBy: 'the Compact Board (minute, Day 67), ' + (d.override ? 'against the CISO’s advice' : d.restored.length || d.cut.length ? 'correcting the CISO’s allocation' : 'on the CISO’s allocation'), approvedBy: 'the Compact Board'};
+  for (const l of above) c.accept.push(chAcceptance(l, c.final, dec, 67));
+  const ids = above.map(l => l.id), list = ids.length > 1 ? ids.slice(0, -1).join(', ') + ' and ' + ids[ids.length - 1] : ids[0];
+  const head = d.override ? 'The Board overrode your allocation: the upgrade in full' + (d.cut.length ? ', paid for by deferring ' + d.cut.join(', ') : '') + '. ' : 'The Board approved your allocation' + (d.cut.length ? ', less ' + d.cut.join(', ') : d.persuaded && c.sent.R6 !== up ? ' as sent, the extension carrying the platform' : ' as sent') + '. ';
+  const minute = above.length ? 'The minute records the Board’s decision to carry ' + list + ' above appetite until Day ' + CH_EXPIRY_DAY + (d.override ? ', with the CISO’s advice against it and the objection noted' : '') + ', and its acceptance of the residual risk, approved by the Board. Each owner signs for the interim measures and owns the treatment plan.'
+    : 'The minute records the decision. No line is left above appetite.';
+  await UI.openModal('The Board’s decision', '<p>' + head + (d.restored.length ? 'It funded R5, which your allocation left at $0. ' : '') + minute + ' (game)</p>' + chAllocTable(c.final) + chAllocSummary(c.final) +
+    (above.length ? '<h3>15:20: the acceptances: the Board’s decision, signed by their owners</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 67)) : '') +
     '<h3>Also before the Board</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 66)),
     [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
-  if (above.length && above.every(l => l.owner === 'Edda Thornquist')) await say('I sign ' + (above.length === 1 ? 'it' : 'them') + ', as their owner. The upgrade was my request; what it leaves is mine too.', 'Edda Thornquist');
-  else if (above.length) await say('15:20: ' + above.map(l => l.owner).filter((x, i, a) => a.indexOf(x) === i).join(', ') + ' sign, each as the owner of the lines left above appetite. (game)');
-  f.chBoard = true; f.chPlumb = true;
+  for (const o of [...new Set(above.map(l => l.owner))]) {
+    const mine = above.filter(l => l.owner === o).map(l => l.id), one = mine.length === 1;
+    if (o === 'Edda Thornquist') await say('I sign ' + (one ? 'it as its owner' : 'them as their owner') + ', and I’ll run the interim checks. The Board chose the trade-off; the minute says so.', o);
+    else if (o === 'Marit Quellan') await say('I sign ' + mine.join(', ') + ' as ' + (one ? 'its' : 'their') + ' owner, and I’ll run the interim checks. The Board chose it; the minute says so.', o);
+    else await say('15:20: ' + o + ' signs ' + mine.join(', ') + ' as the owner, for the interim measures and the treatment plan. (game)');
+  }
+  f.chBoard = true; f.chBallast = true;
   G.focusMax += 4; G.focus = G.focusMax; unlock('act', 'chboard'); touchCSF('Govern'); track();
-  await say('You cleared the Compact Board’s budget round. This is the Plumb Badge (game).', who);
+  await say('You cleared the Compact Board’s budget round. This is the Ballast Badge (game).', who);
   await say('Its power, from the next district on: every register line arrives with its owner and its review date. And you carry a little more now: Focus +4.', who);
   await say('16:00: your desk. Close the week.');
 }
@@ -2545,14 +2617,14 @@ async function chSummary() {
     Series.markEdition('charter', {budget: true});
     await say('An appetite the Board signed, a register with an owner and a date on every line, and a budget the Board decided with its eyes open. Next, the suppliers.', 'Ivor Penhallow');
   }
-  const ok = l => l.every(Boolean), s = c.final ? chAllocStats(c.final) : null;
+  const ok = l => l.every(Boolean), s = c.final ? chAllocStats(c.final) : null, adv = c.sent ? chAllocStats(c.sent) : null;
   const body = '<p class="big">Budget: done.</p>' +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b> · Day <b>' + G.day + '</b> (' + (CH_DAY[G.day] || '') + ')</p>' +
     '<p>Monday: the remit ' + (c.remit && ok(c.remit.first) ? 'answered at the first try' : 'answered, with false starts') + '; the appetite statement ' + (c.appetite && ok(c.appetite.first) ? 'drafted at the first try' : 'drafted, with false starts') + ', approved at 12:00; the register’s owners and dates ' + (c.register && ok(c.register.first) ? 'set at the first try' : 'set, with false starts') + '.</p>' +
     '<h3>Drills (game)</h3><table class="sc"><tr><th>Drill</th><th>Score</th><th>Supported</th></tr>' + chDrillRows() + '</table>' +
-    '<p>Thursday: the Board ' + (c.decision && c.decision.override ? 'overrode your allocation, funding the upgrade in full by deferring ' + c.decision.cut.join(', ') : 'approved your allocation as sent') + '. Its rounds ' + (c.board && ok(c.board.first) ? 'at the first try' : 'with false starts the debriefs named') + '. ' + (s ? s.within + ' of 6 lines within appetite; ' + chMoney(s.total) + ' allocated.' : '') + '</p>' +
+    '<p>Your advice: the allocation you sent, ' + (adv ? adv.within + ' of 6 lines within appetite and its tolerances, ' + chMoney(adv.total) + '.' : 'none sent.') + ' Thursday: the Board ' + (c.decision && c.decision.override ? 'overrode your allocation, funding the upgrade in full' + (c.decision.cut.length ? ' by deferring ' + c.decision.cut.join(', ') : '') : 'approved your allocation' + (c.decision && c.decision.cut.length ? ', less ' + c.decision.cut.join(', ') : ' as sent')) + (c.decision && c.decision.restored && c.decision.restored.length ? ', and funded R5, which your allocation left at $0' : '') + '. Its rounds ' + (c.board && ok(c.board.first) ? 'at the first try' : 'with false starts the debriefs named') + '. ' + (s ? 'The Board’s decision: ' + s.within + ' of 6 lines within appetite; ' + chMoney(s.total) + ' allocated.' : '') + '</p>' +
     '<h3>Acceptances on the register</h3>' + chAcceptHtml(c.accept) +
-    '<p>Lesson (game): the budget follows the register, each line priced against what it buys and what it leaves, measured against an appetite the Board approved before anyone spent a dollar. Claims are checked against records. The Board decides; each owner signs for the risk left above appetite; the CISO advises and keeps the record.</p>' +
+    '<p>Lesson (game): the budget follows the register, each line priced against what it buys and what it leaves, measured against an appetite and tolerances the Board approved before anyone spent a dollar. Claims are checked against records. The Board decides; each acceptance is signed by its business owner; a risk the governing body decides to carry above its own appetite is also minuted as the governing body’s decision. The CISO advises and keeps the record.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: ' + qtCount() + ' notes in the suspicion file. Who, and why: not yet known.</p>') +
     '<p class="big">Next: Suppliers.</p>';
@@ -3336,7 +3408,7 @@ function fmEntries() {
   const out = [];
   for (const id in TECH) out.push({cat: 'ATT&CK techniques', key: 'tech:' + id, name: id + ' ' + TECH[id].name, desc: TECH[id].desc + ' Tactic: ' + TECH[id].tactic.join(', ') + '.'});
   if (!EDITION.noTools) for (const k in ABIL) out.push({cat: 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: ABIL[k].name, desc: ABIL[k].desc});  // tool abilities only where there is a tool console
-  for (const k in EXTRA_ACTIONS) out.push({cat: 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: EXTRA_ACTIONS[k].name, desc: EXTRA_ACTIONS[k].desc});
+  for (const k in EXTRA_ACTIONS) out.push({cat: EDITION.fmActionsCat || 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: EXTRA_ACTIONS[k].name, desc: EXTRA_ACTIONS[k].desc});
   for (const k in CSF) out.push({cat: 'NIST CSF 2.0 functions', key: 'csf:' + k, name: k, desc: CSF[k]});
   for (const k in FACTS) out.push({cat: 'Facts', key: 'fact:' + k, name: FACTS[k].name, desc: FACTS[k].desc + ' Source: ' + FACTS[k].src + '.'});
   return out;
@@ -3344,7 +3416,7 @@ function fmEntries() {
 function fmUnlocked(e) { return e.key.startsWith('csf:') ? !!G.csf[e.key.slice(4)] : !!G.fm[e.key]; }
 function fmPct() { const e = fmEntries(); return Math.round(e.filter(fmUnlocked).length / e.length * 100); }
 function fmHtml() {
-  const e = fmEntries(); let cat = '', h = '<p>' + fmPct() + '% complete. Descriptions are our own words; IDs are from MITRE ATT&amp;CK.</p>';
+  const e = fmEntries(); let cat = '', h = '<p>' + fmPct() + '% complete. ' + (EDITION.fmIntro || 'Descriptions are our own words; IDs are from MITRE ATT&amp;CK.') + '</p>';
   for (const x of e) {
     if (x.cat !== cat) { cat = x.cat; h += '<h3>' + esc(cat) + '</h3>'; }
     h += fmUnlocked(x) ? '<div class="fm"><b>' + esc(x.name) + '</b><br>' + esc(x.desc) + '</div>' : '<div class="fm lock">??? (not met yet)</div>';

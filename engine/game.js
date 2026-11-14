@@ -606,7 +606,7 @@ function fmEntries() {
   const out = [];
   for (const id in TECH) out.push({cat: 'ATT&CK techniques', key: 'tech:' + id, name: id + ' ' + TECH[id].name, desc: TECH[id].desc + ' Tactic: ' + TECH[id].tactic.join(', ') + '.'});
   if (!EDITION.noTools) for (const k in ABIL) out.push({cat: 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: ABIL[k].name, desc: ABIL[k].desc});  // tool abilities only where there is a tool console
-  for (const k in EXTRA_ACTIONS) out.push({cat: 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: EXTRA_ACTIONS[k].name, desc: EXTRA_ACTIONS[k].desc});
+  for (const k in EXTRA_ACTIONS) out.push({cat: EDITION.fmActionsCat || 'Defensive actions (D3FEND-style)', key: 'act:' + k, name: EXTRA_ACTIONS[k].name, desc: EXTRA_ACTIONS[k].desc});
   for (const k in CSF) out.push({cat: 'NIST CSF 2.0 functions', key: 'csf:' + k, name: k, desc: CSF[k]});
   for (const k in FACTS) out.push({cat: 'Facts', key: 'fact:' + k, name: FACTS[k].name, desc: FACTS[k].desc + ' Source: ' + FACTS[k].src + '.'});
   return out;
@@ -614,7 +614,7 @@ function fmEntries() {
 function fmUnlocked(e) { return e.key.startsWith('csf:') ? !!G.csf[e.key.slice(4)] : !!G.fm[e.key]; }
 function fmPct() { const e = fmEntries(); return Math.round(e.filter(fmUnlocked).length / e.length * 100); }
 function fmHtml() {
-  const e = fmEntries(); let cat = '', h = '<p>' + fmPct() + '% complete. Descriptions are our own words; IDs are from MITRE ATT&amp;CK.</p>';
+  const e = fmEntries(); let cat = '', h = '<p>' + fmPct() + '% complete. ' + (EDITION.fmIntro || 'Descriptions are our own words; IDs are from MITRE ATT&amp;CK.') + '</p>';
   for (const x of e) {
     if (x.cat !== cat) { cat = x.cat; h += '<h3>' + esc(cat) + '</h3>'; }
     h += fmUnlocked(x) ? '<div class="fm"><b>' + esc(x.name) + '</b><br>' + esc(x.desc) + '</div>' : '<div class="fm lock">??? (not met yet)</div>';
