@@ -347,6 +347,11 @@ const councilBand = COUNCIL_BAND.map(n => { const st = stat(inScope('council'), 
 // every list type and overall, at n >= MIN_N (the wording in Records Hall and the Server Room was rebalanced first).
 const TH_URGENT = EXTRA.find(w => w[0] === 'G:urgent')[1];
 const thUrgent = scopes.concat(TYPES).map(s => { const st = stat(inScope(s), TH_URGENT); return {n: s, st, ok: st.n < MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}; });
+// Headroom on the hurry band (maintenance slice 1 review, N5): name any Town Hall scope within 4 points of the 35–65%
+// edges, so a content author sees before the next edit that one more hurry word on that side would fail the suite
+// (story-choices sits at 62%: 2/58 right, 8/144 wrong).
+const thThin = thUrgent.filter(x => x.ok && x.st.n >= MIN_N && (x.st.lean > WARN - 0.04 || x.st.lean < 1 - WARN + 0.04));
+if (thThin.length) console.log('Hurry-word headroom (G:urgent, Town Hall; near the band edge, not a failure):\n  ' + thThin.map(x => x.n + ' ' + fmt(x.st)).join('\n  '));
 // ---- Crossroads: its own population, scopes and band ----
 const CR_DISTRICTS = ['cr-prologue', 'cr-library', 'cr-school', 'cr-clinic', 'cr-dispatch', 'cr-airport', 'cr-finale'];
 const crScope = s => s === 'cr-all' ? crOpts : TYPES.includes(s) ? crOpts.filter(x => x.t === s) : crOpts.filter(x => x.d === s);

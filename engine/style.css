@@ -134,6 +134,19 @@ body.landscape.touch #modal{padding:8px 150px 8px 168px}
 .mbox.mkeep .mopts{flex:none}
 .mbox.mscroll{overflow-y:auto;overscroll-behavior:contain}
 .mbox.mscroll .mbody,.mbox.mscroll .mopts{flex:none;min-height:0}  /* full height, so they never scroll vertically; wide tables still scroll sideways */
+/* "More below" cues (maintenance slice 1 review, S2; UI.syncMore). In .mscroll a strip pinned to the box's bottom edge says
+   the options are below (in the flow after them, so at the page's end it sits under the last option, never over it; the
+   box's scroll padding keeps a highlighted option above it). In .mkeep a strip at the bottom of the body says its text goes
+   on (no flow height of its own). The words are CSS content, so page text is unchanged. Page tokens: every palette. */
+.mmore{display:none;position:sticky;bottom:0;z-index:2;flex:none;height:26px;line-height:22px;font-size:13px;font-weight:700;letter-spacing:.5px;
+  text-align:center;background:var(--paper);color:var(--paper-ink);border-top:2px solid var(--paper-ink);box-shadow:0 -10px 10px -4px var(--paper);
+  visibility:hidden;cursor:pointer;-webkit-user-select:none;user-select:none;white-space:nowrap;overflow:hidden}
+.mmore.on{visibility:visible}
+.mmore-o::after{content:"\25BC  options below  \25BC"}
+.mmore-o.txt::after,.mmore-t::after{content:"\25BC  more below"}
+.mbox.mscroll{scroll-padding-bottom:30px}
+.mbox.mscroll .mmore-o{display:block}
+.mbox.mkeep .mmore-t{display:block;margin-top:-26px}
 .mopts .opt{flex:none;font-size:15px;min-height:40px;padding:6px 8px;color:var(--paper-ink)}
 .mopts .opt.cur{background:var(--cur);border-color:var(--paper-ink)}
 .mopts .opt .note{color:var(--muted)}
@@ -178,5 +191,10 @@ body.calm #toast{transition:none}
 body.bigtext .mbody{font-size:18px}
 body.bigtext .mopts .opt{font-size:18px}
 body.bigtext .mbody .small,body.bigtext .small{font-size:15px}
+body.bigtext .mmore{height:30px;line-height:26px;font-size:16px}
+body.bigtext .mbox.mkeep .mmore-t{margin-top:-30px}
+body.bigtext .mbox.mscroll{scroll-padding-bottom:34px}
+body.bigtext .mtoast{font-size:15px}
+body.bigtext #toast{font-size:calc(var(--fs) * .95)}
 body.bigtext #panel{font-size:calc(var(--fs) * 1.2)}
 body.portrait.bigtext #panel{font-size:17px}

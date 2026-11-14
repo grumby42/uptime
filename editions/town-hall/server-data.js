@@ -336,7 +336,7 @@ const SV_DRILLS = {
       {label: 'The monitoring server’s nightly ticket requests', good: true, why: 'Ruled out: MON-01 used AES and its documented account; PK-WS-11 used RC4 and a clerk’s.'},
       {label: 'An application server requesting its own service’s tickets at start-up', good: true, why: 'Ruled out: those are AES, for one service, from the app’s own account, not a clerk’s workstation across 12.'},
       {label: 'A clock problem bunched old requests into one window', why: 'The clocks are synchronised; the 4769 events are real and recent.'},
-      {label: 'The clerk opening 12 applications at the same time', why: 'A person opening apps doesn’t ask for RC4 tickets for service accounts they never use.'}],
+      {label: 'The clerk opening 12 applications together', why: 'A person opening apps doesn’t ask for RC4 tickets for service accounts they never use.'}],
     path: '<p>A burst of service-ticket requests is decided by <b>the encryption type and the requesting account</b> in event 4769 (RC4/0x17 for cracking versus the AES the town uses; a clerk’s account versus a documented service) and by <b>whether the requesting host has a business reason</b> to reach those services. The total count and the time of night fit a monitoring tool just as well, so they decide nothing.</p>',
     response: ['Isolate PK-WS-11 and collect triage, the program included', 'Reset d.okonjo and revoke its sessions; find the email the program came from', 'Rotate the 12 roasted service accounts, svc-permits first (its 2019 password and domain-admin rights make it the worst case), and hunt its sign-ins since 02:10; the other 11 already have long random passwords, rotate them anyway', 'Move the RC4 ones to AES after a test, and keep the RC4-ticket rule'],
     techs: ['T1558.003'], acts: ['krbaudit']
@@ -419,7 +419,7 @@ const SV_DRILLS = {
     reasons: [
       {label: 'The requesting account is the documented Entra Connect MSOL_ connector, and SYNC-02 is the identity team’s own Tier 0 sync server, placed in Tier 0 during the fieldwork, on its first run', good: true, why: 'Who asked, whether it’s documented, and who owns the host.'},
       {label: 'Only 2.1 GB moved this morning, far less than the whole directory would be, well under what a full password-data dump would need to pull', why: 'Volume fits both a first sync and a dump; it decides nothing.'},
-      {label: 'The request went to both domain controllers at the same time, which is how ordinary directory replication works and not how a quiet attacker pulling hashes would behave', why: 'An attacker can target either or both DCs; the destinations don’t clear it.'}],
+      {label: 'The request went to both domain controllers in parallel, which is how ordinary directory replication works and not how a quiet attacker pulling hashes would behave', why: 'An attacker can target either or both DCs; the destinations don’t clear it.'}],
     alts: [
       {label: 'A DCSync-style credential dump from a compromised host', good: true, why: 'Ruled out: the account is the documented connector and the host is the owned Tier 0 sync server.'},
       {label: 'A rogue account quietly granted replication rights', good: true, why: 'Ruled out: this account was created with SYNC-02 under a change ticket, holds only the connector’s documented rights, and replicates only from SYNC-02.'},

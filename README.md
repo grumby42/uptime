@@ -17,7 +17,7 @@ Planned home: GitHub Pages at `grumby42/uptime` (open `index.html` for the serie
 ```
 index.html                  series menu (generated)
 engine/                     shared code
-  shell.html, style.css     page skeleton and layout (HUD band above the map; phone portrait: taller map view, dialogue, then the pad at the bottom, modals above the pad, or between the controls on a landscape phone, the pad always visible; a modal keeps its answer options whole and lets the body scroll, or scrolls as one page when both can't fit, so an option is never clipped; toasts sit on the map, or in a lane below an open modal, never over it or the HUD; desktop: dialogue below the map when there is room)
+  shell.html, style.css     page skeleton and layout (HUD band above the map; phone portrait: taller map view, dialogue, then the pad at the bottom, modals above the pad, or between the controls on a landscape phone, the pad always visible; a modal keeps its answer options whole and lets the body scroll, or scrolls as one page when both can't fit, so an option is never clipped; a "▼ options below" / "▼ more below" cue shows while anything is below the fold, and A (or up/down) first brings a highlighted option that is out of view into view, so nothing is picked unseen; toasts sit on the map, or in a lane below an open modal, never over it or the HUD, and a toast that would change an open modal's layout waits until it closes; desktop: dialogue below the map when there is room)
   core-data.js              sprites (characters in four facings, each with two stepping frames so the feet alternate), palettes, tile legend, tool classes, tools, abilities, NIST CSF function names
   settings.js               Settings ('uptime.settings', shared by every edition): colour palettes applied at render time, Web Audio
                             sound sets, volume / mute / alerts only, reduced flashing, text size, the state-badge glyphs, the Settings page
@@ -108,7 +108,9 @@ Need Node and Playwright (Chromium).
                                    #   (UPTIME_PALETTE=contrast|light|... and UPTIME_TEXT=large run it under a palette / text size)
     node tests/modalfit.js         # every graded modal in both editions (recorded by the three desktop bots, plus every drill, report finding and
                                    #   clue stage built from the data) at 800x360, 844x390, 390x844, 360x640 and 1280x800: no option clipped or
-                                   #   off-screen, the pad visible; toasts clear of the modal and the HUD (MODAL_CORPUS=dir reuses recorded logs)
+                                   #   off-screen, the pad visible; A at open never acts on an option not on screen (D-pad too); "more below" cues
+                                   #   shown, readable in every palette and text size; toasts clear of the modal and the HUD, and a toast mid-modal
+                                   #   never switches the layout (MODAL_CORPUS=dir reuses recorded logs)
     node tests/settings.js         # Settings: persistence across reload, storage blocked, v1 migration, each palette on canvas pixels and
                                    #   CSS, WCAG contrast >= 4.5:1 for 15 text/background token pairs per palette, colour-blind
                                    #   simulation of every badged equipment state pair, no colour-only cue (badges, lit PCs, hatched

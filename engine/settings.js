@@ -378,7 +378,7 @@ async function settingsMenu() {
   let cursor = 0;
   while (true) {
     const items = settingsItems();
-    const pr = UI.openModal('Settings', settingsBody(), items, {cursor: cursor, lr: true, cls: 'setbox'});
+    const pr = UI.openModal('Settings', settingsBody(), items, {cursor: cursor, lr: true, cls: 'setbox', inView: true});
     drawSettingsPreview();
     const r = await pr;
     if (r && typeof r === 'object') { cursor = r.i; settingsChange(items[r.i].meta.k, r.d); continue; }
