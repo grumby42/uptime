@@ -11,11 +11,14 @@
      contracts, a price uplift and a supplier's goodwill per clause, the
      must-haves set by the tier (GV.SC-05); insurance and indemnity are
      counsel's and procurement's call, shown and never chosen by the CISO;
-   - a must-have left out of a contract: an acceptance signed by the service's
-     business owner, who decides it (one decider), with an expiry, a review
-     date and an interim measure; the Board sees it;
+   - a must-have left out of a contract: leaving it out is the CISO's
+     recommendation (the plan), recorded as the CISO's; the service's business
+     owner decides on it and signs (one decider), with an expiry, a review date
+     and an interim measure; the Board sees it. When a plan with every
+     must-have fits the envelope and every supplier's goodwill, leaving one out
+     is scored as poor advice (the metric "Must-haves in your plan");
    - the supplier incident's timeline against Contract A (the tier-1 model
-     terms): the Compact's own times only.
+     terms, its clauses C1, C2 and C3): the Compact's own times only.
    Procurement (Ilka) and counsel (Noor) own the Compact's contracts; each
    member's owner decides that member's contracts.
    State: G.ch.sup (chSup() creates it, so a save from slice 1 loads too).
@@ -27,6 +30,7 @@ function chSup() {
   if (!c.sup) c.sup = {tiers: null, sent: null, drills: {}, needs: {met: 0, total: 0}, incident: {first: []}, plan: null, planSent: null,
     accept: [], directive: null, dojo: [false, false, false], board: null};
   if (G.targets && G.targets.chSupTier === undefined) Object.assign(G.targets, {chSupCrit: 100, chSupTier: 100, chSupNotify: 100});
+  if (G.targets && G.targets.chSupMust === undefined) G.targets.chSupMust = 100;
   return c.sup;
 }
 function chSupLine(id) { return CH_SUPPLIERS.find(s => s.id === id); }
@@ -69,7 +73,7 @@ async function chTierEdit() {
 }
 function chTierStats(sent) {
   if (!sent) return null;
-  const ok = CH_SUPPLIERS.filter(s => sent[s.id] === chTierRule(s) && s.owner && CH_SUP_REVIEW);
+  const ok = CH_SUPPLIERS.filter(s => sent[s.id] === chTierRule(s));
   return {right: ok.length, pct: Math.round(ok.length / CH_SUPPLIERS.length * 100), wrong: CH_SUPPLIERS.filter(s => sent[s.id] !== chTierRule(s))};
 }
 function chTierDebrief(sent) {
@@ -106,6 +110,22 @@ function chPlanStats(plan) {
   return {cost, over: cost > CH_SUP_ENVELOPE, per, mustTotal, mustIn, ok: cost <= CH_SUP_ENVELOPE && Object.values(per).every(p => !p.overGoodwill)};
 }
 function chPlanRec(id) { const k = chContract(id), s = chSupLine(id); return chMust(s).filter(c => !k.has.includes(c)); }
+function chPlanAll() { return Object.fromEntries(CH_SUP_CONTRACTS.map(k => [k.id, chPlanRec(k.id)])); }
+// The plan's advice on each must-have it leaves out. fitsNow: the clause fits in what the plan leaves of the envelope
+// and of the supplier's goodwill; fitsAll: a plan with every must-have fits (then leaving any out is poor advice);
+// extras: clauses sought that are not must-haves for their tier.
+function chPlanAdvice(plan) {
+  const st = chPlanStats(plan), envLeft = CH_SUP_ENVELOPE - st.cost, fitsAll = chPlanStats(chPlanAll()).ok;
+  const extras = CH_SUP_CONTRACTS.flatMap(k => (plan[k.id] || []).filter(c => !st.per[k.id].must.includes(c)).map(c => chSupLine(k.id).short + ' ' + c));
+  const left = CH_SUP_CONTRACTS.flatMap(k => st.per[k.id].miss.map(c => {
+    const o = k.offer[c], gLeft = k.goodwill - st.per[k.id].goodwill;
+    return {id: k.id, clause: c, line: chSupLine(k.id).short + ' ' + c, envLeft, gLeft, fitsNow: !!o && o[0] <= envLeft && o[1] <= gLeft};
+  }));
+  return {left, extras, fitsAll, poor: !!left.length && fitsAll};
+}
+function chFitText(x, adv) {
+  return x.line + (x.fitsNow ? ' fits: ' + chMoney(x.envLeft) + ' of the envelope left, goodwill ' + x.gLeft + ' left' : adv.fitsAll ? ' fits once the extras go (' + adv.extras.join(', ') + ')' : ' does not fit');
+}
 function chPlanLine(k, plan, st) {
   const s = chSupLine(k.id), p = st.per[k.id];
   return s.name + ' (Tier ' + chTierRule(s) + '): ' + (p.must.length - p.miss.length) + ' of ' + p.must.length + ' must-haves, ' + chMoney(p.cost) + ', goodwill ' + p.goodwill + ' of ' + k.goodwill + (p.overGoodwill ? ': too much to ask' : '');
@@ -140,13 +160,15 @@ async function chPlanEdit() {
     const items = CH_SUP_CONTRACTS.map(k => { const rec = chPlanRec(k.id), same = plan[k.id].length === rec.length && rec.every(id => plan[k.id].includes(id));
       return {label: chPlanLine(k, plan, st), note: k.what + '. A opens its clauses.', meta: {k: k.id, bot: !same}}; });
     items.push({label: st.ok ? 'Send it to Ilka and Noor' : st.over ? 'Over the envelope by ' + chMoney(st.cost - CH_SUP_ENVELOPE) + ': change a contract' : 'Too much asked of one supplier: change it', disabled: !st.ok, meta: {k: 'send', bot: recDone}});
-    const body = '<p>The Compact’s four contracts that change this year, and ' + chMoney(CH_SUP_ENVELOPE) + ' a year of price uplift across them (game). Each clause costs uplift and some of the supplier’s goodwill. The tier sets the must-haves. Ilka and Noor hold the contracts; each service’s owner signs for any must-have left out.</p>' +
+    const body = '<p>The Compact’s four contracts that change this year, and ' + chMoney(CH_SUP_ENVELOPE) + ' a year of price uplift across them (game), set by Marit from the services’ budgets. Each clause costs uplift and some of the supplier’s goodwill. The tier sets the must-haves. Ilka and Noor hold the contracts; a must-have you leave out is your recommendation, and its service’s owner decides on it and signs.</p>' +
       '<p>Envelope <b>' + chMoney(st.cost) + ' of ' + chMoney(CH_SUP_ENVELOPE) + '</b> · must-haves in or sought <b>' + st.mustIn + ' of ' + st.mustTotal + '</b> (game)</p>';
     const r = await UI.openModal('Clause plan · the Compact’s contracts', body, items, {closable: false, cursor: cur, inView: true, cls: 'drill'});
     if (r >= 0 && r < CH_SUP_CONTRACTS.length) { await chPlanContract(CH_SUP_CONTRACTS[r]); cur = r; continue; }
     if (items[r] && items[r].meta.k === 'send') {
       const left = CH_SUP_CONTRACTS.flatMap(k => st.per[k.id].miss.map(id => chSupLine(k.id).short + ' ' + id));
-      const j = await UI.openModal('Send the plan?', '<p>' + chMoney(st.cost) + ' of ' + chMoney(CH_SUP_ENVELOPE) + '. ' + (left.length ? 'Must-haves left out, each needing its owner’s signed acceptance: <b>' + left.join(', ') + '</b>.' : 'Every must-have in or sought.') + '</p><p>Ilka and Noor take it to the suppliers.</p>',
+      const adv = chPlanAdvice(plan);
+      const j = await UI.openModal('Send the plan?', '<p>' + chMoney(st.cost) + ' of ' + chMoney(CH_SUP_ENVELOPE) + '. ' + (left.length ? 'Must-haves left out, on your recommendation, each needing its owner’s decision and signed acceptance: <b>' + left.join(', ') + '</b>.' : 'Every must-have in or sought.') + '</p>' +
+        (adv.poor ? '<p>' + adv.left.map(x => esc(chFitText(x, adv))).join('. ') + '. Its owner would be signing for a gap the money covers: the scorecard reads that as poor advice (game).</p>' : '') + '<p>Ilka and Noor take it to the suppliers.</p>',
         [{label: 'Send it', meta: {k: 'go', bot: true}}, {label: 'Back to the contracts', meta: {k: 'back'}}], {closable: false, cursor: 1});
       if (j === 0) return JSON.parse(JSON.stringify(plan));
       cur = r;
@@ -162,26 +184,35 @@ function chSupStats() {
   const crit = plan ? Math.round(t1.filter(k => chMust(chSupLine(k.id)).every(c => inPlan(k.id).has(c))).length / t1.length * 100) : null;
   const notify = plan ? Math.round(t1.filter(k => inPlan(k.id).has('C1')).length / t1.length * 100) : null;
   const members = CH_SUPPLIERS.filter(s => !s.compact), memFull = members.filter(s => chMust(s).every(c => chHas(s.id).includes(c))).length;
-  return {tier: tier ? tier.pct : null, crit, notify, members: members.length, memFull};
+  // Must-haves in the plan as sent, of the twenty across the Compact's four contracts: every one fits (chPlanAdvice's
+  // fitsAll), so each one left out is the CISO's poor advice and lowers this.
+  const ps = plan ? chPlanStats(plan) : null, adv = plan ? chPlanAdvice(plan) : null;
+  const must = ps ? Math.round(ps.mustIn / ps.mustTotal * 100) : null;
+  return {tier: tier ? tier.pct : null, crit, notify, must, poor: adv ? adv.poor : false, members: members.length, memFull};
 }
 
-/* ---------- A must-have left out: the owner decides it and signs ---------- */
-function chClauseAccept(id, clause, day) {
-  const s = chSupLine(id), c = chClause(clause);
-  return {line: s.short + ' ' + clause, name: s.name + ': ' + c.name, supplier: id, clause: clause, owner: s.owner, decider: s.owner.replace(/^Director /, '').split(' ')[0],
-    decidedBy: s.owner + ', its owner', signedBy: s.owner, signedFor: 'leaving the clause out until the next renewal, and the interim measure', day: day,
+/* ---------- A must-have left out: the CISO's recommendation; the owner decides on it and signs ---------- */
+// adv: chPlanAdvice of the plan as sent (without it, the advice is read as poor when every must-have fits).
+function chClauseAccept(id, clause, day, adv) {
+  const s = chSupLine(id), c = chClause(clause), x = adv ? adv.left.find(y => y.id === id && y.clause === clause) : null;
+  const poor = adv ? adv.poor : chPlanStats(chPlanAll()).ok, pushed = !!(x && !x.fitsNow && adv.extras.length);
+  return {line: s.short + ' ' + clause, name: s.name + ': ' + c.name, supplier: id, clause: clause, owner: s.owner,
+    recommendedBy: 'the CISO (your plan)', decider: s.owner.replace(/^Director /, '').split(' ')[0],
+    decidedBy: s.owner + ', its owner, on the CISO’s recommendation' + (pushed ? ' (extras sought instead: ' + adv.extras.join(', ') + ')' : ''),
+    signedBy: s.owner, signedFor: 'leaving the clause out until the next renewal, and the interim measure', day: day, poor: poor, fit: x ? chFitText(x, adv) : '',
     expiry: CH_EXPIRY_DAY, review: CH_SUP_REVIEW, interim: CH_CLAUSE_INTERIM[clause] || ''};
 }
 function chClauseAcceptHtml(list) {
   if (!list.length) return '<p>No must-have left out: nothing to accept.</p>';
-  return '<table class="sc"><tr><th>Clause</th><th>Decided</th><th>Signed</th><th>Review</th></tr>' + list.map(x => '<tr><td>' + esc(x.line) + '</td><td>' + esc(x.decider) + '</td><td>' + esc(x.decider) + '</td><td>Day ' + x.review + '</td></tr>').join('') + '</table>' +
-    '<ul>' + list.map(x => '<li><b>' + esc(x.name) + '</b>: a must-have for its tier, left out. Decided and signed by ' + esc(x.signedBy) + ', its owner, for ' + esc(x.signedFor) + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '. Meanwhile: ' + esc(x.interim) + ' The Board sees it.</li>').join('') + '</ul>';
+  return '<table class="sc"><tr><th>Clause</th><th>Advised</th><th>Decided</th><th>Signed</th><th>Review</th></tr>' + list.map(x => '<tr><td>' + esc(x.line) + '</td><td>CISO</td><td>' + esc(x.decider) + '</td><td>' + esc(x.decider) + '</td><td>Day ' + x.review + '</td></tr>').join('') + '</table>' +
+    '<ul>' + list.map(x => '<li><b>' + esc(x.name) + '</b>: a must-have for its tier, left out on the CISO’s recommendation (your plan)' + (x.poor ? ': poor advice (game), as a plan with every must-have fitted' + (x.fit ? ' (' + esc(x.fit) + ')' : '') : '') + '. ' +
+      'Decided by ' + esc(x.decidedBy) + '; signed by ' + esc(x.signedBy) + ', for ' + esc(x.signedFor) + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '. Meanwhile: ' + esc(x.interim) + ' The Board sees it.</li>').join('') + '</ul>';
 }
 
 /* ---------- The supplier incident: the Compact's own timeline against Contract A (game) ---------- */
 function chSupTimelineHtml() {
   const rows = CH_SUP_TIMELINE.map(r => '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td><td>' + esc(r[2]) + '</td></tr>').join('');
-  return '<p>The Compact’s own records, Monday 21:14 to Thursday 12:00, beside what Contract A’s two clauses (C1 and C3) would have changed. (game)</p>' +
+  return '<p>The Compact’s own records, Monday 21:14 to Thursday 12:00, beside what Contract A’s clauses C1, C2 and C3 would have changed. (game)</p>' +
     '<table class="sc"><tr><th>What</th><th>As it was</th><th>Contract A</th></tr>' + rows + '</table>' +
     '<ul>' + CH_SUP_LOST.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
 }

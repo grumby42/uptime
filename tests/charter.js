@@ -29,9 +29,22 @@
 // (the tiers as sent, the plan as sent for the Compact's tier-1 contracts); the incident's timeline (the Compact's own
 // times, the hours lost, nothing about the supplier's side, an RFC 5737 address); played: drill A read from one decisive
 // source is unsupported, a deliberate tier mistake scored on the advice and corrected on the register, a wrong first step
-// in Cobbleton's incident recorded, the directive's wrong first pick, the plan sent without Inkmere's C1 (Marit signs),
+// in Thimbleford's incident recorded, the directive's wrong first pick, the plan sent without Inkmere's C1 (Marit signs),
 // the return of cp-xfer held until the answer covers 23:52, the Supplier round, the Hawser Badge, the summary ("Next:
 // Policy"), the series record, and the earlier saves unchanged.
+// Slice 2 review fixes (charter2): the clause plan shows only what is known on Wednesday at 14:00 (no Thursday figure);
+// the tiering rule and the data-flow record agree (Inkmere's record holds names and addresses only: Medium, Tier 2), and
+// the criticality words match every supplier's own description; a must-have left out is the CISO's recommendation, the
+// owner decides on it and signs, and leaving one out when every must-have fits is scored as poor advice (the plan's
+// metric, the send confirmation, the acceptance, the summary), with a second case where extras push one out; Contract A's
+// column credits C1 and C2 for the notice and compares entries with entries (C3); each member's counsel decides for its
+// own staff (Noor for the Compact); the Compact's own evidence before the return (the edge searched for 203.0.113.77, the
+// transfer server's log after the export), and the return measured against Monday's privacy tolerance (above it: Marit's
+// acceptance, key-only, one range, every session logged); the directive's procurement mechanics and openers; Round 2's
+// distractor; the facts-for-counsel line; C4's period wording; the renamed suppliers (Thimbleford Payroll, Pewterlane AV;
+// no Cobbleton or Glasswick in the built page); the Nice items (timeline wording, answer-pattern leans, the tier metric's
+// label, the register's game-data line, the Hawser power, Tarnfield's sent time and admin account, the envelope's owner,
+// Wellhollow's restore line, the C1 interim's mailbox).
 // Usage: node tests/charter.js   (UPTIME_FILE=file:///.../charter/index.html to test another build)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -383,37 +396,95 @@ async function session(ctx, seed) {
     const plus = JSON.parse(JSON.stringify(rec)); plus.inkmere.push('C3'); const sPlus = chPlanStats(plus);
     const greedy = JSON.parse(JSON.stringify(rec)); greedy.inkmere.push('C5', 'C8'); const sGreedy = chPlanStats(greedy);
     const none = Object.fromEntries(CH_SUP_CONTRACTS.map(k => [k.id, []])), sNone = chPlanStats(none);
-    const noC1 = JSON.parse(JSON.stringify(rec)); noC1.cobbleton = noC1.cobbleton.filter(c => c !== 'C1');
+    const noC1 = JSON.parse(JSON.stringify(rec)); noC1.thimbleford = noC1.thimbleford.filter(c => c !== 'C1');
     const sup = chSup(), keep = JSON.parse(JSON.stringify(sup));
     sup.sent = Object.fromEntries(CH_SUPPLIERS.map(s => [s.id, chTierRule(s)])); sup.planSent = rec; const mRec = chSupStats();
     sup.planSent = noC1; const mNoC1 = chSupStats();
     sup.sent = Object.assign({}, sup.sent, {inkmere: 3}); const mTier = chSupStats();
     G.ch.sup = keep;
     const acc = chClauseAccept('inkmere', 'C1', 73);
+    // Decision 3: leaving a must-have out is the CISO's recommendation; the owner decides on it and signs; poor advice when
+    // every must-have fits. Case 1: Inkmere C1 left out with room for it. Case 2: extras (Inkmere C3, C8) push it out.
+    const noInkC1 = JSON.parse(JSON.stringify(rec)); noInkC1.inkmere = noInkC1.inkmere.filter(c => c !== 'C1');
+    const adv1 = chPlanAdvice(noInkC1), acc1 = chClauseAccept('inkmere', 'C1', 73, adv1);
+    const extras = JSON.parse(JSON.stringify(noInkC1)); extras.inkmere.push('C3', 'C8');
+    const sEx = chPlanStats(extras), adv2 = chPlanAdvice(extras), acc2 = chClauseAccept('inkmere', 'C1', 73, adv2), advRec = chPlanAdvice(rec);
+    const keep2 = G.ch.sup; G.ch.sup = sup; sup.sent = Object.fromEntries(CH_SUPPLIERS.map(s => [s.id, chTierRule(s)])); sup.planSent = noInkC1; const mNoInk = chSupStats(); G.ch.sup = keep2;
+    const fit = s => adv1.left.map(x => chFitText(x, adv1)).join();
     return { rule, spendOrder, must, offered, sRec, sPlus: {cost: sPlus.cost, ok: sPlus.ok}, sGreedy: {ok: sGreedy.ok, over: sGreedy.per.inkmere.overGoodwill}, sNone: {ok: sNone.ok, mustIn: sNone.mustIn, mustTotal: sNone.mustTotal},
-      mRec, mNoC1, mTier, acc, tl: chSupTimelineHtml(), counsel: CH_CLAUSE_COUNSEL, sTiers: CH_SUPPLIERS.map(s => [s.id, s.compact, s.owner]) };
+      mRec, mNoC1, mTier, acc, acc1, acc2, adv1, adv2, advRec, sEx: {cost: sEx.cost, ok: sEx.ok}, mNoInk, fit1: fit(), accHtml: chClauseAcceptHtml([acc1, acc2]),
+      tl: chSupTimelineHtml(), counsel: CH_CLAUSE_COUNSEL, sTiers: CH_SUPPLIERS.map(s => [s.id, s.compact, s.owner]) };
   });
-  check('suppliers: the tiering rule gives Inkmere Tier 2, Cobbleton, Wrenfold, Tarnfield, Wellhollow, Stillmark and Shelfwright Tier 1, Glasswick Tier 3; the register is inherited in order of spend, and the biggest invoice (Inkmere) is not Tier 1',
-    sp.rule.join() === 'inkmere:2,cobbleton:1,wrenfold:1,tarnfield:1,wellhollow:1,stillmark:1,shelfwright:1,glasswick:3' && sp.spendOrder.every((x, i) => !i || x <= sp.spendOrder[i - 1]) && sp.spendOrder[0] === 210, { rule: sp.rule, spend: sp.spendOrder });
+  check('suppliers: the tiering rule gives Inkmere Tier 2, Thimbleford, Wrenfold, Tarnfield, Wellhollow, Stillmark and Shelfwright Tier 1, Pewterlane Tier 3; the register is inherited in order of spend, and the biggest invoice (Inkmere) is not Tier 1',
+    sp.rule.join() === 'inkmere:2,thimbleford:1,wrenfold:1,tarnfield:1,wellhollow:1,stillmark:1,shelfwright:1,pewterlane:3' && sp.spendOrder.every((x, i) => !i || x <= sp.spendOrder[i - 1]) && sp.spendOrder[0] === 210, { rule: sp.rule, spend: sp.spendOrder });
   check('clauses: must-haves follow the tier (Tier 1 with a way in: C1–C8; Wellhollow, no way in: no C6; Tier 2: C1, C2, C4, C7; Tier 3: C2); insurance and indemnity are counsel’s and procurement’s, never offered',
-    sp.must.cobbleton.join() === 'C1,C2,C3,C4,C5,C6,C7,C8' && sp.must.wellhollow.join() === 'C1,C2,C3,C4,C5,C7,C8' && sp.must.inkmere.join() === 'C1,C2,C4,C7' && sp.must.glasswick.join() === 'C2' && sp.counsel.join() === 'Insurance,Indemnity' && !sp.offered.some(c => !/^C[1-8]$/.test(c)), sp.must);
+    sp.must.thimbleford.join() === 'C1,C2,C3,C4,C5,C6,C7,C8' && sp.must.wellhollow.join() === 'C1,C2,C3,C4,C5,C7,C8' && sp.must.inkmere.join() === 'C1,C2,C4,C7' && sp.must.pewterlane.join() === 'C2' && sp.counsel.join() === 'Insurance,Indemnity' && !sp.offered.some(c => !/^C[1-8]$/.test(c)), sp.must);
   check('the clause plan: every missing must-have sought costs $28k of the $30k envelope, within every supplier’s goodwill; adding Inkmere’s log clause goes over the envelope ($31k); asking Inkmere for C5 and C8 too goes over its goodwill; sending nothing leaves 6 of 20 must-haves',
     sp.sRec.cost === 28 && sp.sRec.ok && sp.sRec.mustIn === 20 && sp.sPlus.cost === 31 && !sp.sPlus.ok && !sp.sGreedy.ok && sp.sGreedy.over && sp.sNone.ok && sp.sNone.mustIn === 6 && sp.sNone.mustTotal === 20, { rec: sp.sRec, plus: sp.sPlus, greedy: sp.sGreedy, none: sp.sNone });
-  check('the supplier metrics read the advice: the recommended tiers and plan give 100/100/100; the plan without Cobbleton’s C1 gives critical 50% and notification 50%; Inkmere tiered 3 gives tiers 88%',
-    sp.mRec.tier === 100 && sp.mRec.crit === 100 && sp.mRec.notify === 100 && sp.mNoC1.crit === 50 && sp.mNoC1.notify === 50 && sp.mTier.tier === 88 && sp.mRec.memFull === 0 && sp.mRec.members === 4, { rec: sp.mRec, noC1: sp.mNoC1, tier: sp.mTier });
-  check('a must-have left out: decided and signed by the service’s owner (Inkmere C1: Marit), never the CISO, with expiry Day 428, review Day 155 and an interim measure',
-    sp.acc.signedBy === 'Marit Quellan' && sp.acc.decidedBy === 'Marit Quellan, its owner' && sp.acc.expiry === 428 && sp.acc.review === 155 && sp.acc.interim.length > 20, sp.acc);
-  check('the incident timeline: the Compact’s own times (21:14, 08:10, 08:40, 23:52, 16:40, 11:00), the hours lost (10 h 56 min, 11 h 20 min, 7 h 30 min, 25 h 50 min, 49 h 50 min), Contract A’s column labelled (game), nothing about how Cobbleton was reached, no ATT&CK ID',
-    ['21:14', '08:10', '08:40', '23:52', '16:40', '11:00', '10 h 56 min', '11 h 20 min', '7 h 30 min', '25 h 50 min', '49 h 50 min', '(game)'].every(t => sp.tl.includes(t)) && !/\bT1\d{3}\b|phish|malware|exploit|ransom/i.test(sp.tl), sp.tl.slice(0, 400));
+  check('the supplier metrics read the advice: the recommended tiers and plan give 100/100/100/100; the plan without Thimbleford’s C1 gives critical 50%, notification 50%, must-haves 95%; without Inkmere’s C1, critical and notification stay 100% but must-haves fall to 95% (poor advice); Inkmere tiered 3 gives tiers 88%',
+    sp.mRec.tier === 100 && sp.mRec.crit === 100 && sp.mRec.notify === 100 && sp.mRec.must === 100 && !sp.mRec.poor && sp.mNoC1.crit === 50 && sp.mNoC1.notify === 50 && sp.mNoC1.must === 95 && sp.mNoC1.poor &&
+    sp.mNoInk.crit === 100 && sp.mNoInk.notify === 100 && sp.mNoInk.must === 95 && sp.mNoInk.poor && sp.mTier.tier === 88 && sp.mRec.memFull === 0 && sp.mRec.members === 4, { rec: sp.mRec, noC1: sp.mNoC1, noInk: sp.mNoInk, tier: sp.mTier });
+  check('a must-have left out (decision 3): the CISO’s recommendation, recorded as the CISO’s; the owner (Inkmere C1: Marit) decides on it and signs, one decider, never the CISO, with expiry Day 428, review Day 155 and an interim measure; with room for it in the envelope and goodwill, poor advice, and the fit stated ($6k of the envelope left, goodwill 2 left)',
+    sp.acc1.recommendedBy === 'the CISO (your plan)' && sp.acc1.decider === 'Marit' && sp.acc1.signedBy === 'Marit Quellan' && sp.acc1.decidedBy === 'Marit Quellan, its owner, on the CISO’s recommendation' && sp.acc1.poor === true &&
+    sp.acc1.expiry === 428 && sp.acc1.review === 155 && sp.acc1.interim.length > 20 && sp.adv1.poor && sp.adv1.fitsAll && sp.adv1.left.length === 1 && sp.adv1.left[0].fitsNow && sp.fit1 === 'Inkmere C1 fits: $6k of the envelope left, goodwill 2 left' &&
+    sp.acc.decidedBy === 'Marit Quellan, its owner, on the CISO’s recommendation' && sp.acc.poor === true && !sp.advRec.left.length && !sp.advRec.poor &&
+    /<th>Advised<\/th><th>Decided<\/th><th>Signed<\/th>/.test(sp.accHtml) && /left out on the CISO’s recommendation \(your plan\): poor advice \(game\)/.test(sp.accHtml) && /Decided by Marit Quellan, its owner, on the CISO’s recommendation; signed by Marit Quellan/.test(sp.accHtml), { acc1: sp.acc1, adv1: sp.adv1, fit: sp.fit1 });
+  check('a must-have pushed out by extras (decision 3, second case): Inkmere C3 and C8 sought instead of C1 ($29k, goodwill 4 of 4): C1 no longer fits as sent, fits once the extras go; still poor advice; Marit decides on the CISO’s recommendation, the extras named, and signs',
+    sp.sEx.cost === 29 && sp.sEx.ok && sp.adv2.left.length === 1 && !sp.adv2.left[0].fitsNow && sp.adv2.poor && sp.adv2.extras.join() === 'Inkmere C3,Inkmere C8' &&
+    sp.acc2.decidedBy === 'Marit Quellan, its owner, on the CISO’s recommendation (extras sought instead: Inkmere C3, Inkmere C8)' && sp.acc2.signedBy === 'Marit Quellan' && /fits once the extras go \(Inkmere C3, Inkmere C8\)/.test(sp.acc2.fit), { adv2: sp.adv2, acc2: sp.acc2 });
+  check('the incident timeline: the Compact’s own times (21:14, 08:10, 08:40, 23:52, 16:40, 11:00), the hours lost (10 h 56 min, about 11 h 20 min, 7 h 30 min, 25 h 50 min, 49 h 50 min), Contract A’s column labelled (game), nothing about how Thimbleford was reached, no ATT&CK ID',
+    ['21:14', '08:10', '08:40', '23:52', '16:40', '11:00', '10 h 56 min', 'about 11 h 20 min', '7 h 30 min', '25 h 50 min', '49 h 50 min', '(game)'].every(t => sp.tl.includes(t)) && !/\bT1\d{3}\b|phish|malware|exploit|ransom/i.test(sp.tl), sp.tl.slice(0, 400));
+  check('the timeline, like with like (review 4, 5, 17): Contract A’s notice row credits C1 and C2 (the named contact, the on-call page, the detection time 15:05); the 21:14 notice was 6 h 9 min after detection, inside C1’s 24 hours; entries are compared with entries (C3, “for us to read”) and Thimbleford’s statement is not called its entries; the clauses named C1, C2 and C3; what Contract A does not change is the call itself',
+    /<td>The notice<\/td><td>[^<]*<\/td><td>C1 and C2: the same notice to the named contact, the on-call page, at 21:14, with its detection time \(15:05\)<\/td>/.test(sp.tl) && /6 h 9 min after it detected the incident: inside C1’s 24 hours/.test(sp.tl) &&
+    /<td>Entries covering 23:52<\/td><td>None; Thimbleford’s statement at 11:00 Thursday<\/td><td>C3: the entries, by 09:10 Wednesday, for us to read<\/td>/.test(sp.tl) && /Thimbleford’s entries: never given/.test(sp.tl) && !/An answer covering 23:52/.test(sp.tl) &&
+    /Contract A’s clauses C1, C2 and C3 would have changed/.test(sp.tl) && /the call itself \(suspend, then export\), made about 21:20 by the on-call lead instead of 08:40 by Edda/.test(sp.tl), sp.tl.slice(0, 1500));
   const supAll = await A.page.evaluate(() => [...document.scripts].map(x => x.textContent).join('\n'));
   const ips = (supAll.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g) || []).filter(x => /^203\.0\.113\.77$/.test(x));
   check('Suppliers uses only a documentation address for the 23:52 login (203.0.113.77, RFC 5737), and names no ATT&CK technique', ips.length >= 1 && !/(T1\d{3})[^\d]/.test(supAll.slice(supAll.indexOf('CH_SUP_DRILLS'), supAll.indexOf('CH_SUP_LOST') + 2000)), ips.length);
+  const sd = await A.page.evaluate(() => {
+    const lab = l => l.map(o => typeof o === 'string' ? o : o.label);
+    const clauseTxt = CH_CLAUSES.map(c => c.text + ' ' + c.without).join(' | ');
+    const flows = CH_SUP_DRILLS.supdata.sources.find(x => x.id === 'flows').qs[0].res.join(' | ');
+    const ink = chSupLine('inkmere'), why = CH_SUPPLIERS.map(s => s.id + ':' + s.crit + ':' + s.stops);
+    return { clauseTxt, flows, ink, why, rule: CH_SUP_RULE, verdA: CH_SUP_DRILLS.supdata.verdicts.find(v => v.good), notes: GAME_NOTES.join(' | '),
+      inc: CH_SUP_INCIDENT.map(x => x.resp.map(r => [r.label, !!r.good, r.why || ''])), dir: CH_SUP_DIRECTIVE.map(o => [o.label, !!o.good, o.why || '']),
+      dojo: CH_SUP_DOJO.map(p => [p.opts, p.good]), board: CH_SUP_BOARD_SPECS().map(x => x.resp.map(r => [r.label, !!r.good, r.why || ''])),
+      attest: CH_SUP_DRILLS.supattest, clock: JSON.stringify(CH_SUP_DRILLS.supclock.sources), c4: chClause('C4').text, interimC1: CH_CLAUSE_INTERIM.C1,
+      reqC4: CH_SUP_DRILLS.supattest.sources.find(x => x.id === 'req').qs[0].res.join(' | '), wh: chSupLine('wellhollow').stops, names: [...document.scripts].map(x => x.textContent).join('\n') };
+  });
+  check('decision 1: the clause plan’s text (every clause and its “without it” line, shown on Wednesday at 14:00) holds no figure from after Wednesday 14:00 (no 49 h, 25 h 50, 16:40, 11:00 Thursday or the 15:05 detection time); C3’s line says only what was known (asked Tuesday 09:10; 17:30 “confidential”; nothing yet); the Field Manual’s game notes, readable from Monday, name no incident time or address',
+    !/49 h|25 h 50|16:40|11:00 Thursday|15:05/.test(sd.clauseTxt) && /asked Tuesday 09:10; at 17:30 its logs were “confidential”, a summary to follow; nothing yet/.test(sd.clauseTxt) && !/23:52|203\.0\.113|15:05|49 h|Thimbleford’s incident/.test(sd.notes), { clause: sd.clauseTxt.slice(0, 900) });
+  check('decision 2: the tiering rule and the data-flow record agree: the record shows names and postal addresses only (the town’s address file, the same letters for every household, the members post their own), no letter text or amount due; the rule’s Medium is “names and postal addresses only, with no way in”; Inkmere data Medium, criticality Low, Tier 2; the verdict needs the data-flow record and the account lists',
+    /Fields: name, postal address\. The letters are the town’s standard mailings, the same for every household/.test(sd.flows) && /the members post their own letters/.test(sd.flows) && !/amount due|notice’s text|letter’s text|notice type/.test(sd.flows + ' ' + sd.ink.holds + ' ' + sd.ink.serves) &&
+    sd.rule.data.Medium === 'holds names and postal addresses only, with no way in' && /beyond names and addresses/.test(sd.rule.data.High) && sd.ink.data === 'Medium' && sd.ink.crit === 'Low' && sd.ink.data === 'Medium' && JSON.stringify(sd.verdA.needs) === JSON.stringify(['flows', 'accounts']), { flows: sd.flows, ink: sd.ink, rule: sd.rule.data });
+  check('review 11: the criticality words match the suppliers’ own lines: High “stops or falls back to paper” (Wrenfold’s downtime cart, Stillmark’s cards, Shelfwright’s manual checkout, now High), Medium a back-office service (pay, billing, office PCs); Wellhollow Low “until we need a restore”; every tier unchanged',
+    sd.rule.crit.High === 'a life-safety service, or a member’s main service, stops or falls back to paper' && sd.rule.crit.Medium === 'a back-office service slows or goes to paper (pay, billing, office PCs)' &&
+    sd.why.map(x => x.split(':').slice(0, 2).join(':')).join() === 'inkmere:Low,thimbleford:Medium,wrenfold:High,tarnfield:Medium,wellhollow:Low,stillmark:High,shelfwright:High,pewterlane:Low' &&
+    /until we need a restore: then it is our only off-site copy/.test(sd.wh), sd.why);
+  const incGood = sd.inc.map(l => l.find(r => r[1])[0]), dirGood = sd.dir.find(o => o[1])[0];
+  check('decision 5 and review 14, 19: the 12:05 right answer is counsel, Noor for the Compact and each member’s for its own staff; the facts for counsel read “one failed login at 23:52, no successful one since Thursday 06:00”; the summary step’s right answer is trimmed; no option opens “Likely”',
+    /^Counsel: Noor for the Compact, each member’s for its staff\. You bring the facts$/.test(incGood[4]) && /^One failed login at 23:52, no successful one since Thursday 06:00, cp-xfer off 08:40, pay files not known$/.test(incGood[3]) && !/none since Thursday/.test(JSON.stringify(sd.inc)) &&
+    /^Not yet: its review stops at 18:00, before 23:52\. Ask for one to the present$/.test(incGood[5]) && ![].concat(...sd.inc, sd.dir, ...sd.board).some(r => /^Likely/.test(r[0])) && /^An attack on us as well/.test(sd.inc[3][1][0]), incGood);
+  check('review 9: the directive’s right answer opens “Not as it stands” with an “I”, two wrong options open “Don’t sign” (one: walk away unless the clause is free, Marit’s call) and two “Sign it”',
+    /^Not as it stands: I’ll put C1 in the plan, and Marit chooses: price it, sign, or walk away$/.test(dirGood) && sd.dir.filter(o => !o[1] && /^Don’t sign/.test(o[0])).length === 2 && sd.dir.filter(o => !o[1] && /^Sign it/.test(o[0])).length === 2 &&
+    sd.dir.some(o => !o[1] && /^Don’t sign: tell Inkmere the Compact walks away unless the clause is free$/.test(o[0]) && /Walking away is Marit’s call/.test(o[2])), sd.dir);
+  check('review 10 and 19: Round 2’s money distractor is wrong because claims are Noor’s question and the Board asked about time (no claim about the contract’s clauses); the attestation drill has a two-reason wrong verdict; the notice-clock terminal has a right-verdict, wrong-reason option',
+    sd.board[1].some(r => /^Only money/.test(r[0]) && r[2] === 'Whether anything can be claimed is Noor’s question. What the Board asked is what it cost us: the time.') && !/no such clause/.test(JSON.stringify(sd.board)) &&
+    sd.attest.verdicts.some(v => !v.good && /^Enough: a clean opinion, and the assessors who gave it are independent$/.test(v.label)) && sd.dojo[2][0].length === 4 && sd.dojo[2][0].some((o, j) => j !== sd.dojo[2][1] && /^Not met: it reached the general inbox first/.test(o)), null);
+  check('review 15, 23, 26: C4 measures the period (“covering a period that ended within the last 12 months”), not “older”; Tarnfield’s times record its sent time (18:29) and the airport’s own record of its admin account (suspended 18:50, back Day 58 once the review covered its last sign-in); the C1 interim reads the mailbox the supplier writes to; Wellhollow asked what has changed since the period ended',
+    /covering a period that ended within the last 12 months/.test(sd.c4) && !/older than/i.test(sd.c4 + sd.reqC4) && /Its period ended within the last 12 months/.test(sd.reqC4) && /Sent: Day 55 18:29 \(the notice’s header\)/.test(sd.clock) && /Day 55 18:50: Dario suspended Tarnfield’s admin account/.test(sd.clock) && /Day 58 \(Tuesday\)/.test(sd.clock) &&
+    /reads the mailbox the supplier writes to/.test(sd.interimC1) && sd.attest.response.some(x => /what has changed/.test(x)), null);
+  check('decision 4: the AV supplier is Pewterlane AV and the payroll provider Thimbleford Payroll; no “Glasswick” or “Cobbleton” anywhere in the built Charter page’s scripts',
+    !/Glasswick|glasswick|Cobbleton|cobbleton/.test(sd.names) && /Pewterlane AV/.test(sd.names) && /Thimbleford Payroll/.test(sd.names), null);
+  // Every say() from here on is logged, to check what is said, by whom, and in which order.
+  await A.page.evaluate(() => { window.__sayLog = []; const os = UI.say.bind(UI); UI.say = (t, w) => { window.__sayLog.push((w || '') + '|' + t); return os(t, w); }; });
+  const sayLog = () => A.page.evaluate(() => window.__sayLog.slice());
 
   // Monday: the week opens, drill A read from one decisive source only (unsupported).
   await A.follow(p => p.f.chSupStart, []);
   const dS = await A.page.evaluate(() => ({ day: G.day, wd: CH_DAY[G.day], m: metricVals(), sc: editionScorecard() }));
   check('Suppliers opens on Day 71, a Monday; the supplier metrics show “—” until the tiers and the plan are sent; the scorecard names the Hawser Badge as not yet',
-    dS.day === 71 && dS.wd === 'Monday' && (71 - 1) % 7 === 0 && dS.m.chSupTier === null && dS.m.chSupCrit === null && /Suppliers tiered, with owner and review date/.test(dS.sc) && /Hawser Badge: not yet/.test(dS.sc), dS);
+    dS.day === 71 && dS.wd === 'Monday' && (71 - 1) % 7 === 0 && dS.m.chSupTier === null && dS.m.chSupCrit === null && dS.m.chSupMust === null && /Suppliers tiered by the rule \(your advice\)/.test(dS.sc) && !/Suppliers tiered, with owner and review date/.test(dS.sc) && /Must-haves in your plan \(your advice\)/.test(dS.sc) && /Owners and review dates came with every line \(the Ballast Badge\)/.test(dS.sc) && /Hawser Badge: not yet/.test(dS.sc), dS);
   await A.goTo('choffice', 12, 2);
   await A.settle([], /Investigation drill · Inkmere and residents’ data/);
   await A.settle([], /^Drill ·/);
@@ -438,14 +509,14 @@ async function session(ctx, seed) {
   check('the tiers as sent (Inkmere in Tier 3, the rest by the rule): the metric reads the advice, 88%; the debrief gives the rule’s Tier 2 and why; the register then shows the rule’s tiers',
     sT.sent.inkmere === 3 && sT.m.chSupTier === 88 && /Inkmere: Tier 2\. If it stops: Low/.test(tierTxt) && /<td>Inkmere<\/td><td>2<\/td>/.test(sT.reg), { sent: sT.sent, m: sT.m.chSupTier, txt: tierTxt.slice(0, 600) });
 
-  // Tuesday: Cobbleton's notice, with a wrong first step at cp-xfer (export the log first).
+  // Tuesday: Thimbleford's notice, with a wrong first step at cp-xfer (export the log first).
   await A.follow(p => p.f.chSupDay71, []);
   const inc = await A.follow(p => p.f.chSupIncident, [], /cp-xfer · 08:35/);
   const wrongInc = inc.ui.options.findIndex(o => /^Export its log first/.test(o.label));
   await A.pickLabel(new RegExp('^' + esc(inc.ui.options[wrongInc].label) + '$'));
   await A.follow(p => p.f.chSupIncident, []);
   const sI = await A.page.evaluate(() => ({ first: G.ch.sup.incident.first, f: G.f, fm: G.fm }));
-  check('Cobbleton’s incident: six steps planned, the five Tuesday ones answered, the wrong first step at cp-xfer recorded (export first), the rest right first time; the Field Manual entry unlocked',
+  check('Thimbleford’s incident: six steps planned, the five Tuesday ones answered, the wrong first step at cp-xfer recorded (export first), the rest right first time; the Field Manual entry unlocked',
     JSON.stringify(sI.first) === JSON.stringify([true, false, true, true, true]) && sI.f.chSupIncident && sI.fm['act:chvendorir'], sI.first);
 
   // Wednesday: drill C, the directive (a wrong first pick), the plan without Inkmere's C1.
@@ -455,30 +526,65 @@ async function session(ctx, seed) {
   await A.follow(p => p.f.chSupDirective, []);
   await A.follow(p => false, [], /Clause plan · the Compact’s contracts/);
   await A.page.evaluate(() => { const p = chPlanInit(); for (const k of CH_SUP_CONTRACTS) p[k.id] = chPlanRec(k.id); p.inkmere = p.inkmere.filter(c => c !== 'C1'); });
-  await A.pickLabel(/^Cobbleton Payroll/); await A.settle([], /^Clauses · Cobbleton/); await A.pickLabel(/^Back to the contracts/);
+  const planBody = await A.modalText();
+  await A.pickLabel(/^Thimbleford Payroll/); await A.settle([], /^Clauses · Thimbleford/);
+  const clauseModal = await A.page.evaluate(() => document.getElementById('mbody').textContent + ' | ' + UI.modal.items.map(o => o.label + ' ' + (o.note || '')).join(' | '));
+  await A.pickLabel(/^Back to the contracts/);
   await A.settle([], /Clause plan · the Compact’s contracts/);
   await A.pickLabel(/^Send it to Ilka and Noor/);
-  await A.settle([], /Send the plan\?/); await A.pickLabel(/^Send it$/);
+  await A.settle([], /Send the plan\?/);
+  const sendTxt = await A.modalText();
+  await A.pickLabel(/^Send it$/);
   await A.follow(p => p.f.chSupPlan, []);
-  const sP = await A.page.evaluate(() => ({ d: G.ch.sup.directive, plan: G.ch.sup.planSent, acc: G.ch.sup.accept, m: metricVals() }));
-  check('directive and plan: the wrong first pick (sign it as it stands) recorded; the plan sent without Inkmere’s C1 ($24k); Marit, its owner, decides and signs that acceptance; Cobbleton and Wellhollow keep every must-have (critical 100%, notification 100%)',
-    !!dirS && sP.d.first === false && !sP.plan.inkmere.includes('C1') && sP.acc.length === 1 && sP.acc[0].line === 'Inkmere C1' && sP.acc[0].signedBy === 'Marit Quellan' && sP.acc[0].decider === 'Marit' && sP.m.chSupCrit === 100 && sP.m.chSupNotify === 100, sP);
+  const sP = await A.page.evaluate(() => ({ d: G.ch.sup.directive, plan: G.ch.sup.planSent, acc: G.ch.sup.accept, adv: G.ch.sup.planAdvice, m: metricVals(), sc: editionScorecard() }));
+  const sayP = await sayLog();
+  check('decision 1, played: the clause plan on Wednesday 14:00 (Thimbleford’s clauses with their notes, the plan page) shows no figure from after it (49 h, 25 h 50, 16:40, 11:00 Thursday, 15:05); the envelope set by Marit from the services’ budgets',
+    !/49 h|25 h 50|16:40|11:00 Thursday|15:05/.test(clauseModal + planBody) && /C3 Logs and access to them/.test(clauseModal) && /nothing yet/.test(clauseModal) && /set by Marit from the services’ budgets/.test(planBody), clauseModal.slice(0, 900));
+  check('directive and plan (decision 3, played): the wrong first pick (sign it as it stands) recorded; the plan sent without Inkmere’s C1 ($24k); the send confirmation says it fits ($6k left, goodwill 2 left) and that the scorecard reads it as poor advice; the acceptance is the CISO’s recommendation, Marit decides on it and signs (one decider); Marit says the money covered it; critical and notification stay 100%, must-haves 95%, the scorecard says poor advice',
+    !!dirS && sP.d.first === false && !sP.plan.inkmere.includes('C1') && sP.acc.length === 1 && sP.acc[0].line === 'Inkmere C1' && sP.acc[0].signedBy === 'Marit Quellan' && sP.acc[0].decider === 'Marit' && sP.acc[0].recommendedBy === 'the CISO (your plan)' && /on the CISO’s recommendation$/.test(sP.acc[0].decidedBy) && sP.acc[0].poor &&
+    /Must-haves left out, on your recommendation, each needing its owner’s decision and signed acceptance: Inkmere C1\./.test(sendTxt) && /Inkmere C1 fits: \$6k of the envelope left, goodwill 2 left\. Its owner would be signing for a gap the money covers: the scorecard reads that as poor advice \(game\)\./.test(sendTxt) &&
+    sayP.some(x => /^Marit Quellan\|You recommend leaving out Inkmere C1, though the money covered it\. My decision, on your recommendation: I sign for it as its owner/.test(x)) && sP.adv.poor &&
+    sP.m.chSupCrit === 100 && sP.m.chSupNotify === 100 && sP.m.chSupMust === 95 && /poor advice: a plan with every must-have fitted/.test(sP.sc), { m: sP.m, adv: sP.adv, sc: /poor advice: a plan/.test(sP.sc), sendTxt: sendTxt.slice(0, 500), marit: sayP.filter(x => /^Marit/.test(x)).slice(-2) });
+  check('review 8 (played): Ilka signs renewals under the Board’s delegated authority, and Inkmere holds today’s price until Friday as it stands (no “today only”); Marit names the three-month extension and what walking away would mean, as her call',
+    sayP.some(x => /^Ilka Thrushcombe\|.*I sign renewals under the authority the Board delegated \(game\)/.test(x)) && sayP.some(x => /^Ilka Thrushcombe\|Inkmere renews at today’s price if we sign by Friday as it stands/.test(x)) && !sayP.some(x => /only if we sign today/.test(x)) &&
+    sayP.some(x => /three-month extension on today’s terms/.test(x) && /Walking away means the town prints and posts its own mailings next month: my call/.test(x)), sayP.filter(x => /Ilka|Marit/.test(x)).slice(-6));
 
   // Wednesday 16:50 and Thursday: cp-xfer held until the answer covers 23:52, the timeline, the Supplier round.
   await A.follow(p => p.f.chSupReturn, []);
   await A.follow(p => p.f.chSupThu, [], /The Compact’s timeline, beside Contract A/);
   const tlTxt = await A.modalText();
+  const sayT = await sayLog(), at = re => sayT.findIndex(x => re.test(x));
+  const xfer = await A.page.evaluate(() => ({ acc: G.ch.accept.find(x => x.line === 'CP-XFER'), tol: chTol('privacy') }));
+  const iEdge = at(/^Edda Thornquist\|08:40: I’ve suspended cp-xfer.*09:00: 203\.0\.113\.77 blocked at our edge, and ninety days of edge logs searched for it: the 23:52 attempt only/), iCheck = at(/^Edda Thornquist\|11:45\. Our side too, before anything comes back: CP-XFER-01’s log since the 08:50 export, no attempt on cp-xfer since 23:52 Monday; our edge, nothing from 203\.0\.113\.77 since it was blocked/);
+  const iMeasure = at(/^\|11:50: you measure the return Edda proposes against Monday’s privacy tolerance\..*above the tolerance/), iSign = at(/^Marit Quellan\|Payroll is mine, so that risk is mine to carry\. I agree the conditions, and I sign for it/), iReturn = at(/^Edda Thornquist\|12:00: cp-xfer is back/);
+  check('decision 6 and review 13, 24 (played): before any return the Compact checks its own evidence (Tuesday 09:00: 203.0.113.77 searched across ninety days of edge logs; Thursday 11:45: CP-XFER-01’s log since the 08:50 export and the edge since the block); then the return is measured against Monday’s privacy tolerance (above it: no MFA for a machine account), Marit, payroll’s owner, agrees the conditions and signs, and only then Edda returns it: key-only, from its documented range, each sign-in logged, 203.0.113.77 still blocked',
+    iEdge >= 0 && iCheck > iEdge && iMeasure > iCheck && iSign > iMeasure && iReturn > iSign && /Key sign-in only, no password/.test(sayT[iReturn]) && /Sign-ins only from its documented range, each one logged; 203\.0\.113\.77 stays blocked/.test(sayT[iReturn]) &&
+    !!xfer.acc && xfer.acc.signedBy === 'Marit Quellan' && xfer.acc.decider === 'Marit' && xfer.acc.day === 74 && xfer.acc.breaks.join() === xfer.tol && /no system holding personal records reachable from outside without MFA/.test(xfer.tol) && xfer.acc.appetite === 'Low' && /every session logged/.test(xfer.acc.interim) && /documented range/.test(xfer.acc.interim),
+    { iEdge, iCheck, iMeasure, iSign, iReturn, xfer, tail: sayT.slice(-12) });
+  check('decision 5 (played): Noor decides for the Compact and each member’s counsel for its own staff, at 09:15 (she sends them the same facts), 12:30 and 11:30 Thursday',
+    at(/^Noor Castellanos\|09:15\..*Whether anyone must be told is mine for the Compact, and each member’s counsel’s for its own staff\. I’ll send them the same facts\./) >= 0 && at(/^Noor Castellanos\|12:30\. My decision for the Compact, and each member’s counsel has said the same for its staff: no notice yet/) >= 0 &&
+    at(/^Noor Castellanos\|11:30\. My decision for the Compact, and each member’s counsel has agreed for its staff: Marit tells the members’ staff today/) >= 0 && at(/My decision, as counsel/) < 0, sayT.filter(x => /^Noor/.test(x)));
+
   const fmS = await A.page.evaluate(() => G.focusMax);
   await A.follow(p => p.f.chSupBoard, []);
   const sB = await A.page.evaluate(() => ({ first: G.ch.sup.incident.first, b: G.ch.sup.board, f: G.f, fm: G.focusMax, badges: EDITION.badgeFlags, sc: editionScorecard(), day: G.day }));
   check('Wednesday 16:50 (cp-xfer stays off until the answer covers 23:52) right first time; the timeline modal with both columns; the Supplier round (three rounds), the Hawser Badge, Focus +4; Thursday; the scorecard on the advice (tiers 88%, critical 100%, notification 100%) with the members’ contracts on their own line',
     sB.first[5] === true && /As it was/.test(tlTxt) && /Contract A/.test(tlTxt) && /10 h 56 min/.test(tlTxt) && sB.b.first.length === 3 && sB.f.chHawser && sB.badges.includes('chHawser') && sB.fm === fmS + 4 && sB.day === 74 &&
     /The members’ own contracts are their owners’ decisions: <b>0 of 4<\/b>/.test(sB.sc) && /Hawser Badge: yes/.test(sB.sc), { b: sB.b, fm: [fmS, sB.fm], sc: sB.sc.slice(0, 1200) });
+  const sayB = await sayLog();
+  check('review 4 (played): with C1, C2 and C3 all in the plan, Marit says Contract A’s clauses C1, C2 and C3 go into Thimbleford’s amendment',
+    sayB.some(x => /^Marit Quellan\|Contract A’s clauses C1, C2 and C3 go into Thimbleford’s amendment/.test(x)), sayB.filter(x => /^Marit/.test(x)).slice(-3));
+  check('review 22 (played): the Hawser Badge’s power names the account manager where a contract names no security contact yet; the Board’s minute names the acceptances signed on the CISO’s recommendation and cp-xfer’s, measured against the privacy tolerance',
+    sayB.some(x => /every Tier 1 supplier’s security contact, or its account manager where its contract names none yet, is on the incident page/.test(x)) && sayB.some(x => /each acceptance its owner signed on your recommendation, and cp-xfer’s, measured against Monday’s privacy tolerance/.test(x)), sayB.slice(-6));
+  const regView = await A.page.evaluate(async () => { run(() => chSupRegisterView()); await new Promise(z => setTimeout(z, 250)); return document.getElementById('mbody').textContent; });
+  await A.settle([]);
+  check('review 21: the supplier register view opens with “Spend, tiers and dates: game data.”', /^Spend, tiers and dates: game data\./.test(regView.trim()), regView.slice(0, 200));
   await A.follow(() => false, [], /End of Suppliers/);
   const supSum = await A.modalText();
   const sS = await A.page.evaluate(() => ({ obj: objective(), ser: Series.load().editions.charter, m: metricVals(), keep: { th: localStorage.getItem('uptime.slice1.save'), cr: localStorage.getItem('uptime.crossroads.save'), ng: localStorage.getItem('uptime.crossroads.ngplus.save') } }));
   check('the Suppliers summary: “Next: Policy”, the drills, the acceptance Marit signed, the members’ contracts as their owners’ decisions, the lesson, the scorecard; the series records Suppliers; the objective done; the earlier saves byte-for-byte as seeded',
-    /Next: Policy/.test(supSum) && /Tarnfield’s notice clock/.test(supSum) && /Decided and signed by Marit Quellan, its owner/.test(supSum) && /their owners’ decisions/.test(supSum) && /the clock starts where the contract says/.test(supSum) &&
+    /Next: Policy/.test(supSum) && /Tarnfield’s notice clock/.test(supSum) && /Must-haves left out: your recommendation, their owners’ decisions/.test(supSum) && /Decided by Marit Quellan, its owner, on the CISO’s recommendation; signed by Marit Quellan/.test(supSum) && /poor advice \(game\)/.test(supSum) && /their owners’ decisions/.test(supSum) && /the clock starts where the contract says/.test(supSum) &&
+    /the evidence, theirs and your own, covers the latest activity/.test(supSum) && /Measure a returned way in against the tolerances/.test(supSum) &&
     sS.ser.suppliers === true && sS.obj.done && /^Suppliers done\. Next: Policy\.$/.test(sS.obj.text) && sS.m.chSupTier === 88 && sS.keep.th === TH_SAVE && sS.keep.cr === CR_SAVE && sS.keep.ng === NG_SAVE, { obj: sS.obj, ser: sS.ser, sum: supSum.slice(0, 1200) });
   await A.settle([/^Keep exploring/]);
 
@@ -490,8 +596,8 @@ async function session(ctx, seed) {
 
   // The Field Manual: the CSF and NICE facts, the game notes.
   const fmT = await A.page.evaluate(() => fmHtml());
-  check('Field Manual (Suppliers): GV.SC-04, -05, -06, -07, -08 and -10 quoted with NIST’s examples, the supplier practices, and the game notes for the suppliers and Cobbleton’s incident',
-    /GV\.SC-04: “Suppliers are known and prioritized by criticality”/.test(fmT) && /GV\.SC-10/.test(fmT) && /A supplier’s incident, from your side/.test(fmT) && /The clock starts where the contract says/.test(fmT) && /Cobbleton’s incident is told only through the Compact’s records/.test(fmT), null);
+  check('Field Manual (Suppliers): GV.SC-04, -05, -06, -07, -08 and -10 quoted with NIST’s examples, the supplier practices, and the game notes for the suppliers and Thimbleford’s incident',
+    /GV\.SC-04: “Suppliers are known and prioritized by criticality”/.test(fmT) && /GV\.SC-10/.test(fmT) && /A supplier’s incident, from your side/.test(fmT) && /The clock starts where the contract says/.test(fmT) && /Any supplier incident in Suppliers is told only through the Compact’s records/.test(fmT) && /check your own logs and edge too/.test(fmT) && /Leaving one out when the money covers it is poor advice/.test(fmT), null);
   check('Field Manual: GV.RM-02 and GV.RR-03 quoted, the NICE tasks, “CISO” a job title (a job may cover one or more work roles, or part of one), the game notes labelled (game); Charter’s practices under “Leadership practices (game)”, not D3FEND, and no ATT&CK claim in its intro',
     /GV\.RM-02/.test(fmT) && /GV\.RR-03/.test(fmT) && /T1059/.test(fmT) && /OG-WRL-007/.test(fmT) && /\(game\)/.test(fmT) && /a job may cover one or more work roles, or part of one/.test(fmT) && !/seniority/.test(fmT) && /<h3>Leadership practices \(game\)<\/h3>/.test(fmT) && !/D3FEND/.test(fmT) && !/IDs are from MITRE/.test(fmT) && /open in later districts/.test(fmT), null);
 

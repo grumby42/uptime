@@ -624,10 +624,10 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     await shut(); await sleep(100);
     await p.evaluate(() => { run(() => chPlanContract(CH_SUP_CONTRACTS[0])); }); await sleep(300);
     const kc = await modalFit();
-    check('Charter ' + name + ': a contract’s clauses (Cobbleton’s six, the goodwill and envelope line) fit above the controls, no overflow', fits(kc), kc);
+    check('Charter ' + name + ': a contract’s clauses (Thimbleford’s six, the goodwill and envelope line) fit above the controls, no overflow', fits(kc), kc);
     await p.screenshot({ path: OUT + '/layout-charter-' + name + '-clauses.png' });
     await shut(); await sleep(100);
-    await p.evaluate(() => { UI.openModal('15:00: must-haves left out', chClauseAcceptHtml([chClauseAccept('inkmere', 'C1', 73), chClauseAccept('cobbleton', 'C3', 73)]), [{ label: 'Continue', meta: { good: true } }], { closable: false, cls: 'summary' }); }); await sleep(250);
+    await p.evaluate(() => { UI.openModal('15:00: must-haves left out', chClauseAcceptHtml([chClauseAccept('inkmere', 'C1', 73), chClauseAccept('thimbleford', 'C3', 73)]), [{ label: 'Continue', meta: { good: true } }], { closable: false, cls: 'summary' }); }); await sleep(250);
     const ca = await modalFit();
     check('Charter ' + name + ': the must-haves left out (owner-signed acceptances) fit, table on one line', fits(ca) && !ca.wrapped.length, ca);
     await shut(); await sleep(100);

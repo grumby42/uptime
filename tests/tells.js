@@ -581,7 +581,7 @@ const CH_NAMES = [
   ['N:Joanna', /\b(Joanna|Ferreday)\b/], ['N:Beatriz', /\b(Beatriz|Solano)\b/], ['N:Noor', /\b(Noor|Castellanos)\b/],
   ['N:ch-deciders', /\b(Edda|Thornquist|Marit|Quellan|Ivor|Penhallow|Celia|Marrow|Joanna|Ferreday|Noor|Castellanos|Ilka|Thrushcombe)\b/],
   ['N:Ilka', /\b(Ilka|Thrushcombe)\b/],
-  ['N:suppliers', /\b(Cobbleton|Inkmere|Wellhollow|Tarnfield|Glasswick|Stillmark|Shelfwright|Wrenfold|Brindlemark)\b/]];
+  ['N:suppliers', /\b(Thimbleford|Inkmere|Wellhollow|Tarnfield|Pewterlane|Stillmark|Shelfwright|Wrenfold|Brindlemark)\b/]];
 const chPunct = [], chNameRows = [];
 for (const [name, re] of PUNCT) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re), ln = lone(chListsIn(s), re); chPunct.push({n: name + '@' + s, st, ln, ok: pOk(st) && ln.ok}); }
 for (const [name, re] of CH_NAMES) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re); chNameRows.push({n: name + '@' + s, st, ok: pOk(st)}); }

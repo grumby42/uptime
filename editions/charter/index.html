@@ -236,7 +236,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261114-1126Z', BUILD_TS = '2026-11-14 11:26 UTC';
+const BUILD_ID = 'ARCD-20261114-1441Z', BUILD_TS = '2026-11-14 14:41 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -1613,9 +1613,9 @@ const EXTRA_ACTIONS = {
   chdataflow: {name: 'A supplier’s access, from the records', desc: 'Whether a supplier holds your data, and whether it can reach your systems, is read from the data-flow record and the account lists, not from its questionnaire. A questionnaire says what the supplier believes.'},
   chtier: {name: 'Tier suppliers by what breaks and what they hold', desc: 'Tier each supplier by what stops for residents if it stops, and by what it holds or can reach, never by the size of its invoice. The biggest supplier is often not the most critical one.'},
   chattest: {name: 'An assurance report: its scope and its dates', desc: 'A clean report is clean about what it looked at, when it looked. Read its scope against the service you use, and its period against how recent your requirement says it must be.'},
-  chvendorir: {name: 'A supplier’s incident, from your side', desc: 'Find what the supplier can reach in your systems, suspend that access while the evidence stays (suspending destroys nothing), ask for the facts you need with times, say only what the records show, and give access back when the evidence covers the latest activity. Counsel decides any notice; the supplier’s root cause is its own.'},
+  chvendorir: {name: 'A supplier’s incident, from your side', desc: 'Find what the supplier can reach in your systems, suspend that access while the evidence stays (suspending destroys nothing), ask for the facts you need with times, say only what the records show, check your own logs and edge too, and give access back when the evidence covers the latest activity, measured against your tolerances. Counsel decides any notice; the supplier’s root cause is its own.'},
   chclock: {name: 'The clock starts where the contract says', desc: 'A notification clause names its trigger (detecting, confirming, becoming aware) and who must receive the notice. Count from that trigger, in the supplier’s own stated time, to when the named contact had it: not from the time either side prefers.'},
-  chclause: {name: 'Security requirements in the contract, by tier', desc: 'Each tier has its must-have clauses. Price them within the money, ask each supplier for no more than it will give, and where a must-have is left out its business owner signs an acceptance with an expiry, a review date and an interim measure. Procurement and counsel hold the contract.'},
+  chclause: {name: 'Security requirements in the contract, by tier', desc: 'Each tier has its must-have clauses. Price them within the money, ask each supplier for no more than it will give, and where your plan leaves a must-have out, that is your recommendation: its business owner decides on it and signs an acceptance with an expiry, a review date and an interim measure. Leaving one out when the money covers it is poor advice. Procurement and counsel hold the contract.'},
   chsupboard: {name: 'Suppliers in the board’s language', desc: 'Tell the board which suppliers matter most and why, what a missing clause cost in time, and whose decision each contract is. A member’s own contracts are its owner’s to decide.'}
 };
 const FACTS = {
@@ -1630,9 +1630,9 @@ const GAME_NOTES = [
   'Every person, the Riverbend Shared Services Compact, its members, accounts (fin-ap, board-display, the group MFA-Exempt), counts and times are invented. Recalled Crossroads facts are quoted from Crossroads. (game)',
   'Charter never says what any law requires. Counsel decides legal questions: Noor for the town and the shared services, each member’s own counsel for that member. (game)',
   'The carry-over effects (Focus +2 for each Crossroads track played, +2 if Crossroads was finished) and the Ballast Badge’s effects (every register line arriving with its owner and review date; Focus +4) are invented. (game)',
-  'Suppliers: every supplier (Inkmere Print & Post, Cobbleton Payroll, Wellhollow Backup, Tarnfield IT Services, Glasswick AV; Stillmark, Shelfwright Systems and Wrenfold Health Software as met in Crossroads), every spend, the tiering rule, the clause catalogue and its tiers, Contract A, every contract’s clauses, the $30k envelope, each price uplift and each supplier’s goodwill, the Brindlemark Assurance Report, and Ilka Thrushcombe are invented. (game)',
-  'Cobbleton’s incident is told only through the Compact’s records: its notice, CP-XFER-01’s log, cp-xfer, the 23:52 login from 203.0.113.77 (a documentation address), the times, and who decided what. Nothing says what happened on Cobbleton’s side. Contract A’s column in the timeline is what its two clauses would have changed. (game)',
-  'Insurance and indemnity clauses are counsel’s and procurement’s call; the game shows them and never lets the CISO choose them. The Hawser Badge’s effects (every Tier 1 supplier’s security contact on the incident page; Focus +4) are invented. (game)'
+  'Suppliers: every supplier (Inkmere Print & Post, Thimbleford Payroll, Wellhollow Backup, Tarnfield IT Services, Pewterlane AV; Stillmark, Shelfwright Systems and Wrenfold Health Software as met in Crossroads), every spend, the tiering rule, the clause catalogue and its tiers, Contract A, every contract’s clauses, the $30k envelope, each price uplift and each supplier’s goodwill, the Brindlemark Assurance Report, and Ilka Thrushcombe are invented. (game)',
+  'Any supplier incident in Suppliers is told only through the Compact’s records: the supplier’s notice, our own logs, the times, and who decided what. Any outside address is a documentation address. Nothing says what happened on the supplier’s side, and Contract A’s column in a timeline is what its clauses would have changed. (game)',
+  'Insurance and indemnity clauses are counsel’s and procurement’s call; the game shows them and never lets the CISO choose them. The Hawser Badge’s effects (every Tier 1 supplier’s security contact, or its account manager where its contract names none yet, on the incident page; Focus +4) are invented. (game)'
 ];
 
 /* ---- editions/charter/risk.js ---- */
@@ -1827,11 +1827,14 @@ function chAcceptHtml(list) {
      contracts, a price uplift and a supplier's goodwill per clause, the
      must-haves set by the tier (GV.SC-05); insurance and indemnity are
      counsel's and procurement's call, shown and never chosen by the CISO;
-   - a must-have left out of a contract: an acceptance signed by the service's
-     business owner, who decides it (one decider), with an expiry, a review
-     date and an interim measure; the Board sees it;
+   - a must-have left out of a contract: leaving it out is the CISO's
+     recommendation (the plan), recorded as the CISO's; the service's business
+     owner decides on it and signs (one decider), with an expiry, a review date
+     and an interim measure; the Board sees it. When a plan with every
+     must-have fits the envelope and every supplier's goodwill, leaving one out
+     is scored as poor advice (the metric "Must-haves in your plan");
    - the supplier incident's timeline against Contract A (the tier-1 model
-     terms): the Compact's own times only.
+     terms, its clauses C1, C2 and C3): the Compact's own times only.
    Procurement (Ilka) and counsel (Noor) own the Compact's contracts; each
    member's owner decides that member's contracts.
    State: G.ch.sup (chSup() creates it, so a save from slice 1 loads too).
@@ -1843,6 +1846,7 @@ function chSup() {
   if (!c.sup) c.sup = {tiers: null, sent: null, drills: {}, needs: {met: 0, total: 0}, incident: {first: []}, plan: null, planSent: null,
     accept: [], directive: null, dojo: [false, false, false], board: null};
   if (G.targets && G.targets.chSupTier === undefined) Object.assign(G.targets, {chSupCrit: 100, chSupTier: 100, chSupNotify: 100});
+  if (G.targets && G.targets.chSupMust === undefined) G.targets.chSupMust = 100;
   return c.sup;
 }
 function chSupLine(id) { return CH_SUPPLIERS.find(s => s.id === id); }
@@ -1885,7 +1889,7 @@ async function chTierEdit() {
 }
 function chTierStats(sent) {
   if (!sent) return null;
-  const ok = CH_SUPPLIERS.filter(s => sent[s.id] === chTierRule(s) && s.owner && CH_SUP_REVIEW);
+  const ok = CH_SUPPLIERS.filter(s => sent[s.id] === chTierRule(s));
   return {right: ok.length, pct: Math.round(ok.length / CH_SUPPLIERS.length * 100), wrong: CH_SUPPLIERS.filter(s => sent[s.id] !== chTierRule(s))};
 }
 function chTierDebrief(sent) {
@@ -1922,6 +1926,22 @@ function chPlanStats(plan) {
   return {cost, over: cost > CH_SUP_ENVELOPE, per, mustTotal, mustIn, ok: cost <= CH_SUP_ENVELOPE && Object.values(per).every(p => !p.overGoodwill)};
 }
 function chPlanRec(id) { const k = chContract(id), s = chSupLine(id); return chMust(s).filter(c => !k.has.includes(c)); }
+function chPlanAll() { return Object.fromEntries(CH_SUP_CONTRACTS.map(k => [k.id, chPlanRec(k.id)])); }
+// The plan's advice on each must-have it leaves out. fitsNow: the clause fits in what the plan leaves of the envelope
+// and of the supplier's goodwill; fitsAll: a plan with every must-have fits (then leaving any out is poor advice);
+// extras: clauses sought that are not must-haves for their tier.
+function chPlanAdvice(plan) {
+  const st = chPlanStats(plan), envLeft = CH_SUP_ENVELOPE - st.cost, fitsAll = chPlanStats(chPlanAll()).ok;
+  const extras = CH_SUP_CONTRACTS.flatMap(k => (plan[k.id] || []).filter(c => !st.per[k.id].must.includes(c)).map(c => chSupLine(k.id).short + ' ' + c));
+  const left = CH_SUP_CONTRACTS.flatMap(k => st.per[k.id].miss.map(c => {
+    const o = k.offer[c], gLeft = k.goodwill - st.per[k.id].goodwill;
+    return {id: k.id, clause: c, line: chSupLine(k.id).short + ' ' + c, envLeft, gLeft, fitsNow: !!o && o[0] <= envLeft && o[1] <= gLeft};
+  }));
+  return {left, extras, fitsAll, poor: !!left.length && fitsAll};
+}
+function chFitText(x, adv) {
+  return x.line + (x.fitsNow ? ' fits: ' + chMoney(x.envLeft) + ' of the envelope left, goodwill ' + x.gLeft + ' left' : adv.fitsAll ? ' fits once the extras go (' + adv.extras.join(', ') + ')' : ' does not fit');
+}
 function chPlanLine(k, plan, st) {
   const s = chSupLine(k.id), p = st.per[k.id];
   return s.name + ' (Tier ' + chTierRule(s) + '): ' + (p.must.length - p.miss.length) + ' of ' + p.must.length + ' must-haves, ' + chMoney(p.cost) + ', goodwill ' + p.goodwill + ' of ' + k.goodwill + (p.overGoodwill ? ': too much to ask' : '');
@@ -1956,13 +1976,15 @@ async function chPlanEdit() {
     const items = CH_SUP_CONTRACTS.map(k => { const rec = chPlanRec(k.id), same = plan[k.id].length === rec.length && rec.every(id => plan[k.id].includes(id));
       return {label: chPlanLine(k, plan, st), note: k.what + '. A opens its clauses.', meta: {k: k.id, bot: !same}}; });
     items.push({label: st.ok ? 'Send it to Ilka and Noor' : st.over ? 'Over the envelope by ' + chMoney(st.cost - CH_SUP_ENVELOPE) + ': change a contract' : 'Too much asked of one supplier: change it', disabled: !st.ok, meta: {k: 'send', bot: recDone}});
-    const body = '<p>The Compact’s four contracts that change this year, and ' + chMoney(CH_SUP_ENVELOPE) + ' a year of price uplift across them (game). Each clause costs uplift and some of the supplier’s goodwill. The tier sets the must-haves. Ilka and Noor hold the contracts; each service’s owner signs for any must-have left out.</p>' +
+    const body = '<p>The Compact’s four contracts that change this year, and ' + chMoney(CH_SUP_ENVELOPE) + ' a year of price uplift across them (game), set by Marit from the services’ budgets. Each clause costs uplift and some of the supplier’s goodwill. The tier sets the must-haves. Ilka and Noor hold the contracts; a must-have you leave out is your recommendation, and its service’s owner decides on it and signs.</p>' +
       '<p>Envelope <b>' + chMoney(st.cost) + ' of ' + chMoney(CH_SUP_ENVELOPE) + '</b> · must-haves in or sought <b>' + st.mustIn + ' of ' + st.mustTotal + '</b> (game)</p>';
     const r = await UI.openModal('Clause plan · the Compact’s contracts', body, items, {closable: false, cursor: cur, inView: true, cls: 'drill'});
     if (r >= 0 && r < CH_SUP_CONTRACTS.length) { await chPlanContract(CH_SUP_CONTRACTS[r]); cur = r; continue; }
     if (items[r] && items[r].meta.k === 'send') {
       const left = CH_SUP_CONTRACTS.flatMap(k => st.per[k.id].miss.map(id => chSupLine(k.id).short + ' ' + id));
-      const j = await UI.openModal('Send the plan?', '<p>' + chMoney(st.cost) + ' of ' + chMoney(CH_SUP_ENVELOPE) + '. ' + (left.length ? 'Must-haves left out, each needing its owner’s signed acceptance: <b>' + left.join(', ') + '</b>.' : 'Every must-have in or sought.') + '</p><p>Ilka and Noor take it to the suppliers.</p>',
+      const adv = chPlanAdvice(plan);
+      const j = await UI.openModal('Send the plan?', '<p>' + chMoney(st.cost) + ' of ' + chMoney(CH_SUP_ENVELOPE) + '. ' + (left.length ? 'Must-haves left out, on your recommendation, each needing its owner’s decision and signed acceptance: <b>' + left.join(', ') + '</b>.' : 'Every must-have in or sought.') + '</p>' +
+        (adv.poor ? '<p>' + adv.left.map(x => esc(chFitText(x, adv))).join('. ') + '. Its owner would be signing for a gap the money covers: the scorecard reads that as poor advice (game).</p>' : '') + '<p>Ilka and Noor take it to the suppliers.</p>',
         [{label: 'Send it', meta: {k: 'go', bot: true}}, {label: 'Back to the contracts', meta: {k: 'back'}}], {closable: false, cursor: 1});
       if (j === 0) return JSON.parse(JSON.stringify(plan));
       cur = r;
@@ -1978,26 +2000,35 @@ function chSupStats() {
   const crit = plan ? Math.round(t1.filter(k => chMust(chSupLine(k.id)).every(c => inPlan(k.id).has(c))).length / t1.length * 100) : null;
   const notify = plan ? Math.round(t1.filter(k => inPlan(k.id).has('C1')).length / t1.length * 100) : null;
   const members = CH_SUPPLIERS.filter(s => !s.compact), memFull = members.filter(s => chMust(s).every(c => chHas(s.id).includes(c))).length;
-  return {tier: tier ? tier.pct : null, crit, notify, members: members.length, memFull};
+  // Must-haves in the plan as sent, of the twenty across the Compact's four contracts: every one fits (chPlanAdvice's
+  // fitsAll), so each one left out is the CISO's poor advice and lowers this.
+  const ps = plan ? chPlanStats(plan) : null, adv = plan ? chPlanAdvice(plan) : null;
+  const must = ps ? Math.round(ps.mustIn / ps.mustTotal * 100) : null;
+  return {tier: tier ? tier.pct : null, crit, notify, must, poor: adv ? adv.poor : false, members: members.length, memFull};
 }
 
-/* ---------- A must-have left out: the owner decides it and signs ---------- */
-function chClauseAccept(id, clause, day) {
-  const s = chSupLine(id), c = chClause(clause);
-  return {line: s.short + ' ' + clause, name: s.name + ': ' + c.name, supplier: id, clause: clause, owner: s.owner, decider: s.owner.replace(/^Director /, '').split(' ')[0],
-    decidedBy: s.owner + ', its owner', signedBy: s.owner, signedFor: 'leaving the clause out until the next renewal, and the interim measure', day: day,
+/* ---------- A must-have left out: the CISO's recommendation; the owner decides on it and signs ---------- */
+// adv: chPlanAdvice of the plan as sent (without it, the advice is read as poor when every must-have fits).
+function chClauseAccept(id, clause, day, adv) {
+  const s = chSupLine(id), c = chClause(clause), x = adv ? adv.left.find(y => y.id === id && y.clause === clause) : null;
+  const poor = adv ? adv.poor : chPlanStats(chPlanAll()).ok, pushed = !!(x && !x.fitsNow && adv.extras.length);
+  return {line: s.short + ' ' + clause, name: s.name + ': ' + c.name, supplier: id, clause: clause, owner: s.owner,
+    recommendedBy: 'the CISO (your plan)', decider: s.owner.replace(/^Director /, '').split(' ')[0],
+    decidedBy: s.owner + ', its owner, on the CISO’s recommendation' + (pushed ? ' (extras sought instead: ' + adv.extras.join(', ') + ')' : ''),
+    signedBy: s.owner, signedFor: 'leaving the clause out until the next renewal, and the interim measure', day: day, poor: poor, fit: x ? chFitText(x, adv) : '',
     expiry: CH_EXPIRY_DAY, review: CH_SUP_REVIEW, interim: CH_CLAUSE_INTERIM[clause] || ''};
 }
 function chClauseAcceptHtml(list) {
   if (!list.length) return '<p>No must-have left out: nothing to accept.</p>';
-  return '<table class="sc"><tr><th>Clause</th><th>Decided</th><th>Signed</th><th>Review</th></tr>' + list.map(x => '<tr><td>' + esc(x.line) + '</td><td>' + esc(x.decider) + '</td><td>' + esc(x.decider) + '</td><td>Day ' + x.review + '</td></tr>').join('') + '</table>' +
-    '<ul>' + list.map(x => '<li><b>' + esc(x.name) + '</b>: a must-have for its tier, left out. Decided and signed by ' + esc(x.signedBy) + ', its owner, for ' + esc(x.signedFor) + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '. Meanwhile: ' + esc(x.interim) + ' The Board sees it.</li>').join('') + '</ul>';
+  return '<table class="sc"><tr><th>Clause</th><th>Advised</th><th>Decided</th><th>Signed</th><th>Review</th></tr>' + list.map(x => '<tr><td>' + esc(x.line) + '</td><td>CISO</td><td>' + esc(x.decider) + '</td><td>' + esc(x.decider) + '</td><td>Day ' + x.review + '</td></tr>').join('') + '</table>' +
+    '<ul>' + list.map(x => '<li><b>' + esc(x.name) + '</b>: a must-have for its tier, left out on the CISO’s recommendation (your plan)' + (x.poor ? ': poor advice (game), as a plan with every must-have fitted' + (x.fit ? ' (' + esc(x.fit) + ')' : '') : '') + '. ' +
+      'Decided by ' + esc(x.decidedBy) + '; signed by ' + esc(x.signedBy) + ', for ' + esc(x.signedFor) + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '. Meanwhile: ' + esc(x.interim) + ' The Board sees it.</li>').join('') + '</ul>';
 }
 
 /* ---------- The supplier incident: the Compact's own timeline against Contract A (game) ---------- */
 function chSupTimelineHtml() {
   const rows = CH_SUP_TIMELINE.map(r => '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td><td>' + esc(r[2]) + '</td></tr>').join('');
-  return '<p>The Compact’s own records, Monday 21:14 to Thursday 12:00, beside what Contract A’s two clauses (C1 and C3) would have changed. (game)</p>' +
+  return '<p>The Compact’s own records, Monday 21:14 to Thursday 12:00, beside what Contract A’s clauses C1, C2 and C3 would have changed. (game)</p>' +
     '<table class="sc"><tr><th>What</th><th>As it was</th><th>Contract A</th></tr>' + rows + '</table>' +
     '<ul>' + CH_SUP_LOST.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
 }
@@ -2135,7 +2166,7 @@ function newState(seed) {
     focus: 50, focusMax: 50, rep: 50, uptime: 99.95,
     health: {}, rank: 'CISO', badge: false, track: {}, name: 'Lead',
     m: {closed: 0, judged: 0, correctShown: 0, evOk: 0, ttaSum: 0, ttaN: 0, esc: 0, escOk: 0, missed: 0, surfaced: 0, overreact: 0, autoClosed: 0, events: 0, today: 0},
-    targets: {chWithin: 100, chOwned: 100, chTop5: 80, chSupCrit: 100, chSupTier: 100, chSupNotify: 100},
+    targets: {chWithin: 100, chOwned: 100, chTop5: 80, chSupCrit: 100, chSupTier: 100, chSupNotify: 100, chSupMust: 100},
     mfaSet: [], fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
     fpWeight: 50, queue: 0, steps: 0, auto: false, autoReview: false, playMs: 0,
     ch: {carry: null, remit: null, appetite: null, register: null, drills: {}, needs: {met: 0, total: 0}, alloc: null, sent: null,
@@ -2194,7 +2225,7 @@ function chOwnedPct() {
 function editionMetricVals() {
   const a = chScored(), s = a ? chAllocStats(a) : null, ss = G.ch && G.ch.sup ? chSupStats() : null;
   return {chWithin: s ? s.withinPct : null, chOwned: G.f.chBudgetBrief ? chOwnedPct() : null, chTop5: s ? s.topPct : null,
-    chSupCrit: ss ? ss.crit : null, chSupTier: ss ? ss.tier : null, chSupNotify: ss ? ss.notify : null};
+    chSupCrit: ss ? ss.crit : null, chSupTier: ss ? ss.tier : null, chSupNotify: ss ? ss.notify : null, chSupMust: ss ? ss.must : null};
 }
 const EDITION_METRICS = [
   {k: 'chWithin', label: 'Risks within appetite (your advice)', unit: '%', higher: true},
@@ -2202,8 +2233,11 @@ const EDITION_METRICS = [
   {k: 'chTop5', label: 'Budget spent against top-five risks', unit: '%', higher: true},
   // Suppliers (slice 2): on the CISO's advice, the tiers as sent and the plan as sent for the Compact's own contracts.
   {k: 'chSupCrit', label: 'Critical suppliers with must-have clauses (your plan)', unit: '%', higher: true, when: () => !!G.f.chSupStart},
-  {k: 'chSupTier', label: 'Suppliers tiered, with owner and review date', unit: '%', higher: true, when: () => !!G.f.chSupStart},
-  {k: 'chSupNotify', label: 'Notification clause, tier-1 suppliers (your plan)', unit: '%', higher: true, when: () => !!G.f.chSupStart}
+  // Owners and review dates came with every line (the Ballast Badge), so this metric reads the tiers alone.
+  {k: 'chSupTier', label: 'Suppliers tiered by the rule (your advice)', unit: '%', higher: true, when: () => !!G.f.chSupStart},
+  {k: 'chSupNotify', label: 'Notification clause, tier-1 suppliers (your plan)', unit: '%', higher: true, when: () => !!G.f.chSupStart},
+  // Every must-have fits the envelope, so each one the plan leaves out is the CISO's poor advice.
+  {k: 'chSupMust', label: 'Must-haves in your plan (your advice)', unit: '%', higher: true, when: () => !!G.f.chSupStart}
 ];
 function editionScorecard() {
   const v = metricVals(), c = G.ch || {};
@@ -2212,7 +2246,7 @@ function editionScorecard() {
   const ss = G.f.chSupStart ? chSupStats() : null, sup = G.ch && G.ch.sup;
   return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
     '<p>' + (c.sent ? 'Scored on your advice: the allocation you sent, against Monday’s appetite and tolerances.' : 'No allocation sent yet.') + (c.final ? ' The Board’s decision: <b>' + chAllocStats(c.final).within + ' of ' + CH_LINES.length + '</b> lines within appetite' + (c.decision && c.decision.override ? ', overriding your advice' : '') + '.' : c.sent ? ' The Board decides on Thursday.' : '') + ' Drills with every needs met: <b>' + c.needs.met + ' of ' + c.needs.total + '</b>. Acceptances on the register: <b>' + (c.accept || []).length + '</b>' + ((c.accept || []).length ? ' (signed by ' + [...new Set(c.accept.map(x => x.signedBy))].map(esc).join(', ') + ')' : '') + '.</p>' +
-    (ss ? '<p>Suppliers: scored on your advice, the tiers you sent and your plan for the Compact’s own contracts. The members’ own contracts are their owners’ decisions: <b>' + ss.memFull + ' of ' + ss.members + '</b> with every must-have. Must-haves left out, signed by their owners: <b>' + sup.accept.length + '</b>. Supplier drills with every needs met: <b>' + sup.needs.met + ' of ' + sup.needs.total + '</b>.</p>' : '') +
+    (ss ? '<p>Suppliers: scored on your advice, the tiers you sent and your plan for the Compact’s own contracts. The members’ own contracts are their owners’ decisions: <b>' + ss.memFull + ' of ' + ss.members + '</b> with every must-have. Owners and review dates came with every line (the Ballast Badge). Must-haves left out on your recommendation, decided and signed by their owners: <b>' + sup.accept.length + '</b>' + (ss.poor ? ' (poor advice: a plan with every must-have fitted)' : '') + '. Supplier drills with every needs met: <b>' + sup.needs.met + ' of ' + sup.needs.total + '</b>.</p>' : '') +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + (G.f.chSupStart ? ' · Hawser Badge: ' + (G.f.chHawser ? 'yes' : 'not yet') : '') + '</p>' +
     (c.carry ? '<p class="small">Carried: ' + esc(chTracksText(c.carry)) + (c.carry.crBadges.length ? ' · Crossroads badges ' + c.carry.crBadges.join(', ') : '') + (c.carry.thBadges.length ? ' · Town Hall badges ' + c.carry.thBadges.join(', ') : '') + ' · suspicion file ' + qtCount() + ' notes.</p>' : '') +
     '<p class="small">Every number here is a game model (game). Objective: ' + esc(objective().text) + '</p>';
@@ -2272,7 +2306,7 @@ function supObjective(at) {
   if (!f.chSupTier) return at('10:30: the supplier register, in the contracts cabinet: eight suppliers to tier.', 'choffice', 27, 1);
   if (!f.chSupDrillB) return at('14:00: Edda’s desk: Wellhollow’s assurance report.', 'choffice', 18, 2);
   if (!f.chSupDay71) return at('End the day at your desk.', 'choffice', 26, 9);
-  if (!f.chSupIncident) return at('Tuesday 08:20: Marit’s desk: a notice from Cobbleton Payroll.', 'choffice', 24, 2);
+  if (!f.chSupIncident) return at('Tuesday 08:20: Marit’s desk: a notice from Thimbleford Payroll.', 'choffice', 24, 2);
   if (!f.chSupDay72) return at('End the day at your desk.', 'choffice', 26, 9);
   if (!f.chSupDrillC) return at('Wednesday 09:00: Joanna, by the register: Tarnfield’s notice.', 'choffice', 6, 3);
   if (!f.chSupDirective) return at('11:30: Ilka Thrushcombe, procurement, by the contracts cabinet.', 'choffice', 27, 3);
@@ -2281,7 +2315,7 @@ function supObjective(at) {
   if (!f.chSupDojoDone) return at('The Suppliers terminals, south-west: ' + (3 - sup.dojo.filter(Boolean).length) + ' left.', 'choffice', 3 + 2 * Math.max(0, sup.dojo.findIndex(x => !x)), 9);
   if (!f.chSupReturn) return at('Wednesday afternoon: Marit was asking for you.', 'choffice', 24, 2);
   if (!f.chSupDay73) return at('End the day at your desk.', 'choffice', 26, 9);
-  if (!f.chSupThu) return at('Thursday 11:00: Marit’s desk: Cobbleton’s second answer.', 'choffice', 24, 2);
+  if (!f.chSupThu) return at('Thursday 11:00: Marit’s desk: Thimbleford’s second answer.', 'choffice', 24, 2);
   if (!f.chSupBoard) return at('Thursday 14:00: the Compact Board room: the Supplier round.', 'chboard', 8, 3);
   if (!f.chSupSummary) return at('16:00: your desk: close the week.', 'choffice', 26, 9);
   return {text: 'Suppliers done. Next: Policy.', done: true};
@@ -2318,19 +2352,19 @@ async function talk(npc) {
     case 'beatrizch':
       if (f.chDay64 && !f.chDrillA) { await chDrillA(); return; }
       if (f.chSupStart && !f.chSupDrillA) { await chSupDrillA(); return; }
-      if (f.chSupStart) { await say(f.chSupDrillA ? 'Inkmere’s line cites the data-flow record now. Cobbleton’s cp-xfer is the only supplier account on the transfer server.' : 'The account lists, when you’re ready.', who); return; }
+      if (f.chSupStart) { await say(f.chSupDrillA ? 'Inkmere’s line cites the data-flow record now. Thimbleford’s cp-xfer is the only supplier account on the transfer server.' : 'The account lists, when you’re ready.', who); return; }
       await say(f.chDrillA ? 'fin-ap goes to Marit, board-display has an owner and an expiry, and the six service accounts keep theirs, owned and dated.' : 'Exports and resets for Edda. Tomorrow you’ll want the sign-in records, I expect.', who); return;
     case 'edda':
       if (f.chDrillA && !f.chDrillB) { await chDrillB(); return; }
       if (f.chSupTier && !f.chSupDrillB) { await chSupDrillB(); return; }
-      if (f.chSupStart) { await say(f.chSupThu ? 'cp-xfer is back, from Cobbleton’s range only, with a password we set. It was my call both times, on the facts you brought.' : f.chSupIncident ? 'cp-xfer stays suspended until Cobbleton’s answer covers the 23:52 login. My call, on your advice.' : 'Wellhollow keeps our off-site copies. Its renewal is on my desk.', who); return; }
+      if (f.chSupStart) { await say(f.chSupThu ? 'cp-xfer is back, key-only, from Thimbleford’s range, every session logged. It was my call both times, on the facts you brought, and our own logs.' : f.chSupIncident ? 'cp-xfer stays suspended until Thimbleford’s answer covers the 23:52 login. My call, on your advice.' : 'Wellhollow keeps our off-site copies. Its renewal is on my desk.', who); return; }
       await say(!f.chAppetite ? 'Edda Thornquist. I run the shared services. You’ll want me at the Board at nine.' : f.chBoard ? (G.ch.decision && G.ch.decision.override ? 'The upgrade is funded. The Board chose the trade-off, with your advice against it in the minute, and I signed for running the interim checks.' : G.ch.final && G.ch.final.R6 === 2 ? 'The upgrade is funded as you sent it. What it leaves, the owners have signed.' : 'The upgrade waits a year and the extension carries us. Fair, laid out the way you laid it out.') : 'My request is with Marit: the platform leaves its vendor’s support next year. It’s a fair case. Make yours as plainly.', who); return;
     case 'quellan':
       if (f.chAppetite && !f.chBudgetBrief) { await chBudgetBrief(); return; }
       if (f.chSupDay71 && !f.chSupIncident) { await chSupIncident(); return; }
       if (f.chSupDojoDone && !f.chSupReturn) { await chSupReturn(); return; }
       if (f.chSupDay73 && !f.chSupThu) { await chSupThursday(); return; }
-      if (f.chSupStart) { await say(f.chSupThu ? 'The members’ staff have been told what we know. Cobbleton’s amendment is with Ilka.' : f.chSupIncident ? 'cp-xfer is suspended, and Cobbleton has our questions. Noor has the facts.' : 'Inkmere and Cobbleton are both mine. Tell me what each one needs in its contract.', who); return; }
+      if (f.chSupStart) { await say(f.chSupThu ? 'The members’ staff have been told what we know. Thimbleford’s amendment is with Ilka.' : f.chSupIncident ? 'cp-xfer is suspended, and Thimbleford has our questions. Noor has the facts.' : 'Inkmere and Thimbleford are both mine. Tell me what each one needs in its contract.', who); return; }
       if (f.chDrillB && !f.chDrillC) { await chDrillC(); return; }
       if (f.chDirective && !f.chDojoMet) { await chDojoIntro(); return; }
       await say(f.chDojoMet && !f.chDojoDone ? 'The three terminals, south-west. Residual risk, cost against benefit, and who signs.' : !f.chAppetite ? 'Marit Quellan, finance. After the Board’s session, come and see me about the money.' : 'Your section joins the Board papers on Wednesday at 17:00. Numbers, and what each one buys.', who); return;
@@ -2342,7 +2376,7 @@ async function talk(npc) {
     case 'thrushcombe':
       if (!f.chSupDirective) { await chSupDirective(); return; }
       if (f.chSupPlan && !f.chSupDojoMet) { await chSupDojoIntro(); return; }
-      await say(f.chSupPlan ? 'Inkmere signs on Thursday, with the clauses your plan priced. Cobbleton’s amendment goes out with Noor.' : 'I sign Inkmere once your plan is in. 14:00.', who); return;
+      await say(f.chSupPlan ? 'Inkmere signs on Thursday, with the clauses your plan priced. Thimbleford’s amendment goes out with Noor.' : 'I sign Inkmere once your plan is in. 14:00.', who); return;
   }
 }
 
@@ -2467,18 +2501,18 @@ async function chDesk() {
     await say('Day 72, Tuesday, 08:20. Marit is at her desk with something from the payroll mailbox.'); return;
   }
   if (f.chSupIncident && !f.chSupDay72) {
-    await UI.openModal('Tuesday, done', '<p>17:30: Cobbleton’s account manager writes that its logs and its investigation are confidential, and a summary will follow. 17:50: Noor writes to Cobbleton’s counsel for the facts in writing. cp-xfer stays suspended. (game)</p>', [{label: 'Wednesday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    await UI.openModal('Tuesday, done', '<p>17:30: Thimbleford’s account manager writes that its logs and its investigation are confidential, and a summary will follow. 17:50: Noor writes to Thimbleford’s counsel for the facts in writing. cp-xfer stays suspended. (game)</p>', [{label: 'Wednesday', meta: {good: true}}], {closable: false, cls: 'summary'});
     f.chSupDay72 = true; G.day = 73; G.focus = G.focusMax; track();
     await say('Day 73, Wednesday, 09:00. Joanna Ferreday is by the register.'); return;
   }
   if (f.chSupDirective && !f.chSupPlan) { await chSupPlanTask(); return; }
   if (f.chSupReturn && !f.chSupDay73) {
-    await UI.openModal('Wednesday, done', '<p>Tarnfield’s clock read from the clause, Inkmere’s renewal sent to its owner, the plan with Ilka and Noor, and cp-xfer kept off until Cobbleton’s answer covers 23:52. (game)</p>', [{label: 'Thursday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    await UI.openModal('Wednesday, done', '<p>Tarnfield’s clock read from the clause, Inkmere’s renewal sent to its owner, the plan with Ilka and Noor, and cp-xfer kept off until Thimbleford’s answer covers 23:52. (game)</p>', [{label: 'Thursday', meta: {good: true}}], {closable: false, cls: 'summary'});
     f.chSupDay73 = true; G.day = 74; G.focus = G.focusMax; track();
-    await say('Day 74, Thursday, 11:00. Marit has Cobbleton’s second answer.'); return;
+    await say('Day 74, Thursday, 11:00. Marit has Thimbleford’s second answer.'); return;
   }
   if (f.chSupBoard) { await chSupSummary(); return; }
-  if (f.chSummary) { await say('Your desk: the supplier register on one screen, Cobbleton’s thread on the other.'); return; }
+  if (f.chSummary) { await say('Your desk: the supplier register on one screen, Thimbleford’s thread on the other.'); return; }
   await say(f.chDay64 ? 'Your desk: the register on one screen, the Board papers on the other.' : 'Your desk: an empty in-tray and a new nameplate.');
 }
 
@@ -2914,17 +2948,19 @@ async function chSummary() {
    Charter district 2: Suppliers (Days 71 to 74). The supplier register's eight
    lines and the tiering rule, the clause catalogue and the Compact's four
    contracts in this year's plan, three drills whose evidence is records, the
-   supplier incident (Cobbleton Payroll's notice, told only through the
+   supplier incident (Thimbleford Payroll's notice, told only through the
    Compact's own records, notices, times and decisions), the directive
    (procurement wants a renewal signed today without the notification
    clause), the Suppliers terminals and the Compact Board's Supplier round.
    One decider per decision, whoever is on duty: Edda by day (the on-call lead
    at night) decides a shared-services account's suspension and its return;
-   each service's business owner owns its risk and signs any acceptance for a
-   must-have clause left out; procurement (Ilka) and counsel (Noor) own the
-   Compact's contracts; each member's owner decides that member's contracts;
-   counsel decides any notification duty; the CISO sets the security
-   requirements, keeps the supplier register and advises.
+   each service's business owner owns its risk, and decides and signs any
+   acceptance for a must-have clause the CISO's plan recommends leaving out
+   (the recommendation is recorded as the CISO's); procurement (Ilka) and
+   counsel (Noor) own the Compact's contracts; each member's owner decides that
+   member's contracts; counsel decides any notification duty (Noor for the
+   Compact, each member's counsel for its own staff); the CISO sets the
+   security requirements, keeps the supplier register and advises.
    Defender side only: no intrusion mechanism, no technique, no ATT&CK ID.
    Every supplier, person, price, count, time, account and address is invented
    (game); addresses are RFC 5737. Real facts: CREDITS.md, section "Charter".
@@ -2939,17 +2975,17 @@ const CH_SUP_DAY = {71: 'Monday', 72: 'Tuesday', 73: 'Wednesday', 74: 'Thursday'
 
 /* ---------- The tiering rule (game; written by the CISO on Day 68) ---------- */
 const CH_SUP_RULE = {
-  crit: {High: 'a life-safety service or a member’s main service stops', Medium: 'a service slows or goes to paper', Low: 'nothing residents notice for a week'},
-  data: {High: 'holds personal records in bulk, or has an account or connection into our systems', Medium: 'holds names and postal addresses only, with no way in', Low: 'holds no personal data and has no way in'},
+  crit: {High: 'a life-safety service, or a member’s main service, stops or falls back to paper', Medium: 'a back-office service slows or goes to paper (pay, billing, office PCs)', Low: 'nothing residents notice for a week'},
+  data: {High: 'holds personal records beyond names and addresses (pay, health, students’, patrons’) in bulk, or has an account or connection into our systems', Medium: 'holds names and postal addresses only, with no way in', Low: 'holds no personal data and has no way in'},
   text: 'Tier 1 if either is High; Tier 2 if either is Medium and neither is High; Tier 3 if both are Low. Not by spend. (game)'
 };
 
 /* ---------- The supplier register: eight lines (game). Inherited: listed by annual spend, no tiers ---------- */
 const CH_SUPPLIERS = [
   {id: 'inkmere', name: 'Inkmere Print & Post', short: 'Inkmere', spend: 210, crit: 'Low', data: 'Medium', owner: 'Marit Quellan', holder: 'the Compact', compact: true, wayIn: false,
-   serves: 'Prints and posts the members’ notices and the town’s bills, from a file the Compact pushes to its drop site each month. Postage passes through its invoice.',
-   stops: 'Bills and notices go out a few days late; the town can print urgent ones itself.', holds: 'Residents’ names and postal addresses, with each notice’s text. No account on our side.'},
-  {id: 'cobbleton', name: 'Cobbleton Payroll', short: 'Cobbleton', spend: 85, crit: 'Medium', data: 'High', owner: 'Marit Quellan', holder: 'the Compact', compact: true, wayIn: true,
+   serves: 'Prints and posts the town’s mailings to every household (the newsletter, the collection calendar, meeting notices), from an address file the Compact pushes to its drop site each month. The members post their own letters. Postage passes through its invoice.',
+   stops: 'The town’s mailings go out a few days late; it can print an urgent notice itself.', holds: 'Residents’ names and postal addresses; every household gets the same letters. No account on our side.'},
+  {id: 'thimbleford', name: 'Thimbleford Payroll', short: 'Thimbleford', spend: 85, crit: 'Medium', data: 'High', owner: 'Marit Quellan', holder: 'the Compact', compact: true, wayIn: true,
    serves: 'Runs pay for the members’ 1,180 staff. Collects the pay file from CP-XFER-01, the Compact’s transfer server, through its own account, cp-xfer, every other Thursday at 06:00.',
    stops: 'Pay is late, or paid by hand from the last run.', holds: 'Every member’s staff: names, pay and bank details. One account on our side: cp-xfer.'},
   {id: 'wrenfold', name: 'Wrenfold Health Software', short: 'Wrenfold', spend: 64, crit: 'High', data: 'High', owner: 'Marisol Quintero', holder: 'the Clinic', compact: false, wayIn: true,
@@ -2959,14 +2995,14 @@ const CH_SUPPLIERS = [
    serves: 'Desk support and PC builds for the airport’s business office.', stops: 'Office PCs wait for repair; billing slows.', holds: 'One named admin account in the airport’s directory.'},
   {id: 'wellhollow', name: 'Wellhollow Backup', short: 'Wellhollow', spend: 36, crit: 'Low', data: 'High', owner: 'Edda Thornquist', holder: 'the Compact', compact: true, wayIn: false,
    serves: 'Keeps the Compact’s off-site copies of every member’s data, pushed to it by the Compact each night.',
-   stops: 'No off-site copy until it is back; nothing stops for residents.', holds: 'Copies of every member’s data, records included. No account on our side.'},
+   stops: 'Nothing stops for residents, until we need a restore: then it is our only off-site copy.', holds: 'Copies of every member’s data, records included. No account on our side.'},
   {id: 'stillmark', name: 'Stillmark', short: 'Stillmark', spend: 22, crit: 'High', data: 'High', owner: 'Celia Marrow', holder: 'the county 911 authority', compact: false, wayIn: true,
    serves: 'Dispatch’s CAD vendor. Since the Dispatch week: “Stillmark’s access on demand from its range with MFA, in its contract (Celia)”.',
    stops: 'A CAD fault with no support: the floor goes to cards.', holds: 'Support access into CAD, on demand.'},
-  {id: 'shelfwright', name: 'Shelfwright Systems', short: 'Shelfwright', spend: 16, crit: 'Medium', data: 'High', owner: 'Director Mina Strand', holder: 'the Library', compact: false, wayIn: true,
+  {id: 'shelfwright', name: 'Shelfwright Systems', short: 'Shelfwright', spend: 16, crit: 'High', data: 'High', owner: 'Director Mina Strand', holder: 'the Library', compact: false, wayIn: true,
    serves: 'The Library’s circulation system, with the patron records. Support access on demand from its documented range, with MFA. Its contract (2019) is the Director’s.',
    stops: 'Checkout goes manual.', holds: 'Patron records. Support access into CIRC-01, on demand.'},
-  {id: 'glasswick', name: 'Glasswick AV', short: 'Glasswick', spend: 7, crit: 'Low', data: 'Low', owner: 'Edda Thornquist', holder: 'the Compact', compact: true, wayIn: false,
+  {id: 'pewterlane', name: 'Pewterlane AV', short: 'Pewterlane', spend: 7, crit: 'Low', data: 'Low', owner: 'Edda Thornquist', holder: 'the Compact', compact: true, wayIn: false,
    serves: 'Services the Board room’s display and the operations room’s wall screens, on site and escorted.',
    stops: 'A blank screen in a meeting.', holds: 'No data and no account.'}];
 
@@ -2974,12 +3010,12 @@ const CH_SUPPLIERS = [
 // must: the tiers for which the clause is a must-have; wayIn: a must-have only where the supplier has a way in.
 const CH_CLAUSES = [
   {id: 'C1', name: 'Notify within 24 h', must: [1, 2], text: 'Tell the Compact’s named security contact within 24 hours of detecting a security incident on any system used for the service, with the time it was detected.',
-   without: 'You hear of its incident when someone reads a mailbox (Tuesday: 10 h 56 min after Cobbleton sent its notice).'},
+   without: 'You hear of its incident when someone reads a mailbox (Tuesday: 10 h 56 min after Thimbleford sent its notice).'},
   {id: 'C2', name: 'Security contacts', must: [1, 2, 3], text: 'A named security contact on each side, reachable at any hour, kept current.',
    without: 'Nobody to call at night; the account manager is the only name you have.'},
   {id: 'C3', name: 'Logs and access to them', must: [1], text: 'Keep logs of access to the Compact’s data and connections for 12 months, and give the Compact the entries relevant to it within one working day of asking.',
-   without: 'You ask, and wait (Cobbleton: 49 h 50 min to an answer covering the 23:52 login).'},
-  {id: 'C4', name: 'Independent assurance', must: [1, 2], text: 'An independent assessment of the service the Compact uses, no older than 12 months, or the Compact’s right to assess.',
+   without: 'You ask, and wait (Thimbleford: asked Tuesday 09:10; at 17:30 its logs were “confidential”, a summary to follow; nothing yet).'},
+  {id: 'C4', name: 'Independent assurance', must: [1, 2], text: 'An independent assessment of the service the Compact uses, covering a period that ended within the last 12 months, or the Compact’s right to assess.',
    without: 'A clean report on another service, or an old one, is all you can ask for.'},
   {id: 'C5', name: 'Subcontractors named', must: [1], text: 'Name every subcontractor that handles the Compact’s data, and tell the Compact before adding one.',
    without: 'Your data can sit with a company you have never heard of.'},
@@ -2994,19 +3030,19 @@ const CH_CLAUSE_COUNSEL = ['Insurance', 'Indemnity'];   // counsel's and procure
 /* ---------- The Compact's four contracts in this year's plan (game) ---------- */
 // has: clauses in the contract now. offer: what each missing clause costs, [uplift $k a year, goodwill].
 const CH_SUP_CONTRACTS = [
-  {id: 'cobbleton', what: 'An amendment, after Tuesday', goodwill: 7, has: ['C5', 'C7'],
+  {id: 'thimbleford', what: 'An amendment, after Tuesday', goodwill: 7, has: ['C5', 'C7'],
    offer: {C1: [3, 1], C2: [0, 1], C3: [4, 2], C4: [3, 1], C6: [2, 1], C8: [3, 1]}},
   {id: 'wellhollow', what: 'Renewal this year', goodwill: 4, has: ['C1', 'C2', 'C7'],
    offer: {C3: [2, 1], C4: [3, 1], C5: [0, 1], C8: [2, 1]}},
   {id: 'inkmere', what: 'Renewal: the old contract ends on Friday, Day 75', goodwill: 4, has: ['C7'],
    offer: {C1: [4, 1], C2: [0, 1], C4: [2, 1], C3: [3, 1], C5: [0, 1], C8: [2, 1]}},
-  {id: 'glasswick', what: 'Renewal this year', goodwill: 2, has: [],
+  {id: 'pewterlane', what: 'Renewal this year', goodwill: 2, has: [],
    offer: {C2: [0, 1], C5: [0, 1]}}];
 // The members' own contracts: their owners' decisions. The CISO sends each owner its tier's requirements (Thursday).
 const CH_SUP_MEMBER_HAS = {wrenfold: ['C1', 'C2', 'C3', 'C6', 'C7'], tarnfield: ['C1', 'C2', 'C6', 'C7', 'C8'], stillmark: ['C2', 'C6', 'C7'], shelfwright: ['C2']};
 // What an owner does meanwhile when a must-have clause is left out of a contract (the acceptance's interim measure).
 const CH_CLAUSE_INTERIM = {
-  C1: 'The owner’s team reads the supplier’s mailbox and status page each working day, and the on-call number is sent to the supplier by letter.',
+  C1: 'The owner’s team reads the mailbox the supplier writes to, and its status page, each working day, and the on-call number is sent to the supplier by letter.',
   C2: 'The account manager’s number is on the incident page until a security contact is named.',
   C3: 'The Compact keeps its own logs of the supplier’s connections for 12 months.',
   C4: 'The owner asks for the supplier’s current report each quarter and records what it covers.',
@@ -3032,7 +3068,7 @@ const CH_SUP_DRILLS = {
         {q: 'What does Inkmere do with what we send?', kind: 'trap', res: ['“We only print what you send us.”', '(True, and beside the question.)']}]},
       {id: 'flows', name: 'The data-flow record (outbound jobs, 08:30 export)', qs: [
         {q: 'What goes to Inkmere, how, and how often?', kind: 'focus', key: true,
-         res: ['Monthly, first working day: the members’ notices and the town’s bills, pushed by the Compact to Inkmere’s drop site', 'Fields: name, postal address, notice type, the notice’s text (for bills, the amount due)', 'About 14,200 residents a month (game)']},
+         res: ['Monthly, first working day: the town’s address file, pushed by the Compact to Inkmere’s drop site (the members post their own letters)', 'Fields: name, postal address. The letters are the town’s standard mailings, the same for every household', 'About 14,200 residents a month (game)']},
         {q: 'Every outbound job, in full', kind: 'broad', rows: 640,
          wall: ['job {i}  {t}  push  member {n}', 'job {i}  {t}  pull  backup set {n}', 'job {i}  {t}  push  report {n}']}]},
       {id: 'accounts', name: 'The account lists (shared directory, CP-XFER-01)', qs: [
@@ -3054,7 +3090,7 @@ const CH_SUP_DRILLS = {
       {label: 'The monthly file goes to another company’s drop site', good: true, why: 'Ruled out: the job names Inkmere’s drop site.'},
       {label: 'Inkmere connects in to fetch the file', good: true, why: 'Ruled out: no Inkmere account on CP-XFER-01 or in the directory; the Compact pushes.'},
       {label: 'The questionnaire was filled in by the wrong person at Inkmere', why: 'Beside the point: the records decide it, whoever filled it in.'},
-      {label: 'The town’s bills hold no personal data', why: 'They hold names, postal addresses and amounts due.'}],
+      {label: 'An address file holds no personal data', why: 'Names and postal addresses are personal data.'}],
     path: '<p>“Does this supplier have access to our data?” is decided by <b>the data-flow record</b> (what goes to it) and <b>the account lists</b> (how it could reach us). A questionnaire says what the supplier believes.</p>',
     response: ['Inkmere on the rule: data Medium (names and addresses, no way in), criticality Low: Tier 2', 'Its questionnaire answer is corrected on the register, the record cited', 'Marit, its owner, is told: its contract ends on Friday'],
     techs: [], acts: ['chdataflow']
@@ -3073,7 +3109,7 @@ const CH_SUP_DRILLS = {
         {q: 'What does Wellhollow say about it?', kind: 'trap', res: ['A badge: “Brindlemark assured”.', '(A badge, not a scope.)']}]},
       {id: 'req', name: 'The requirement (C4, the clause catalogue, Day 68)', qs: [
         {q: 'What must an assurance report cover?', kind: 'focus', key: true,
-         res: ['The service the Compact uses', 'No older than 12 months when the Compact relies on it', 'Or the Compact’s right to assess']}]},
+         res: ['The service the Compact uses', 'Its period ended within the last 12 months', 'Or the Compact’s right to assess']}]},
       {id: 'scope', name: 'The report’s scope and period pages', qs: [
         {q: 'Which service, and which dates?', kind: 'focus', key: true,
          res: ['In scope: Wellhollow’s hosted file-sharing service', 'Not in scope: Wellhollow’s off-site backup service', 'Period: twelve months, ended 15 months before this week (the report’s own dates, game)']},
@@ -3083,12 +3119,12 @@ const CH_SUP_DRILLS = {
     verdicts: [
       {label: 'No: Wellhollow’s report covers another service, and its period ended 15 months ago', good: true, needs: ['req', 'scope'],
        needsWhy: 'the answer rests on two records: the requirement and the report’s scope and period. You read only one of them.',
-       why: 'C4 asks for the service the Compact uses, within 12 months. The report covers file sharing, not backup, and its period is past.'},
-      {label: 'Enough: a clean report with no exceptions meets the Compact’s requirement', why: 'Clean about file sharing. The Compact uses backup.'},
-      {label: 'No, and it should be dropped at its renewal for misleading us', why: 'Nothing shows it misled anyone. Ask for a report that covers backup, or the right to assess.'},
+       why: 'C4 asks for the service the Compact uses, over a period that ended within 12 months. The report covers file sharing, not backup, and its period ended 15 months ago.'},
+      {label: 'Enough: a clean opinion, and the assessors who gave it are independent', why: 'Clean about file sharing, and independent. The Compact uses backup.'},
+      {label: 'No, and Wellhollow should be dropped at its next renewal for having misled the Compact', why: 'Nothing shows it misled anyone. Ask for a report that covers backup, or the right to assess.'},
       {label: 'Can’t tell until every page of it has been read', why: 'The scope page and the period answer it; the rest is detail.'}],
     reasons: [
-      {label: 'Its scope names file sharing, not backup, and its period is older than 12 months', good: true, why: 'The requirement, then the scope and the dates.'},
+      {label: 'Its scope names file sharing, not backup, and its period ended over 12 months ago', good: true, why: 'The requirement, then the scope and the dates.'},
       {label: 'No exceptions were noted, which means the controls it tested must be sound', why: 'Perhaps, for file sharing. It tested nothing in backup.'},
       {label: 'Its website carries the badge, which the assessors would not allow if it were stale', why: 'A badge isn’t a scope or a date.'}],
     alts: [
@@ -3097,7 +3133,7 @@ const CH_SUP_DRILLS = {
       {label: 'The assessors who wrote it were not independent', why: 'Nothing points to it.'},
       {label: 'Brindlemark reports are worthless', why: 'Beside the point: this one covers the wrong service and dates.'}],
     path: '<p>“Is the report enough?” is decided by <b>the requirement</b> and <b>the report’s scope and period</b>. A clean opinion is clean about what it looked at, when it looked.</p>',
-    response: ['Wellhollow is asked for a current report covering backup, or C4 (the right to assess) goes into the renewal', 'Edda, its owner, is told; the service carries on as it is', 'The register records the gap, with the report’s scope and dates'],
+    response: ['Wellhollow is asked for a current report covering backup, or C4 (the right to assess) goes into the renewal', 'For the months since a report’s period ended, Wellhollow is asked in writing what has changed (game)', 'Edda, its owner, is told; the service carries on as it is', 'The register records the gap, with the report’s scope and dates'],
     techs: [], acts: ['chattest']
   },
   supclock: {
@@ -3120,7 +3156,7 @@ const CH_SUP_DRILLS = {
          res: ['“Tarnfield notifies the Airport’s named security contact in writing within 72 hours of detecting a security incident on any system used to provide the service.” (game)', 'Named security contact: Dario Fenn, the airport’s IT coordinator']}]},
       {id: 'times', name: 'The notice’s times and the airport’s mail log', qs: [
         {q: 'When did Tarnfield detect it, and when did the notice reach Dario?', kind: 'focus', key: true,
-         res: ['Detected, in the notice’s own words: Day 52 (Wednesday) 16:10', 'Reached Dario Fenn’s mailbox: Day 55 (Saturday) 18:30 (the mail log)']}]}
+         res: ['Detected, in the notice’s own words: Day 52 (Wednesday) 16:10', 'Sent: Day 55 18:29 (the notice’s header)', 'Reached Dario Fenn’s mailbox: Day 55 (Saturday) 18:30 (the mail log)', 'Day 55 18:50: Dario suspended Tarnfield’s admin account in the airport’s directory; it came back on Day 58 (Tuesday), once Tarnfield’s review covered its last sign-in (the airport’s record, game)']}]}
     ],
     verdicts: [
       {label: 'Not met: 74 hours 20 minutes from detecting to the named contact, against 72', good: true, needs: ['clause', 'times'],
@@ -3147,50 +3183,50 @@ const CH_SUP_DRILLS = {
 /* ---------- The supplier incident (Tuesday and Wednesday): graded steps, one decider each ---------- */
 // The Compact's own records only: the notice, the transfer server's log, the times, who decided what.
 const CH_SUP_INCIDENT = [
-  {title: 'Cobbleton’s notice · 08:20', who: 'Marit Quellan',
+  {title: 'Thimbleford’s notice · 08:20', who: 'Marit Quellan',
    ask: 'The notice is with you, forwarded from the payroll mailbox. What first?',
-   resp: [{label: 'Find what Cobbleton can reach in our systems: its accounts and its connections', good: true},
-          {label: 'Ask the payroll company how its environment was attacked, and by whom', why: 'That is Cobbleton’s to find. What we need first is what it can reach on our side.'},
-          {label: 'Wait for Cobbleton’s update: the incident, and its systems, are its own', why: 'Its systems are its own. Its way into ours is our question.'},
-          {label: 'Have Marit send the members’ staff a notice at 08:30: their bank details were taken', why: 'Nothing shows that. And whether anyone must be told is Noor’s to decide.'}]},
+   resp: [{label: 'Find what Thimbleford can reach in our systems: its accounts and its connections', good: true},
+          {label: 'Ask the payroll company how its environment was attacked, and by whom', why: 'That is Thimbleford’s to find. What we need first is what it can reach on our side.'},
+          {label: 'Wait for Thimbleford’s update: the incident, and its systems, are its own', why: 'Its systems are its own. Its way into ours is our question.'},
+          {label: 'Have Marit send the members’ staff a notice at 08:30: their bank details were taken', why: 'Nothing shows that. And whether anyone must be told is counsel’s to decide.'}]},
   {title: 'cp-xfer · 08:35', who: 'Edda Thornquist',
-   ask: 'cp-xfer is Cobbleton’s one way in: last used Thursday at 06:00, and a failed login at 23:52 last night. Edda decides. What do you advise?',
+   ask: 'cp-xfer is Thimbleford’s one way in: last used Thursday at 06:00, and a failed login at 23:52 last night. Edda decides. What do you advise?',
    resp: [{label: 'Suspend it now, and export its log after that: suspending destroys nothing', good: true},
           {label: 'Export its log first, then suspend it, and that way no line is lost', why: 'Suspending destroys nothing. Every minute it stays open is a minute it can be used.'},
           {label: 'Delete the account and its folder: then there is no account left for anyone to reach', why: 'Deleting it loses its record. Suspend it: the log and the folder stay as they are.'},
           {label: 'Leave it on until Day 81, as Marit’s next pay file isn’t due before then', why: 'Open until then means open to whoever tried it at 23:52.'}]},
   {title: 'The questions · 09:05', who: 'Marit Quellan',
-   ask: 'Marit will write to Cobbleton’s account manager, the only contact in the contract. What should she ask?',
-   resp: [{label: 'When Cobbleton detected it, if our pay files or cp-xfer’s password were in it, its addresses', good: true},
-          {label: 'How the attackers got in over there, which tools they used, and who they are', why: 'Cobbleton’s root cause is its own. Ask for what the Compact needs to act.'},
-          {label: 'A written promise from Cobbleton that none of the Compact’s staff data was taken by anyone', why: 'Nobody can promise that yet. Ask for facts with times.'},
+   ask: 'Marit will write to Thimbleford’s account manager, the only contact in the contract. What should she ask?',
+   resp: [{label: 'When Thimbleford detected it, if our pay files or cp-xfer’s password were in it, its addresses', good: true},
+          {label: 'How the attackers got in over there, which tools they used, and who they are', why: 'Thimbleford’s root cause is its own. Ask for what the Compact needs to act.'},
+          {label: 'A written promise from Thimbleford that none of the Compact’s staff data was taken by anyone', why: 'Nobody can promise that yet. Ask for facts with times.'},
           {label: 'Every log it holds, for all its customers, so we can look for ourselves', why: 'Not ours to read. Ask for what touches the Compact.'}]},
   {title: 'Facts for counsel · 12:00', who: 'Noor Castellanos',
    ask: 'Noor asked for the facts by 12:00. What do you give her?',
-   resp: [{label: 'A failed login at 23:52, none since Thursday, cp-xfer off 08:40, pay files not known', good: true},
-          {label: 'Likely an attack on us as well: the 23:52 login was whoever got into the payroll company’s systems', why: 'Nothing ties the 23:52 address to Cobbleton’s incident. Say what the log shows.'},
-          {label: 'Nothing to worry about: the login failed, and our staff’s data is safe', why: 'The pay files sit at Cobbleton. Whether they were reached is not known yet.'},
-          {label: 'Our staff’s bank details were taken from Cobbleton’s file store on Monday', why: 'Nothing shows that. Known, not known, and when you asked.'}]},
+   resp: [{label: 'One failed login at 23:52, no successful one since Thursday 06:00, cp-xfer off 08:40, pay files not known', good: true},
+          {label: 'An attack on us as well: the 23:52 login was whoever got into the payroll company’s systems on Monday night', why: 'Nothing ties the 23:52 address to Thimbleford’s incident. Say what the log shows.'},
+          {label: 'Nothing to worry about: the login failed, and our staff’s data is safe', why: 'The pay files sit at Thimbleford. Whether they were reached is not known yet.'},
+          {label: 'Our staff’s bank details were taken from Thimbleford’s file store on Monday', why: 'Nothing shows that. Known, not known, and when you asked.'}]},
   {title: 'Who decides · 12:05', who: 'Noor Castellanos',
    ask: 'Does anyone have to be told, and who decides that?',
-   resp: [{label: 'Noor decides, as counsel. You give her the facts by the time she set', good: true},
-          {label: 'Marit decides: payroll is her service, and its notices are hers to send', why: 'Marit owns the service. Whether the law asks for a notice is counsel’s.'},
+   resp: [{label: 'Counsel: Noor for the Compact, each member’s for its staff. You bring the facts', good: true},
+          {label: 'Marit decides: payroll is her service, and the notices to its staff are hers to send', why: 'Marit owns the service. Whether the law asks for a notice is counsel’s.'},
           {label: 'You decide it: you hold the facts, and counsel only reads them', why: 'You supply the facts. Counsel decides what they require.'},
-          {label: 'Cobbleton decides: the incident is its own, and so is any duty', why: 'Cobbleton has its own duties. The Compact’s are Noor’s to decide.'}]},
-  {title: 'Cobbleton’s summary · Wednesday 16:50', who: 'Edda Thornquist',
-   ask: 'Cobbleton’s summary: “no evidence that your files were accessed”, its review covering activity to Monday 18:00. Edda asks: does cp-xfer come back?',
-   resp: [{label: 'Not yet: Cobbleton’s review ends at 18:00, before the 23:52 login. Ask for one up to this hour', good: true},
+          {label: 'Thimbleford decides: the incident is its own, and so is any duty', why: 'Thimbleford has its own duties. The Compact’s are Noor’s to decide, and each member’s are its own counsel’s.'}]},
+  {title: 'Thimbleford’s summary · Wednesday 16:50', who: 'Edda Thornquist',
+   ask: 'Thimbleford’s summary: “no evidence that your files were accessed”, its review covering activity to Monday 18:00. Edda asks: does cp-xfer come back?',
+   resp: [{label: 'Not yet: its review stops at 18:00, before 23:52. Ask for one to the present', good: true},
           {label: 'Give it back now: its summary found no evidence that any of our files were read or copied', why: 'Its review stops at 18:00 on Monday. The 23:52 login is after it.'},
           {label: 'Give it back today, so the members’ staff are paid on time', why: 'The next pay file is Day 81. There is time to get an answer that covers 23:52.'},
           {label: 'Keep it off for good, and move payroll to another provider', why: 'That is Marit’s decision, with Ilka and Noor, and not today’s question.'}]}];
 
 /* ---------- The directive (game; Wednesday 11:30): sign Inkmere today without the notification clause? ---------- */
 const CH_SUP_DIRECTIVE = [
-  {label: 'It’s a must-have. Marit chooses: price it, sign her acceptance, or walk away', good: true},
+  {label: 'Not as it stands: I’ll put C1 in the plan, and Marit chooses: price it, sign, or walk away', good: true},
   {label: 'Sign it as it stands: the notification clause can wait for next year’s renewal', why: 'A must-have left out needs its owner’s signed acceptance. Marit hasn’t signed one.'},
   {label: 'Don’t sign: I won’t allow it without the clause, whatever Noor and Ilka say', why: 'You set the requirement. Marit owns the service, and Ilka and Noor the contract.'},
   {label: 'Sign it, and I’ll sign the acceptance for Marit to spare her the time', why: 'An acceptance is its owner’s. Marit signs, or the clause goes in.'},
-  {label: 'Sign it, and add the clause by a side letter once it is signed', why: 'A promise after signing is a request the supplier can refuse. Price it now, or Marit accepts it.'}];
+  {label: 'Don’t sign: tell Inkmere the Compact walks away unless the clause is free', why: 'Walking away is Marit’s call, as the service’s owner, not yours. Price the clause, and let her choose.'}];
 
 /* ---------- The Suppliers terminals (Ilka's; three puzzles) ---------- */
 const CH_SUP_DOJO = [
@@ -3207,8 +3243,9 @@ const CH_SUP_DOJO = [
   {q: 'The clause: 48 hours from detecting. Detected Tuesday 09:30; confirmed Wednesday 14:00; the notice reached the general inbox Thursday 08:00, and the named contact Thursday 11:00. Met?',
    opts: ['Not met: it reached the named contact 49½ hours after detecting',
           'Met: from its confirmation on Wednesday, it took 21 hours',
-          'Met: it reached the general inbox well inside 48 hours of detecting'], good: 0,
-   explain: 'The clock starts at detection and stops when the named contact has it: 49½ hours.'}];
+          'Met: it reached the general inbox well inside 48 hours of detecting',
+          'Not met: it reached the general inbox first, and a general inbox does not count as late'], good: 0,
+   explain: 'The clock starts at detection and stops when the named contact has it: 49½ hours. The general inbox doesn’t decide it either way.'}];
 
 /* ---------- The Compact Board's Supplier round (Thursday 14:00; Ivor Penhallow; three rounds) ---------- */
 const CH_SUP_BOARD_SPECS = () => [
@@ -3216,14 +3253,14 @@ const CH_SUP_BOARD_SPECS = () => [
    ask: '“Which of our suppliers should worry this Board most?”',
    resp: [{label: 'The Tier 1 ones, that can stop a service or reach our records, not the biggest invoice', good: true},
           {label: 'Inkmere: it is the biggest invoice we pay, at $210k a year, by a long way', why: 'Spend is what we pay, not what breaks. Inkmere is Tier 2.'},
-          {label: 'Cobbleton: the latest incident puts it in a tier of its own, above the rest', why: 'Recent isn’t ranked. Cobbleton is one of six Tier 1 suppliers.'},
+          {label: 'Thimbleford: the latest incident puts it in a tier of its own, above the rest', why: 'Recent isn’t ranked. Thimbleford is one of six Tier 1 suppliers.'},
           {label: 'All eight the same: any one of them can hurt the Compact as badly as any other could', why: 'Then none comes first. The tiers say which ones do.'}]},
   {title: 'Round 2: what Tuesday cost', who: 'Ivor Penhallow',
    ask: '“What did the missing clauses cost us on Tuesday?”',
    resp: [{label: 'About 11 hours before anyone could act, then two days of asking', good: true},
           {label: 'No damage: the 23:52 login failed, and so no harm was done', why: 'Eleven hours with the account open, and two days of asking. The cost is the time.'},
-          {label: 'Our staff’s bank details, taken from Cobbleton’s file store on Monday night', why: 'Nothing shows that. Say what the records show.'},
-          {label: 'Only money: Noor will claim the costs back under the contract', why: 'The contract has no such clause. Whether anything is owed is Noor’s question.'}]},
+          {label: 'Our staff’s bank details, taken from Thimbleford’s file store on Monday night', why: 'Nothing shows that. Say what the records show.'},
+          {label: 'Only money: Noor will claim the costs back under the contract', why: 'Whether anything can be claimed is Noor’s question. What the Board asked is what it cost us: the time.'}]},
   {title: 'Round 3: the members’ contracts', who: 'Ivor Penhallow',
    ask: '“Will you fix the members’ supplier contracts for them, as our CISO?”',
    resp: [{label: 'No: each member’s owner decides its contracts. Each has our requirements', good: true},
@@ -3231,39 +3268,43 @@ const CH_SUP_BOARD_SPECS = () => [
           {label: 'The Board should instruct the members to add the clauses by the end of the year', why: 'The Board governs the programme. Each member’s contracts are its owner’s.'},
           {label: 'Only the Tier 1 ones, and only once one of them has had an incident', why: 'By then the clause is missing when it is needed. Send the requirements now.'}]}];
 
-/* ---------- The supplier incident's timeline: as it was, beside Contract A's C1 and C3 (game) ---------- */
-// The Compact's own times (charter-timeline.md, Day 72 to Day 74). Contract A's column is what its two clauses would
-// have changed, and is labelled so; nothing here says what happened on Cobbleton's side.
+/* ---------- The supplier incident's timeline: as it was, beside Contract A's C1, C2 and C3 (game) ---------- */
+// The Compact's own times (charter-timeline.md, Day 72 to Day 74). Contract A's column is what its three clauses would
+// have changed, and is labelled so; nothing here says what happened on Thimbleford's side.
 const CH_SUP_TIMELINE = [
-  ['The notice', 'Sent 21:14 Monday to the payroll mailbox, read 08:10 Tuesday', 'C1: the on-call lead paged at 21:14 Monday'],
+  ['The notice', 'Sent 21:14 Monday to the payroll mailbox, read 08:10 Tuesday', 'C1 and C2: the same notice to the named contact, the on-call page, at 21:14, with its detection time (15:05)'],
   ['cp-xfer suspended', '08:40 Tuesday, by Edda, on duty', 'About 21:20 Monday, by the on-call lead, on duty'],
   ['The 23:52 login', 'Failed; found at 08:30 Tuesday in our log', 'Against a suspended account'],
-  ['Cobbleton’s entries for us', 'None; a summary at 16:40 Wednesday, to 18:00 Monday', 'C3: within one working day, by 09:10 Wednesday'],
-  ['An answer covering 23:52', '11:00 Thursday', 'By 09:10 Wednesday']];
+  ['Thimbleford’s entries for us', 'None given; a summary at 16:40 Wednesday, to 18:00 Monday', 'C3: within one working day, by 09:10 Wednesday'],
+  ['Entries covering 23:52', 'None; Thimbleford’s statement at 11:00 Thursday', 'C3: the entries, by 09:10 Wednesday, for us to read']];
 const CH_SUP_LOST = [
   'Notice to someone who could act: 10 h 56 min (21:14 Monday to 08:10 Tuesday).',
-  'cp-xfer open 11 h 20 min longer than under Contract A (about 21:20 Monday to 08:40 Tuesday), with the 23:52 login inside that time.',
-  'Cobbleton’s entries: the summary 7 h 30 min after C3’s time, and an answer covering 23:52 25 h 50 min after it (49 h 50 min after the 09:10 request).',
-  'Not changed by Contract A: what happened on Cobbleton’s side, or Edda’s call at 08:40.'];
+  'Thimbleford’s 21:14 notice was 6 h 9 min after it detected the incident: inside C1’s 24 hours. What was missing was the address and the detection time, not the window.',
+  'cp-xfer open about 11 h 20 min longer than under Contract A (about 21:20 Monday to 08:40 Tuesday), with the 23:52 login inside that time.',
+  'Thimbleford’s entries: never given. Its statements came 7 h 30 min (the summary, not covering 23:52) and 25 h 50 min (covering it) after C3’s time (49 h 50 min after Tuesday’s 09:10 request).',
+  'Not changed by Contract A: what happened on Thimbleford’s side, or the call itself (suspend, then export), made about 21:20 by the on-call lead instead of 08:40 by Edda.'];
 
 /* ---- editions/charter/suppliers-story.js ---- */
 /* ============================================================
    UPTIME · editions/charter/suppliers-story.js
    Charter district 2: Suppliers (Days 71 to 74). Monday: drill A (Inkmere and
    residents' data), the supplier register's tiers, drill B (Wellhollow's
-   assurance report). Tuesday: Cobbleton Payroll's notice of an incident on its
+   assurance report). Tuesday: Thimbleford Payroll's notice of an incident on its
    side, told only through the Compact's own records, notices, times and
    decisions. Wednesday: drill C (Tarnfield's notice clock), the directive
    (Ilka wants Inkmere's renewal signed today without the notification clause),
-   the clause plan, the Suppliers terminals, Cobbleton's summary. Thursday:
-   Cobbleton's second answer, cp-xfer returned, the timeline against Contract A,
+   the clause plan, the Suppliers terminals, Thimbleford's summary. Thursday:
+   Thimbleford's second answer, cp-xfer returned, the timeline against Contract A,
    the Compact Board's Supplier round, the Hawser Badge and the week's summary
    ("Next: Policy").
    One decider per decision, whoever is on duty: Edda (by day) decides
-   cp-xfer's suspension and its return; Marit owns payroll and the print-and-
-   post service and signs for any must-have left out of their contracts; Ilka
-   and Noor hold the Compact's contracts; Noor decides any notification duty;
-   each member's owner decides its own contracts; the CISO advises.
+   cp-xfer's suspension and its return, after the Compact's own evidence check;
+   Marit owns payroll and the print-and-post service, decides and signs for any
+   must-have the CISO's plan recommends leaving out of their contracts, and
+   signs for cp-xfer's return measured against Monday's privacy tolerance; Ilka
+   and Noor hold the Compact's contracts; counsel decides any notification duty
+   (Noor for the Compact, each member's counsel for its own staff); each
+   member's owner decides its own contracts; the CISO measures and advises.
    Timeline: scratchpad charter-timeline.md (slice 2).
    ============================================================ */
 'use strict';
@@ -3321,7 +3362,7 @@ async function chSupTierTask() {
 }
 async function chSupRegisterView() {
   const sup = chSup();
-  await UI.openModal('The supplier register', chSupRegisterHtml() + (sup.accept.length ? '<h3>Acceptances: must-haves left out</h3>' + chClauseAcceptHtml(sup.accept) : ''), [{label: 'Back', meta: {back: true}}], {closable: false, cls: 'drill'});
+  await UI.openModal('The supplier register', '<p class="small">Spend, tiers and dates: game data.</p>' + chSupRegisterHtml() + (sup.accept.length ? '<h3>Acceptances: must-haves left out</h3>' + chClauseAcceptHtml(sup.accept) : ''), [{label: 'Back', meta: {back: true}}], {closable: false, cls: 'drill'});
 }
 
 /* ---------- The supplier incident (Tuesday; then Wednesday 16:50) ---------- */
@@ -3338,46 +3379,59 @@ async function chSupStage(i) {
 }
 async function chSupIncident() {
   const m = 'Marit Quellan';
-  await say('08:20. This came to the payroll mailbox last night: the only address Cobbleton’s contract has for us. The payroll officer read it at 08:10.', m);
-  await UI.openModal('Cobbleton Payroll’s notice', '<pre class="art">From      Cobbleton Payroll, account manager\nTo        the payroll team’s shared mailbox\nSent      Day 71 (Monday) 21:14\n\n“We have identified a security incident affecting\n part of our hosted environment. We are investigating\n with outside specialists and will update customers.”</pre>' +
-    '<p class="small">No detection time and no security contact. Cobbleton’s contract (2021) has neither a notification clause nor a security contact: its notices go to the payroll mailbox. (game)</p>', [{label: 'Read on', meta: {good: true}}], {closable: false, cls: 'drill'});
+  await say('08:20. This came to the payroll mailbox last night: the only address Thimbleford’s contract has for us. The payroll officer read it at 08:10.', m);
+  await UI.openModal('Thimbleford Payroll’s notice', '<pre class="art">From      Thimbleford Payroll, account manager\nTo        the payroll team’s shared mailbox\nSent      Day 71 (Monday) 21:14\n\n“We have identified a security incident affecting\n part of our hosted environment. We are investigating\n with outside specialists and will update customers.”</pre>' +
+    '<p class="small">No detection time and no security contact. Thimbleford’s contract (2021) has neither a notification clause nor a security contact: its notices go to the payroll mailbox. (game)</p>', [{label: 'Read on', meta: {good: true}}], {closable: false, cls: 'drill'});
   await chSupStage(0);
-  await say('08:30, from the register and CP-XFER-01’s log: Cobbleton reaches us through one account, cp-xfer, on the transfer server. Nothing in the shared directory. Last successful login Thursday (Day 67) at 06:00, from its documented range. And a failed login at 23:52 last night, from 203.0.113.77, outside that range. (game)');
+  await say('08:30, from the register and CP-XFER-01’s log: Thimbleford reaches us through one account, cp-xfer, on the transfer server. Nothing in the shared directory. Last successful login Thursday (Day 67) at 06:00, from its documented range. And a failed login at 23:52 last night, from 203.0.113.77, outside that range. (game)');
   await chSupStage(1);
-  await say('08:40: I’ve suspended cp-xfer: disabled, nothing deleted. 08:50: its log, 90 days, exported and kept. 09:00: 203.0.113.77 blocked at our edge.', 'Edda Thornquist');
+  await say('08:40: I’ve suspended cp-xfer: disabled, nothing deleted. 08:50: its log, 90 days, exported and kept. 09:00: 203.0.113.77 blocked at our edge, and ninety days of edge logs searched for it: the 23:52 attempt only. (game)', 'Edda Thornquist');
   await chSupStage(2);
   await say('09:10: sent to its account manager, Noor copied: when it detected the incident; whether our pay files and cp-xfer’s password were in the affected part; the addresses it connects from; when it next updates; and a security contact.', m);
-  await say('09:15. Facts by 12:00, please: what is known, what is not, and since when. Whether anyone must be told is mine to answer.', 'Noor Castellanos');
+  await say('09:15. Facts by 12:00, please: what is known, what is not, and since when. Whether anyone must be told is mine for the Compact, and each member’s counsel’s for its own staff. I’ll send them the same facts.', 'Noor Castellanos');
   await chSupStage(3);
   await chSupStage(4);
-  await say('12:30. My decision, as counsel: no notice to staff yet. I decide again when Cobbleton answers. (game)', 'Noor Castellanos');
+  await say('12:30. My decision for the Compact, and each member’s counsel has said the same for its staff: no notice yet. We decide again when Thimbleford answers. (game)', 'Noor Castellanos');
   G.f.chSupIncident = true; unlock('act', 'chvendorir'); touchCSF('Respond'); track();
   await say('End the day at your desk.');
 }
 async function chSupReturn() {
-  await say('16:40. Cobbleton’s summary, to Noor and to me. It says it detected the incident on Monday at 15:05, its time; the affected part held the file store with customers’ pay files; “we have found no evidence that your files were accessed”; cp-xfer’s password isn’t kept there; it connects only from its documented range. Its review covers activity up to Monday 18:00.', 'Marit Quellan');
+  await say('16:40. Thimbleford’s summary, to Noor and to me. It says it detected the incident on Monday at 15:05, its time; the affected part held the file store with customers’ pay files; “we have found no evidence that your files were accessed”; cp-xfer’s password isn’t kept there; it connects only from its documented range. Its review covers activity up to Monday 18:00.', 'Marit Quellan');
   await chSupStage(5);
-  await say('16:55: Marit asks Cobbleton, Noor copied, for a review that runs to the present, and whether 203.0.113.77 is one of its addresses. cp-xfer stays suspended: Edda’s decision. The next pay file is Day 81. (game)');
+  await say('16:55: Marit asks Thimbleford, Noor copied, for a review that runs to the present, and whether 203.0.113.77 is one of its addresses. cp-xfer stays suspended: Edda’s decision. The next pay file is Day 81. (game)');
   G.f.chSupReturn = true; track();
   await say('End the day at your desk.');
 }
+// cp-xfer's return, measured against Monday's privacy tolerance: above it (no MFA for a machine account), so payroll's
+// owner signs for it until the Board's review. On the risk register's acceptances (G.ch.accept), like Joanna's.
+function chXferAccept() {
+  if (G.ch.accept.some(x => x.line === 'CP-XFER')) return;
+  G.ch.accept.push({line: 'CP-XFER', name: 'cp-xfer back on CP-XFER-01 without MFA', owner: 'Marit Quellan', residual: 'Medium', appetite: chAppetite('privacy'), breaks: [chTol('privacy')],
+    decider: 'Marit', decidedBy: 'Marit Quellan, payroll’s owner, on the CISO’s measure', approvedBy: null, signedBy: 'Marit Quellan', signedFor: 'the interim measures until the Board’s review', day: 74,
+    expiry: CH_EXPIRY_DAY, review: CH_REVIEW_DAY, interim: 'Key-only sign-in from Thimbleford’s documented range, every session logged and read each month by Edda’s team; 203.0.113.77 blocked at our edge.'});
+}
 async function chSupThursday() {
-  await say('11:00. Cobbleton’s second answer: its review now runs to Wednesday 12:00. 203.0.113.77 is not one of its addresses. Nothing on its side used cp-xfer’s credentials after Thursday’s 06:00 pickup. That is its statement.', 'Marit Quellan');
-  await say('11:30. My decision, as counsel: Marit tells the members’ staff today what is known and what is not. Anything more waits for Cobbleton’s final report. (game)', 'Noor Castellanos');
-  await say('12:00: cp-xfer is back. A new password, set by us and given to Cobbleton’s account manager on a call-back to a known number; logins only from its documented range; 203.0.113.77 stays blocked. The next pickup is Day 81 at 06:00.', 'Edda Thornquist');
+  await say('11:00. Thimbleford’s second answer: its review now runs to Wednesday 12:00. 203.0.113.77 is not one of its addresses. Nothing on its side used cp-xfer’s credentials after Thursday’s 06:00 pickup. That is its statement.', 'Marit Quellan');
+  await say('11:30. My decision for the Compact, and each member’s counsel has agreed for its staff: Marit tells the members’ staff today what is known and what is not. Anything more waits for Thimbleford’s final report. (game)', 'Noor Castellanos');
+  // Decision 6 / review 13: the Compact's own evidence before any return, then the return measured against the tolerance.
+  await say('11:45. Our side too, before anything comes back: CP-XFER-01’s log since the 08:50 export, no attempt on cp-xfer since 23:52 Monday; our edge, nothing from 203.0.113.77 since it was blocked. With Thimbleford’s answer, the evidence covers the latest activity. (game)', 'Edda Thornquist');
+  await say('11:50: you measure the return Edda proposes against Monday’s privacy tolerance. CP-XFER-01 holds every member’s staff bank details, and cp-xfer reaches it from outside without MFA, which a machine account can’t answer. Key-only sign-in from one range, every session logged, keeps the logging half, not the MFA half: above the tolerance. Staff records aren’t in the appetite’s list either. Both go to the Board’s Day 155 review. (game)');
+  await say('Payroll is mine, so that risk is mine to carry. I agree the conditions, and I sign for it until the Board’s review, with Edda’s team reading cp-xfer’s sessions each month.', 'Marit Quellan');
+  chXferAccept();
+  await say('12:00: cp-xfer is back, my decision. Key sign-in only, no password: Thimbleford’s new key, confirmed on a call-back to a known number. Sign-ins only from its documented range, each one logged; 203.0.113.77 stays blocked. The next pickup is Day 81 at 06:00.', 'Edda Thornquist');
   touchCSF('Recover');
   await UI.openModal('The Compact’s timeline, beside Contract A', chSupTimelineHtml(), [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
   await say('12:30: you send each member’s owner its tier’s requirements for the next change to its own contracts: Celia for Stillmark, Director Strand for Shelfwright, Marisol for Wrenfold, Joanna for Tarnfield. Their contracts, their decisions. (game)');
-  const cp = (chSup().planSent || {}).cobbleton || [], both = ['C1', 'C3'].every(c => cp.includes(c));
-  await say(both ? 'Contract A’s two clauses go into Cobbleton’s amendment, then: they are in the plan you sent. 14:00, the Board.' : 'Your plan left ' + ['C1', 'C3'].filter(c => !cp.includes(c)).join(' and ') + ' out of Cobbleton’s amendment. I signed for that, with a date; the Board will see it. 14:00.', 'Marit Quellan');
+  const cp = (chSup().planSent || {}).thimbleford || [], ca = ['C1', 'C2', 'C3'], out = ca.filter(c => !cp.includes(c));
+  await say(!out.length ? 'Contract A’s clauses C1, C2 and C3 go into Thimbleford’s amendment, then: they are in the plan you sent. 14:00, the Board.' : 'Your plan recommended leaving ' + out.join(' and ') + ' out of Thimbleford’s amendment. I decided on that and signed for it, with a date; the Board will see it. 14:00.', 'Marit Quellan');
   G.f.chSupThu = true; track();
 }
 
 /* ---------- The directive (game; Wednesday 11:30): Ilka wants Inkmere signed today ---------- */
 async function chSupDirective() {
   const who = 'Ilka Thrushcombe', sup = chSup();
-  await say('Ilka Thrushcombe, procurement. Noor and I hold the Compact’s contracts. Inkmere’s ends on Friday.', who);
-  await say('Inkmere holds its price only if we sign today, as it stands. Your notification clause adds $4k a year. I’d like to sign this afternoon. Shall I?', who);
+  await say('Ilka Thrushcombe, procurement. Noor and I hold the Compact’s contracts, and I sign renewals under the authority the Board delegated (game). Inkmere’s ends on Friday.', who);
+  await say('Inkmere renews at today’s price if we sign by Friday as it stands. Reopen it for your clause and it prices C1 at $4k a year. I’d like to sign this afternoon. Shall I?', who);
   const items = CH_SUP_DIRECTIVE.map(o => ({label: o.label, meta: {good: !!o.good}}));
   let first = true;
   while (true) {
@@ -3387,7 +3441,7 @@ async function chSupDirective() {
     await say(CH_SUP_DIRECTIVE[i].why);
   }
   sup.directive = {first: first};
-  await say('11:50, Marit, its owner: “Price it, in your plan. If it won’t fit, I’ll sign for what’s left, with a date.” Inkmere’s offer stands until Friday. (game)');
+  await say('11:50, Marit, its owner: “Price it, in your plan. If Inkmere won’t settle by Friday, Ilka takes a three-month extension on today’s terms and I sign for C1 for those three months. Walking away means the town prints and posts its own mailings next month: my call, and not this one.” (game)');
   await say('Then I sign once your plan is in. 14:00 is fine.', who);
   G.f.chSupDirective = true; touchCSF('Govern'); track();
   await say('14:00: your desk. The clause plan for the Compact’s four contracts.');
@@ -3396,17 +3450,18 @@ async function chSupDirective() {
 /* ---------- The clause plan (Wednesday 14:00, your desk) ---------- */
 async function chSupPlanTask() {
   const sup = chSup();
-  await say('14:00. Four of the Compact’s contracts change this year: Cobbleton’s amendment, Wellhollow’s renewal, Inkmere’s renewal and Glasswick’s. One envelope, ' + chMoney(CH_SUP_ENVELOPE) + ' a year. (game)');
+  await say('14:00. Four of the Compact’s contracts change this year: Thimbleford’s amendment, Wellhollow’s renewal, Inkmere’s renewal and Pewterlane’s. One envelope, ' + chMoney(CH_SUP_ENVELOPE) + ' a year, set by Marit from the services’ budgets. (game)');
   const plan = await chPlanEdit();
   sup.planSent = plan; track();
   const st = chPlanStats(plan);
-  const left = CH_SUP_CONTRACTS.flatMap(k => st.per[k.id].miss.map(c => [k.id, c]));
-  for (const [id, c] of left) sup.accept.push(chClauseAccept(id, c, 73));
+  const left = CH_SUP_CONTRACTS.flatMap(k => st.per[k.id].miss.map(c => [k.id, c])), adv = chPlanAdvice(plan);
+  sup.planAdvice = {poor: adv.poor, left: adv.left.map(x => x.line), extras: adv.extras};
+  for (const [id, c] of left) sup.accept.push(chClauseAccept(id, c, 73, adv));
   await say('14:40: Ilka and Noor take the plan to the suppliers: ' + chMoney(st.cost) + ' a year, ' + st.mustIn + ' of ' + st.mustTotal + ' must-haves in or sought. (game)');
   if (left.length) {
     const owners = [...new Set(left.map(([id]) => chSupLine(id).owner))];
-    await UI.openModal('15:00: must-haves left out', chClauseAcceptHtml(sup.accept.filter(x => x.day === 73)), [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
-    for (const o of owners) await say('I sign for ' + left.filter(([id]) => chSupLine(id).owner === o).map(([id, c]) => chSupLine(id).short + ' ' + c).join(', ') + ' as its owner, with the interim measure and a date. The Board sees it.', o.replace(/^Director /, ''));
+    await UI.openModal('15:00: must-haves left out', (adv.extras.length ? '<p>Extras your plan sought instead: ' + esc(adv.extras.join(', ')) + '.</p>' : '') + chClauseAcceptHtml(sup.accept.filter(x => x.day === 73)), [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
+    for (const o of owners) await say('You recommend leaving out ' + left.filter(([id]) => chSupLine(id).owner === o).map(([id, c]) => chSupLine(id).short + ' ' + c).join(', ') + (adv.poor ? ', though the money covered it' : '') + '. My decision, on your recommendation: I sign for it as its owner, with the interim measure and a date. The Board sees it.', o.replace(/^Director /, ''));
   } else await say('Every must-have in or sought. Nothing for an owner to sign. (game)');
   G.f.chSupPlan = true; unlock('act', 'chclause'); touchCSF('Govern'); track();
   await say('15:30: Ilka has three terminals for you, south-west.');
@@ -3441,11 +3496,11 @@ async function chSupBoardRound() {
   await say('14:00. The members’ representatives, Edda, Marit, Ilka, and Noor for anything legal. Suppliers, and Tuesday. Three questions.', who);
   sup.board = {first: []};
   await chStages(CH_SUP_BOARD_SPECS(), sup.board.first);
-  await say('15:00: the register goes in the minute: eight suppliers tiered, owners and review dates, the plan for the Compact’s four contracts, and each acceptance an owner signed. Each member’s owner has its tier’s requirements for its own contracts. (game)', who);
+  await say('15:00: the register goes in the minute: eight suppliers tiered, owners and review dates, the plan for the Compact’s four contracts, each acceptance its owner signed on your recommendation, and cp-xfer’s, measured against Monday’s privacy tolerance. Each member’s owner has its tier’s requirements for its own contracts. (game)', who);
   f.chSupBoard = true; f.chHawser = true;
   G.focusMax += 4; G.focus = G.focusMax; unlock('act', 'chsupboard'); touchCSF('Govern'); track();
   await say('You cleared the Compact Board’s Supplier round. This is the Hawser Badge (game).', who);
-  await say('Its power, from the next district on: every Tier 1 supplier’s security contact is on the incident page. And Focus +4.', who);
+  await say('Its power, from the next district on: every Tier 1 supplier’s security contact, or its account manager where its contract names none yet, is on the incident page. And Focus +4.', who);
   await say('16:00: your desk. Close the week.');
 }
 
@@ -3464,11 +3519,11 @@ async function chSupSummary() {
   const ok = l => l.every(x => x !== false), ts = chTierStats(sup.sent), ps = sup.planSent ? chPlanStats(sup.planSent) : null, ss = chSupStats();
   const body = '<p class="big">Suppliers: done.</p>' +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b> · Day <b>' + G.day + '</b> (' + (CH_DAY[G.day] || '') + ')</p>' +
-    '<p>Monday: the register tiered, ' + (ts ? ts.right + ' of 8 by the rule as you sent it' : 'not sent') + '. Tuesday: Cobbleton’s notice, ' + (ok(sup.incident.first) ? 'every step right at the first try' : 'with false starts the debriefs named') + '; cp-xfer suspended at 08:40 and returned on Thursday at 12:00. Wednesday: Inkmere’s renewal ' + (sup.directive && sup.directive.first ? 'sent to its owner at the first try' : 'sent to its owner, after a false start') + '; the plan ' + (ps ? chMoney(ps.cost) + ' of ' + chMoney(CH_SUP_ENVELOPE) + ', ' + ps.mustIn + ' of ' + ps.mustTotal + ' must-haves' : 'not sent') + '.</p>' +
+    '<p>Monday: the register tiered, ' + (ts ? ts.right + ' of 8 by the rule as you sent it' : 'not sent') + '. Tuesday: Thimbleford’s notice, ' + (ok(sup.incident.first) ? 'every step right at the first try' : 'with false starts the debriefs named') + '; cp-xfer suspended at 08:40 and returned on Thursday at 12:00. Wednesday: Inkmere’s renewal ' + (sup.directive && sup.directive.first ? 'sent to its owner at the first try' : 'sent to its owner, after a false start') + '; the plan ' + (ps ? chMoney(ps.cost) + ' of ' + chMoney(CH_SUP_ENVELOPE) + ', ' + ps.mustIn + ' of ' + ps.mustTotal + ' must-haves' : 'not sent') + '.</p>' +
     '<h3>Drills (game)</h3><table class="sc"><tr><th>Drill</th><th>Score</th><th>Supported</th></tr>' + chSupDrillRows() + '</table>' +
-    '<h3>Must-haves left out, signed by their owners</h3>' + chClauseAcceptHtml(sup.accept) +
+    '<h3>Must-haves left out: your recommendation, their owners’ decisions</h3>' + chClauseAcceptHtml(sup.accept) +
     '<p>The members’ own contracts: ' + ss.memFull + ' of ' + ss.members + ' with every must-have for their tier. Their owners’ decisions; each has the requirements.</p>' +
-    '<p>Lesson (game): tier suppliers by what stops for residents and what they hold or can reach, not by the invoice. Put each tier’s requirements into the contracts; an owner signs for any must-have left out. When a supplier has an incident, find what it can reach on your side, suspend it while the evidence stays, ask for the facts you need, say only what the records show, and give access back when the evidence covers the latest activity. Counsel decides any notice; the clock starts where the contract says.</p>' +
+    '<p>Lesson (game): tier suppliers by what stops for residents and what they hold or can reach, not by the invoice. Put each tier’s requirements into the contracts; a must-have you leave out is your recommendation, and its owner decides on it and signs. Measure a returned way in against the tolerances, as any other. When a supplier has an incident, find what it can reach on your side, suspend it while the evidence stays, ask for the facts you need, say only what the records show, and give access back when the evidence, theirs and your own, covers the latest activity. Counsel decides any notice; the clock starts where the contract says.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: ' + qtCount() + ' notes in the suspicion file. Who, and why: not yet known.</p>') +
     '<p class="big">Next: Policy.</p>';

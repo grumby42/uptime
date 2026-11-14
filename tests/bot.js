@@ -14,7 +14,7 @@
 // save are left byte-for-byte as they were. The run is capped at 45 minutes (the Town Hall phone run needs about 26).
 // Charter (edition 3): UPTIME_EDITION=charter plays the prologue (the appointment, the remit, the risk-appetite statement,
 // the register's owners) and Budget (three drills, the allocation, the directive, the terminals, the Board's budget round)
-// to the week's summary, with a save/reload mid-Budget, then District 2, Suppliers (the drills, the tiering, Cobbleton's
+// to the week's summary, with a save/reload mid-Budget, then District 2, Suppliers (the drills, the tiering, Thimbleford's
 // notice, the directive, the clause plan, the terminals, the Supplier round) to its summary, with a save/reload
 // mid-Suppliers; it checks the series record, the acceptances and the supplier scorecard.
 const { chromium } = require('playwright');
@@ -376,7 +376,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     console.log(JSON.stringify(chRes, null, 1));
     await browser.close();
     const accOk = ch && ch.accept.length >= 1 && ch.accept.every(a => a.signedBy === a.owner && a.signedBy !== 'CISO') && sup && sup.accept.every(a => a.signedBy === a.owner);
-    const supOk = sup && sup.sent && sup.planSent && fin.metrics.chSupTier === 100 && fin.metrics.chSupCrit === 100 && fin.metrics.chSupNotify === 100 && fin.f.chHawser;
+    const supOk = sup && sup.sent && sup.planSent && fin.metrics.chSupTier === 100 && fin.metrics.chSupCrit === 100 && fin.metrics.chSupNotify === 100 && fin.metrics.chSupMust === 100 && fin.f.chHawser;
     process.exit(errors.length || requests.length || !savedCheckCh || !savedCheckCh.restored || !savedCheckCh.exportRoundTrip || !savedCheckChSup || !savedCheckChSup.restored || !savedCheckChSup.exportRoundTrip || !fin.objective.done || !fin.extra.chSummary || !fin.extra.chSupSummary || !ser.editions || !ser.editions.charter || ser.editions.charter.budget !== true || ser.editions.charter.suppliers !== true || !accOk || !supOk || !chRes.noHorizontalScroll ? 1 : 0);
   }
   if (CR) {
