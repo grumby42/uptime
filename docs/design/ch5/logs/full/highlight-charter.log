@@ -1,0 +1,128 @@
+{
+ "suite": "highlight",
+ "passed": 10,
+ "failed": 0,
+ "results": [
+  {
+   "name": "static scan: 445 openModal / choose call sites; every list with good/correct flags is shuffled, opens on a chosen item, or is an allowlisted nav menu",
+   "ok": true
+  },
+  {
+   "name": "static scan: every NAV_ALLOW id is still used (no stale exemptions)",
+   "ok": true
+  },
+  {
+   "name": "recorded the lists of a full run",
+   "ok": true
+  },
+  {
+   "name": "run: every graded list is shuffled, opens on a chosen item, or is an allowlisted nav menu (bare nav: true fails)",
+   "ok": true
+  },
+  {
+   "name": "run: first highlight is good no more often than chance",
+   "ok": true
+  },
+  {
+   "name": "run: fixed-order graded lists open on a neutral item (Back / Leave it), never on a good one (Crossroads: the report scale; none on the manager track)",
+   "ok": true
+  },
+  {
+   "name": "Charter: no alert battles, so no verdict scale is opened (n/a)",
+   "ok": true
+  },
+  {
+   "name": "200 seeds: no graded list highlights the answer more often than chance (+0.15)",
+   "ok": true
+  },
+  {
+   "name": "200 seeds overall: good-highlight rate within chance (+0.05)",
+   "ok": true
+  },
+  {
+   "name": "no console errors or network requests",
+   "ok": true
+  }
+ ],
+ "gradedLists": 158,
+ "uniqueGraded": 152,
+ "seedRate": 0.344,
+ "seedChance": 0.34,
+ "navAllowlist": {
+  "end-shift": "Desk menu: End shift / (Quiet Thread console) / Not yet. Both choices are fine; good is the bot hint to end the day.",
+  "district-end": "End-of-district summary: Keep exploring / Title screen (the edition ending adds Credits). Pure navigation.",
+  "tune-tool": "Use the Tuning Guide now or later. Same result either way, only timing.",
+  "evolve-tool": "Evolve Sieve now or later. Same result either way, only timing.",
+  "integrate-tools": "Integrate Sentry with Ledger now or later. Same result either way, only timing.",
+  "patch-plan-confirm": "After the graded triage (shuffled): deploy the plan you made, or redo it. Confirmation of your own answers.",
+  "waf-review-confirm": "After the graded WAF rule review (shuffled): switch to blocking with your plan, or redo it. Confirmation.",
+  "starter-pick": "Starter tool: all three are valid, by preference. good is only the bot's pick.",
+  "name-plate": "Crossroads: keep the carried name or use the one typed. Not graded; good is the bot's pick.",
+  "track-pick": "Crossroads: the two offers (IR manager / DFIR). A preference, never graded; good marks the open (unlocked) offers.",
+  "track-confirm": "Crossroads: take the chosen track or go back to the offers. Confirmation of your own choice.",
+  "ng-confirm": "Crossroads edition ending: start New Game+ on a fresh save, or go back to the ending. Not graded; opens on Back."
+ },
+ "navMenusSeenInRun": [
+  "name-plate: The nameplate on the CISO’s door [Keep “Lead”* | Use the name I typed]",
+  "district-end: End of Budget [Keep exploring the Compact offices* | Credits | Title screen]",
+  "district-end: End of Suppliers [Keep exploring the Compact offices* | Credits | Title screen]",
+  "district-end: End of Policy [Keep exploring the Compact offices* | Credits | Title screen]",
+  "district-end: End of the Board report [Keep exploring the Compact offices* | Credits | Title screen]",
+  "district-end: The end of Charter [Keep exploring the Compact offices* | Credits | Title screen]"
+ ],
+ "staticSites": {
+  "total": 445,
+  "graded": 260,
+  "shuffled": 212,
+  "cursor": 4,
+  "nav": [
+   "end-shift @ editions/town-hall/basement-story.js:180",
+   "district-end @ editions/town-hall/basement-story.js:720",
+   "end-shift @ editions/town-hall/clerks-story.js:210",
+   "patch-plan-confirm @ editions/town-hall/clerks-story.js:331",
+   "integrate-tools @ editions/town-hall/clerks-story.js:524",
+   "district-end @ editions/town-hall/clerks-story.js:644",
+   "end-shift @ editions/town-hall/council-story.js:152",
+   "district-end @ editions/town-hall/council-story.js:583",
+   "end-shift @ editions/town-hall/mailroom-story.js:156",
+   "evolve-tool @ editions/town-hall/mailroom-story.js:391",
+   "district-end @ editions/town-hall/mailroom-story.js:514",
+   "end-shift @ editions/town-hall/market-story.js:209",
+   "waf-review-confirm @ editions/town-hall/market-story.js:497",
+   "district-end @ editions/town-hall/market-story.js:752",
+   "end-shift @ editions/town-hall/records-story.js:197",
+   "district-end @ editions/town-hall/records-story.js:702",
+   "end-shift @ editions/town-hall/server-story.js:160",
+   "district-end @ editions/town-hall/server-story.js:604",
+   "starter-pick @ editions/town-hall/story.js:194",
+   "end-shift @ editions/town-hall/story.js:285",
+   "tune-tool @ editions/town-hall/story.js:427",
+   "district-end @ editions/town-hall/story.js:571",
+   "end-shift @ editions/town-hall/water-story.js:174",
+   "district-end @ editions/town-hall/water-story.js:637",
+   "end-shift @ editions/crossroads/airport-story.js:479",
+   "district-end @ editions/crossroads/airport-story.js:734",
+   "end-shift @ editions/crossroads/clinic-story.js:465",
+   "district-end @ editions/crossroads/clinic-story.js:664",
+   "end-shift @ editions/crossroads/dispatch-story.js:497",
+   "district-end @ editions/crossroads/dispatch-story.js:727",
+   "end-shift @ editions/crossroads/finale-story.js:463",
+   "district-end @ editions/crossroads/finale-story.js:611",
+   "ng-confirm @ editions/crossroads/finale-story.js:624",
+   "end-shift @ editions/crossroads/library-story.js:253",
+   "district-end @ editions/crossroads/library-story.js:596",
+   "end-shift @ editions/crossroads/school-story.js:496",
+   "district-end @ editions/crossroads/school-story.js:686",
+   "name-plate @ editions/crossroads/story.js:220",
+   "track-pick @ editions/crossroads/story.js:378",
+   "track-confirm @ editions/crossroads/story.js:380",
+   "district-end @ editions/charter/budget-story.js:181",
+   "district-end @ editions/charter/finale-story.js:342",
+   "district-end @ editions/charter/policy-story.js:295",
+   "district-end @ editions/charter/report-story.js:201",
+   "name-plate @ editions/charter/story.js:166",
+   "district-end @ editions/charter/suppliers-story.js:245"
+  ]
+ },
+ "seconds": 147
+}

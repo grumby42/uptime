@@ -1,0 +1,745 @@
+{
+ "edition": "crossroads",
+ "track": "manager",
+ "mode": "desktop",
+ "finished": true,
+ "seconds": 203,
+ "iterations": 3188,
+ "errors": [],
+ "requests": [],
+ "saveReloadLibrary": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 3,
+  "map": "library",
+  "x": 11,
+  "y": 8
+ },
+ "saveReloadSchool": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 9,
+  "map": "school",
+  "x": 11,
+  "y": 6
+ },
+ "saveReloadClinic": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 12,
+  "map": "clinic",
+  "x": 16,
+  "y": 3
+ },
+ "saveReloadDispatch": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 16,
+  "map": "dispatch",
+  "x": 25,
+  "y": 3
+ },
+ "saveReloadAirport": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 23,
+  "map": "airport",
+  "x": 24,
+  "y": 3
+ },
+ "saveReloadFinale": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 34,
+  "map": "fnops",
+  "x": 25,
+  "y": 2
+ },
+ "newGamePlus": {
+  "other": "dfir",
+  "offers": [
+   {
+    "label": "The Mayor: IR manager for the Compact",
+    "track": "manager",
+    "disabled": true
+   },
+   {
+    "label": "Tallowmere: principal DFIR consultant",
+    "track": "dfir",
+    "disabled": false
+   }
+  ],
+  "done": true,
+  "mainUnchanged": true,
+  "thUnchanged": true,
+  "ngSave": true,
+  "slot": "ngplus",
+  "track": "dfir",
+  "seriesTrack": "manager",
+  "ngTrack": "dfir",
+  "offersOk": true,
+  "ok": true
+ },
+ "noHorizontalScroll": true,
+ "hscroll": {
+  "sw": 1280,
+  "iw": 1280
+ },
+ "quietTechInAlertMix": [],
+ "seriesCrossroads": {
+  "track": "manager",
+  "tracksPlayed": [
+   "manager"
+  ],
+  "started": true,
+  "library": true,
+  "school": true,
+  "clinic": true,
+  "dispatch": true,
+  "airport": true,
+  "finale": true,
+  "done": true,
+  "editionComplete": true,
+  "ngPlus": true
+ },
+ "final": {
+  "day": 36,
+  "rank": "IR manager",
+  "fm": 82,
+  "metrics": {
+   "closed": 0,
+   "acc": null,
+   "tta": null,
+   "esc": null,
+   "evid": null,
+   "uptime": 99.95,
+   "mfa": 0,
+   "patch": 0,
+   "crExAct": 100,
+   "crActivate": 15,
+   "crGaps": 0,
+   "crTired": 0,
+   "crAar": 100,
+   "crBudget": -23,
+   "crNeeds": null,
+   "crCorrected": null,
+   "crCustody": null,
+   "crCGaps": null,
+   "crFirst": null,
+   "crClients": null,
+   "crDispatch": 87,
+   "crAnswered": 100
+  },
+  "qt": {
+   "stage": 2,
+   "cluesFound": [
+    "lb-rdp",
+    "sd-probe",
+    "cn-folders",
+    "dp-conns",
+    "ap-accounts"
+   ],
+   "evicted": false
+  },
+  "cr": {
+   "carry": {
+    "from": "none",
+    "rank": null,
+    "badges": [],
+    "complete": false,
+    "name": null,
+    "clues": 0,
+    "charter": false
+   },
+   "rota": {
+    "assign": [
+     "magda",
+     "magda",
+     "bea",
+     "bea",
+     "ruth",
+     "ruth",
+     "rae"
+    ],
+    "stats": {
+     "gaps": 0,
+     "tired": [],
+     "over": [],
+     "per": {
+      "magda": 2,
+      "bea": 2,
+      "ruth": 2,
+      "rae": 1
+     },
+     "overtime": 9,
+     "variance": -70,
+     "maxRun": 2
+    },
+    "magda": "spread"
+   },
+   "growth": "paz",
+   "ex": {
+    "run": 5,
+    "actions": 15,
+    "closed": 15
+   },
+   "activate": 15,
+   "aar": {
+    "total": 15,
+    "onTime": 15
+   },
+   "cover": {
+    "k": "threshold",
+    "gaps": 0,
+    "overtime": 27,
+    "variance": -10
+   },
+   "needs": {
+    "met": 0,
+    "total": 0
+   },
+   "corrected": 0,
+   "custody": null,
+   "first": null,
+   "drills": {
+    "pcmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "pastemgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "aar": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "vendmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "signmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "offer": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "hostsmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "restore": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "tethermgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "lagmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "adminmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "switchmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "ap-mailmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "ap-vendmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "ap-tenantmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "fnsignmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "fnfloormgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    },
+    "fnphishmgr": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null
+    }
+   },
+   "reports": {},
+   "board": {
+    "first": [
+     true,
+     true,
+     true
+    ]
+   },
+   "boss": {
+    "day": 5,
+    "first": [
+     true,
+     true,
+     true
+    ],
+    "look": "clear",
+    "ok": true
+   },
+   "dojo": [
+    true,
+    true,
+    true
+   ],
+   "status": {
+    "read": true
+   },
+   "sd": {
+    "activate": 15,
+    "rota": {
+     "assign": [
+      "ruth",
+      "rae",
+      "magda",
+      "magda",
+      "bea",
+      "bea",
+      "ruth",
+      "ruth",
+      "rae"
+     ],
+     "stats": {
+      "gaps": 0,
+      "tired": [],
+      "over": [],
+      "per": {
+       "magda": 2,
+       "bea": 2,
+       "ruth": 2,
+       "rae": 1
+      },
+      "overtime": 6,
+      "variance": -80,
+      "maxRun": 2
+     }
+    },
+    "cover": {
+     "k": "threshold",
+     "gaps": 0,
+     "overtime": 24,
+     "variance": -20
+    },
+    "ex": 3,
+    "notice": {
+     "first": true
+    },
+    "inv": {
+     "first": true,
+     "owned": 3
+    },
+    "facts": {
+     "wrong": 0
+    },
+    "night10": {
+     "lead": "Bea Lindqvist",
+     "tired": false
+    },
+    "board": {
+     "first": [
+      true,
+      true,
+      true
+     ]
+    },
+    "boss": {
+     "first": [
+      true,
+      true,
+      true
+     ],
+     "look": "clear",
+     "ok": true
+    },
+    "dojo": [
+     true,
+     true,
+     true
+    ],
+    "requests": null
+   },
+   "cn": {
+    "activate": 15,
+    "downtime": {
+     "first": true
+    },
+    "cover": {
+     "k": "shifts",
+     "gaps": 0,
+     "overtime": 29,
+     "variance": -3,
+     "n12": "sign"
+    },
+    "ex": 3,
+    "aar": {
+     "factorsWrong": 0,
+     "onTime": 3
+    },
+    "night12": {
+     "lead": "Ruth Avila",
+     "tired": false,
+     "overtime": 3
+    },
+    "board": {
+     "first": [
+      true,
+      true,
+      true
+     ]
+    },
+    "boss": {
+     "first": [
+      true,
+      true,
+      true
+     ],
+     "look": "clear",
+     "ok": true
+    },
+    "dojo": [
+     true,
+     true,
+     true
+    ],
+    "requests": null
+   },
+   "dp": {
+    "activate": 15,
+    "n15": {
+     "n14": "rae",
+     "n15": "odile"
+    },
+    "rota": {
+     "assign": [
+      "rae",
+      "odile",
+      "magda",
+      "magda",
+      "bea",
+      "bea",
+      "ruth",
+      "ruth",
+      "rae"
+     ],
+     "stats": {
+      "gaps": 0,
+      "tired": [],
+      "over": [],
+      "per": {
+       "magda": 2,
+       "bea": 2,
+       "ruth": 2,
+       "rae": 1
+      },
+      "overtime": 0,
+      "variance": -100,
+      "maxRun": 2
+     }
+    },
+    "drill": {
+     "actions": 3
+    },
+    "pack": {
+     "wrong": 0
+    },
+    "cover": {
+     "k": "shifts",
+     "gaps": 0,
+     "overtime": 25,
+     "variance": -17,
+     "n18": "sign"
+    },
+    "aar": {
+     "factorsWrong": 0,
+     "onTime": 3,
+     "impactFirst": true
+    },
+    "impact": null,
+    "night18": {
+     "lead": "Bea Lindqvist",
+     "tired": false,
+     "overtime": 3
+    },
+    "board": {
+     "first": [
+      true,
+      true,
+      true
+     ]
+    },
+    "boss": {
+     "first": [
+      true,
+      true,
+      true
+     ],
+     "w1": 0,
+     "ok": true,
+     "done": true
+    },
+    "dojo": [
+     true,
+     true,
+     true
+    ],
+    "requests": null
+   },
+   "ap": {
+    "owners": {
+     "wrong": 0
+    },
+    "rota": {
+     "assign": [
+      "ruth",
+      "rae",
+      "magda",
+      "magda",
+      "bea",
+      "bea",
+      "ruth",
+      "ruth",
+      "rae"
+     ],
+     "stats": {
+      "gaps": 0,
+      "tired": [],
+      "over": [],
+      "per": {
+       "magda": 2,
+       "bea": 2,
+       "ruth": 2,
+       "rae": 1
+      },
+      "overtime": 0,
+      "variance": -100,
+      "maxRun": 2
+     }
+    },
+    "tt": {
+     "actions": 3
+    },
+    "activate": 15,
+    "cover": {
+     "k": "shifts",
+     "gaps": 0,
+     "overtime": 23,
+     "variance": -23,
+     "n27": "sign"
+    },
+    "aar": {
+     "factorsWrong": 0,
+     "onTime": 3,
+     "impactFirst": true
+    },
+    "night27": {
+     "lead": "Ruth Avila",
+     "tired": false,
+     "overtime": 3
+    },
+    "board": {
+     "first": [
+      true,
+      true,
+      true
+     ]
+    },
+    "boss": {
+     "first": [
+      true,
+      true,
+      true
+     ],
+     "ok": true,
+     "done": true
+    },
+    "dojo": [
+     true,
+     true,
+     true
+    ],
+    "requests": null
+   },
+   "fn": {
+    "rota": {
+     "assign": [
+      "ruth",
+      "rae",
+      "odile",
+      "odile",
+      "magda",
+      "magda",
+      "bea",
+      "bea",
+      "ruth"
+     ],
+     "stats": {
+      "gaps": 0,
+      "tired": [],
+      "over": [],
+      "per": {
+       "odile": 2,
+       "magda": 2,
+       "bea": 2,
+       "ruth": 1
+      },
+      "overtime": 0,
+      "variance": -100,
+      "maxRun": 2
+     }
+    },
+    "activate": 15,
+    "boss": {
+     "first": [
+      true,
+      true,
+      true
+     ],
+     "ok": true,
+     "done": true
+    },
+    "aar": {
+     "factorsWrong": 0,
+     "onTime": 3,
+     "impactFirst": true
+    },
+    "roadmap": {
+     "wrong": 0
+    },
+    "board": {
+     "first": [
+      true,
+      true,
+      true
+     ]
+    },
+    "challenge": null,
+    "stores": null,
+    "requests": null,
+    "revised": false
+   },
+   "night4": {
+    "lead": "Bea Lindqvist",
+    "tired": false
+   },
+   "bossActions": {
+    "owned": 3,
+    "total": 3
+   }
+  },
+  "objective": {
+   "text": "The Compact-wide incident is closed, and the edition with it. Next: Charter.",
+   "done": true,
+   "district": "finale"
+  }
+ },
+ "stats": {
+  "battles": 0,
+  "says": 574,
+  "steps": 2015,
+  "shots": {
+   "rota": 1,
+   "library": 1,
+   "school": 1,
+   "clinic": 1,
+   "dispatch": 1,
+   "airport": 1,
+   "finale": 1
+  },
+  "alertTechs": {},
+  "lbSummary": {
+   "day": 5,
+   "fm": 23,
+   "seconds": 28
+  },
+  "sdSummary": {
+   "day": 11,
+   "fm": 34,
+   "seconds": 67
+  },
+  "cnSummary": {
+   "day": 15,
+   "fm": 47,
+   "seconds": 103
+  },
+  "dpSummary": {
+   "day": 19,
+   "fm": 60,
+   "seconds": 137
+  },
+  "apSummary": {
+   "day": 29,
+   "fm": 74,
+   "seconds": 172
+  }
+ }
+}

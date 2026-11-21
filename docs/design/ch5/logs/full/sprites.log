@@ -1,0 +1,112 @@
+{
+ "suite": "sprites",
+ "passed": 25,
+ "failed": 0,
+ "sprites": [
+  "player",
+  "actor"
+ ],
+ "frames": 24,
+ "results": [
+  {
+   "name": "(a) every character sprite has down/up/left/right (standing + two step frames), 16x16, indices 0-4, facings distinct; NPC facings/palettes valid",
+   "ok": true
+  },
+  {
+   "name": "(b) after each key the player faces that way (state and drawn sprite key)",
+   "ok": true
+  },
+  {
+   "name": "(b) pixel sample: the canvas shows the facing sprite (0 mismatched pixels; differs from the down sprite unless facing down)",
+   "ok": true
+  },
+  {
+   "name": "(b) bumping into a wall turns the player to face it without moving (drawn sprite matches)",
+   "ok": true
+  },
+  {
+   "name": "(b) walking shows standing and stepping frames for each facing",
+   "ok": true
+  },
+  {
+   "name": "(b) walking alternates the two stepping frames (left foot, right foot) on successive steps",
+   "ok": true
+  },
+  {
+   "name": "save/reload keeps the player facing (state and drawn sprite)",
+   "ok": true
+  },
+  {
+   "name": "(e) a scripted speaker (scene started by walking) turns to face the player while speaking (drawn facing and pixels)",
+   "ok": true
+  },
+  {
+   "name": "(e) the scripted speaker faces its own way before the scene and goes back to it after",
+   "ok": true
+  },
+  {
+   "name": "(c) door arrival: warp turns the player to the door `dir` from the opposite facing (state and drawn sprite), every open door",
+   "ok": true
+  },
+  {
+   "name": "(d) an NPC turns to face the player while talking (drawn facing)",
+   "ok": true
+  },
+  {
+   "name": "(d) the NPC keeps its own facing before talking and goes back to it after",
+   "ok": true
+  },
+  {
+   "name": "(d) pixel sample: the canvas shows each talked-to NPC turned to the player (0 mismatched pixels, at least 2 NPCs)",
+   "ok": true
+  },
+  {
+   "name": "(f) no NPC faces straight into an adjacent solid tile or off the map (allowlist: behind a desk or counter)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads (f): no NPC faces into an adjacent solid tile; every NPC uses a four-facing character sprite",
+   "ok": true
+  },
+  {
+   "name": "Crossroads (c): every door’s warp turns the player to face away from it (all 26 links, the School District’s, the Clinic’s, Dispatch’s, the Airport’s and the finale’s included)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads (d): an NPC turns to the player while talking (Dot faces left), then back to her own facing",
+   "ok": true
+  },
+  {
+   "name": "Crossroads (d): in the School District, Nell Sato turns to the player while talking (faces down), then back (left)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads (d): in the Clinic, Joy Okonjo turns to the player while talking (faces right), then back (down)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads (d): at Dispatch, Tamsin Reyes turns to the player while talking (faces right), then back (left)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads (d): at the Airport, Lise Moreau turns to the player while talking (faces right), then back (left)",
+   "ok": true
+  },
+  {
+   "name": "Charter (f): no NPC faces into an adjacent solid tile; every NPC uses a four-facing character sprite",
+   "ok": true
+  },
+  {
+   "name": "Charter (c): every door’s warp turns the player to face away from it (both links)",
+   "ok": true
+  },
+  {
+   "name": "Charter (d): in the Compact offices, Beatriz Solano turns to the player while talking (faces left), then back (down)",
+   "ok": true
+  },
+  {
+   "name": "no console errors or network requests",
+   "ok": true
+  }
+ ]
+}

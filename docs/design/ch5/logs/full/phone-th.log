@@ -1,0 +1,913 @@
+{
+ "quietTechInAlertMix": [],
+ "mode": "phone",
+ "finished": true,
+ "seconds": 1604,
+ "iterations": 5299,
+ "errors": [],
+ "requests": [],
+ "saveReload": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 2,
+  "map": "hub",
+  "x": 13,
+  "y": 11
+ },
+ "saveReloadMailRoom": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 3,
+  "map": "mail",
+  "x": 14,
+  "y": 4
+ },
+ "saveReloadClerks": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 4,
+  "map": "clerks",
+  "x": 21,
+  "y": 2
+ },
+ "saveReloadMarket": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 6,
+  "map": "market",
+  "x": 16,
+  "y": 7
+ },
+ "saveReloadRecords": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 8,
+  "map": "records",
+  "x": 13,
+  "y": 6
+ },
+ "saveReloadBasement": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 11,
+  "map": "basement",
+  "x": 13,
+  "y": 7
+ },
+ "saveReloadServer": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 14,
+  "map": "server",
+  "x": 13,
+  "y": 7
+ },
+ "saveReloadWater": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 17,
+  "map": "water",
+  "x": 5,
+  "y": 3
+ },
+ "saveReloadCouncil": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 20,
+  "map": "council",
+  "x": 24,
+  "y": 8
+ },
+ "noHorizontalScroll": true,
+ "hscroll": {
+  "sw": 360,
+  "iw": 360
+ },
+ "final": {
+  "day": 22,
+  "rank": "Security team lead",
+  "fm": 86,
+  "metrics": {
+   "closed": 115,
+   "acc": 100,
+   "tta": 0.9,
+   "esc": 100,
+   "evid": 100,
+   "uptime": 100,
+   "mfa": 50,
+   "patch": 100,
+   "report": 59,
+   "tq": null,
+   "bec": 3,
+   "crKev": 100,
+   "crOther": 100,
+   "crTtc": 5.2,
+   "crIso": 100,
+   "crOver": 0,
+   "crAdmins": 0,
+   "mkInv": 100,
+   "mkWafFp": 0.1,
+   "mkTtc": 3.6,
+   "mkWindow": 0.75,
+   "rhTest": 75,
+   "rhRto": 100,
+   "rhRpo": 80,
+   "rhOffline": 100,
+   "rhTtc": 4,
+   "bmCov": 94,
+   "bmSkew": 0.4,
+   "bmPrec": 100,
+   "bmFwOwn": 100,
+   "bmMttd": 13,
+   "svPriv": 4,
+   "svOwn": 91,
+   "svCross": 0,
+   "svMtts": 4,
+   "svLed": 4,
+   "wtExposed": 0,
+   "wtDefault": 0,
+   "wtInv": 100,
+   "wtBackup": 100,
+   "wtVend": 100,
+   "ccAssign": 4,
+   "ccLoad": 100,
+   "ccOwner": 100,
+   "ccBrief": 100,
+   "ccActions": 73
+  },
+  "party": [
+   {
+    "id": "overwatch",
+    "lvl": 23,
+    "xp": 115,
+    "tuned": true
+   },
+   {
+    "id": "annalist",
+    "lvl": 7,
+    "xp": 0,
+    "tuned": false
+   },
+   {
+    "id": "tidewatch",
+    "lvl": 8,
+    "xp": 0,
+    "tuned": false
+   },
+   {
+    "id": "tessera",
+    "lvl": 7,
+    "xp": 0,
+    "tuned": false
+   },
+   {
+    "id": "reportbird",
+    "lvl": 5,
+    "xp": 0,
+    "tuned": false
+   },
+   {
+    "id": "sifter",
+    "lvl": 5,
+    "xp": 0,
+    "tuned": false
+   },
+   {
+    "id": "mirrorcoat",
+    "lvl": 6,
+    "xp": 0,
+    "tuned": false
+   },
+   {
+    "id": "bulwark",
+    "lvl": 6,
+    "xp": 0,
+    "tuned": false
+   }
+  ],
+  "m": {
+   "closed": 115,
+   "judged": 115,
+   "correctShown": 115,
+   "evOk": 115,
+   "ttaSum": 106.34050000000367,
+   "ttaN": 117,
+   "esc": 1,
+   "escOk": 1,
+   "missed": 0,
+   "surfaced": 0,
+   "overreact": 0,
+   "autoClosed": 38,
+   "events": 114582,
+   "today": 0
+  },
+  "mfa": 6,
+  "insider": "defused",
+  "cards": [
+   "revoke",
+   "devices",
+   "reset"
+  ],
+  "mrCards": [
+   "bank",
+   "search",
+   "ic3",
+   "callback"
+  ],
+  "mr": {
+   "drills": {
+    "link": {
+     "score": 100,
+     "verdictOk": true,
+     "ai": null,
+     "aiWrong": false
+    },
+    "bec": {
+     "score": 100,
+     "verdictOk": true,
+     "ai": null,
+     "aiWrong": false
+    },
+    "push": {
+     "score": 100,
+     "verdictOk": true,
+     "ai": null,
+     "aiWrong": false
+    }
+   },
+   "rep": {
+    "seen": 34,
+    "reported": 20
+   },
+   "bec": 3,
+   "tq": 0
+  },
+  "crCards": [
+   "segment",
+   "patch",
+   "smb",
+   "pz"
+  ],
+  "cr": {
+   "drills": {
+    "hash": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "ai": null,
+     "aiWrong": false
+    },
+    "task": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "ai": null,
+     "aiWrong": false
+    },
+    "rtp": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "ai": null,
+     "aiWrong": false
+    }
+   },
+   "triageScore": 100,
+   "admins": 0,
+   "needed": 2,
+   "over": 0,
+   "work": 2,
+   "infected": [
+    "CR-LT-17",
+    "CR-LT-08"
+   ],
+   "isolated": [],
+   "ttc": 1,
+   "lit": 18
+  },
+  "mkCards": [
+   "preserve",
+   "hosted",
+   "mfa3p",
+   "csp"
+  ],
+  "mk": {
+   "found": [
+    "www",
+    "pay",
+    "portal",
+    "mail",
+    "vpn",
+    "test",
+    "wafadmin"
+   ],
+   "inv": 100,
+   "wafScore": 100,
+   "wafStats": {
+    "atk": 1800,
+    "res": 2,
+    "payFail": 0,
+    "fp": 0.1
+   },
+   "wafReviews": 1,
+   "scope": "redirect",
+   "check": "q15",
+   "scripts": {
+    "pay": "keep",
+    "tok": "keep",
+    "ana": "remove",
+    "chat": "remove"
+   },
+   "drills": {
+    "sqli": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "script": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "admin": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 3,
+     "ai": null,
+     "aiWrong": false
+    }
+   },
+   "ttc": 1,
+   "directive": "plan",
+   "boss": {
+    "window": 0.75,
+    "affected": 23,
+    "detect": 0.25,
+    "contain": 0.5,
+    "again": 0,
+    "startOk": true,
+    "whoOk": true,
+    "restoreEarly": false,
+    "check": "q15",
+    "picks": [
+     "preserve",
+     "hosted",
+     "mfa3p",
+     "csp"
+    ]
+   },
+   "dojo": [
+    true,
+    true,
+    true
+   ]
+  },
+  "rhCards": [
+   "identity",
+   "preserve",
+   "verify",
+   "isolate"
+  ],
+  "rh": {
+   "tests": 4,
+   "testRate": 75,
+   "crit": [
+    "db",
+    "app",
+    "fs",
+    "dir",
+    "dns"
+   ],
+   "obj": true,
+   "offline": 100,
+   "keyEscrow": true,
+   "directive": "tier",
+   "drills": {
+    "rename": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "shrink": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "stolen": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    }
+   },
+   "ttc": 1,
+   "dojo": [
+    true,
+    true,
+    true
+   ],
+   "boss": {
+    "day": 10,
+    "picks": [
+     "identity",
+     "preserve",
+     "verify",
+     "isolate"
+    ],
+    "rtoMet": 5,
+    "rpoMet": 4,
+    "reinfect": 0,
+    "depFail": 0,
+    "clock": 27,
+    "pay": "no"
+   },
+   "restore": {
+    "clock": 27,
+    "reinfect": 0,
+    "depFail": 0,
+    "rtoMet": 5,
+    "rpoMet": 4,
+    "order": [
+     "dir:clean",
+     "dns:gold",
+     "db:gold",
+     "app:gold",
+     "fs:gold"
+    ],
+    "done": {
+     "dir": {
+      "end": 4,
+      "opt": "clean",
+      "loss": 121.7,
+      "rtoOk": true,
+      "rpoOk": false
+     },
+     "dns": {
+      "end": 6,
+      "opt": "gold",
+      "loss": 1.7,
+      "rtoOk": true,
+      "rpoOk": true
+     },
+     "db": {
+      "end": 12,
+      "opt": "gold",
+      "loss": 1.7,
+      "rtoOk": true,
+      "rpoOk": true
+     },
+     "app": {
+      "end": 15,
+      "opt": "gold",
+      "loss": 1.7,
+      "rtoOk": true,
+      "rpoOk": true
+     },
+     "fs": {
+      "end": 27,
+      "opt": "gold",
+      "loss": 1.7,
+      "rtoOk": true,
+      "rpoOk": true
+     }
+    },
+    "overrun": false
+   },
+   "pay": "no"
+  },
+  "bmCards": [
+   "hunt",
+   "timeline",
+   "rule",
+   "preserve"
+  ],
+  "bm": {
+   "cov": 94,
+   "src": {
+    "idp": true,
+    "laptops": true,
+    "web": true,
+    "backup": true,
+    "vpn": true,
+    "firewall": true,
+    "dns": true,
+    "servers": true,
+    "proxy": false,
+    "bms": true
+   },
+   "skew": 0.4,
+   "ret": 90,
+   "rules": {
+    "owned": 100,
+    "removed": [
+     "R6",
+     "R7",
+     "R3"
+    ],
+    "narrowed": [
+     "R4"
+    ],
+    "defaultDeny": true
+   },
+   "prec": 100,
+   "tune": {
+    "applied": [
+     "bk",
+     "vs",
+     "pm"
+    ],
+    "left": 2,
+    "fpRemoved": 12,
+    "realKept": 2,
+    "hidden": false,
+    "reopened": true
+   },
+   "drills": {
+    "gap": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "clocks": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "dns": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    }
+   },
+   "dojoL": [
+    true,
+    true,
+    true
+   ],
+   "dojoS": [
+    true,
+    true,
+    true
+   ],
+   "directive": "tier",
+   "gap": "bms",
+   "boss": {
+    "day": 13,
+    "picks": [
+     "hunt",
+     "timeline",
+     "rule",
+     "preserve"
+    ],
+    "hidden": false,
+    "reopened": true
+   },
+   "file": {
+    "clues": [
+     "bm-anyany"
+    ],
+    "day": 13
+   },
+   "mttd": 13
+  },
+  "svCards": [
+   "allatonce",
+   "cleanpaw",
+   "krbtgt",
+   "scope"
+  ],
+  "sv": {
+   "priv": 4,
+   "owned": 21,
+   "own": 91,
+   "cross": 0,
+   "led": 4,
+   "svc": null,
+   "tier": null,
+   "drills": {
+    "roast": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "tenmin": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "replica": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    }
+   },
+   "finds": [
+    true,
+    true,
+    true
+   ],
+   "directive": "test",
+   "boss": {
+    "day": 16,
+    "picks": [
+     "allatonce",
+     "cleanpaw",
+     "krbtgt",
+     "scope"
+    ],
+    "evicted": true
+   },
+   "mtts": 4
+  },
+  "wtCards": [
+   "safe",
+   "asis",
+   "restore",
+   "offnet"
+  ],
+  "wt": {
+   "exposed": 0,
+   "deflt": 0,
+   "inv": 41,
+   "invPct": 100,
+   "backup": 7,
+   "vend": 100,
+   "vSince": {
+    "total": 1,
+    "ok": 1
+   },
+   "zones": {
+    "exposure": 0,
+    "broken": 0
+   },
+   "drills": {
+    "setpoint": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "checksum": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "officeplc": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    }
+   },
+   "dojo": [
+    true,
+    true,
+    true
+   ],
+   "directive": "ondemand",
+   "boss": {
+    "day": 19,
+    "picks": [
+     "safe",
+     "asis",
+     "restore",
+     "offnet"
+    ],
+    "restored": true
+   },
+   "led": 4
+  },
+  "cc": {
+   "day0": 19,
+   "assign": 4,
+   "load": 100,
+   "dec": {
+    "owned": 16,
+    "total": 16
+   },
+   "brief": {
+    "on": 3,
+    "total": 3
+   },
+   "act": {
+    "closed": 19,
+    "total": 26
+   },
+   "plan": true,
+   "risks": {
+    "vendor": true,
+    "permits": true,
+    "cards": true,
+    "bec": true
+   },
+   "deleg": {
+    "mean": 4,
+    "over": 0,
+    "caught": 1,
+    "missed": 0,
+    "wrongBack": 0,
+    "busiest": 100
+   },
+   "drills": {
+    "review": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "press": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    },
+    "insurer": {
+     "score": 100,
+     "verdictOk": true,
+     "supported": true,
+     "keys": 2,
+     "ai": null,
+     "aiWrong": false
+    }
+   },
+   "dojo": [
+    true,
+    true,
+    true
+   ],
+   "directive": "options",
+   "board": {
+    "day": 21
+   },
+   "boss": {
+    "day": 22,
+    "first": [
+     true,
+     true,
+     true
+    ],
+    "ok": true
+   },
+   "file": {
+    "handed": 22,
+    "clues": 3
+   },
+   "led": 4
+  },
+  "objective": {
+   "text": "Town Hall secured. Next edition: coming later.",
+   "done": true,
+   "district": "council"
+  }
+ },
+ "stats": {
+  "battles": 363,
+  "says": 1248,
+  "steps": 2505,
+  "shots": {
+   "dialog": 1,
+   "brief": 1,
+   "hub": 1,
+   "battle": 1,
+   "mail": 1,
+   "drill": 1,
+   "triage": 1,
+   "clerks": 1,
+   "contain": 1,
+   "market": 1,
+   "waf": 1,
+   "records": 1,
+   "restore": 1,
+   "basement": 1,
+   "tuning": 1,
+   "suspicion": 1,
+   "server": 1,
+   "tiering": 1,
+   "finding": 1,
+   "water": 1,
+   "zones": 1,
+   "council": 1,
+   "delegate": 1
+  },
+  "alertTechs": {
+   "T1566.004": 36,
+   "T1595": 67,
+   "T1190": 46,
+   "T1621": 61,
+   "T1586.002": 62,
+   "T1110.003": 36,
+   "T1204.002": 21,
+   "T1218.011": 37,
+   "T1059.001": 18,
+   "T1490": 28,
+   "T1685": 12,
+   "T1110.004": 12,
+   "T1660": 52,
+   "T1003.001": 8,
+   "T1566.001": 34,
+   "T1595.002": 46,
+   "T1499.002": 50,
+   "T1686.002": 11,
+   "T1685.006": 24,
+   "T1021.002": 10,
+   "T1003.006": 22,
+   "T1059.007": 10,
+   "T1558.003": 10,
+   "T0886": 10,
+   "T0843": 13,
+   "T1567.002": 10,
+   "T1528": 10
+  },
+  "fdSummary": {
+   "day": 3,
+   "fm": 10,
+   "seconds": 163
+  },
+  "mailQueue": 8,
+  "mrSummary": {
+   "day": 4,
+   "fm": 18,
+   "seconds": 336
+  },
+  "clerksQueue": 8,
+  "crSummary": {
+   "day": 5,
+   "fm": 31,
+   "seconds": 506
+  },
+  "marketQueue": 8,
+  "mkSummary": {
+   "day": 7,
+   "fm": 43,
+   "seconds": 683
+  },
+  "recordsQueue": 8,
+  "rhSummary": {
+   "day": 10,
+   "fm": 53,
+   "seconds": 867
+  },
+  "basementQueue": 8,
+  "bmSummary": {
+   "day": 13,
+   "fm": 62,
+   "seconds": 1097
+  },
+  "serverQueue": 8,
+  "svSummary": {
+   "day": 16,
+   "fm": 72,
+   "seconds": 1294
+  },
+  "waterQueue": 8,
+  "wtSummary": {
+   "day": 19,
+   "fm": 81,
+   "seconds": 1478
+  }
+ }
+}

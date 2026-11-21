@@ -24,3 +24,11 @@ Build agent, 2026-11-21 (UTC). Spec: docs/design/SPEC_ed3_slice5.md. Timeline fi
 
 ## Mutation check (docs/design/ch5/mut)
 18 rules broken on purpose (muts.json), each run against tests/charter.js in a copy of the repo (run.py, three workers). 17 caught on the first pass. The one that survived, "supported optional rows earn", was not pinned: the padding checks asserted only "below 100", and with that bug the padded packets still scored below 100. The check now asserts the exact scores (60 and 70), and the rerun (muts-rerun.json, rerun-0.json) catches it. 18 of 18 caught.
+
+## Full sequence (build ARCD-20261121-2113Z; logs docs/design/ch5/logs/full, scripts ch5/runall.sh and ch5/phone.sh)
+- Suites, all exit 0: frontdesk, mailroom, clerks, market, records, basement, server, water, council, quiet, crossroads, charter (160/160), layout (377/377), modalfit, highlight (and Charter), doors (and Crossroads, Charter), sprites, settings, tells (no FAIL).
+- tools/lentell.js and tools/tells2.js: identical to the baseline (ch5/base) except the new ch-finale row: 43 lists, longest-is-correct 17 (chance 13.2), shortest-is-correct 16 (chance 11.7); mean rank 2.23 (chance 2.25). The packets' own rows pass the stricter rank check in tells.js.
+- tells --report: lines 1-370 (Town Hall and Crossroads) byte-identical to the baseline (cmp).
+- Desktop bots: Town Hall; Crossroads manager and DFIR to the ending and New Game+; Charter through the finale to the edition's end (ten checkpoints clean, save/reload mid-finale); GAMER=1. All exit 0, errors [], requests [].
+- Phone bots last and alone (0 other bots before): Town Hall 1605 s, Crossroads manager 764 s, DFIR 751 s, Charter 564 s. All exit 0, errors [], requests [], no horizontal scroll.
+- Copies: /home/claude/charter.html, /home/claude/crossroads.html, /home/claude/uptime.html, each cmp-identical to its editions/*/index.html (uptime.html = editions/town-hall/index.html).
