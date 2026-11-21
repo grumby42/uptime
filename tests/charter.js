@@ -903,8 +903,9 @@ async function session(ctx, seed) {
   await A.follow(p => p.f.chRepDay87, []);
   const rQ = await A.follow(p => p.f.chRepBoard, [], /A member’s question/);
   const rQask = await A.page.evaluate(() => chRepBoardQs().map(q => q.row + '|' + q.ask));
-  const rQ1 = rQ.ui.options.findIndex(o => !(o.meta && o.meta.good));
-  await A.pickLabel(new RegExp('^' + esc(rQ.ui.options[rQ1].label) + '$'));
+  // A report with weak lines must bring a member's question about them; if none comes, that is a failure, not a crash.
+  check('Report round: the report as sent brings a member’s question about its own weak lines', !!(rQ && rQ.ui && rQ.ui.options), null);
+  if (rQ && rQ.ui && rQ.ui.options) { const rQ1 = rQ.ui.options.findIndex(o => !(o.meta && o.meta.good)); await A.pickLabel(new RegExp('^' + esc(rQ.ui.options[rQ1].label) + '$')); }
   await A.follow(p => p.f.chRepBoard, []);
   const rSayB = await sayLog();
   const rB = await A.page.evaluate(() => ({ b: G.ch.rep.board, min: G.ch.rep.minute, f: G.f, fm: G.focusMax, sc: editionScorecard(), m: metricVals(), aud: G.ch.audit }));

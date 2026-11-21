@@ -1,0 +1,49 @@
+[
+ [
+  "report not scored as sent (graded on the supported picks)",
+  1,
+  [
+   "CRASH CHARTER FAILED: TypeError: Cannot read properties of null (reading 'options')\n    at /home/cla"
+  ]
+ ],
+ [
+  "Board questions not keyed to the report (standing questions only)",
+  1,
+  [
+   "CRASH CHARTER FAILED: TypeError: Cannot read properties of null (reading 'options')\n    at /home/cla"
+  ]
+ ],
+ [
+  "the report audit disabled",
+  1,
+  [
+   "Report invariant (rules and records agree): this run clean; an acceptance removed from the register "
+  ]
+ ],
+ [
+  "Ivor's papers line before 17:00",
+  1,
+  [
+   "no NPC line states an outcome before its timeline time: each NPC read at every step of the objective"
+  ]
+ ],
+ [
+  "GV.OV-03 misquoted (evaluated)",
+  1,
+  [
+   "Report week opens on Day 85, a Monday; the report metrics show “—” until a report is sent; the score"
+  ]
+ ],
+ [
+  "the Board's acceptances counted as owners' (A2 never required)",
+  6,
+  [
+   "Report as sent reflects this run’s results: A2 names R2 and R3 (the Board’s decision, Edda signing; ",
+   "Report graded on the report as sent: 9 lines, 4 supported, 5 weak (A2 and E2 misplaced, B1 and B3 ov",
+   "Report round, played: the members’ questions are keyed to the report as sent (the omission first, D1",
+   "Report invariant (rules and records agree): this run clean; an acceptance removed from the register ",
+   "invariant, override and poor-advice run: eight checkpoints (the four Board minutes and the four dist",
+   "invariant: the slice 1, 2 and 3 failures re-created in the data are caught (R4 above appetite with n"
+  ]
+ ]
+]

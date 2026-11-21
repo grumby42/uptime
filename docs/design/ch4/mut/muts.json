@@ -1,0 +1,14 @@
+[
+ ["report not scored as sent (graded on the supported picks)", "editions/charter/report-story.js", "p.grade = chRepGrade(p.sent.picks, F); track();", "p.grade = chRepGrade(Object.fromEntries(chRepRows(F).map(r => [r.id, chRepGood(r)])), F); track();"],
+ ["an omission costs nothing", "editions/charter/report.js", "- 20 * omitted.length", "- 0 * omitted.length"],
+ ["Board questions not keyed to the report (standing questions only)", "editions/charter/report.js", "const qs = weak.slice(0, 3).map(", "const qs = weak.slice(0, 0).map("],
+ ["A2's misplaced wording graded supported", "editions/charter/report-data.js", "signing it as the line’s owner on Day 67', grade: 'misplaced'", "signing it as the line’s owner on Day 67', grade: 'supported'"],
+ ["the report audit disabled", "editions/charter/risk.js", "if (c.rep && c.rep.sent && typeof chRepAuditNow === 'function')", "if (false)"],
+ ["no invariant at the report's minute", "editions/charter/report-story.js", "chAudit('Report: the Board’s minute (Day 88)');", ""],
+ ["Ivor's papers line before 17:00", "editions/charter/story.js", "await say(f.chRepDay87 ? 'Thursday at 14:00. The members have your page.'", "await say(f.chRepSent ? 'Thursday at 14:00. The members have your page.'"],
+ ["a record dated after the report", "editions/charter/report-data.js", "EXC: {name: 'The exception register', at: [86, '17:00']}", "EXC: {name: 'The exception register', at: [87, '13:00']}"],
+ ["GV.OV-03 misquoted (evaluated)", "editions/charter/data.js", "performance is measured and reviewed for adjustments needed", "performance is evaluated and reviewed for adjustments needed"],
+ ["the open item draws a conclusion", "editions/charter/report.js", "This report draws no conclusion.", "The pattern points to one actor."],
+ ["the Board's acceptances counted as owners' (A2 never required)", "editions/charter/report.js", "const board = open.filter(a => a.decider === 'Board' && lineAbove(a.line)), owner = open.filter(a => a.decider !== 'Board' && lineAbove(a.line));", "const board = [], owner = open.filter(a => lineAbove(a.line));"],
+ ["drill 3 always the persuaded variant", "editions/charter/report-story.js", "a.decider === 'Board' && !a.closed) ? 'repwho' : 'repwho2'; }", "a.decider === 'Board' && !a.closed) ? 'repwho2' : 'repwho2'; }"]
+]
