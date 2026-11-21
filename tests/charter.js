@@ -57,6 +57,14 @@
 // decision; the library sent with one undated document (83%); the Library's entry only after the control's check; the
 // Policy round, its minute read from the register, the Bowline Badge, the standards published; the summary ("Next: The
 // Board report"), the series record, the earlier saves unchanged; the Field Manual.
+// Slice 3 review fixes (charter3): the two-tier approval rule (one entry per escalation trigger; the owner alone cannot
+// approve an escalated entry; EX-05 stays owner-approved; the 13-week clause gone); 6.7 on each line's current state
+// (EX-04 inside R4's broken call-back tolerance on Monday, Marit's call-back from Day 79); the systemic invariant (every
+// register risk within appetite and tolerances, or covered by an acceptance naming the right decider, at every Board
+// minute and district end, on the override and poor-advice run and on a recommended-path run, and the slice 1, 2 and 3
+// failures re-created in the data and caught); no NPC line states an outcome before its time; 6.6a, renewals counted and
+// a second one escalated, chNextBoard, an expiry's clock time; drill 3 on every record; STD-4 v2; fin-ap's lookback and
+// partial control; document owners; POL-1's review date in the minute; the scored write-ups; the Sheet Bend Badge.
 // Usage: node tests/charter.js   (UPTIME_FILE=file:///.../charter/index.html to test another build)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -610,15 +618,33 @@ async function session(ctx, seed) {
     const ap = Object.fromEntries(L.map(e => [e.id, chExcApprover(e)]));
     const finalR4 = G.ch.final && G.ch.final.R4;
     const keepFinal = G.ch.final; G.ch.final = Object.assign({}, G.ch.final, {R4: 1}); const apFunded = chExcApprover(L.find(e => e.id === 'EX-04')); G.ch.final = keepFinal;
+    // The two tiers (6.2, 6.2a): a standard baseline (no trigger), then one entry per escalation trigger.
+    const base = {id: 'EX-T', owner: 'Edda Thornquist', start: 81, expiry: 428, review: 155, scope: 't', clause: 't', reason: 't', controls: 't', tol: 'within'};
+    const mk = o => Object.assign({}, base, o), e4s = JSON.parse(JSON.stringify(L.find(e => e.id === 'EX-04')));
+    const trig = {base: chExcClass(mk({})).cls, against: chExcClass(mk({cisoAgainst: true})).cls, partial: chExcClass(mk({partial: true})).cls, critical: chExcClass(mk({critical: 'holds personal records'})).cls,
+      renewal: chExcClass(mk({renewals: 2})).cls, tol: chExcClass(e4s).cls, tolWhy: chExcClass(e4s).why.join('; '), e2: chExcClass(L.find(e => e.id === 'EX-02')).cls};
+    const esc2 = JSON.parse(JSON.stringify(L.find(e => e.id === 'EX-02'))), std = mk({}), mem = mk({owner: 'Director Mina Strand', member: 'the Library', memberLead: 'the Library’s own leadership, above its Director', critical: 'personal records'});
+    const dec = {ownerEsc: chExcDecide(JSON.parse(JSON.stringify(esc2)), 'Edda Thornquist', 79), chairEsc: chExcDecide(JSON.parse(JSON.stringify(esc2)), 'Ivor Penhallow', 79), cisoEsc: chExcDecide(JSON.parse(JSON.stringify(esc2)), 'the CISO', 79),
+      ownerStd: chExcDecide(mk({}), 'Edda Thornquist', 80), chairStd: chExcDecide(mk({}), 'Ivor Penhallow', 80), memLead: chExcDecide(mem, 'the Library’s own leadership, above its Director', 80), memOwner: chExcDecide(mk({owner: 'Director Mina Strand', member: 'the Library', memberLead: 'x', critical: 'p'}), 'Director Mina Strand', 80),
+      boardOwner: chExcDecide(JSON.parse(JSON.stringify(e4s)), 'Marit Quellan', 81), board: chExcDecide(JSON.parse(JSON.stringify(e4s)), 'the Compact Board', 81)};
+    // Renewals counted (6.8): a standard one renews once by its owner, a second time only by the chair, and opens the review.
+    const evR = ['the review’s record', 'the control’s records'], rn = mk({start: 65, expiry: 155, review: 155});
+    const ren1 = chExcRenew(rn, {by: 'Edda Thornquist', evidence: evR, to: 300, review: 246, day: 155}), ren2o = chExcRenew(rn, {by: 'Edda Thornquist', evidence: evR, to: 400, review: 246, day: 240}),
+      ren2c = chExcRenew(rn, {by: 'Ivor Penhallow', evidence: evR, to: 400, review: 246, day: 240});
+    const nb = [chNextBoard(65), chNextBoard(81), chNextBoard(155), chNextBoard(200)], at = [chExcStatus(L.find(e => e.id === 'EX-01'), 75, '16:59'), chExcStatus(L.find(e => e.id === 'EX-01'), 75, '17:00')];
+    const tolTxt = chExcTolerance(e4s).text, itemE4 = chExcItemHtml(e4s);
     const e1 = JSON.parse(JSON.stringify(L.find(e => e.id === 'EX-01'))), e2 = JSON.parse(JSON.stringify(L.find(e => e.id === 'EX-02'))), e4 = JSON.parse(JSON.stringify(L.find(e => e.id === 'EX-04')));
     const st = {e1at75: chExcStatus(e1, 75), e1at78: chExcStatus(e1, 78), e2at155: chExcStatus(e2, 155), e2at156: chExcStatus(e2, 156)};
     const closeCiso = chExcClose(JSON.parse(JSON.stringify(e1)), 'the CISO', 78), closeOwner = chExcClose(e1, 'Edda Thornquist', 78, 'test');
     const ev = ['the review’s record, Day 155', 'the rule’s sign-in records'];
-    const rCiso = chExcRenew(JSON.parse(JSON.stringify(e2)), {by: 'the CISO', evidence: ev, to: 240, review: 155, day: 150});
-    const rNoEv = chExcRenew(JSON.parse(JSON.stringify(e2)), {by: 'Edda Thornquist', evidence: [], to: 240, review: 155, day: 150});
-    const rLong = chExcRenew(JSON.parse(JSON.stringify(e2)), {by: 'Edda Thornquist', evidence: ev, to: 600, review: 155, day: 150});
-    const rLate = chExcRenew(JSON.parse(JSON.stringify(e2)), {by: 'Edda Thornquist', evidence: ev, to: 240, review: 200, day: 150});
-    const e2r = JSON.parse(JSON.stringify(e2)), rOk = chExcRenew(e2r, {by: 'Edda Thornquist', evidence: ev, to: 155, review: 155, day: 150});
+    // e2s: the five service accounts' entry without its personal-records trigger, so it is standard (its owner renews it).
+    const e2s = Object.assign(JSON.parse(JSON.stringify(e2)), {critical: undefined});
+    const rCiso = chExcRenew(JSON.parse(JSON.stringify(e2s)), {by: 'the CISO', evidence: ev, to: 240, review: 155, day: 150});
+    const rNoEv = chExcRenew(JSON.parse(JSON.stringify(e2s)), {by: 'Edda Thornquist', evidence: [], to: 240, review: 155, day: 150});
+    const rLong = chExcRenew(JSON.parse(JSON.stringify(e2s)), {by: 'Edda Thornquist', evidence: ev, to: 600, review: 155, day: 150});
+    const rLate = chExcRenew(JSON.parse(JSON.stringify(e2s)), {by: 'Edda Thornquist', evidence: ev, to: 240, review: 200, day: 150});
+    const rEscOwner = chExcRenew(JSON.parse(JSON.stringify(e2)), {by: 'Edda Thornquist', evidence: ev, to: 155, review: 155, day: 150});
+    const e2r = JSON.parse(JSON.stringify(e2s)), rOk = chExcRenew(e2r, {by: 'Edda Thornquist', evidence: ev, to: 155, review: 155, day: 150});
     const rBoard = chExcRenew(JSON.parse(JSON.stringify(e4)), {by: 'the Compact Board (minute)', evidence: ev, to: 155, review: 155, day: 150});
     const chk = {
       ok: chExcCheck({owner: 'Edda Thornquist', expiry: 155, review: 155}, 65, 'Edda Thornquist'),
@@ -636,34 +662,45 @@ async function session(ctx, seed) {
     const mRight = chPolStats();
     p.intakeSent = {'EX-02': 1, 'EX-03': 1, 'EX-04': 3}; p.libSent = Object.assign({}, p.libSent, {'STD-2': 'when', 'STD-5': 600});
     const mWrong = chPolStats();
+    p.intakeSent = {'EX-02': 1, 'EX-03': chIntakeRight('EX-03'), 'EX-04': chIntakeRight('EX-04')}; const mHalf = chPolStats();
     p.drills.polvalid = {verdictOk: false}; p.intakeSent = {'EX-02': chIntakeRight('EX-02'), 'EX-03': chIntakeRight('EX-03'), 'EX-04': chIntakeRight('EX-04')};
     const mDrill = chPolStats();
     const imp = L.filter(e => e.imported).map(e => ({id: e.id, owner: e.owner, ap: chExcApprover(e), exp: e.expiry, rev: e.review, rec: e.recommendedBy, clause: e.clause}));
     const reg = chExcRegisterHtml(), rule = CH_POL_RULE.join(' | ');
     const qIntakeTxt = JSON.stringify(CH_POL_INTAKE) + ' ' + L.map(e => e.note + ' ' + e.controls).join(' ');
     G.ch.pol = keep;
-    return { seed, ap, apFunded, finalR4, st, closeCiso, closeOwner, rCiso, rNoEv, rLong, rLate, rOk, e2r: {renewed: e2r.renewed, status: chExcStatus(e2r, 150)}, rBoard, chk, mRight, mWrong, mDrill, imp, reg, rule, qIntakeTxt,
+    return { seed, ap, apFunded, finalR4, st, closeCiso, closeOwner, rCiso, rNoEv, rLong, rLate, rOk, rEscOwner, e2r: {renewed: e2r.renewed, status: chExcStatus(e2r, 150)}, rBoard, chk, mRight, mWrong, mHalf, mDrill, imp, reg, rule, qIntakeTxt,
+      trig, dec, ren1, ren2o, ren2c, rnStd: !!rn.stdReview, rnN: rn.renewals, nb, at, tolTxt, itemE4,
       notes: GAME_NOTES.join(' | '), fm: FACTS.chcsfpo.desc + ' ' + FACTS.chnice.desc, docs: CH_POL_DOCS.map(d => d.id), ids: L.map(e => e.id) };
   });
   check('Policy: the register’s first entry is the town’s fd-admin exception, quoted from Town Hall word for word (the account, IS-04 and its approval year, “for convenience”, added in 2023 before IS-04, no approver recorded, no expiry, no review, removed the morning after the incident, the list empty since, the rule that followed), read only and closed; what Town Hall does not state (an owner, a compensating control, any day number) is shown as not stated',
     ['fd-admin, the Front Desk admin account', '“Multi-factor authentication is required for all remote access.” Approved 2024.', 'added in 2023', 'before IS-04 was approved', 'No approver recorded', 'fd-admin removed the morning after the incident; the list has been empty since', 'Exceptions now need an approver and an expiry, and Bram’s committee reads the list every month', 'MFA-Exceptions, that night: one member, fd-admin', 'for convenience'].every(q => qTH_SRC.includes(q) && JSON.stringify(qPp.seed).includes(q.replace(/"/g, '\\"'))) &&
     qPp.seed.seed === true && qPp.seed.status === 'closed' && qPp.seed.owner === 'not stated in the town’s record' && qPp.seed.controls === 'not stated in the town’s record' && qPp.seed.start === undefined && qPp.seed.expiry === undefined && qPp.seed.review === undefined && /no expiry/.test(qPp.seed.expiryText) && /no review/.test(qPp.seed.reviewText), qPp.seed);
-  check('Policy, the approver routing (POL-1 6.2, 6.3): each exception’s business owner approves by signing (Edda for board-display, the five service accounts and cp-patch; Marit for an imported must-have; the Library’s Director for hers); fin-ap’s is the Compact Board’s, in its minute, on this path where the Board trimmed R4 to $0, and Marit’s where R4 is funded; never the CISO',
-    qPp.finalR4 === 0 && qPp.ap['EX-01'] === 'Edda Thornquist' && qPp.ap['EX-02'] === 'Edda Thornquist' && qPp.ap['EX-03'] === 'Edda Thornquist' && qPp.ap['EX-04'] === 'the Compact Board (minute, Day 67)' && qPp.apFunded === 'Marit Quellan' &&
+  check('Policy, the approver routing (POL-1 6.2, 6.2a, 6.3): a standard exception’s owner approves by signing (Edda for board-display and cp-patch; Marit for an imported must-have, decided in Suppliers); the five service accounts are escalated (personal records), so the chair; fin-ap’s is the Compact Board’s under 6.3 on this path where the Board trimmed R4 to $0 (“the exception to its Day 81 minute”), and the chair’s where R4 is funded (escalated: the broken call-back tolerance); never the CISO',
+    qPp.finalR4 === 0 && qPp.ap['EX-01'] === 'Edda Thornquist' && qPp.ap['EX-02'] === 'Ivor Penhallow, the Board’s chair (6.2a)' && qPp.ap['EX-03'] === 'Edda Thornquist' && qPp.ap['EX-04'] === 'the Compact Board (6.3: R4 carried in its Day 67 minute; the exception to its Day 81 minute)' && qPp.apFunded === 'Ivor Penhallow, the Board’s chair (6.2a)' &&
     qPp.imp.length === 1 && qPp.imp[0].id === 'EX-11' && qPp.imp[0].owner === 'Marit Quellan' && qPp.imp[0].ap === 'Marit Quellan' && qPp.imp[0].exp === 428 && qPp.imp[0].rev === 155 && /the CISO/.test(qPp.imp[0].rec) && /STD-3/.test(qPp.imp[0].clause) &&
     !Object.values(qPp.ap).some(a => /CISO/.test(a)), { ap: qPp.ap, funded: qPp.apFunded, imp: qPp.imp });
+  check('Policy, the two tiers (6.2a), one entry per trigger: no trigger is standard; the CISO against, a partial control, safety-of-life or personal records, a second renewal and a broken tolerance (fin-ap inside R4 as now) each escalate; the five service accounts are escalated (personal records)',
+    qPp.trig.base === 'standard' && ['against', 'partial', 'critical', 'renewal', 'tol', 'e2'].every(k => qPp.trig[k] === 'escalated') && /a tolerance breaks/.test(qPp.trig.tolWhy), qPp.trig);
+  check('Policy, one decider per decision: the owner alone cannot approve an escalated entry (nor the CISO), the chair can; a standard one is its owner’s, not the chair’s; a member’s escalated one is its own leadership’s, not its owner’s; under 6.3 the Board decides, not the owner',
+    !qPp.dec.ownerEsc.ok && /not its owner alone/.test(qPp.dec.ownerEsc.why) && qPp.dec.chairEsc.ok && !qPp.dec.cisoEsc.ok && qPp.dec.ownerStd.ok && !qPp.dec.chairStd.ok && qPp.dec.memLead.ok && !qPp.dec.memOwner.ok && !qPp.dec.boardOwner.ok && qPp.dec.board.ok, qPp.dec);
+  check('Policy, renewals counted (6.8, F4) and the quarter’s arithmetic (F5): a renewal at the Day 155 Board may run to a review at Day 246; a second renewal by the owner alone is refused as escalated, the chair’s is accepted and opens the standard’s review; the next quarterly Board after Day 65, 81, 155 and 200 is 155, 155, 246 and 246; an escalated entry’s owner cannot renew it alone; board-display is open at 16:59 on Day 75 and expired from 17:00',
+    qPp.ren1.ok && !qPp.ren2o.ok && /second renewal is escalated/.test(qPp.ren2o.why) && qPp.ren2c.ok && qPp.ren2c.stdReview && qPp.rnStd && qPp.rnN === 2 && qPp.nb.join() === '155,155,246,246' && !qPp.rEscOwner.ok && /escalated/.test(qPp.rEscOwner.why) && qPp.at.join() === 'open,expired',
+    { ren1: qPp.ren1, ren2o: qPp.ren2o, ren2c: qPp.ren2c, nb: qPp.nb, at: qPp.at, esc: qPp.rEscOwner });
+  check('Policy, 6.7 on the register (decision 2): on this override path, before the call-back, fin-ap’s entry shows R4 breaking the call-back tolerance as now, the Board’s Day 67 acceptance as its acceptance, and the escalation; its item shows the class and the tolerance line',
+    /^6\.7: breaks the call-back tolerance \(R4, as now\): on the risk register as R4’s acceptance \(Board, Day 67\); escalated \(6\.2a\)$/.test(qPp.tolTxt) && /class \(the CISO’s check\): escalated/.test(qPp.itemE4) && /Tolerances: 6\.7: breaks the call-back tolerance/.test(qPp.itemE4), { tol: qPp.tolTxt });
   check('Policy, expiry handling: board-display’s exception is open on Day 75 and expired on Day 78; the five service accounts’ open on Day 155 and expired on Day 156; the CISO cannot close or renew one; its owner closes it; a renewal needs its owner (or the Board under 6.3), fresh evidence, an expiry within 12 months and a review by the next quarterly Board, and then reads “renewed”',
     qPp.st.e1at75 === 'open' && qPp.st.e1at78 === 'expired' && qPp.st.e2at155 === 'open' && qPp.st.e2at156 === 'expired' && !qPp.closeCiso.ok && qPp.closeOwner.ok &&
     !qPp.rCiso.ok && /owner/.test(qPp.rCiso.why) && !qPp.rNoEv.ok && /evidence/.test(qPp.rNoEv.why) && !qPp.rLong.ok && /12 months/.test(qPp.rLong.why) && !qPp.rLate.ok && /review/.test(qPp.rLate.why) && qPp.rOk.ok && qPp.e2r.renewed && qPp.e2r.status === 'renewed' && qPp.rBoard.ok,
     { st: qPp.st, rCiso: qPp.rCiso, rNoEv: qPp.rNoEv, rLong: qPp.rLong, rLate: qPp.rLate, rOk: qPp.rOk, rBoard: qPp.rBoard });
   check('Policy, the rule’s checks (6.2, 6.5): a write-up needs the service’s business owner (not the CISO, not another person), a dated expiry within 12 months of its start (not “permanent”, not “when the mailboxes arrive”), and a review date no later than its expiry and the next quarterly Board (not Day 428, not “when something changes”)',
     !qPp.chk.ok.length && qPp.chk.ciso.length && qPp.chk.other.length && qPp.chk.perm.length && qPp.chk.when.length && qPp.chk.long.length && qPp.chk.late.length && qPp.chk.reviewWhen.length, qPp.chk);
-  check('Policy metrics read the advice: the right register, both expired exceptions sent to their owners, and every document dated give 100/100/100; a wrong owner (the CISO) on the five service accounts and Edda on fin-ap drop the register to 33% (the imported must-have stays complete), cp-patch left “open” halves the expired score, two documents undated drop the library to 67%; a wrong drill-1 verdict alone halves the expired score',
-    qPp.mRight.exc === 100 && qPp.mRight.exp === 100 && qPp.mRight.rev === 100 && qPp.mWrong.exc === 33 && qPp.mWrong.exp === 50 && qPp.mWrong.rev === 67 && qPp.mDrill.exp === 50 && qPp.mDrill.exc === 100, { right: qPp.mRight, wrong: qPp.mWrong, drill: qPp.mDrill });
+  check('Policy metrics read the advice: the right write-ups, both expired exceptions sent to their owners, and every document dated give 100/100/100; the score counts only your two write-ups (EX-02, EX-04): both wrong is 0%, one wrong 50%, while the entries you never wrote (the imported must-have) sit on an unscored line; cp-patch left “open” halves the expired score, two documents undated drop the library to 67%; a wrong drill-1 verdict alone halves the expired score',
+    qPp.mRight.exc === 100 && qPp.mRight.exp === 100 && qPp.mRight.rev === 100 && qPp.mWrong.exc === 0 && qPp.mHalf.exc === 50 && qPp.mRight.reg && qPp.mRight.reg.of === 1 && qPp.mRight.reg.n === 1 && qPp.mWrong.exp === 50 && qPp.mWrong.rev === 67 && qPp.mDrill.exp === 50 && qPp.mDrill.exc === 100, { right: qPp.mRight, wrong: qPp.mWrong, drill: qPp.mDrill });
   check('Policy, the rule as written (POL-1 section 6): one clause, exact scope, a reason, controls that cover the gap; the owner decides and signs; the Board approves only where its own decision left it, in its minute; the CISO writes up, checks, records and recommends, and never approves, signs, renews or closes one; 12 months; review by expiry and the next quarterly Board; expired is not open; renew by the same route with fresh evidence; an acceptance too when above appetite; a lasting difference goes to the standard’s review',
-    ['6.1', '6.8', 'exactly', 'cover the gap', 'The owner decides on it and signs; the signature is its approval', 'the Board approves it in its minute', 'The CISO never approves, signs, renews or closes one', '12 months (365 days)', 'no later than its expiry and no later than the next quarterly Board', 'An expired exception is not open', 'renews through the same route with fresh evidence', 'also an acceptance on the risk register', 'goes to the standard’s review'].every(t => qPp.rule.includes(t)), qPp.rule.slice(0, 600));
+    ['6.1', '6.8', 'exactly', 'cover the gap', 'The owner asks for it and signs for running its control', 'a standard exception, the owner decides, and the signature is its approval', '6.2a Escalated: the CISO recommends against; the control covers only part of the gap; a risk goes above appetite or a tolerance breaks (6.7); the system serves a safety-of-life service or holds personal records; or it is a second renewal', 'the Board’s chair decides, on the papers, within five working days', 'that member’s own leadership above the owner decides', 'One the CISO recommends against is escalated (6.2a)', 'its control is checked by Edda’s team, not the CISO', '6.6a At its expiry', 'A second renewal also opens the standard’s review', 'the Board approves it in its minute', 'The CISO never approves, signs, renews or closes one', '12 months (365 days)', 'no later than its expiry and no later than the next quarterly Board', 'An expired exception is not open', 'renews through the same route with fresh evidence', 'also an acceptance on the risk register', 'goes to the standard’s review'].every(t => qPp.rule.includes(t)) && !/still stands on its owner’s signature|next quarterly Board with the recommendation/.test(qPp.rule), qPp.rule.slice(0, 600));
   check('Policy, nothing before its evidence: Monday’s intake and the register’s Monday notes hold no Tuesday or later result (no 10:31, 7 of 10, FIN-STAFF, Day 79, LIB-FILM-01); fin-ap’s control reads “not checked yet”; the Library’s exception is not on the register before Thursday’s check; the game notes, readable from Monday, name no drill result',
-    !/10:31|7 of 10|FIN-STAFF|Day 79|LIB-FILM-01|49 sign-ins/.test(qPp.qIntakeTxt) && /not checked yet/.test(qPp.qIntakeTxt) && !qPp.ids.includes('EX-05') && !/LIB-FILM-01/.test(qPp.reg) && !/10:31|7 of 10|not applied|09:50|11:10/.test(qPp.notes), { ids: qPp.ids });
+    !/10:31|27 of 30|FIN-STAFF|Day 79|LIB-FILM-01|49 sign-ins|finance-office rule’s scope/.test(qPp.qIntakeTxt.replace(/control: the finance-office rule/g, '')) && /not checked yet/.test(qPp.qIntakeTxt) && !qPp.ids.includes('EX-05') && !/LIB-FILM-01/.test(qPp.reg) && !/10:31|27 of 30|not applied|09:50|11:10/.test(qPp.notes), { ids: qPp.ids });
   check('Policy facts: GV.PO-01 with its examples Ex2 and Ex3 and GV.PO-02, word for word as the NIST Implementation Examples print them; T1308 “Coordinate cybersecurity policy review and approval processes” on the NICE fact; six documents (POL-1, STD-1 to STD-5)',
     qPp.fm.includes('GV.PO-01: “Policy for managing cybersecurity risks is established based on organizational context, cybersecurity strategy, and priorities and is communicated and enforced”') && qPp.fm.includes('“Require approval from senior management on policy”') &&
     qPp.fm.includes('“Periodically review policy and supporting processes and procedures to ensure that they align with risk management strategy objectives and priorities, as well as the high-level direction of the cybersecurity policy”') &&
@@ -675,12 +712,12 @@ async function session(ctx, seed) {
       all: JSON.stringify([CH_POL_DRILLS, CH_POL_CONSULT, CH_POL_REPLY, CH_POL_DIRECTIVE, CH_POL_DOJO, CH_POL_BOARD_SPECS()]) };
   });
   check('Policy drills (the spec’s three): validity needs the exception’s record and the review record (not the team’s note, not that it still signs in); the control needs the rule’s scope and fin-ap’s sign-in records (not Marit’s write-up, not where people sat); followed needs STD-4’s wording and the sample (not the attestation, not that nobody signed in)',
-    qPd.v.polvalid.needs.join() === 'entry,reviews' && /^Not valid: it expired on Friday at 17:00, and no review renewed it$/.test(qPd.v.polvalid.good) && qPd.v.polcover.needs.join() === 'rule,log' && /^No: the rule leaves fin-ap out/.test(qPd.v.polcover.good) &&
-    qPd.v.polfollow.needs.join() === 'words,sample' && /^Not as written: 3 of 10 in the sample were disabled late$/.test(qPd.v.polfollow.good) && qPd.v.polvalid.srcs.length === 4 && qPd.v.polcover.srcs.length === 4 && qPd.v.polfollow.srcs.length === 4, qPd.v);
+    qPd.v.polvalid.needs.join() === 'entry,reviews' && /^Not valid: the exception expired on Friday at 17:00, and no review renewed it$/.test(qPd.v.polvalid.good) && qPd.v.polcover.needs.join() === 'rule,log' && /^No: the rule leaves fin-ap out/.test(qPd.v.polcover.good) &&
+    qPd.v.polfollow.needs.join() === 'words,sample' && /^Not as written: 3 of the 30 leavers’ accounts were disabled late$/.test(qPd.v.polfollow.good) && /every record of the next 30 days/.test(qPd.all) && /The 7-day sign-in summary/.test(qPd.all) && /fin-ap: 49 sign-ins in the 7 days to 08:00, all from the finance office’s three PCs/.test(qPd.all) && !/49 sign-ins this week/.test(qPd.all) && /fewer than 50, so all 30/.test(qPd.all) && !/sample was unlucky|bigger sample|Every third/.test(qPd.all) && qPd.v.polvalid.srcs.length === 4 && qPd.v.polcover.srcs.length === 4 && qPd.v.polfollow.srcs.length === 4, qPd.v);
   check('Policy: the directive’s right answer is never permanent, the owner decides and signs, with an expiry, a review and a control for the gap; granting it (permanently, or yourself for a year), refusing it outright and sending it to the Board are wrong for stated reasons; the consultation goes to the members’ owners, counsel (the legal wording) and Edda (operability); the Board approves the policy and the CISO issues the standards; the defender side only (no ATT&CK ID, no attack verb)',
-    /^Never permanent: you decide and sign, with an expiry, a review and a control for the gap$/.test(qPd.dir.find(o => o[1])[0]) && qPd.dir.filter(o => !o[1]).length === 4 && qPd.dir.every(o => o[1] || o[2].length > 20) &&
+    /^Not as a permanent one: the exception is yours to decide and sign, with an expiry, a review and a control$/.test(qPd.dir.find(o => o[1])[0]) && qPd.dir.filter(o => !o[1]).length === 4 && qPd.dir.every(o => o[1] || o[2].length > 20) &&
     qPd.consult.length === 3 && qPd.consult.some(l => /legal wording/.test(l)) && qPd.consult.some(l => /^Edda/.test(l)) && qPd.consult.some(l => /members’ owners/.test(l)) &&
-    /^The policy\. I issue the standards under it, each with an owner and a review date$/.test(qPd.board[0][1]) && /no approver, no expiry and no review/.test(qPd.board[2][0]) &&
+    /^The policy: I issue the standards under it, each with an owner and a review date$/.test(qPd.board[0][1]) && /no approver, no expiry and no review/.test(qPd.board[2][0]) &&
     !/\bT1\d{3}\b|phish|malware|exploit|ransom|spray|brute/i.test(qPd.all), { dir: qPd.dir.map(o => o[0]), board: qPd.board });
 
   // Played: Monday to Thursday, with deliberate mistakes in drill 1 (one key source), the intake (the five service
@@ -688,8 +725,8 @@ async function session(ctx, seed) {
   // left to "when something changes").
   await A.follow(p => p.f.chPolStart, []);
   const qDP = await A.page.evaluate(() => ({ day: G.day, wd: CH_DAY[G.day], m: metricVals(), sc: editionScorecard(), obj: objective().text, reg: chExcRegisterHtml() }));
-  check('Policy opens on Day 78, a Monday; the policy metrics show “—” until the register and library are sent; the scorecard names the Bowline Badge as not yet; the objective is board-display at Edda’s desk',
-    qDP.day === 78 && qDP.wd === 'Monday' && (78 - 1) % 7 === 0 && qDP.m.chPolExc === null && qDP.m.chPolExp === null && qDP.m.chPolRev === null && /Exceptions with owner, expiry and review \(your register\)/.test(qDP.sc) && /Bowline Badge: not yet/.test(qDP.sc) && /board-display/.test(qDP.obj) && /EX-11/.test(qDP.reg), { day: qDP.day, m: qDP.m, obj: qDP.obj });
+  check('Policy opens on Day 78, a Monday; the policy metrics show “—” until the register and library are sent; the scorecard names the Sheet Bend Badge as not yet; the objective is board-display at Edda’s desk',
+    qDP.day === 78 && qDP.wd === 'Monday' && (78 - 1) % 7 === 0 && qDP.m.chPolExc === null && qDP.m.chPolExp === null && qDP.m.chPolRev === null && /Exceptions you wrote up with owner, expiry and review \(your register\)/.test(qDP.sc) && /Sheet Bend Badge: not yet/.test(qDP.sc) && /board-display/.test(qDP.obj) && /EX-11/.test(qDP.reg), { day: qDP.day, m: qDP.m, obj: qDP.obj });
   await A.goTo('choffice', 18, 2);
   await A.settle([], /Investigation drill · board-display’s exception/);
   await A.settle([], /^Drill ·/);
@@ -710,9 +747,10 @@ async function session(ctx, seed) {
   const qIntakeTxt = await A.modalText();
   await A.settle([]);
   const qSayI = await sayLog();
-  const qPI = await A.page.evaluate(() => ({ sent: G.ch.pol.intakeSent, m: metricVals(), e2: chExc('EX-02'), e3: chExc('EX-03'), e4: chExc('EX-04'), f: G.f.chPolRegister }));
-  check('Policy intake, played: the register sent with the five service accounts given to the CISO is scored on the advice (67%: the imported must-have and fin-ap complete); the debrief names the rule’s write-up; the corrected register has Edda as owner and Day 155 for review; cp-patch went to Edda, who closed it at 11:10 (PATCH-01 retired Friday); expired advice 100% (drill 1 right, cp-patch to its owner)',
-    qPI.sent['EX-02'] === 1 && qPI.m.chPolExc === 67 && qPI.m.chPolExp === 100 && /EX-02/.test(qIntakeTxt) && /You keep the register\. The accounts run in Edda’s shared services, so she is their owner\./.test(qIntakeTxt) && /You correct your own register/.test(qIntakeTxt) &&
+  const qPI = await A.page.evaluate(() => ({ sent: G.ch.pol.intakeSent, m: metricVals(), e2: chExc('EX-02'), e3: chExc('EX-03'), e4: chExc('EX-04'), f: G.f.chPolRegister, item4: chExcItemHtml(chExc('EX-04')), item2: chExcItemHtml(chExc('EX-02')) }));
+  check('Policy intake, played: the register sent with the five service accounts given to the CISO is scored on the advice (50%: fin-ap right, the five service accounts wrong); the debrief names the draft rule’s write-up; on the override path fin-ap’s entry shows 6.7 (R4 breaks the call-back tolerance as now, the Board’s acceptance) and the five service accounts await the chair; the corrected register has Edda as owner and Day 155 for review; cp-patch went to Edda, who closed it at 11:10 (PATCH-01 retired Friday); expired advice 100% (drill 1 right, cp-patch to its owner)',
+    qPI.sent['EX-02'] === 1 && qPI.m.chPolExc === 50 && qPI.m.chPolExp === 100 && /EX-02/.test(qIntakeTxt) && /You keep the register\. The accounts run in Edda’s shared services, so she is their owner\./.test(qIntakeTxt) && /You correct your own register/.test(qIntakeTxt) && /The draft rule’s: /.test(qIntakeTxt) && /Account/.test(qIntakeTxt) &&
+    /Tolerances: 6\.7: breaks the call-back tolerance \(R4, as now\): on the risk register as R4’s acceptance \(Board, Day 67\); escalated \(6\.2a\)/.test(qPI.item4) && /approver \(the rule\): Ivor Penhallow, the Board’s chair \(6\.2a\); to be decided on the papers within five working days/.test(qPI.item2) &&
     qPI.e2.owner === 'Edda Thornquist' && qPI.e2.review === 155 && qPI.e2.expiry === 155 && qPI.e3.closed && qPI.e3.closedBy === 'Edda Thornquist' && qPI.e3.closedAt === '11:10' && qPI.e4.expiry === 155 && qPI.e4.review === 155 && qPI.e4.owner === 'Marit Quellan' &&
     qSayI.some(x => /^Edda Thornquist\|11:10: cp-patch is out of MFA-Exempt/.test(x)), { sent: qPI.sent, m: qPI.m, txt: qIntakeTxt.slice(0, 600) });
   const qCons = await A.follow(p => p.f.chPolConsult, [], /POL-1 v0\.1 · the consultation/);
@@ -723,9 +761,15 @@ async function session(ctx, seed) {
   check('Policy consultation, played: the Board picked first (before consultation) is explained and retried; the false start recorded; the draft goes to the members’ owners, Noor and Edda',
     !!qCons && qPC.first === false && qSayC.some(x => /Approval comes after the consultation/.test(x)) && qSayC.some(x => /14:20: sent, to each member’s owner, to Noor and to Edda/.test(x)), qPC);
   await A.follow(p => p.f.chPolDrillC, []);
-  const qPB = await A.page.evaluate(() => ({ dr: G.ch.pol.drills, e4: chExc('EX-04'), day: G.day }));
-  check('Policy drills 2 and 3, played on Tuesday (Day 79): fin-ap’s control, then in the rule’s scope and checked by a sign-in (10:31, applied); STD-4 measured by sample; both supported',
-    qPB.day === 79 && qPB.dr.polcover.verdictOk && qPB.dr.polcover.supported && qPB.dr.polfollow.verdictOk && qPB.dr.polfollow.supported && /fin-ap in its scope since Day 79 10:20/.test(qPB.e4.controls) && /10:31, location rule applied/.test(qPB.e4.controls), qPB);
+  const qPB = await A.page.evaluate(() => ({ dr: G.ch.pol.drills, e4: chExc('EX-04'), e2: chExc('EX-02'), day: G.day, cb: G.f.chPolCallback, tol4: chExcTolerance(chExc('EX-04')).text, cls4: chExcClass(chExc('EX-04')), ap4: chExcApprover(chExc('EX-04')), resp: JSON.stringify(CH_POL_DRILLS.polcover.response) }));
+  const qSayT = await sayLog();
+  check('Policy drills 2 and 3, played on Tuesday (Day 79): fin-ap’s control, then in the rule’s scope and checked by a sign-in (10:31, applied), the weeks before read (Day 65 08:00 to 10:20, 99 sign-ins) and the control found partial; STD-4 measured on all 30 records; both supported',
+    qPB.day === 79 && qPB.dr.polcover.verdictOk && qPB.dr.polcover.supported && qPB.dr.polfollow.verdictOk && qPB.dr.polfollow.supported && /fin-ap in its scope since Day 79 10:20/.test(qPB.e4.controls) && /10:31, location rule applied/.test(qPB.e4.controls) &&
+    /Day 65 08:00 to 10:20 today: 99, all from the finance office’s three PCs; its mailbox rules and forwarding: none added since Day 65/.test(qPB.resp) && /the control is partial \(6\.2a\) until the named mailboxes arrive/.test(qPB.resp) && qPB.e4.partial === true && qSayT.some(x => /Twenty-seven of thirty/.test(x)), qPB);
+  check('Policy, Tuesday 10:40 (decision 2): Marit decides the call-back rule, so the financial tolerance holds from then on every path; fin-ap’s controls cite it; its entry is escalated as partial; 13:00 the chair decides the five service accounts on the papers (6.2a), while fin-ap stays the Board’s under 6.3 on this path',
+    qPB.cb === true && qSayT.some(x => /^Marit Quellan\|10:40\. From today, no payment detail changes without a call-back on a number we already hold/.test(x)) && /called back on a known number \(Marit, Day 79\)/.test(qPB.e4.controls) && /: within$/.test(qPB.tol4) && /call-back in force from Day 79/.test(qPB.tol4) &&
+    qPB.cls4.cls === 'escalated' && /only part of the gap/.test(qPB.cls4.why.join()) && /^the Compact Board \(6\.3/.test(qPB.ap4) && qPB.e2.decidedBy === 'Ivor Penhallow' && qPB.e2.decidedDay === 79 && !qPB.e4.decidedBy &&
+    qSayT.some(x => /^Ivor Penhallow\|13:00, on the papers \(6\.2a\): EX-02 five service accounts, escalated, so mine to decide/.test(x)), { e2: qPB.e2.decidedBy, tol4: qPB.tol4, cls4: qPB.cls4, ap4: qPB.ap4 });
   await A.follow(p => p.f.chPolReplies, []);
   const qDirP = await A.follow(p => p.f.chPolDirective, [], /The Library’s request: what do you tell its Director/);
   await A.pickLabel(/^Grant it permanently/);
@@ -733,9 +777,12 @@ async function session(ctx, seed) {
   const qSayD = await sayLog();
   const qPD = await A.page.evaluate(() => ({ dir: G.ch.pol.directive, rep: G.ch.pol.replies, ids: chExcInit().map(e => e.id) }));
   check('Policy, Wednesday played: Noor’s wording goes in (legal wording is counsel’s); Edda’s operability point goes into STD-4 (the CISO’s, as its issuer); the directive’s wrong first pick (permanent) is explained and recorded; the Director decides and signs until Day 428 with a control, review Day 155; your recommendation recorded as yours; the entry waits for the control’s check',
-    qPD.rep.first.every(Boolean) && qSayD.some(x => /09:20: section 7 is Noor’s/.test(x)) && qSayD.some(x => /STD-4 is yours to issue/.test(x)) && !!qDirP && qPD.dir.first === false && qSayD.some(x => /A difference meant to last goes to STD-5’s review/.test(x)) &&
+    qPD.rep.first.every(Boolean) && qSayD.some(x => /09:20: section 7 is Noor’s/.test(x)) && qSayD.some(x => /STD-4 is yours to issue/.test(x)) && qSayD.some(x => /with the reason \(Tuesday’s records\) recorded beside the change/.test(x)) && qSayD.some(x => /^\|12:40: the five members’ owners agree the 12:00 notice by e-mail/.test(x)) && qSayD.some(x => /Signed under the draft’s section 6; it stands from Thursday’s approval/.test(x)) && !!qDirP && qPD.dir.first === false && qSayD.some(x => /A difference meant to last goes to STD-5’s review/.test(x)) &&
     qSayD.some(x => /11:50, her decision: “Then until Day 428, signed: LIB-FILM-01 on its own segment/.test(x)) && qSayD.some(x => /Your recommendation, recorded as yours: for, once the control is in and checked/.test(x)) && !qPD.ids.includes('EX-05'), { dir: qPD.dir, ids: qPD.ids });
   await A.follow(p => false, [], /The policy library · review dates/);
+  const qLib0 = await A.page.evaluate(() => UI.modal.items.map(o => o.note || ''));
+  check('Policy library at 14:00 Wednesday carries STD-4 v2 (the 12:00 notice, agreed by each member’s owner) and each document’s owner (POL-1 the Board’s; the standards the CISO’s, as issuer, with Edda’s team operating STD-1, STD-4 and STD-5)',
+    /Each member sends its leaver notice to reach the Compact by 12:00 that day \(agreed by each member’s owner, Day 80\)/.test(qLib0[4]) && /Owner: the Compact Board \(kept by the CISO\)/.test(qLib0[0]) && /Owner: the CISO, as issuer; operated by Edda’s team/.test(qLib0[1]) && /Owner: the CISO, as issuer\./.test(qLib0[2]), qLib0);
   await A.page.evaluate(() => { const t = G.ch.pol.lib; for (const d of CH_POL_DOCS) t[d.id] = CH_POL_REVIEWS.indexOf(d.bot); t['STD-2'] = 0; });
   await A.page.evaluate(() => UI.closeModal({lr: true, d: 1, i: 2})); await sleep(120);
   await A.pickLabel(/^Send it to the Board papers$/);
@@ -752,23 +799,104 @@ async function session(ctx, seed) {
     qPK.day === 81 && qPK.dojo.every(Boolean) && qPK.fm === qFmP + 2 && qPK.e5 && qPK.e5.owner === 'Director Mina Strand' && qPK.ap === 'Director Mina Strand' && qPK.e5.start === 81 && qPK.e5.expiry === 428 && qPK.e5.review === 155 && qPK.st === 'open' && /checked Day 81 09:00/.test(qPK.e5.controls) && /^the CISO: for/.test(qPK.e5.recommendedBy), qPK);
   await A.follow(p => p.f.chPolBoard, []);
   const qSayB3 = await sayLog();
-  const qPBd = await A.page.evaluate(() => ({ b: G.ch.pol.board, min: G.ch.pol.minute, f: G.f, fm: G.focusMax, pub: G.ch.pol.published, sc: editionScorecard(), badges: EDITION.badgeFlags }));
-  check('Policy round, played: three rounds; the minute (POL-1 approved, the Board’s decision) reads the register as it is: open EX-02, EX-04, EX-05 and the imported EX-11, closed EX-01 and EX-03, none past its expiry, fin-ap’s approved there as the Board’s own decision of Day 67 left it (6.3), the Library’s on its owner’s signature; the Bowline Badge, Focus +4; the standards issued and published, STD-2 given Day 155 before it goes, the scorecard still reading the library as sent',
-    qPBd.b.first.length === 3 && /POL-1 is approved: the Board’s decision/.test(qPBd.min.text) && qPBd.min.open.join() === 'EX-02,EX-04,EX-11,EX-05' && qPBd.min.closed.join() === 'EX-01,EX-03' && !qPBd.min.past.length && /none open past its expiry/.test(qPBd.min.text) &&
-    /EX-04 fin-ap: approved here, as the Board’s own decision of Day 67 left it \(section 6\.3\)/.test(qPBd.min.text) && /EX-05, the Library’s, stands on its owner’s signature/.test(qPBd.min.text) && qPBd.f.chBowline && qPBd.badges.includes('chBowline') && qPBd.fm === qFmP + 2 + 4 &&
-    qPBd.pub['STD-2'] === 155 && qSayB3.some(x => /STD-2 had none within 12 months in the library you sent: under section 8 each gets one before it goes \(15:40\), STD-2 Day 155\. The scorecard reads the library as you sent it\./.test(x)) && /Bowline Badge: yes/.test(qPBd.sc) &&
-    qSayB3.some(x => /Bowline Badge \(game\)/.test(x)) && qSayB3.some(x => /every exception’s expiry and review date reaches your desk on the Monday before it falls due/.test(x)), { min: qPBd.min, pub: qPBd.pub });
+  const qPBd = await A.page.evaluate(() => ({ b: G.ch.pol.board, min: G.ch.pol.minute, f: G.f, fm: G.focusMax, pub: G.ch.pol.published, sc: editionScorecard(), badges: EDITION.badgeFlags, e4: chExc('EX-04') }));
+  check('Policy round, played: three rounds; the minute (POL-1 approved, the Board’s decision, its review date set in the minute) reads the register as it is: open EX-02, EX-04, EX-05 and the imported EX-11, each with its class, closed EX-01 and EX-03, none past its expiry; the five service accounts decided by the chair on Tuesday (6.2a); fin-ap’s approved there, the exception to this minute (6.3), and its 6.7 line; the Library’s a standard one, signed under the draft and confirmed; EX-11 from the CISO’s own recommendation, checked by Edda’s team; the STD-1 miss reported; the Sheet Bend Badge, Focus +4; the standards issued and published with their owners, STD-2 given Day 155 before it goes, the scorecard still reading the library as sent',
+    qPBd.b.first.length === 3 && /POL-1 is approved: the Board’s decision\. POL-1 to be reviewed by Day 428, set in this minute\./.test(qPBd.min.text) && qPBd.min.open.join() === 'EX-02,EX-04,EX-11,EX-05' && qPBd.min.closed.join() === 'EX-01,EX-03' && !qPBd.min.past.length && /none open past its expiry/.test(qPBd.min.text) &&
+    /EX-02 five service accounts: escalated, decided by the chair on Tuesday under 6\.2a, minuted here/.test(qPBd.min.text) && /EX-04 fin-ap: approved here, the exception to this minute \(6\.3: R4 carried in the Day 67 minute\)/.test(qPBd.min.text) && /EX-04 sits inside R4 \(6\.7\): financial: call-back in force from Day 79 \(Marit\): within/.test(qPBd.min.text) &&
+    /EX-05, the Library’s, a standard one, signed by its owner under the draft and confirmed under POL-1 as approved/.test(qPBd.min.text) && /EX-11: from the CISO’s own recommendation, as the papers say; its control is checked by Edda’s team \(6\.4\)/.test(qPBd.min.text) && /a STD-1 miss/.test(qPBd.min.text) && qPBd.e4.approvedIn === 'minute, Day 81' &&
+    qPBd.f.chSheetBend && qPBd.badges.includes('chSheetBend') && qPBd.fm === qFmP + 2 + 4 && qPBd.pub['POL-1'] === 428 && qSayB3.some(x => /each with its owner \(the CISO as issuer; Edda’s team operating STD-1, STD-4 and STD-5\)/.test(x)) &&
+    qPBd.pub['STD-2'] === 155 && qSayB3.some(x => /STD-2 had none within 12 months in the library you sent: under section 8 each gets one before it goes \(15:40\), STD-2 Day 155\. The scorecard reads the library as you sent it\./.test(x)) && /Sheet Bend Badge: yes/.test(qPBd.sc) &&
+    qSayB3.some(x => /Sheet Bend Badge \(game\)/.test(x)) && qSayB3.some(x => /every exception’s expiry and review date reaches its owner, and your desk, on the Monday before it falls due/.test(x)), { min: qPBd.min, pub: qPBd.pub });
   await A.follow(() => false, [], /End of Policy/);
   const qPolSum = await A.modalText();
   const qPS2 = await A.page.evaluate(() => ({ obj: objective(), ser: Series.load().editions.charter, m: metricVals(), keep: { th: localStorage.getItem('uptime.slice1.save'), cr: localStorage.getItem('uptime.crossroads.save'), ng: localStorage.getItem('uptime.crossroads.ngplus.save') } }));
-  check('the Policy summary: “Next: The Board report”, the drills, the register (with the town’s entry quoted), the lesson (owner decides and signs, the Board only what its own decision left, expiry and review, the same route with fresh evidence, the CISO never grants one, the lifecycle), the scorecard on the advice (75% once the Library’s entry joins the two right rows, 100%, 83%); the series records Policy; the objective done; the earlier saves byte-for-byte as seeded',
+  check('the Policy summary: “Next: The Board report”, the drills, the register (with the town’s entry quoted), the lesson (the owner signs, who decides follows the check, the chair for an escalated one, the Board only what its own decision left, expiry and review, the same route with fresh evidence, the CISO never grants one, tolerances on what is in force today, the lifecycle), the scorecard on the advice (50%: your two write-ups, one wrong; 100%; 83%) with the unscored register line; the series records Policy; the objective done; the earlier saves byte-for-byte as seeded',
     /Next: The Board report/.test(qPolSum) && /board-display’s exception/.test(qPolSum) && /Is STD-4 followed\?/.test(qPolSum) && /EX-00 fd-admin, the Front Desk admin account/.test(qPolSum) && /a policy that says “all” needs a register that is read/.test(qPolSum) && /never grants one/.test(qPolSum) && /renews through the same route with fresh evidence/.test(qPolSum) &&
-    /Exceptions with owner, expiry and review \(your register\)/.test(qPolSum) && qPS2.m.chPolExc === 75 && qPS2.m.chPolExp === 100 && qPS2.m.chPolRev === 83 && qPS2.ser.policy === true && qPS2.obj.done && /^Policy done\. Next: The Board report\.$/.test(qPS2.obj.text) &&
+    /Exceptions you wrote up with owner, expiry and review \(your register\)/.test(qPolSum) && qPS2.m.chPolExc === 50 && /Register entries complete \(not scored\): 2 of 2/.test(qPolSum) && /an escalated one/.test(qPolSum) && /Tolerances bind on what is in force today/.test(qPolSum) && qPS2.m.chPolExp === 100 && qPS2.m.chPolRev === 83 && qPS2.ser.policy === true && qPS2.obj.done && /^Policy done\. Next: The Board report\.$/.test(qPS2.obj.text) &&
     qPS2.keep.th === TH_SAVE && qPS2.keep.cr === CR_SAVE && qPS2.keep.ng === NG_SAVE, { obj: qPS2.obj, ser: qPS2.ser, m: qPS2.m, sum: qPolSum.slice(0, 900) });
   await A.settle([/^Keep exploring/]);
   const qFmPol = await A.page.evaluate(() => fmHtml());
   check('Field Manual (Policy): GV.PO-01 and GV.PO-02 quoted, T1308, the policy practices (the lifecycle, validity, the register, the control against the gap, measuring by sample, exceptions through the route, the register for the board), and the game note that the town’s entry is quoted and nothing added',
     /GV\.PO-01: “Policy for managing cybersecurity risks/.test(qFmPol) && /GV\.PO-02/.test(qFmPol) && /T1308/.test(qFmPol) && /The policy lifecycle/.test(qFmPol) && /Is the exception still valid\?/.test(qFmPol) && /An exception register/.test(qFmPol) && /Does the control cover the gap\?/.test(qFmPol) && /Is the policy followed\?/.test(qFmPol) && /Exceptions through the route/.test(qFmPol) && /The register in the board’s language/.test(qFmPol) && /quoted from the town’s own records \(Town Hall\) and nothing is added to it/.test(qFmPol), null);
+
+
+  // ======== The systemic invariant (decision 2 of the slice-3 review) ========
+  // At every Board minute and district end of this run (the override path, with the poor-advice choices above), every
+  // register risk is within appetite and its tolerances, or covered by an acceptance naming the right decider.
+  const qAud = await A.page.evaluate(() => G.ch.audit);
+  check('invariant, override and poor-advice run: six checkpoints (the three Board minutes and the three district ends, Days 67, 74 and 81), none with a finding',
+    Array.isArray(qAud) && qAud.length === 6 && qAud.every(a => !a.bad.length) && qAud.map(a => a.day).join() === '67,67,74,74,81,81', qAud);
+  // The slice 1, 2 and 3 failures, re-created in the data on purpose: the invariant must catch each one.
+  const qBreak = await A.page.evaluate(() => {
+    const keep = JSON.stringify({accept: G.ch.accept, final: G.ch.final, f: G.f, sup: G.ch.sup, pol: G.ch.pol}), restore = () => { const k = JSON.parse(keep); G.ch.accept = k.accept; G.ch.final = k.final; G.f = k.f; G.ch.sup = k.sup; G.ch.pol = k.pol; };
+    const out = {};
+    out.clean = chAuditNow();
+    // Slice 1: the Board's override leaves R4 above appetite (broken call-back tolerance) with no acceptance.
+    G.f.chPolCallback = false; G.ch.accept = G.ch.accept.filter(a => a.line !== 'R4'); out.s1 = chAuditNow(); restore();
+    // Slice 1 too: an acceptance that names the owner where the Board's decision left the line above appetite.
+    G.ch.accept.find(a => a.line === 'R2').decider = 'Edda'; out.s1b = chAuditNow(); restore();
+    // Slice 1 too: the tolerance left off the acceptance.
+    G.f.chPolCallback = false; G.ch.accept.find(a => a.line === 'R4').breaks = []; out.s1c = chAuditNow(); restore();
+    // Slice 2: cp-xfer returned against the privacy tolerance with no acceptance.
+    G.ch.accept = G.ch.accept.filter(a => a.line !== 'CP-XFER'); out.s2 = chAuditNow(); restore();
+    // Slice 2 too: a must-have left out of the plan as sent with no acceptance.
+    G.ch.sup.accept = []; out.s2b = chAuditNow(); restore();
+    // Slice 3: the recommended path (R4 funded, so as now until it delivers) before the call-back, with no acceptance.
+    G.ch.final = {R1: 2, R2: 1, R3: 2, R4: 1, R5: 1, R6: 1}; G.f.chPolCallback = false; G.ch.accept = G.ch.accept.filter(a => !/^R\d$/.test(a.line));
+    out.s3 = chAuditNow(); G.ch.accept.push(chGapAcceptance(chLine('R4'), 67)); out.s3ok = chAuditNow();
+    // Slice 3 too: the gap closed while nothing holds the tolerance.
+    G.ch.accept.find(a => a.gap).closed = true; out.s3b = chAuditNow(); restore();
+    // 6.7: fin-ap's entry inside a broken R4 shown as standard (its escalation lost).
+    G.f.chPolCallback = false; const e4 = chExc('EX-04'), keepP = e4.partial; e4.partial = false; const oc = window.chExcClass; window.chExcClass = () => ({cls: 'standard', why: []}); out.s3c = chAuditNow(); window.chExcClass = oc; e4.partial = keepP; restore();
+    return out;
+  });
+  check('invariant: the slice 1, 2 and 3 failures re-created in the data are caught (R4 above appetite with no acceptance; an acceptance naming the owner where the Board decided; a broken tolerance missing from its acceptance; cp-xfer back with no acceptance; a must-have left out with none; R4 as now on the recommended path with no acceptance, then covered by Marit’s gap acceptance, then uncovered when it is closed with nothing holding the tolerance; fin-ap’s exception inside a broken R4 not escalated); the run’s own state is clean',
+    !qBreak.clean.length && qBreak.s1.some(x => /^R4: breaks call-back tolerance, no acceptance/.test(x)) && qBreak.s1b.some(x => /^R2: decided by Edda, the rule names Board/.test(x)) && qBreak.s1c.some(x => /^R4: its acceptance does not list the call-back tolerance/.test(x)) &&
+    qBreak.s2.some(x => /^CP-XFER: breaks privacy tolerance, no acceptance/.test(x)) && qBreak.s2b.some(x => /^MH .*: a must-have left out, no acceptance/.test(x)) && qBreak.s3.some(x => /^R4: breaks call-back tolerance, no acceptance/.test(x)) && !qBreak.s3ok.length && qBreak.s3b.some(x => /^R4: /.test(x)) &&
+    qBreak.s3c.some(x => /^EX-04: inside R4/.test(x)), qBreak);
+
+  const qSrc = await A.page.evaluate(() => ({ all: [...document.scripts].map(x => x.textContent).join('\n'), dojo2: CH_POL_DOJO[1].then, r1: CH_POL_BOARD_SPECS()[0].resp.find(r => /^Nothing:/.test(r.label)).why, rule: CH_POL_RULE.join(' ') }));
+  check('slice-3 review texts: no “Bowline” anywhere in the built page (the Sheet Bend Badge); POL-1 section 1 (what binds the members’ systems) and section 5 (the plan before the draw; every record under 50) in the week’s opening; the recalled directory fact worded from the game text; Round 1’s “Nothing” answered from Monday’s lifecycle, NIST’s senior management not equated with the Board; the dojo’s second question (the CISO against: the chair decides); 6.5 on a review that falls on the expiry day',
+    !/Bowline/.test(qSrc.all) && /Sheet Bend Badge/.test(qSrc.all) && /POL-1 binds the systems the Compact runs, because each member’s representative approves it at the Board/.test(qSrc.all) && /Where there are fewer than 50, every record is read/.test(qSrc.all) &&
+    /the shared directory holds the town’s accounts too/.test(qSrc.all) && !/the town’s directory is the shared directory/.test(qSrc.all) && /^Monday’s lifecycle: the Board approves the policy/.test(qSrc.r1) && /for the Compact, the Board holds that/.test(qSrc.r1) &&
+    qSrc.dojo2 && /CISO recommends against/.test(qSrc.dojo2.q) && /^The Board’s chair/.test(qSrc.dojo2.opts[qSrc.dojo2.good]) && /Where the review falls on the expiry day, the renewal is decided at the review, before 17:00/.test(qSrc.rule), { r1: qSrc.r1, dojo2: qSrc.dojo2 });
+
+  // POL-1 sent without a review date: the Board sets it in its own minute (finding 10); the 15:30 fallback is the standards'.
+  const qMin2 = await A.page.evaluate(() => { const p = chPol(), keep = JSON.stringify({lib: p.libSent, exc: p.exc}); p.libSent = Object.assign({}, p.libSent, {'POL-1': null}); const m = chPolMinute(); const k = JSON.parse(keep); p.libSent = k.lib; p.exc = k.exc; return m; });
+  check('POL-1 sent with no review date: the minute sets it (Day 428, “set in this minute (the library sent none)”), not the CISO after the vote',
+    qMin2.polReview === 428 && /POL-1 to be reviewed by Day 428, set in this minute \(the library sent none\)/.test(qMin2.text), qMin2.text.slice(0, 200));
+
+  // No NPC states an outcome before its time (finding 3, general): every NPC's line is read at every step of the
+  // objective chain (each prefix of its flags), and no outcome appears before the flag of the step that produces it.
+  const qEarly = await A.page.evaluate(async () => {
+    const src = [objective, supObjective, polObjective].map(f => f.toString()).join('\n'), chain = [];
+    for (const m of src.matchAll(/!f\.(\w+)\)/g)) if (!chain.includes(m[1])) chain.push(m[1]);
+    const keep = JSON.stringify(G), oSay = UI.say, oModal = UI.openModal, oChoose = UI.choose, lines = [];
+    let k = 0;
+    UI.say = (t, w) => { lines.push({k: k, who: w || '', t: t}); return Promise.resolve(); };
+    UI.openModal = () => Promise.reject(new Error('task')); UI.choose = () => Promise.reject(new Error('task'));
+    const npcs = ['penhallow', 'noorch', 'beatrizch', 'edda', 'quellan', 'strand', 'thrushcombe', 'ferredaysup'];
+    for (k = 0; k <= chain.length; k++) {
+      for (const id of npcs) {
+        const g = JSON.parse(keep); g.f = Object.fromEntries(chain.slice(0, k).map(x => [x, true])); Object.assign(G, g);
+        const n0 = lines.length, f0 = JSON.stringify(G.f); let task = false;
+        try { await talk({id: id, name: id}); } catch (e) { task = true; }
+        if (JSON.stringify(G.f) !== f0) task = true;   // a scene that sets its step's flag is a task, not an idle line
+        for (let i = n0; i < lines.length; i++) lines[i].task = task;
+      }
+    }
+    UI.say = oSay; UI.openModal = oModal; UI.choose = oChoose; Object.assign(G, JSON.parse(keep));
+    return {chain, lines};
+  });
+  const qRules = [[/cp-patch[^.]*closed|closed[^.]*cp-patch/i, 'chPolRegister'], [/board-display (is )?closed|board-display and cp-patch are closed/i, 'chPolDrillA'], [/checked now|in the rule’s scope now|call-back rule is mine/, 'chPolDrillB'],
+    [/Twenty-seven|27 of 30/, 'chPolDrillC'], [/Until Day 428, signed/, 'chPolDirective'], [/Sheet Bend Badge/, 'chPolBoard'], [/each on an open entry in date/, 'chPolCheck'], [/cp-xfer is back/, 'chSupThu'], [/cp-xfer (stays )?suspended/, 'chSupIncident'],
+    [/Hawser Badge/, 'chSupBoard'], [/Ballast Badge/, 'chBoard'], [/upgrade is funded|upgrade waits a year/, 'chBoard']];
+  // A task's own lines (the scene that produces the outcome, cut at its first choice) are at their time on that step; an
+  // NPC's idle line on that step, or any line on an earlier step, is early.
+  const qEarlyBad = qEarly.lines.filter(l => qRules.some(([re, fl]) => { const i = qEarly.chain.indexOf(fl); return re.test(l.t) && i >= 0 && (l.k < i || (l.k === i && !l.task)); }));
+  check('no NPC line states an outcome before its timeline time: each NPC read at every step of the objective chain (' + qEarly.chain.length + ' steps), and no outcome (cp-patch closed, board-display closed, fin-ap’s control checked, 27 of 30, the Library’s decision, the badges, the morning’s read, cp-xfer back or suspended, the upgrade decided) appears before the step that produces it; Edda before the intake says only board-display',
+    qEarly.chain.length > 40 && qEarly.lines.length > 200 && !qEarlyBad.length && qEarly.lines.some(l => l.k === qEarly.chain.indexOf('chPolRegister') && /^board-display is closed, my decision\. The register’s yours to write up at 10:30\.$/.test(l.t)),
+    { bad: qEarlyBad.slice(0, 5), n: qEarly.lines.length });
 
   // A Crossroads save code is refused by Charter's import; Charter's own still loads.
   const imp = await A.page.evaluate(async c => {
@@ -784,6 +912,33 @@ async function session(ctx, seed) {
     /GV\.RM-02/.test(fmT) && /GV\.RR-03/.test(fmT) && /T1059/.test(fmT) && /OG-WRL-007/.test(fmT) && /\(game\)/.test(fmT) && /a job may cover one or more work roles, or part of one/.test(fmT) && !/seniority/.test(fmT) && /<h3>Leadership practices \(game\)<\/h3>/.test(fmT) && !/D3FEND/.test(fmT) && !/IDs are from MITRE/.test(fmT) && /open in later districts/.test(fmT), null);
 
   check('full run: no console errors or network requests', !A.errors.length && !A.requests.length, { e: A.errors, r: A.requests });
+
+  // ======== The recommended path (the bot's choices), to the end of Policy: the invariant and 6.7 on this path ========
+  {
+    const ctxR = await browser.newContext();
+    const R = await session(ctxR, { 'uptime.series': SERIES });
+    await R.newGame();
+    await R.follow(p => p.f.chBoard, []);
+    const rB = await R.page.evaluate(() => ({ dec: G.ch.decision, acc: G.ch.accept.map(a => ({line: a.line, gap: !!a.gap, decider: a.decider, breaks: a.breaks, signedBy: a.signedBy})), aud: G.ch.audit }));
+    await R.follow(p => p.f.chPolRegister, []);
+    const rM = await R.page.evaluate(() => ({ item: chExcItemHtml(chExc('EX-04')), cls: chExcClass(chExc('EX-04')), ap: chExcApprover(chExc('EX-04')), aud: chAuditNow() }));
+    await R.follow(p => p.f.chPolDrillB, []);
+    const rT = await R.page.evaluate(() => ({ e4: chExc('EX-04'), e2: chExc('EX-02'), gap: G.ch.accept.find(a => a.gap), tol: chExcTolerance(chExc('EX-04')).text }));
+    await R.follow(() => false, [], /End of Policy/);
+    const rE = await R.page.evaluate(() => ({ aud: G.ch.audit, m: metricVals(), min: G.ch.pol.minute.text }));
+    await R.settle([/^Keep exploring/]);
+    check('recommended path, the Day 67 minute: the Board persuaded, R4 funded but as now until its line delivers, so Marit accepts the call-back gap and signs (decider: Marit, the tolerance listed); the invariant clean there',
+      rB.dec.persuaded && rB.acc.some(a => a.line === 'R4' && a.gap && a.decider === 'Marit' && a.signedBy === 'Marit Quellan' && /call-back/.test(a.breaks.join())) && rB.aud.length === 1 && !rB.aud[0].bad.length, rB);
+    check('recommended path, Monday 10:30 to Tuesday (decision 2): fin-ap’s entry is not shown as within appetite: “6.7: breaks the call-back tolerance (R4, as now): on the risk register as R4’s acceptance (Marit, Day 67); escalated (6.2a)”, the chair its approver',
+      /Tolerances: 6\.7: breaks the call-back tolerance \(R4, as now\): on the risk register as R4’s acceptance \(Marit, Day 67\); escalated \(6\.2a\)/.test(rM.item) && rM.cls.cls === 'escalated' && rM.ap === 'Ivor Penhallow, the Board’s chair (6.2a)' && !rM.aud.length, rM);
+    check('recommended path, Tuesday: the call-back rule in force from 10:40, Marit’s gap acceptance closed (Day 79), fin-ap’s tolerance line within; the chair decides EX-02 and EX-04 on the papers on Day 79 (both escalated)',
+      rT.gap && rT.gap.closed && rT.gap.closedDay === 79 && /call-back in force from Day 79/.test(rT.tol) && rT.e4.decidedBy === 'Ivor Penhallow' && rT.e2.decidedBy === 'Ivor Penhallow' && rT.e4.decidedDay === 79, { gap: rT.gap, tol: rT.tol, e4: rT.e4.decidedBy });
+    check('recommended path: the invariant clean at all six checkpoints (Days 67, 74, 81: each Board minute and district end); the policy metrics 100/100/100; the minute names EX-02 and EX-04 decided by the chair',
+      rE.aud.length === 6 && rE.aud.every(a => !a.bad.length) && rE.m.chPolExc === 100 && rE.m.chPolExp === 100 && rE.m.chPolRev === 100 && /EX-02 five service accounts and EX-04 fin-ap: escalated, decided by the chair on Tuesday under 6\.2a/.test(rE.min), { aud: rE.aud, m: rE.m });
+    check('recommended run: no console errors or network requests', !R.errors.length && !R.requests.length, { e: R.errors, r: R.requests });
+    await ctxR.close();
+  }
+
   await browser.close();
   const out = { suite: 'charter', seconds: Math.round((Date.now() - t0) / 1000), passed: Object.values(results).filter(v => v === 'ok').length, failed: Object.values(results).filter(v => v !== 'ok').length, results };
   console.log(JSON.stringify(out, null, 1));

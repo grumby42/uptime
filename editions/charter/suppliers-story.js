@@ -209,7 +209,8 @@ async function chSupBoardRound() {
   await say('14:00. The members’ representatives, Edda, Marit, Ilka, and Noor for anything legal. Suppliers, and Tuesday. Three questions.', who);
   sup.board = {first: []};
   await chStages(CH_SUP_BOARD_SPECS(), sup.board.first);
-  await say('15:00: the register goes in the minute: eight suppliers tiered, owners and review dates, the plan for the Compact’s four contracts, each acceptance its owner signed on your recommendation, and cp-xfer’s, measured against Monday’s privacy tolerance. Each member’s owner has its tier’s requirements for its own contracts. (game)', who);
+  await say('15:00: the register goes in the minute: eight suppliers tiered, owners and review dates, the plan for the Compact’s four contracts, each acceptance its owner signed on your recommendation, and cp-xfer’s, measured against Monday’s privacy tolerance.' + (G.ch.accept.some(x => x.gap && !x.closed) ? ' Still on the register: ' + G.ch.accept.filter(x => x.gap && !x.closed).map(x => x.line + '’s gap until its line delivers, ' + x.signedBy.split(' ')[0] + '’s').join(', ') + '.' : '') + ' Each member’s owner has its tier’s requirements for its own contracts. (game)', who);
+  chAudit('Suppliers: the Board’s minute (Day 74)');
   f.chSupBoard = true; f.chHawser = true;
   G.focusMax += 4; G.focus = G.focusMax; unlock('act', 'chsupboard'); touchCSF('Govern'); track();
   await say('You cleared the Compact Board’s Supplier round. This is the Hawser Badge (game).', who);
@@ -225,7 +226,7 @@ function chSupDrillRows() {
 async function chSupSummary() {
   const f = G.f, sup = chSup();
   if (!f.chSupSummary) {
-    f.chSupSummary = true; touchCSF('Govern');
+    f.chSupSummary = true; touchCSF('Govern'); chAudit('Suppliers: the district’s end (Day 74)');
     Series.markEdition('charter', {suppliers: true});
     await say('Eight suppliers in tiers, a plan within the money, and Tuesday told from our own records. Next, policy.', 'Ivor Penhallow');
   }

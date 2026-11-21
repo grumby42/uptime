@@ -377,13 +377,15 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     const chRes = { edition: 'charter', mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter, errors, requests, saveReloadBudget: savedCheckCh, saveReloadSuppliers: savedCheckChSup, saveReloadPolicy: savedCheckChPol,
       suppliers: sup && { tiers: sup.sent, plan: sup.planSent, accept: sup.accept.map(a => a.line + ':' + a.signedBy), needs: sup.needs, incident: sup.incident.first, board: sup.board && sup.board.first, dojo: sup.dojo },
       policy: pol && { intake: pol.intakeSent, library: pol.libSent, register: pol.exc.map(e => e.id + ':' + (e.seed ? 'seed' : e.closed ? 'closed' : 'open') + ':' + (e.seed ? '' : e.owner)), needs: pol.needs, consult: pol.consult, directive: pol.directive && pol.directive.first, board: pol.board && pol.board.first, dojo: pol.dojo, minute: pol.minute && pol.minute.text },
-      noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, seriesCharter: ser.editions && ser.editions.charter,
+      noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, seriesCharter: ser.editions && ser.editions.charter, audit: ch && ch.audit,
       final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, objective: fin.objective, override: ch && ch.decision, accept: ch && ch.accept.map(a => a.line + ':' + a.signedBy), needs: ch && ch.needs, sent: ch && ch.sent, final: ch && ch.final }, stats };
     console.log(JSON.stringify(chRes, null, 1));
     await browser.close();
-    const accOk = ch && ch.accept.length >= 1 && ch.accept.every(a => a.signedBy === a.owner && a.signedBy !== 'CISO') && sup && sup.accept.every(a => a.signedBy === a.owner);
+    // The systemic invariant (Charter slice-3 review): six checkpoints (three minutes, three district ends), none with a finding.
+    const audOk = ch && Array.isArray(ch.audit) && ch.audit.length === 6 && ch.audit.every(a => !a.bad.length);
+    const accOk = audOk && ch && ch.accept.length >= 1 && ch.accept.every(a => a.signedBy === a.owner && a.signedBy !== 'CISO') && sup && sup.accept.every(a => a.signedBy === a.owner);
     const supOk = sup && sup.sent && sup.planSent && fin.metrics.chSupTier === 100 && fin.metrics.chSupCrit === 100 && fin.metrics.chSupNotify === 100 && fin.metrics.chSupMust === 100 && fin.f.chHawser;
-    const polOk = pol && pol.intakeSent && pol.libSent && fin.metrics.chPolExc === 100 && fin.metrics.chPolExp === 100 && fin.metrics.chPolRev === 100 && fin.f.chBowline && pol.exc.some(e => e.id === 'EX-05') && pol.exc.filter(e => !e.seed).every(e => e.owner && e.owner !== 'the CISO');
+    const polOk = pol && pol.intakeSent && pol.libSent && fin.metrics.chPolExc === 100 && fin.metrics.chPolExp === 100 && fin.metrics.chPolRev === 100 && fin.f.chSheetBend && pol.exc.some(e => e.id === 'EX-05') && pol.exc.filter(e => !e.seed).every(e => e.owner && e.owner !== 'the CISO');
     process.exit(errors.length || requests.length || !savedCheckCh || !savedCheckCh.restored || !savedCheckCh.exportRoundTrip || !savedCheckChSup || !savedCheckChSup.restored || !savedCheckChSup.exportRoundTrip || !savedCheckChPol || !savedCheckChPol.restored || !savedCheckChPol.exportRoundTrip || !fin.objective.done || !fin.extra.chSummary || !fin.extra.chSupSummary || !fin.extra.chPolSummary || !ser.editions || !ser.editions.charter || ser.editions.charter.budget !== true || ser.editions.charter.suppliers !== true || ser.editions.charter.policy !== true || !accOk || !supOk || !polOk || !chRes.noHorizontalScroll ? 1 : 0);
   }
   if (CR) {

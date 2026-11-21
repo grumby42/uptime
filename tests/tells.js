@@ -236,7 +236,8 @@ function strOf(n) {
 }
 const prop = (o, k) => o.properties && o.properties.find(p => p.key && (p.key.name === k || p.key.value === k));
 function goodOf(o) {
-  const g = prop(o, 'good') || prop(o, 'correct');
+  // `ok` too (Charter's intake write-ups used it before the slice-3 review; no Town Hall or Crossroads list has it).
+  const g = prop(o, 'good') || prop(o, 'correct') || prop(o, 'ok');
   if (g) return g.value.type === 'Literal' ? g.value.value === true : undefined;
   const m = prop(o, 'meta');
   if (m && m.value.type === 'ObjectExpression') { const mg = prop(m.value, 'good'); if (mg) return mg.value.type === 'Literal' ? mg.value.value === true : undefined; }
@@ -579,10 +580,11 @@ for (const [name, re] of CR_WORDS) for (const s of CH_DISTRICTS.concat(['ch-all'
 const CH_GROUPS = stemmed(EXTRA.concat(CR_EXTRA, CH_EXTRA));
 const CHARTER_BAND = CROSSROADS_BAND.concat(CH_EXTRA.map(w => w[0]));
 const chBand = [];
-// The slice-3 groups (exceptions, policy) were introduced for Policy: checked there and across Charter (ch-all), not
-// inside the prologue, Budget or Suppliers, whose lists were written and reviewed before them (as Crossroads does).
+// The slice-3 groups (exceptions, policy) were introduced for Policy: checked there, in Budget (since the slice-3 review:
+// a player reaches Policy having learned Budget) and across Charter (ch-all), not inside the prologue or Suppliers, whose
+// matches are another sense (a contract's "renewal").
 const CH_POL_ONLY = ['G:exception', 'G:policy'];
-for (const n of CHARTER_BAND) for (const s of CH_DISTRICTS.concat(['ch-all']).filter(s => !CH_POL_ONLY.includes(n) || s === 'ch-policy' || s === 'ch-all')) { const st = stat(chScope(s), CH_GROUPS.find(w => w[0] === n)[1]); chBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
+for (const n of CHARTER_BAND) for (const s of CH_DISTRICTS.concat(['ch-all']).filter(s => !CH_POL_ONLY.includes(n) || s === 'ch-policy' || s === 'ch-budget' || s === 'ch-all')) { const st = stat(chScope(s), CH_GROUPS.find(w => w[0] === n)[1]); chBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
 const CH_NAMES = [
   ['N:named', new RegExp(CR_NAMES[0][1].source.replace('|Hugo|Ellerby)', '|Hugo|Ellerby|Marit|Quellan|Dalia|Ilka|Thrushcombe)'))],
   ['N:Edda', /\b(Edda|Thornquist)\b/], ['N:Marit', /\b(Marit|Quellan)\b/], ['N:Ivor', /\b(Ivor|Penhallow)\b/], ['N:Celia', /\b(Celia|Marrow)\b/],
@@ -591,7 +593,20 @@ const CH_NAMES = [
   ['N:Ilka', /\b(Ilka|Thrushcombe)\b/], ['N:Strand', /\b(Mina|Strand)\b/],
   ['N:suppliers', /\b(Thimbleford|Inkmere|Wellhollow|Tarnfield|Pewterlane|Stillmark|Shelfwright|Wrenfold|Brindlemark)\b/]];
 const chPunct = [], chNameRows = [];
-for (const [name, re] of PUNCT) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re), ln = lone(chListsIn(s), re); chPunct.push({n: name + '@' + s, st, ln, ok: pOk(st) && ln.ok}); }
+// The lone absence (since the Charter slice-3 review): lists of three or more where every option but one carries the mark,
+// so the one without it stands out (Round 1's right answer was the only one not opening "X:"). Held to the same chance
+// test as the lone mark. Charter only, so the Town Hall and Crossroads tables are unchanged.
+function loneAbsent(Ls, re) {
+  let n = 0, hit = 0, exp = 0, v = 0;
+  for (const L of Ls) {
+    if (L.key === 'cards' || L.items.length < 3) continue;
+    const m = L.items.filter(x => !re.test(markText(x))); if (m.length !== 1) continue;
+    const p = L.items.filter(x => x.good).length / L.items.length;
+    n++; exp += p; v += p * (1 - p); if (m[0].good) hit++;
+  }
+  return {n, hit, exp, v, ok: Math.abs(hit - exp) <= 2 * Math.sqrt(v) + 1};
+}
+for (const [name, re] of PUNCT) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re), ln = lone(chListsIn(s), re), la = loneAbsent(chListsIn(s), re); chPunct.push({n: name + '@' + s, st, ln, la, ok: pOk(st) && ln.ok && la.ok}); }
 for (const [name, re] of CH_NAMES) for (const s of CH_DISTRICTS.concat(['ch-all'])) { const st = pstat(chScope(s), re); chNameRows.push({n: name + '@' + s, st, ok: pOk(st)}); }
 const chLf = CH_DISTRICTS.concat(['ch-all']).map(s => ({s, rows: loneFeatures(chListsIn(s), true)}));
 const chLfFails = chLf.flatMap(x => x.rows.filter(r => r.fail).map(r => x.s + ' ' + lfFmt(r)));
@@ -599,7 +614,7 @@ if (report && chOpts.length) {
   console.log('\nCharter (' + chGraded.length + ' graded lists, ' + chOpts.length + ' options)\n' + 'word'.padEnd(18) + CH_DISTRICTS.concat(['ch-all']).map(s => s.padEnd(19)).join(''));
   for (const [name, re] of CR_WORDS.concat(CH_GROUPS)) console.log(name.padEnd(18) + CH_DISTRICTS.concat(['ch-all']).map(s => fmt(stat(chScope(s), re)).padEnd(19)).join(''));
   console.log('\nCharter punctuation and names (enforced)');
-  for (const r of chPunct.concat(chNameRows)) console.log(r.n.padEnd(26) + pFmt(r.st) + (r.ln ? ' lone ' + loneFmt(r.ln) : '') + (r.ok ? '' : '  OUT'));
+  for (const r of chPunct.concat(chNameRows)) console.log(r.n.padEnd(26) + pFmt(r.st) + (r.ln ? ' lone ' + loneFmt(r.ln) : '') + (r.la ? ' absent ' + loneFmt(r.la) : '') + (r.ok ? '' : '  OUT'));
   console.log('\nCharter lone features (enforced)');
   for (const x of chLf) console.log(x.s.padEnd(12) + lfTop(x.rows, 8).map(r => (r.fail ? '!' : r.flag ? '*' : '') + lfFmt(r)).join(', '));
   if (chFails.length) console.log('Charter tells:\n  ' + chFails.join('\n  '));
@@ -627,8 +642,9 @@ if (chFiles.length) checks.push(
   ['Charter: source scan found graded lists in the prologue, Budget, Suppliers and Policy (' + chGraded.length + ' lists, ' + chOpts.length + ' options)', CH_DISTRICTS.every(d => chGraded.some(L => district(L.file) === d))],
   ['Charter: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ', stem-matched) in its districts, its list types or overall, and none outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !chFails.length && !chWarns.length],
   ['Charter stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on every Crossroads group and its own (appetite, budget, accept/sign, Board, owner, you, records, tier; exceptions and policy in Policy and overall), n>=' + CR_BAND_MIN_N + ' (' + chBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', chBand.every(x => x.ok)],
-  ['Charter: no punctuation tell (; : dash parentheses), the lone-mark pick no better than chance (' + chPunct.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln)).join(', ') + ')', chPunct.every(x => x.ok)],
+  ['Charter: no punctuation tell (; : dash parentheses), the lone-mark and lone-absence picks no better than chance (' + chPunct.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln) + ' absent ' + loneFmt(x.la)).join(', ') + ')', chPunct.every(x => x.ok)],
   ['Charter: no name tell — any named character, and Edda, Marit, Ivor, Celia, Joanna, Beatriz, Noor, Ilka, Strand, the deciders together and the suppliers together (' + chNameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', chNameRows.every(x => x.ok)],
+  ['Charter: the intake write-ups (CH_POL_INTAKE, the scorecard’s rows) are scanned: ' + chGraded.filter(L => /^policy-data/.test(path.basename(L.file)) && L.items.some(x => /^(Marit’s|Edda’s|The CISO’s|Open:|Expired)/.test(x.label)) && L.items.length === 4 && L.items.some(x => / · |PATCH-01/.test(x.label))).length + ' lists (3 expected)', chGraded.filter(L => /^policy-data/.test(path.basename(L.file)) && L.items.some(x => /^(Marit’s|Edda’s|The CISO’s|Open:|Expired)/.test(x.label)) && L.items.length === 4 && L.items.some(x => / · |PATCH-01/.test(x.label))).length === 3],
   ['Charter: no lone-feature tell (the same rule as Crossroads); strongest leans: ' + chLf.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !chLfFails.length]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);

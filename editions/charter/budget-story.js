@@ -120,7 +120,7 @@ async function chBoardRound() {
   let msg = '15:00. ';
   if (d.restored.length) msg += 'Your allocation leaves R5, the 911 center’s segment, at $0. The Board funds it, $120k, and the minute says so: I won’t ask Celia to sign that. ';
   if (d.override) msg += 'The Board funds the upgrade in full, $250k. Marit’s figures: a year of support now and the upgrade next year is $340k for the same platform.' + (d.cut.length ? ' To pay for it, ' + names(d.cut) + (d.cut.length === 1 ? ' waits' : ' wait') + ' a year.' : '') + (d.restored.length ? '' : ' The center’s segment stays funded: I won’t ask Celia to sign for that.');
-  else if (d.persuaded && c.sent.R6 !== up) msg += 'The Board approves your allocation as sent. The extension carries the platform for a year, and the upgrade comes back at the start of next year’s budget cycle. Laid out side by side, it keeps every line inside what we signed on Monday.';
+  else if (d.persuaded && c.sent.R6 !== up) msg += 'The Board approves your allocation as sent. The extension carries the platform for a year, and the upgrade comes back at the start of next year’s budget cycle. Laid out side by side, it keeps every line inside what we signed on Monday once each line delivers.';
   else msg += 'The Board approves your allocation' + (d.cut.length ? ', less ' + names(d.cut) + ', to fit $480k' : ' as sent') + '.';
   await say(msg + ' (game)', who);
   // What the decision leaves above appetite: the Board's decision and its approval of the residual risk, in the minute (the
@@ -128,12 +128,18 @@ async function chBoardRound() {
   const above = chAboveAppetite(c.final);
   const dec = {decidedBy: 'the Compact Board (minute, Day 67), ' + (d.override ? 'against the CISO’s advice' : d.restored.length || d.cut.length ? 'correcting the CISO’s allocation' : 'on the CISO’s allocation'), approvedBy: 'the Compact Board'};
   for (const l of above) c.accept.push(chAcceptance(l, c.final, dec, 67));
+  // A funded line stays as now until it delivers (next year's money): where that breaks a tolerance today (R4: no
+  // call-back rule), its owner accepts the gap and signs; the Board sees it in the minute (the tolerances bind now).
+  const gap = CH_LINES.filter(l => !above.includes(l) && chLineNow(l).gap);
+  for (const l of gap) c.accept.push(chGapAcceptance(l, 67));
   const ids = above.map(l => l.id), list = ids.length > 1 ? ids.slice(0, -1).join(', ') + ' and ' + ids[ids.length - 1] : ids[0];
+  const gapTxt = gap.length ? ' Until its line delivers, ' + gap.map(l => l.id + ' stays as now and breaks the ' + chLineNow(l).breaks.map(chTolName).join(' and ') + ' tolerance: ' + l.owner + ', its owner, accepts that gap and signs, with interim measures').join('; ') + '. The Board sees it.' : '';
   const head = d.override ? 'The Board overrode your allocation: the upgrade in full' + (d.cut.length ? ', paid for by deferring ' + d.cut.join(', ') : '') + '. ' : 'The Board approved your allocation' + (d.cut.length ? ', less ' + d.cut.join(', ') : d.persuaded && c.sent.R6 !== up ? ' as sent, the extension carrying the platform' : ' as sent') + '. ';
   const minute = above.length ? 'The minute records the Board’s decision to carry ' + list + ' above appetite until Day ' + CH_EXPIRY_DAY + (d.override ? ', with the CISO’s advice against it and the objection noted' : '') + ', and its acceptance of the residual risk, approved by the Board. Each owner signs for the interim measures and owns the treatment plan.'
-    : 'The minute records the decision. No line is left above appetite.';
-  await UI.openModal('The Board’s decision', '<p>' + head + (d.restored.length ? 'It funded R5, which your allocation left at $0. ' : '') + minute + ' (game)</p>' + chAllocTable(c.final) + chAllocSummary(c.final) +
-    (above.length ? '<h3>15:20: the acceptances: the Board’s decision, signed by their owners</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 67)) : '') +
+    : 'The minute records the decision. No line is left above appetite once its line delivers.';
+  await UI.openModal('The Board’s decision', '<p>' + head + (d.restored.length ? 'It funded R5, which your allocation left at $0. ' : '') + minute + gapTxt + ' (game)</p>' + chAllocTable(c.final) + chAllocSummary(c.final) +
+    (above.length ? '<h3>15:20: the acceptances: the Board’s decision, signed by their owners</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 67 && !x.gap)) : '') +
+    (gap.length ? '<h3>15:20: until its line delivers: the owner’s acceptance</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 67 && x.gap)) : '') +
     '<h3>Also before the Board</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 66)),
     [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
   for (const o of [...new Set(above.map(l => l.owner))]) {
@@ -142,6 +148,8 @@ async function chBoardRound() {
     else if (o === 'Marit Quellan') await say('I sign ' + mine.join(', ') + ' as ' + (one ? 'its' : 'their') + ' owner, and I’ll run the interim checks. The Board chose it; the minute says so.', o);
     else await say('15:20: ' + o + ' signs ' + mine.join(', ') + ' as the owner, for the interim measures and the treatment plan. (game)');
   }
+  for (const l of gap) await say(l.id === 'R4' ? 'And the gap on R4 until its line delivers is mine: I accept it and sign. Until a call-back rule is in force, I approve every payment-detail change myself and hold it five working days.' : 'The gap on ' + l.id + ' until its line delivers is mine: I accept it and sign.', l.owner);
+  chAudit('Budget: the Board’s minute (Day 67)');
   f.chBoard = true; f.chBallast = true;
   G.focusMax += 4; G.focus = G.focusMax; unlock('act', 'chboard'); touchCSF('Govern'); track();
   await say('You cleared the Compact Board’s budget round. This is the Ballast Badge (game).', who);
@@ -156,7 +164,7 @@ function chDrillRows() {
 async function chSummary() {
   const f = G.f, c = G.ch;
   if (!f.chSummary) {
-    f.chSummary = true; touchCSF('Govern');
+    f.chSummary = true; touchCSF('Govern'); chAudit('Budget: the district’s end (Day 67)');
     Series.markEdition('charter', {budget: true});
     await say('An appetite the Board signed, a register with an owner and a date on every line, and a budget the Board decided with its eyes open. Next, the suppliers.', 'Ivor Penhallow');
   }

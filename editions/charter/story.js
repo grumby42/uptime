@@ -17,7 +17,7 @@ const EDITION = {
   saveKey: 'uptime.charter.save',
   ownMetrics: true,           // the analyst scorecard is replaced by the CISO's (EDITION_METRICS)
   noTools: true,              // no tool console: the CISO's tools are the register, the budget and the Board
-  badgeFlags: ['chBallast', 'chHawser', 'chBowline'],
+  badgeFlags: ['chBallast', 'chHawser', 'chSheetBend'],
   title: 'Charter edition',
   blurb: 'Four weeks after the Compact-wide incident, the Compact Board appoints its first CISO: you. Set the risk appetite with the Board, then the budget: one sum, six risks, and an upgrade that wants the money too. Then the suppliers: tiers, contract clauses, and a supplier’s incident told from the Compact’s own records. Then policy: an exception register with owners, expiries and reviews, and a policy the Board approves.',
   fmActionsCat: 'Leadership practices (game)',   // the Field Manual's heading for EXTRA_ACTIONS (engine default: D3FEND-style)
@@ -114,8 +114,8 @@ const EDITION_METRICS = [
   // Every must-have fits the envelope, so each one the plan leaves out is the CISO's poor advice.
   {k: 'chSupMust', label: 'Must-haves in your plan (your advice)', unit: '%', higher: true, when: () => !!G.f.chSupStart},
   // Policy (slice 3): game metrics on the CISO's advice (CAREER_LADDER §3 lists "policy exceptions with an expiry"; these
-  // widen it): the register as sent, the advice on the exceptions that expired, and the policy library as sent.
-  {k: 'chPolExc', label: 'Exceptions with owner, expiry and review (your register)', unit: '%', higher: true, when: () => !!G.f.chPolStart},
+  // widen it): the write-ups you sent (EX-02, EX-04), the advice on the exceptions that expired, and the library as sent.
+  {k: 'chPolExc', label: 'Exceptions you wrote up with owner, expiry and review (your register)', unit: '%', higher: true, when: () => !!G.f.chPolStart},
   {k: 'chPolExp', label: 'Expired exceptions resolved (your advice)', unit: '%', higher: true, when: () => !!G.f.chPolStart},
   {k: 'chPolRev', label: 'Policies with a review date (your advice)', unit: '%', higher: true, when: () => !!G.f.chPolStart}
 ];
@@ -127,8 +127,8 @@ function editionScorecard() {
   return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
     '<p>' + (c.sent ? 'Scored on your advice: the allocation you sent, against Monday’s appetite and tolerances.' : 'No allocation sent yet.') + (c.final ? ' The Board’s decision: <b>' + chAllocStats(c.final).within + ' of ' + CH_LINES.length + '</b> lines within appetite' + (c.decision && c.decision.override ? ', overriding your advice' : '') + '.' : c.sent ? ' The Board decides on Thursday.' : '') + ' Drills with every needs met: <b>' + c.needs.met + ' of ' + c.needs.total + '</b>. Acceptances on the register: <b>' + (c.accept || []).length + '</b>' + ((c.accept || []).length ? ' (signed by ' + [...new Set(c.accept.map(x => x.signedBy))].map(esc).join(', ') + ')' : '') + '.</p>' +
     (ss ? '<p>Suppliers: scored on your advice, the tiers you sent and your plan for the Compact’s own contracts. The members’ own contracts are their owners’ decisions: <b>' + ss.memFull + ' of ' + ss.members + '</b> with every must-have. Owners and review dates came with every line (the Ballast Badge). Must-haves left out on your recommendation, decided and signed by their owners: <b>' + sup.accept.length + '</b>' + (ss.poor ? ' (poor advice: a plan with every must-have fitted)' : '') + '. Supplier drills with every needs met: <b>' + sup.needs.met + ' of ' + sup.needs.total + '</b>.</p>' : '') +
-    (pol ? '<p>Policy: scored on your advice, the register you sent on Monday, your advice on the two exceptions that expired (drill 1’s verdict and the intake), and the library you sent. Exceptions on the register now: <b>' + chExcInit().filter(e => !e.seed && chExcStatus(e) !== 'closed').length + '</b> open, each with its owner, approver, expiry and review. Policy drills with every needs met: <b>' + pol.needs.met + ' of ' + pol.needs.total + '</b>.</p>' : '') +
-    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + (G.f.chSupStart ? ' · Hawser Badge: ' + (G.f.chHawser ? 'yes' : 'not yet') : '') + (G.f.chPolStart ? ' · Bowline Badge: ' + (G.f.chBowline ? 'yes' : 'not yet') : '') + '</p>' +
+    (pol ? '<p>Policy: scored on your advice, the two entries you wrote up on Monday (EX-02, EX-04), your advice on the two exceptions that expired (drill 1’s verdict and the intake), and the library you sent.' + (chPolStats().reg ? ' Register entries complete (not scored): <b>' + chPolStats().reg.n + ' of ' + chPolStats().reg.of + '</b> (EX-05 decided by its owner; EX-1x as recorded in Suppliers).' : '') + ' Exceptions on the register now: <b>' + chExcInit().filter(e => !e.seed && chExcStatus(e) !== 'closed').length + '</b> open, each with its owner, class, approver, expiry and review. Policy drills with every needs met: <b>' + pol.needs.met + ' of ' + pol.needs.total + '</b>.</p>' : '') +
+    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + (G.f.chSupStart ? ' · Hawser Badge: ' + (G.f.chHawser ? 'yes' : 'not yet') : '') + (G.f.chPolStart ? ' · Sheet Bend Badge: ' + (G.f.chSheetBend ? 'yes' : 'not yet') : '') + '</p>' +
     (c.carry ? '<p class="small">Carried: ' + esc(chTracksText(c.carry)) + (c.carry.crBadges.length ? ' · Crossroads badges ' + c.carry.crBadges.join(', ') : '') + (c.carry.thBadges.length ? ' · Town Hall badges ' + c.carry.thBadges.join(', ') : '') + ' · suspicion file ' + qtCount() + ' notes.</p>' : '') +
     '<p class="small">Every number here is a game model (game). Objective: ' + esc(objective().text) + '</p>';
 }
@@ -250,7 +250,7 @@ async function talk(npc) {
       if (f.chDay66 && !f.chBoard) { await chBoardRound(); return; }
       if (f.chSupThu && !f.chSupBoard) { await chSupBoardRound(); return; }
       if (f.chPolCheck && !f.chPolBoard) { await chPolBoardRound(); return; }
-      if (f.chPolBoard) { await say('The Bowline Badge: every exception’s dates reach you before they fall due. A list that is read is a list we can trust.', who); return; }
+      if (f.chPolBoard) { await say('The Sheet Bend Badge: every exception’s dates reach its owner, and you, before they fall due. A list that is read is a list we can trust.', who); return; }
       if (f.chSupBoard) { await say(f.chPolStart ? 'Thursday at 14:00, the policy. Bring the register as it stands.' : 'The Hawser Badge: a supplier’s trouble reaches us through our own records first. Keep them that way.', who); return; }
       await say(f.chBoard ? 'The Ballast Badge says this Board can hold you to a measure. Keep giving it one.' : 'Thursday at 14:00. Bring both cases, laid out the same way.', who); return;
     case 'noorch':
@@ -269,7 +269,7 @@ async function talk(npc) {
       if (f.chPolDrillB && !f.chPolDrillC) { await chPolDrillC(); return; }
       if (f.chPolLib && !f.chPolDojoMet) { await chPolDojoIntro(); return; }
       if (f.chPolDay80 && !f.chPolCheck) { await chPolCheck(); return; }
-      if (f.chPolStart) { await say(f.chPolCheck ? 'Six accounts in MFA-Exempt, each on an open entry in date. That’s how it stays.' : f.chPolDojoMet && !f.chPolDojoDone ? 'The three terminals, south-west: dates, who approves, and whether a control covers its gap.' : 'board-display and cp-patch are closed, my decisions both. The rest of the shared services’ exceptions are mine, with dates.', who); return; }
+      if (f.chPolStart) { await say(f.chPolCheck ? 'Six accounts in MFA-Exempt, each on an open entry in date. That’s how it stays.' : f.chPolDojoMet && !f.chPolDojoDone ? 'The three terminals, south-west: dates, who approves, and whether a control covers its gap.' : f.chPolRegister ? 'board-display and cp-patch are closed, my decisions both. The five service accounts are mine to run, with dates; the chair decides them.' : 'board-display is closed, my decision. The register’s yours to write up at 10:30.', who); return; }
       if (f.chSupStart) { await say(f.chSupThu ? 'cp-xfer is back, key-only, from Thimbleford’s range, every session logged. It was my call both times, on the facts you brought, and our own logs.' : f.chSupIncident ? 'cp-xfer stays suspended until Thimbleford’s answer covers the 23:52 login. My call, on your advice.' : 'Wellhollow keeps our off-site copies. Its renewal is on my desk.', who); return; }
       await say(!f.chAppetite ? 'Edda Thornquist. I run the shared services. You’ll want me at the Board at nine.' : f.chBoard ? (G.ch.decision && G.ch.decision.override ? 'The upgrade is funded. The Board chose the trade-off, with your advice against it in the minute, and I signed for running the interim checks.' : G.ch.final && G.ch.final.R6 === 2 ? 'The upgrade is funded as you sent it. What it leaves, the owners have signed.' : 'The upgrade waits a year and the extension carries us. Fair, laid out the way you laid it out.') : 'My request is with Marit: the platform leaves its vendor’s support next year. It’s a fair case. Make yours as plainly.', who); return;
     case 'quellan':
@@ -277,7 +277,7 @@ async function talk(npc) {
       if (f.chSupDay71 && !f.chSupIncident) { await chSupIncident(); return; }
       if (f.chSupDojoDone && !f.chSupReturn) { await chSupReturn(); return; }
       if (f.chSupDay73 && !f.chSupThu) { await chSupThursday(); return; }
-      if (f.chPolStart) { await say(f.chPolDrillB ? 'fin-ap’s exception is mine, to Day 155, and its control is checked now, not just written down.' : 'fin-ap’s exception is mine. I wrote down what I was told covers it.', who); return; }
+      if (f.chPolStart) { await say(f.chPolDrillB ? 'fin-ap’s exception is mine to run, to Day 155, and its control is checked now, and it covers sign-ins from outside the office. The rest waits for the mailboxes. And the call-back rule is mine, from Tuesday.' : 'fin-ap’s exception is mine. I wrote down what I was told covers it.', who); return; }
       if (f.chSupStart) { await say(f.chSupThu ? 'The members’ staff have been told what we know. Thimbleford’s amendment is with Ilka.' : f.chSupIncident ? 'cp-xfer is suspended, and Thimbleford has our questions. Noor has the facts.' : 'Inkmere and Thimbleford are both mine. Tell me what each one needs in its contract.', who); return; }
       if (f.chDrillB && !f.chDrillC) { await chDrillC(); return; }
       if (f.chDirective && !f.chDojoMet) { await chDojoIntro(); return; }

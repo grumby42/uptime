@@ -52,6 +52,18 @@ function chLevelWithin(cat, residual) { return CH_LEVELS.indexOf(residual) <= CH
 function chWithin(cat, residual, breaks) { return chLevelWithin(cat, residual) && !(breaks && breaks.length); }
 function chOptWithin(l, o) { return chWithin(l.cat, o.res, o.breaks); }
 function chBreaks(o) { return (o && o.breaks) || []; }
+function chTolName(t) { return t === CH_TOL_CALLBACK ? 'call-back' : t === chTol('privacy') ? 'privacy' : 'a'; }
+// Tolerances held now by a measure in force, whatever a line's funding: Marit's call-back rule, from Day 79 10:40.
+function chHeldTol() { return G && G.f && G.f.chPolCallback ? [CH_TOL_CALLBACK] : []; }
+// A register line now. Its residual is read on the Board's decided option (the treatment plan, as Budget week set it);
+// its tolerances on what is in force now: the decided option's breaks, plus the "as now" option's while the line has
+// not delivered (every line is next year's money, so none has yet), less any tolerance a measure in force holds.
+function chLineNow(l, fin) {
+  const f = fin || (G && G.ch && G.ch.final); if (!f) return null;
+  const o = chOpt(f, l), now = l.opts[0], held = chHeldTol();
+  const breaks = [...new Set(chBreaks(o).concat(o === now ? [] : chBreaks(now)))].filter(t => !held.includes(t));
+  return {line: l.id, cat: l.cat, owner: l.owner, residual: o.res, breaks: breaks, within: chLevelWithin(l.cat, o.res) && !breaks.length, gap: o !== now && breaks.length > 0};
+}
 // Build the statement: one graded list per category, retried until the Board can approve it; first tries are recorded.
 async function chAppetiteBuild(cats) {
   const out = {levels: {}, tol: {}, first: []};
@@ -167,10 +179,65 @@ function chAcceptance(l, alloc, dec, day) {
     signedBy: l.owner, signedFor: 'the interim measures and the treatment plan', day: day,
     expiry: CH_EXPIRY_DAY, review: CH_REVIEW_DAY, interim: l.interim || ''};
 }
+// The gap a funded line leaves until it delivers (R4: as now, it breaks the call-back tolerance). Not the Board's choice
+// (its decided option is within appetite), so its owner decides on it and signs; the Board sees it in its minute.
+function chGapAcceptance(l, day) {
+  const st = chLineNow(l);
+  return {line: l.id, name: l.name + ', until its line delivers', owner: l.owner, residual: l.opts[0].res, appetite: chAppetite(l.cat), breaks: st.breaks.slice(), gap: true,
+    decider: l.owner.split(' ')[0], decidedBy: l.owner + ', its owner, until its line delivers', approvedBy: null, signedBy: l.owner, signedFor: 'the interim measures until its line delivers', day: day,
+    expiry: CH_EXPIRY_DAY, review: CH_REVIEW_DAY, interim: l.gapInterim || l.interim || ''};
+}
 function chAcceptHtml(list) {
   if (!list.length) return '<p>No line above appetite: nothing to accept.</p>';
   return '<table class="sc"><tr><th>Line</th><th>Left</th><th>Decided</th><th>Signed</th><th>Review</th></tr>' + list.map(x => '<tr><td>' + esc(x.line) + '</td><td>' + esc(x.residual) + '</td><td>' + esc(x.decider || x.decidedBy.split(' ')[0]) + '</td><td>' + esc(x.signedBy.split(' ')[0]) + '</td><td>Day ' + x.review + '</td></tr>').join('') + '</table>' +
     '<ul>' + list.map(x => '<li><b>' + esc(x.line) + ' ' + esc(x.name) + '</b>: residual ' + esc(x.residual) + ' against a ' + esc(x.appetite) + ' appetite' + (x.breaks && x.breaks.length ? ', and it breaks the tolerance “' + esc(x.breaks.join('”, “')) + '”' : '') + '. ' +
       'Decided by ' + esc(x.decidedBy) + (x.approvedBy ? '; carrying the residual risk approved by ' + esc(x.approvedBy) : '') + '. ' +
-      'Signed by ' + esc(x.signedBy) + ', its owner' + (x.signedFor ? ', for ' + esc(x.signedFor) : '') + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '.' + (x.interim ? ' Meanwhile: ' + esc(x.interim) : '') + '</li>').join('') + '</ul>';
+      'Signed by ' + esc(x.signedBy) + ', its owner' + (x.signedFor ? ', for ' + esc(x.signedFor) : '') + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '.' + (x.interim ? ' Meanwhile: ' + esc(x.interim) : '') + (x.closed ? ' Closed Day ' + x.closedDay + ': ' + esc(x.closedNote) + '.' : '') + '</li>').join('') + '</ul>';
+}
+
+/* ---------- The systemic invariant: tolerances bind at every checkpoint ---------- */
+// At every district end and every Board minute: every register risk is within its appetite and its tolerances, or
+// covered by an open acceptance that lists each tolerance it breaks and names the decider the rule names (the Board
+// where its own decision left the line above appetite; otherwise the risk's owner). Read from the data, not from the
+// game's own within-appetite flags, so a lapse in those is caught too. G.ch.audit keeps each checkpoint's result.
+const CH_OTHER_RISKS = [
+  {id: 'AP', when: f => f.chDirective, cat: 'privacy', residual: 'Medium', breaks: () => [], owner: 'Joanna Ferreday'},
+  {id: 'CP-XFER', when: f => f.chSupThu, cat: 'privacy', residual: 'Medium', breaks: () => [chTol('privacy')], owner: 'Marit Quellan'}];
+function chRiskStates() {
+  const c = G.ch, out = [], held = chHeldTol();
+  if (c.final) for (const l of CH_LINES) {
+    const o = chOpt(c.final, l), now = l.opts[0];
+    const boardLeft = !(CH_LEVELS.indexOf(o.res) <= CH_LEVELS.indexOf(CH_APPETITE_MAX[chAppetite(l.cat)]) && !((o.breaks || []).length));
+    const breaks = [...new Set((o.breaks || []).concat(o === now ? [] : (now.breaks || [])))].filter(t => !held.includes(t));
+    out.push({id: l.id, cat: l.cat, residual: o.res, breaks: breaks, decider: boardLeft ? 'Board' : l.owner.split(' ')[0]});
+  }
+  for (const r of CH_OTHER_RISKS) if (r.when(G.f)) out.push({id: r.id, cat: r.cat, residual: r.residual, breaks: r.breaks(), decider: r.owner.split(' ')[0]});
+  const sup = c.sup;
+  if (sup && sup.planSent) for (const x of chPlanAdvice(sup.planSent).left) out.push({id: 'MH ' + x.line, mh: true, supplier: x.id, clause: x.clause, decider: chSupLine(x.id).owner.replace(/^Director /, '').split(' ')[0]});
+  return out;
+}
+function chAuditNow() {
+  const bad = [], c = G.ch, lvl = (cat, res) => CH_LEVELS.indexOf(res) <= CH_LEVELS.indexOf(CH_APPETITE_MAX[chAppetite(cat)]);
+  for (const r of chRiskStates()) {
+    if (r.mh) {
+      const a = ((c.sup && c.sup.accept) || []).find(x => x.supplier === r.supplier && x.clause === r.clause && !x.closed);
+      if (!a) bad.push(r.id + ': a must-have left out, no acceptance'); else if (a.decider !== r.decider) bad.push(r.id + ': decided by ' + a.decider + ', the rule names ' + r.decider);
+      continue;
+    }
+    if (lvl(r.cat, r.residual) && !r.breaks.length) continue;
+    const a = (c.accept || []).find(x => x.line === r.id && !x.closed);
+    if (!a) { bad.push(r.id + ': ' + (r.breaks.length ? 'breaks ' + r.breaks.map(chTolName).join(', ') + ' tolerance' : 'above appetite') + ', no acceptance'); continue; }
+    if (a.decider !== r.decider) bad.push(r.id + ': decided by ' + a.decider + ', the rule names ' + r.decider);
+    const miss = r.breaks.filter(t => !(a.breaks || []).includes(t));
+    if (miss.length) bad.push(r.id + ': its acceptance does not list the ' + miss.map(chTolName).join(', ') + ' tolerance');
+  }
+  // 6.7: an open exception inside a register line that is above appetite or breaks a tolerance is escalated and shows it.
+  if (c.pol && c.pol.exc) for (const e of c.pol.exc.filter(x => x.boardLine && !x.seed && chExcStatus(x) !== 'closed')) {
+    const r = chRiskStates().find(x => x.id === e.boardLine);
+    if (!r || (lvl(r.cat, r.residual) && !r.breaks.length)) continue;
+    if (chExcClass(e).cls !== 'escalated' || !/^6\.7: /.test(chExcTolerance(e).text)) bad.push(e.id + ': inside ' + e.boardLine + ', which ' + (r.breaks.length ? 'breaks a tolerance' : 'is above appetite') + ', but not escalated with 6.7 shown');
+  }
+  return bad;
+}
+function chAudit(where) { const c = G.ch, bad = chAuditNow(); (c.audit || (c.audit = [])).push({where: where, day: G.day, bad: bad}); return bad;
 }

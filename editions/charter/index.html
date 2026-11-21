@@ -236,7 +236,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261114-1729Z', BUILD_TS = '2026-11-14 17:29 UTC';
+const BUILD_ID = 'ARCD-20261114-2343Z', BUILD_TS = '2026-11-14 23:43 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -1626,10 +1626,10 @@ const EXTRA_ACTIONS = {
   // Policy (slice 3)
   chpolcycle: {name: 'The policy lifecycle', desc: 'Draft, consult (each consultee answers for its own part, and legal wording is counsel’s), approve (the governing body approves the policy; the CISO issues the standards under it), publish, measure, and review on a date. One decider per step.'},
   chpolvalid: {name: 'Is the exception still valid?', desc: 'Read its expiry date and its review record. That nobody complained, or that the system still lets the account in, says nothing. An expired exception is not open: its owner closes it, or renews it through the route with fresh evidence.'},
-  chexcreg: {name: 'An exception register', desc: 'Each exception: the clause, the exact accounts or systems, the reason, the compensating controls, its owner, its approver by the policy’s own rule, a start, an expiry no more than 12 months on, a review date, and its status. The owner decides and signs; the CISO writes it up, checks it and recommends.'},
+  chexcreg: {name: 'An exception register', desc: 'Each exception: the clause, the exact accounts or systems, the reason, the compensating controls, its owner, its approver by the policy’s own rule, a start, an expiry no more than 12 months on, a review date, its tolerance line, and its status. The owner asks for it and signs for running the control; who decides follows the CISO’s check: a standard one, the owner; an escalated one (the CISO against, a partial control, a broken tolerance, safety-of-life or personal records, a second renewal), someone above the owner. The CISO writes it up, checks it and recommends.'},
   chpolcover: {name: 'Does the control cover the gap?', desc: 'Read the control’s scope (what it applies to) and the records for the excepted accounts (whether it applied). Where people happened to sit is not a control.'},
-  chpolmeasure: {name: 'Is the policy followed?', desc: 'Measure a sample of records against the document’s own wording. An attestation says what someone believes; an outcome that went well says nothing about the rule.'},
-  chexcroute: {name: 'Exceptions through the route', desc: 'A permanent exception is not one: a difference meant to last goes to the standard’s review. An exception is its owner’s to decide and sign, with an expiry, a review and a control that covers the gap. The CISO does not grant it.'},
+  chpolmeasure: {name: 'Is the policy followed?', desc: 'Measure the records against the document’s own wording, by a plan set before they are drawn (the population, the period, the size, how they are picked; every record where there are fewer than 50). Records with misses in them prove “not as written”; a clean sample would not prove the opposite. An attestation says what someone believes; an outcome that went well says nothing about the rule.'},
+  chexcroute: {name: 'Exceptions through the route', desc: 'A permanent exception is not one: a difference meant to last goes to the standard’s review. An exception has an owner who signs, an expiry, a review and a control that covers the gap, and is decided by whoever the rule names. The CISO does not grant it.'},
   chpolboard: {name: 'The register in the board’s language', desc: 'Tell the board what the register shows: each exception’s owner, dates and control, and any past its expiry. A policy that says “all” needs a register that is read.'}
 };
 const FACTS = {
@@ -1648,7 +1648,7 @@ const GAME_NOTES = [
   'Suppliers: every supplier (Inkmere Print & Post, Thimbleford Payroll, Wellhollow Backup, Tarnfield IT Services, Pewterlane AV; Stillmark, Shelfwright Systems and Wrenfold Health Software as met in Crossroads), every spend, the tiering rule, the clause catalogue and its tiers, Contract A, every contract’s clauses, the $30k envelope, each price uplift and each supplier’s goodwill, the Brindlemark Assurance Report, and Ilka Thrushcombe are invented. (game)',
   'Any supplier incident in Suppliers is told only through the Compact’s records: the supplier’s notice, our own logs, the times, and who decided what. Any outside address is a documentation address. Nothing says what happened on the supplier’s side, and Contract A’s column in a timeline is what its clauses would have changed. (game)',
   'Insurance and indemnity clauses are counsel’s and procurement’s call; the game shows them and never lets the CISO choose them. The Hawser Badge’s effects (every Tier 1 supplier’s security contact, or its account manager where its contract names none yet, on the incident page; Focus +4) are invented. (game)',
-  'Policy: POL-1, the Compact’s security policy, the five standards under it (STD-1 to STD-5) and their wording, the exception rule, every exception, account (cp-backup, cp-logfwd, cp-patch, cp-files-lib, cp-files-cl, cp-files-ap), group (FIN-STAFF), rule, host (PATCH-01, LIB-FILM-01), count, sample, time and date, and the Bowline Badge’s effects (every exception’s expiry and review date on your desk the Monday before it falls due; Focus +4) are invented. (game)',
+  'Policy: POL-1, the Compact’s security policy, the five standards under it (STD-1 to STD-5) and their wording, the exception rule, every exception, account (cp-backup, cp-logfwd, cp-patch, cp-files-lib, cp-files-cl, cp-files-ap), group (FIN-STAFF), rule, host (PATCH-01, LIB-FILM-01), count, record, time and date, and the Sheet Bend Badge’s effects (every exception’s expiry and review date to its owner and your desk the Monday before it falls due; Focus +4) are invented. (game)',
   'The register’s first entry, the town’s fd-admin exception, is quoted from the town’s own records (Town Hall) and nothing is added to it: what they do not state is shown as not stated. (game)'
 ];
 
@@ -1707,6 +1707,18 @@ function chLevelWithin(cat, residual) { return CH_LEVELS.indexOf(residual) <= CH
 function chWithin(cat, residual, breaks) { return chLevelWithin(cat, residual) && !(breaks && breaks.length); }
 function chOptWithin(l, o) { return chWithin(l.cat, o.res, o.breaks); }
 function chBreaks(o) { return (o && o.breaks) || []; }
+function chTolName(t) { return t === CH_TOL_CALLBACK ? 'call-back' : t === chTol('privacy') ? 'privacy' : 'a'; }
+// Tolerances held now by a measure in force, whatever a line's funding: Marit's call-back rule, from Day 79 10:40.
+function chHeldTol() { return G && G.f && G.f.chPolCallback ? [CH_TOL_CALLBACK] : []; }
+// A register line now. Its residual is read on the Board's decided option (the treatment plan, as Budget week set it);
+// its tolerances on what is in force now: the decided option's breaks, plus the "as now" option's while the line has
+// not delivered (every line is next year's money, so none has yet), less any tolerance a measure in force holds.
+function chLineNow(l, fin) {
+  const f = fin || (G && G.ch && G.ch.final); if (!f) return null;
+  const o = chOpt(f, l), now = l.opts[0], held = chHeldTol();
+  const breaks = [...new Set(chBreaks(o).concat(o === now ? [] : chBreaks(now)))].filter(t => !held.includes(t));
+  return {line: l.id, cat: l.cat, owner: l.owner, residual: o.res, breaks: breaks, within: chLevelWithin(l.cat, o.res) && !breaks.length, gap: o !== now && breaks.length > 0};
+}
 // Build the statement: one graded list per category, retried until the Board can approve it; first tries are recorded.
 async function chAppetiteBuild(cats) {
   const out = {levels: {}, tol: {}, first: []};
@@ -1822,12 +1834,67 @@ function chAcceptance(l, alloc, dec, day) {
     signedBy: l.owner, signedFor: 'the interim measures and the treatment plan', day: day,
     expiry: CH_EXPIRY_DAY, review: CH_REVIEW_DAY, interim: l.interim || ''};
 }
+// The gap a funded line leaves until it delivers (R4: as now, it breaks the call-back tolerance). Not the Board's choice
+// (its decided option is within appetite), so its owner decides on it and signs; the Board sees it in its minute.
+function chGapAcceptance(l, day) {
+  const st = chLineNow(l);
+  return {line: l.id, name: l.name + ', until its line delivers', owner: l.owner, residual: l.opts[0].res, appetite: chAppetite(l.cat), breaks: st.breaks.slice(), gap: true,
+    decider: l.owner.split(' ')[0], decidedBy: l.owner + ', its owner, until its line delivers', approvedBy: null, signedBy: l.owner, signedFor: 'the interim measures until its line delivers', day: day,
+    expiry: CH_EXPIRY_DAY, review: CH_REVIEW_DAY, interim: l.gapInterim || l.interim || ''};
+}
 function chAcceptHtml(list) {
   if (!list.length) return '<p>No line above appetite: nothing to accept.</p>';
   return '<table class="sc"><tr><th>Line</th><th>Left</th><th>Decided</th><th>Signed</th><th>Review</th></tr>' + list.map(x => '<tr><td>' + esc(x.line) + '</td><td>' + esc(x.residual) + '</td><td>' + esc(x.decider || x.decidedBy.split(' ')[0]) + '</td><td>' + esc(x.signedBy.split(' ')[0]) + '</td><td>Day ' + x.review + '</td></tr>').join('') + '</table>' +
     '<ul>' + list.map(x => '<li><b>' + esc(x.line) + ' ' + esc(x.name) + '</b>: residual ' + esc(x.residual) + ' against a ' + esc(x.appetite) + ' appetite' + (x.breaks && x.breaks.length ? ', and it breaks the tolerance “' + esc(x.breaks.join('”, “')) + '”' : '') + '. ' +
       'Decided by ' + esc(x.decidedBy) + (x.approvedBy ? '; carrying the residual risk approved by ' + esc(x.approvedBy) : '') + '. ' +
-      'Signed by ' + esc(x.signedBy) + ', its owner' + (x.signedFor ? ', for ' + esc(x.signedFor) : '') + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '.' + (x.interim ? ' Meanwhile: ' + esc(x.interim) : '') + '</li>').join('') + '</ul>';
+      'Signed by ' + esc(x.signedBy) + ', its owner' + (x.signedFor ? ', for ' + esc(x.signedFor) : '') + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '.' + (x.interim ? ' Meanwhile: ' + esc(x.interim) : '') + (x.closed ? ' Closed Day ' + x.closedDay + ': ' + esc(x.closedNote) + '.' : '') + '</li>').join('') + '</ul>';
+}
+
+/* ---------- The systemic invariant: tolerances bind at every checkpoint ---------- */
+// At every district end and every Board minute: every register risk is within its appetite and its tolerances, or
+// covered by an open acceptance that lists each tolerance it breaks and names the decider the rule names (the Board
+// where its own decision left the line above appetite; otherwise the risk's owner). Read from the data, not from the
+// game's own within-appetite flags, so a lapse in those is caught too. G.ch.audit keeps each checkpoint's result.
+const CH_OTHER_RISKS = [
+  {id: 'AP', when: f => f.chDirective, cat: 'privacy', residual: 'Medium', breaks: () => [], owner: 'Joanna Ferreday'},
+  {id: 'CP-XFER', when: f => f.chSupThu, cat: 'privacy', residual: 'Medium', breaks: () => [chTol('privacy')], owner: 'Marit Quellan'}];
+function chRiskStates() {
+  const c = G.ch, out = [], held = chHeldTol();
+  if (c.final) for (const l of CH_LINES) {
+    const o = chOpt(c.final, l), now = l.opts[0];
+    const boardLeft = !(CH_LEVELS.indexOf(o.res) <= CH_LEVELS.indexOf(CH_APPETITE_MAX[chAppetite(l.cat)]) && !((o.breaks || []).length));
+    const breaks = [...new Set((o.breaks || []).concat(o === now ? [] : (now.breaks || [])))].filter(t => !held.includes(t));
+    out.push({id: l.id, cat: l.cat, residual: o.res, breaks: breaks, decider: boardLeft ? 'Board' : l.owner.split(' ')[0]});
+  }
+  for (const r of CH_OTHER_RISKS) if (r.when(G.f)) out.push({id: r.id, cat: r.cat, residual: r.residual, breaks: r.breaks(), decider: r.owner.split(' ')[0]});
+  const sup = c.sup;
+  if (sup && sup.planSent) for (const x of chPlanAdvice(sup.planSent).left) out.push({id: 'MH ' + x.line, mh: true, supplier: x.id, clause: x.clause, decider: chSupLine(x.id).owner.replace(/^Director /, '').split(' ')[0]});
+  return out;
+}
+function chAuditNow() {
+  const bad = [], c = G.ch, lvl = (cat, res) => CH_LEVELS.indexOf(res) <= CH_LEVELS.indexOf(CH_APPETITE_MAX[chAppetite(cat)]);
+  for (const r of chRiskStates()) {
+    if (r.mh) {
+      const a = ((c.sup && c.sup.accept) || []).find(x => x.supplier === r.supplier && x.clause === r.clause && !x.closed);
+      if (!a) bad.push(r.id + ': a must-have left out, no acceptance'); else if (a.decider !== r.decider) bad.push(r.id + ': decided by ' + a.decider + ', the rule names ' + r.decider);
+      continue;
+    }
+    if (lvl(r.cat, r.residual) && !r.breaks.length) continue;
+    const a = (c.accept || []).find(x => x.line === r.id && !x.closed);
+    if (!a) { bad.push(r.id + ': ' + (r.breaks.length ? 'breaks ' + r.breaks.map(chTolName).join(', ') + ' tolerance' : 'above appetite') + ', no acceptance'); continue; }
+    if (a.decider !== r.decider) bad.push(r.id + ': decided by ' + a.decider + ', the rule names ' + r.decider);
+    const miss = r.breaks.filter(t => !(a.breaks || []).includes(t));
+    if (miss.length) bad.push(r.id + ': its acceptance does not list the ' + miss.map(chTolName).join(', ') + ' tolerance');
+  }
+  // 6.7: an open exception inside a register line that is above appetite or breaks a tolerance is escalated and shows it.
+  if (c.pol && c.pol.exc) for (const e of c.pol.exc.filter(x => x.boardLine && !x.seed && chExcStatus(x) !== 'closed')) {
+    const r = chRiskStates().find(x => x.id === e.boardLine);
+    if (!r || (lvl(r.cat, r.residual) && !r.breaks.length)) continue;
+    if (chExcClass(e).cls !== 'escalated' || !/^6\.7: /.test(chExcTolerance(e).text)) bad.push(e.id + ': inside ' + e.boardLine + ', which ' + (r.breaks.length ? 'breaks a tolerance' : 'is above appetite') + ', but not escalated with 6.7 shown');
+  }
+  return bad;
+}
+function chAudit(where) { const c = G.ch, bad = chAuditNow(); (c.audit || (c.audit = [])).push({where: where, day: G.day, bad: bad}); return bad;
 }
 
 /* ---- editions/charter/supplier.js ---- */
@@ -2056,16 +2123,23 @@ function chSupTimelineHtml() {
    Charter's policy primitives (game models), used by District 3, Policy:
    - the exception register: each exception's clause, the exact accounts or
      systems in scope, the business reason, the compensating controls, its
-     owner (the business owner, never the CISO), its approver by POL-1's own
-     rule (chExcApprover: the owner; the Compact Board in its minute where the
-     exception exists because of a Board decision), its start, expiry and
-     review dates, and its status (open, expired, renewed, closed: chExcStatus);
+     owner (the business owner, never the CISO), its class by the CISO's check
+     (chExcClass: standard, or escalated under 6.2a), its approver by POL-1's
+     own rule (chExcApprover: the owner for a standard one; the Board's chair,
+     or a member's own leadership, for an escalated one; the Compact Board in
+     its minute where the exception exists because of a Board decision, 6.3),
+     its tolerance line (chExcTolerance, 6.7: read on the register line's
+     current state), its start, expiry and review dates, and its status (open,
+     expired, renewed, closed: chExcStatus);
    - the checks the rule makes (chExcCheck): a named business owner, an expiry
      no more than 12 months after the start, a review date no later than the
-     expiry and the next quarterly Board;
+     expiry and the next quarterly Board after the start (chNextBoard);
+   - who decides (chExcDecide): only the approver the rule names; the owner
+     alone cannot approve an escalated one;
    - expiry handling: an expired exception is not open; it closes (chExcClose)
-     or renews through the same route with fresh evidence (chExcRenew); the
-     CISO never renews or closes one;
+     or renews through the same route with fresh evidence (chExcRenew, counted:
+     a second renewal is escalated and opens the standard's review); the CISO
+     never renews or closes one;
    - the intake (Monday): the register written up from the records, one row per
      entry, the as-sent register being the CISO's advice the scorecard reads;
    - the policy library: each document's review date, as sent;
@@ -2085,6 +2159,8 @@ function chPol() {
   return c.pol;
 }
 const chIsPerson = o => !!o && typeof o === 'string' && !/^(you|yours|the CISO|IT|Finance|Dispatch|not stated)/i.test(o);
+// The quarterly Board after `day` (Day 155, then every 91 days): a review date may fall no later than this.
+function chNextBoard(day) { let b = CH_POL_NEXT_BOARD; while (b <= day) b += CH_POL_BOARD_EVERY; return b; }
 function chExcDayText(d, at) { return typeof d === 'number' ? 'Day ' + d + (CH_DAY[d] ? ' (' + CH_DAY[d] + ')' : '') + (at ? ' ' + at : '') : d === 'when' ? 'when something changes' : d === null || d === undefined ? 'none' : String(d); }
 
 /* ---------- The register ---------- */
@@ -2102,24 +2178,69 @@ function chExcImport() {
     if (p.exc.some(e => e.id === id)) return;
     p.exc.push({id: id, imported: true, short: a.line, std: 'STD-3', scope: a.name, clause: 'STD-3: the must-haves for its tier (' + a.clause + ')',
       reason: 'left out of the plan on the CISO’s recommendation (Day ' + a.day + ')', controls: a.interim, owner: a.owner, start: a.day,
-      expiry: a.expiry, review: a.review, recommendedBy: a.recommendedBy || 'the CISO (your plan)', note: 'Imported from Suppliers: ' + a.decidedBy + '.'});
+      expiry: a.expiry, review: a.review, recommendedBy: a.recommendedBy || 'the CISO (your plan)', note: 'Imported from Suppliers: ' + a.decidedBy + '.',
+      // Decided in Suppliers (Day 73) under the appetite statement's rule, before POL-1; 6.2a applies at its review. It comes
+      // from the CISO's own recommendation (6.4): the papers say so, and Edda's team checks its control.
+      preRule: true, ownRec: true, tol: 'as recorded in Suppliers'});
   });
 }
 function chExc(id) { return chExcInit().find(e => e.id === id); }
 // 6.3: an exception that exists because of a Board decision (a line the Board chose not to fund) is approved by the
 // Board in its minute; the owner signs for running the control. EX-04 (fin-ap) on the path where the Board trimmed R4.
 function chExcBoardChose(e) { return !!(e && e.boardLine && G.ch.final && G.ch.final[e.boardLine] === 0); }
+// 6.7: the tolerance line. An exception inside a register line (boardLine) is read against that line's current state
+// (chLineNow: the decided option's residual, the tolerances in force now); the others carry their recorded line.
+function chExcTolerance(e) {
+  if (e.seed) return {above: false, breaks: [], text: CH_POL_NOT_STATED};
+  if (!e.boardLine) return {above: false, breaks: [], text: e.tol || 'as recorded'};
+  const l = chLine(e.boardLine), st = chLineNow(l);
+  if (!st) return {above: false, breaks: [], text: 'the Board has not decided ' + l.id + ' yet'};
+  if (!st.within) {
+    const a = (G.ch.accept || []).find(x => x.line === l.id && !x.closed);
+    return {above: true, breaks: st.breaks, acc: a || null, text: '6.7: ' + (st.breaks.length ? st.breaks.map(t => 'breaks the ' + chTolName(t) + ' tolerance').join(', ') + ' (' + l.id + ', as now)' : l.id + ' above appetite') + ': ' +
+      (a ? 'on the risk register as ' + l.id + '’s acceptance (' + a.decider + ', Day ' + a.day + ')' : 'no acceptance on the risk register') + '; escalated (6.2a)'};
+  }
+  return {above: false, breaks: [], text: l.catName.toLowerCase() + ': ' + (chHeldTol().length ? 'call-back in force from Day 79 (Marit)' : 'tolerances kept') + ': within'};
+}
+// The CISO's check (6.4, 6.2a): standard, or escalated with its reasons.
+function chExcClass(e) {
+  if (e.seed) return {cls: 'the town’s', why: []};
+  const why = [];
+  if (e.cisoAgainst) why.push('the CISO recommends against');
+  if (e.partial) why.push('its control covers only part of the gap');
+  const t = chExcTolerance(e); if (t.above) why.push(t.breaks.length ? 'a tolerance breaks' : 'a risk above appetite');
+  if (e.critical) why.push(e.critical);
+  if ((e.renewals || 0) >= 2) why.push('a second renewal');
+  return {cls: why.length ? 'escalated' : 'standard', why: why};
+}
+const CH_POL_CHAIR = 'Ivor Penhallow, the Board’s chair (6.2a)';
+// Who the rule says decides: 'board' (6.3), 'chair' or 'member' (escalated, 6.2a), or 'owner' (standard). Entries
+// imported from Suppliers were decided there, before POL-1, by their owner on the CISO's recommendation.
+function chExcDeciderKey(e, cls) {
+  if (chExcBoardChose(e)) return 'board';
+  if (e.preRule) return 'owner';
+  return (cls || chExcClass(e).cls) === 'escalated' ? (e.member ? 'member' : 'chair') : 'owner';
+}
 function chExcApprover(e) {
   if (e.seed) return e.approver;
-  if (chExcBoardChose(e)) return 'the Compact Board (minute, Day 67)';
-  return e.owner;
+  const k = chExcDeciderKey(e);
+  return k === 'board' ? 'the Compact Board (6.3: ' + e.boardLine + ' carried in its Day 67 minute; the exception to its Day 81 minute)' : k === 'chair' ? CH_POL_CHAIR : k === 'member' ? e.memberLead : e.owner;
 }
-function chExcStatus(e, day) {
+function chWhoKey(e, by) { return chExcBoardChose(e) && /Compact Board/.test(by) ? 'board' : /^Ivor Penhallow/.test(by) ? 'chair' : e.memberLead && by === e.memberLead ? 'member' : by === e.owner ? 'owner' : 'other'; }
+// A decision on an exception: only the approver the rule names. The owner alone cannot approve an escalated one.
+function chExcDecide(e, by, day, note) {
+  const need = chExcDeciderKey(e), got = chWhoKey(e, by);
+  if (need !== got) return {ok: false, why: need === 'owner' ? 'its owner decides it' : need === 'board' ? 'the Board decides it, in its minute (6.3)' : 'escalated (6.2a): ' + chExcApprover(e) + ' decides it, not its owner alone'};
+  Object.assign(e, {decidedBy: by, decidedDay: day, decidedNote: note || ''});
+  return {ok: true};
+}
+// Status, at a day (and, given, a clock time: an expiry at 17:00 is expired from 17:00 on its day).
+function chExcStatus(e, day, at) {
   const d = day === undefined ? G.day : day;
   if (e.seed) return e.status;
   if (e.closed) return 'closed';
   if (typeof e.expiry !== 'number') return 'open';
-  if (d > e.expiry) return 'expired';
+  if (d > e.expiry || (d === e.expiry && e.expiryAt && at && at >= e.expiryAt)) return 'expired';
   return e.renewed ? 'renewed' : 'open';
 }
 // What POL-1's rule asks of a write-up {owner, expiry, review} for an entry starting on `start` (and, given, whose
@@ -2131,7 +2252,7 @@ function chExcCheck(w, start, bizOwner) {
   if (typeof w.expiry !== 'number') out.push('no expiry date');
   else if (w.expiry - start > CH_POL_MAX_DAYS) out.push('expiry more than 12 months after its start');
   if (typeof w.review !== 'number') out.push('no review date');
-  else if (w.review > CH_POL_NEXT_BOARD || (typeof w.expiry === 'number' && w.review > w.expiry)) out.push('review after the next quarterly Board or its expiry');
+  else if (w.review > chNextBoard(start) || (typeof w.expiry === 'number' && w.review > w.expiry)) out.push('review after the next quarterly Board or its expiry');
   return out;
 }
 // Close an exception: its owner's decision (or the Board's, where 6.3 applies). The CISO never closes one.
@@ -2140,17 +2261,21 @@ function chExcClose(e, by, day, note) {
   Object.assign(e, {closed: true, closedBy: by, closedDay: day, closedNote: note || ''});
   return {ok: true};
 }
-// Renew an expired (or expiring) exception through the same route, with fresh evidence: by its owner (or the Board where
-// 6.3 applies), with the review's record and the control's records, to an expiry no more than 12 months from the
-// renewal and a review date the rule allows. The CISO never renews one.
+// Renew an expired (or expiring) exception through the same route, with fresh evidence: by the approver the rule names
+// (the owner for a standard one, the chair or the member's leadership for an escalated one, the Board under 6.3), with the
+// review's record and the control's records, to an expiry no more than 12 months from the renewal and a review date the
+// rule allows. Renewals are counted: a second one is escalated (6.2a) and opens the standard's review (6.8). The CISO
+// never renews one.
 function chExcRenew(e, r) {
-  const by = r.by || '', w = {owner: e.owner, expiry: r.to, review: r.review};
-  if (by !== e.owner && !(chExcBoardChose(e) && /Board/.test(by))) return {ok: false, why: 'only its owner renews it (or the Board, under 6.3)'};
+  const by = r.by || '', w = {owner: e.owner, expiry: r.to, review: r.review}, n = (e.renewals || 0) + 1;
+  const base = chExcDeciderKey(e), need = base === 'owner' && n >= 2 ? (e.member ? 'member' : 'chair') : base, got = chWhoKey(e, by);
+  if (got !== need) return {ok: false, why: need === 'owner' ? 'only its owner renews it (or the Board, under 6.3)' : need === 'board' ? 'the Board renews it, in its minute (6.3)' : (n >= 2 ? 'a second renewal is escalated (6.2a): ' : 'escalated (6.2a): ') + (need === 'chair' ? 'the Board’s chair' : 'the member’s own leadership') + ' renews it, not its owner alone'};
   if (!r.evidence || !r.evidence.length) return {ok: false, why: 'no fresh evidence'};
   const probs = chExcCheck(w, r.day);
   if (probs.length) return {ok: false, why: probs.join(', ')};
-  Object.assign(e, {renewed: true, renewedBy: by, renewedDay: r.day, start: r.day, expiry: r.to, review: r.review, evidence: r.evidence.slice()});
-  return {ok: true};
+  Object.assign(e, {renewed: true, renewals: n, renewedBy: by, renewedDay: r.day, start: r.day, expiry: r.to, review: r.review, evidence: r.evidence.slice()});
+  if (n >= 2) e.stdReview = true;
+  return {ok: true, stdReview: n >= 2};
 }
 function chExcStatusText(e) {
   const s = chExcStatus(e);
@@ -2165,15 +2290,19 @@ function chExcRegisterHtml(list) {
 }
 function chExcItemHtml(e) {
   if (e.seed) return '<b>' + esc(e.id) + ' ' + esc(e.scope) + '</b> (' + esc(e.src) + '). Clause: ' + esc(e.clause) + ' Reason: ' + esc(e.reason) + '. Start: ' + esc(e.startText) + '. Owner: ' + esc(e.owner) + '. Approver: ' + esc(e.approver) + '. Expiry: ' + esc(e.expiryText) + '; review: ' + esc(e.reviewText) + '. Compensating controls: ' + esc(e.controls) + '. Status: closed. ' + esc(e.note);
-  return '<b>' + esc(e.id) + ' ' + esc(e.scope) + '</b>. Clause: ' + esc(e.clause) + '. Reason: ' + esc(e.reason) + '. Controls: ' + esc(e.controls) + '. Owner: ' + esc(e.owner) + '; approver (the rule): ' + esc(chExcApprover(e)) +
-    (e.recommendedBy ? '; recommended by ' + esc(e.recommendedBy) : '') + '. Start Day ' + e.start + '; expiry ' + esc(chExcDayText(e.expiry, e.expiryAt)) + '; review ' + esc(chExcDayText(e.review)) + '. Status: ' + esc(chExcStatusText(e)) + '.' + (e.closedNote ? ' ' + esc(e.closedNote) : e.note ? ' ' + esc(e.note) : '');
+  const c = chExcClass(e), t = chExcTolerance(e), open = chExcStatus(e) !== 'closed';
+  const cls = e.preRule ? 'decided before POL-1 (the appetite statement’s rule); 6.2a applies at its review' : c.cls + (c.why.length ? ' (' + c.why.join('; ') + ')' : '');
+  const dec = e.decidedBy ? ', decided by ' + e.decidedBy + ' on Day ' + e.decidedDay + (e.approvedIn ? ' (' + e.approvedIn + ')' : '') : open && !e.preRule && chExcDeciderKey(e, c.cls) === 'chair' ? '; to be decided on the papers within five working days' : '';
+  return '<b>' + esc(e.id) + ' ' + esc(e.scope) + '</b>. Clause: ' + esc(e.clause) + '. Reason: ' + esc(e.reason) + '. Controls: ' + esc(e.controls) + '. Owner: ' + esc(e.owner) + ', who signs for running its control; class (the CISO’s check): ' + esc(cls) + '; approver (the rule): ' + esc(chExcApprover(e)) + esc(dec) +
+    (e.recommendedBy ? '; recommended by ' + esc(e.recommendedBy) : '') + '. Start Day ' + e.start + '; expiry ' + esc(chExcDayText(e.expiry, e.expiryAt)) + '; review ' + esc(chExcDayText(e.review)) + '. Tolerances: ' + esc(t.text) + '. Status: ' + esc(chExcStatusText(e)) + '.' +
+    (e.ownRec ? ' From the CISO’s own recommendation: the Board’s papers say so, and Edda’s team checks its control (6.4).' : '') + (e.stdReview ? ' A second renewal: the standard’s review is opened (6.8).' : '') + (e.closedNote ? ' ' + esc(e.closedNote) : e.note ? ' ' + esc(e.note) : '');
 }
-function chPolRuleHtml() { return '<p class="small">POL-1 section 6, the exception rule (game; the draft’s, for the Board on Thursday):</p><ul class="small">' + CH_POL_RULE.map(r => '<li>' + esc(r) + '</li>').join('') + '</ul>'; }
+function chPolRuleHtml() { return '<p class="small">POL-1 section 6, the exception rule (game; the draft’s, in force once the Board approves POL-1 on Thursday):</p><ul class="small">' + CH_POL_RULE.map(r => '<li>' + esc(r) + '</li>').join('') + '</ul>'; }
 
 /* ---------- The intake (Monday 10:30): write the register up from the records ---------- */
 // One row per entry to write up; left/right (or A) cycles its write-ups (CH_POL_INTAKE); the page reopens in place. Not
 // graded row by row: the scorecard reads the register as sent. meta.bot marks the bot's next step; it is never shown.
-function chIntakeRight(id) { return CH_POL_INTAKE[id].findIndex(w => w.ok) + 1; }
+function chIntakeRight(id) { return CH_POL_INTAKE[id].findIndex(w => w.good) + 1; }
 async function chExcIntakeEdit() {
   const p = chPol(), ids = Object.keys(CH_POL_INTAKE), t = p.intake || (p.intake = Object.fromEntries(ids.map(id => [id, 0])));
   let cur = 0;
@@ -2181,7 +2310,7 @@ async function chExcIntakeEdit() {
     const done = ids.every(id => t[id]), right = ids.every(id => t[id] === chIntakeRight(id));
     const items = ids.map(id => { const e = chExc(id), w = t[id] ? CH_POL_INTAKE[id][t[id] - 1] : null;
       return {label: id + ' ' + e.short + ': ' + (w ? w.label : 'not written up yet'),
-        note: e.scope + '. ' + e.clause + '. Reason: ' + e.reason + '. Controls: ' + e.controls + '. Recorded: ' + e.note + ' Expiry as recorded: ' + chExcDayText(e.expiry, e.expiryAt) + '. (A cycles)',
+        note: e.scope + '. ' + e.clause + '. Reason: ' + e.reason + '. Controls: ' + e.controls + '. Recorded: ' + e.note + ' Expiry as recorded: ' + chExcDayText(e.expiry, e.expiryAt) + '. Tolerances: ' + chExcTolerance(e).text + '. (A cycles)',
         meta: {k: id, lr: true, bot: t[id] !== chIntakeRight(id)}}; });
     items.push({label: 'The exception rule', meta: {k: 'help'}});
     items.push({label: done ? 'Put it on the register' : 'Write up every row first', disabled: !done, meta: {k: 'send', bot: right}});
@@ -2205,19 +2334,21 @@ function chExcApplyWriteup(id, idx) {
 }
 function chIntakeDebrief(sent) {
   const ids = Object.keys(CH_POL_INTAKE), wrong = ids.filter(id => sent[id] !== chIntakeRight(id));
-  return '<table class="sc"><tr><th>Entry</th><th>Yours</th><th>The rule</th></tr>' + ids.map(id => '<tr><td>' + esc(id) + '</td><td>' + (sent[id] === chIntakeRight(id) ? 'as the rule' : 'differs') + '</td><td>' + esc(chExc(id).short) + '</td></tr>').join('') + '</table>' +
-    (wrong.length ? '<ul>' + wrong.map(id => '<li><b>' + esc(id) + '</b>: you wrote “' + esc(CH_POL_INTAKE[id][sent[id] - 1].label) + '”. ' + esc(CH_POL_INTAKE[id][sent[id] - 1].why) + ' The rule’s: “' + esc(CH_POL_INTAKE[id][chIntakeRight(id) - 1].label) + '”.</li>').join('') + '</ul>' : '<p>Every row written up as the rule asks.</p>');
+  return '<table class="sc"><tr><th>Entry</th><th>Account</th><th>Yours</th></tr>' + ids.map(id => '<tr><td>' + esc(id) + '</td><td>' + esc(chExc(id).short) + '</td><td>' + (sent[id] === chIntakeRight(id) ? 'as the draft rule asks' : 'differs') + '</td></tr>').join('') + '</table>' +
+    (wrong.length ? '<ul>' + wrong.map(id => '<li><b>' + esc(id) + '</b>: you wrote “' + esc(CH_POL_INTAKE[id][sent[id] - 1].label) + '”. ' + esc(CH_POL_INTAKE[id][sent[id] - 1].why) + ' The draft rule’s: “' + esc(CH_POL_INTAKE[id][chIntakeRight(id) - 1].label) + '”.</li>').join('') + '</ul>' : '<p>Every row written up as the draft rule asks (in force once the Board approves it on Thursday).</p>');
 }
 
 /* ---------- The policy library (Wednesday 14:00): a review date for each document ---------- */
 function chLibValid(v) { return typeof v === 'number' && v <= CH_POL_REVIEW_MAX; }
+// A document's text as it stands: STD-4 is v2 from Wednesday's replies (agreed with the members' owners, Day 80).
+function chDocWhat(d) { return d.v2 && G.f && G.f.chPolReplies ? d.v2 : d.what; }
 function chLibText(v) { return v === null || v === undefined ? 'no review date' : 'review ' + CH_POL_REVIEW_TEXT[v]; }
 async function chPolLibEdit() {
   const p = chPol(), t = p.lib || (p.lib = Object.fromEntries(CH_POL_DOCS.map(d => [d.id, 0])));
   let cur = 0;
   while (true) {
     const right = CH_POL_DOCS.every(d => CH_POL_REVIEWS[t[d.id]] === d.bot);
-    const items = CH_POL_DOCS.map(d => ({label: d.id + ' ' + d.name + ': ' + chLibText(CH_POL_REVIEWS[t[d.id]]), note: d.what + ' (A cycles)', meta: {k: d.id, lr: true, bot: CH_POL_REVIEWS[t[d.id]] !== d.bot}}));
+    const items = CH_POL_DOCS.map(d => ({label: d.id + ' ' + d.name + ': ' + chLibText(CH_POL_REVIEWS[t[d.id]]), note: chDocWhat(d) + ' Owner: ' + d.owner + '. (A cycles)', meta: {k: d.id, lr: true, bot: CH_POL_REVIEWS[t[d.id]] !== d.bot}}));
     items.push({label: 'Send it to the Board papers', meta: {k: 'send', bot: right}});
     const body = '<p>Six documents: the policy and the five standards under it. POL-1 section 8: every document reviewed at least every 12 months, and after any incident that tests it. Left/right (or A) changes a review date. (game)</p>';
     const r = await UI.openModal('The policy library · review dates', body, items, {closable: false, cursor: cur, inView: true, lr: true, cls: 'drill'});
@@ -2229,24 +2360,25 @@ async function chPolLibEdit() {
 }
 
 /* ---------- The policy metrics (on the CISO's advice) ---------- */
-// exc: open entries as you wrote them (EX-02 and EX-04 from the intake as sent; EX-05 as written with its owner; any
-// imported), each with a named business owner, an expiry within 12 months of its start and a review date the rule
-// allows. exp: of the exceptions that expired this week (EX-01, EX-03), the share your advice sent to their owner to
+// exc: the entries you wrote up (EX-02 and EX-04, from the intake as sent), each with its business owner, an expiry
+// within 12 months of its start and a review date the rule allows. reg (not scored): every open entry complete, EX-05
+// as its owner decided it and any EX-1x as recorded in Suppliers. exp: of the exceptions that expired this week (EX-01, EX-03), the share your advice sent to their owner to
 // close or renew through the route (drill 1's verdict, the intake row). rev: documents sent with a review date within 12
 // months.
 function chPolStats() {
   const p = chPol(), sent = p.intakeSent;
-  let exc = null, exp = null, rev = null;
+  let exc = null, exp = null, rev = null, reg = null;
   if (sent) {
     const rows = [];
     for (const id of ['EX-02', 'EX-04']) { const e = chExc(id), w = CH_POL_INTAKE[id][sent[id] - 1]; rows.push(chExcCheck(w, e.start, e.owner).length === 0); }
-    for (const e of chExcInit().filter(x => x.imported || x.id === 'EX-05')) rows.push(chExcCheck(e, e.start).length === 0);
     exc = Math.round(rows.filter(Boolean).length / rows.length * 100);
+    const others = chExcInit().filter(x => x.imported || x.id === 'EX-05');
+    reg = {n: others.filter(e => chExcCheck(e, e.start).length === 0).length, of: others.length};
     const d1 = p.drills.polvalid, res = [d1 ? !!d1.verdictOk : false, CH_POL_INTAKE['EX-03'][sent['EX-03'] - 1].disp === 'owner'];
     exp = Math.round(res.filter(Boolean).length / res.length * 100);
   }
   if (p.libSent) rev = Math.round(CH_POL_DOCS.filter(d => chLibValid(p.libSent[d.id])).length / CH_POL_DOCS.length * 100);
-  return {exc, exp, rev};
+  return {exc, exp, rev, reg};
 }
 
 /* ---- editions/charter/prologue-data.js ---- */
@@ -2360,7 +2492,7 @@ const EDITION = {
   saveKey: 'uptime.charter.save',
   ownMetrics: true,           // the analyst scorecard is replaced by the CISO's (EDITION_METRICS)
   noTools: true,              // no tool console: the CISO's tools are the register, the budget and the Board
-  badgeFlags: ['chBallast', 'chHawser', 'chBowline'],
+  badgeFlags: ['chBallast', 'chHawser', 'chSheetBend'],
   title: 'Charter edition',
   blurb: 'Four weeks after the Compact-wide incident, the Compact Board appoints its first CISO: you. Set the risk appetite with the Board, then the budget: one sum, six risks, and an upgrade that wants the money too. Then the suppliers: tiers, contract clauses, and a supplier’s incident told from the Compact’s own records. Then policy: an exception register with owners, expiries and reviews, and a policy the Board approves.',
   fmActionsCat: 'Leadership practices (game)',   // the Field Manual's heading for EXTRA_ACTIONS (engine default: D3FEND-style)
@@ -2457,8 +2589,8 @@ const EDITION_METRICS = [
   // Every must-have fits the envelope, so each one the plan leaves out is the CISO's poor advice.
   {k: 'chSupMust', label: 'Must-haves in your plan (your advice)', unit: '%', higher: true, when: () => !!G.f.chSupStart},
   // Policy (slice 3): game metrics on the CISO's advice (CAREER_LADDER §3 lists "policy exceptions with an expiry"; these
-  // widen it): the register as sent, the advice on the exceptions that expired, and the policy library as sent.
-  {k: 'chPolExc', label: 'Exceptions with owner, expiry and review (your register)', unit: '%', higher: true, when: () => !!G.f.chPolStart},
+  // widen it): the write-ups you sent (EX-02, EX-04), the advice on the exceptions that expired, and the library as sent.
+  {k: 'chPolExc', label: 'Exceptions you wrote up with owner, expiry and review (your register)', unit: '%', higher: true, when: () => !!G.f.chPolStart},
   {k: 'chPolExp', label: 'Expired exceptions resolved (your advice)', unit: '%', higher: true, when: () => !!G.f.chPolStart},
   {k: 'chPolRev', label: 'Policies with a review date (your advice)', unit: '%', higher: true, when: () => !!G.f.chPolStart}
 ];
@@ -2470,8 +2602,8 @@ function editionScorecard() {
   return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
     '<p>' + (c.sent ? 'Scored on your advice: the allocation you sent, against Monday’s appetite and tolerances.' : 'No allocation sent yet.') + (c.final ? ' The Board’s decision: <b>' + chAllocStats(c.final).within + ' of ' + CH_LINES.length + '</b> lines within appetite' + (c.decision && c.decision.override ? ', overriding your advice' : '') + '.' : c.sent ? ' The Board decides on Thursday.' : '') + ' Drills with every needs met: <b>' + c.needs.met + ' of ' + c.needs.total + '</b>. Acceptances on the register: <b>' + (c.accept || []).length + '</b>' + ((c.accept || []).length ? ' (signed by ' + [...new Set(c.accept.map(x => x.signedBy))].map(esc).join(', ') + ')' : '') + '.</p>' +
     (ss ? '<p>Suppliers: scored on your advice, the tiers you sent and your plan for the Compact’s own contracts. The members’ own contracts are their owners’ decisions: <b>' + ss.memFull + ' of ' + ss.members + '</b> with every must-have. Owners and review dates came with every line (the Ballast Badge). Must-haves left out on your recommendation, decided and signed by their owners: <b>' + sup.accept.length + '</b>' + (ss.poor ? ' (poor advice: a plan with every must-have fitted)' : '') + '. Supplier drills with every needs met: <b>' + sup.needs.met + ' of ' + sup.needs.total + '</b>.</p>' : '') +
-    (pol ? '<p>Policy: scored on your advice, the register you sent on Monday, your advice on the two exceptions that expired (drill 1’s verdict and the intake), and the library you sent. Exceptions on the register now: <b>' + chExcInit().filter(e => !e.seed && chExcStatus(e) !== 'closed').length + '</b> open, each with its owner, approver, expiry and review. Policy drills with every needs met: <b>' + pol.needs.met + ' of ' + pol.needs.total + '</b>.</p>' : '') +
-    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + (G.f.chSupStart ? ' · Hawser Badge: ' + (G.f.chHawser ? 'yes' : 'not yet') : '') + (G.f.chPolStart ? ' · Bowline Badge: ' + (G.f.chBowline ? 'yes' : 'not yet') : '') + '</p>' +
+    (pol ? '<p>Policy: scored on your advice, the two entries you wrote up on Monday (EX-02, EX-04), your advice on the two exceptions that expired (drill 1’s verdict and the intake), and the library you sent.' + (chPolStats().reg ? ' Register entries complete (not scored): <b>' + chPolStats().reg.n + ' of ' + chPolStats().reg.of + '</b> (EX-05 decided by its owner; EX-1x as recorded in Suppliers).' : '') + ' Exceptions on the register now: <b>' + chExcInit().filter(e => !e.seed && chExcStatus(e) !== 'closed').length + '</b> open, each with its owner, class, approver, expiry and review. Policy drills with every needs met: <b>' + pol.needs.met + ' of ' + pol.needs.total + '</b>.</p>' : '') +
+    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + (G.f.chSupStart ? ' · Hawser Badge: ' + (G.f.chHawser ? 'yes' : 'not yet') : '') + (G.f.chPolStart ? ' · Sheet Bend Badge: ' + (G.f.chSheetBend ? 'yes' : 'not yet') : '') + '</p>' +
     (c.carry ? '<p class="small">Carried: ' + esc(chTracksText(c.carry)) + (c.carry.crBadges.length ? ' · Crossroads badges ' + c.carry.crBadges.join(', ') : '') + (c.carry.thBadges.length ? ' · Town Hall badges ' + c.carry.thBadges.join(', ') : '') + ' · suspicion file ' + qtCount() + ' notes.</p>' : '') +
     '<p class="small">Every number here is a game model (game). Objective: ' + esc(objective().text) + '</p>';
 }
@@ -2593,7 +2725,7 @@ async function talk(npc) {
       if (f.chDay66 && !f.chBoard) { await chBoardRound(); return; }
       if (f.chSupThu && !f.chSupBoard) { await chSupBoardRound(); return; }
       if (f.chPolCheck && !f.chPolBoard) { await chPolBoardRound(); return; }
-      if (f.chPolBoard) { await say('The Bowline Badge: every exception’s dates reach you before they fall due. A list that is read is a list we can trust.', who); return; }
+      if (f.chPolBoard) { await say('The Sheet Bend Badge: every exception’s dates reach its owner, and you, before they fall due. A list that is read is a list we can trust.', who); return; }
       if (f.chSupBoard) { await say(f.chPolStart ? 'Thursday at 14:00, the policy. Bring the register as it stands.' : 'The Hawser Badge: a supplier’s trouble reaches us through our own records first. Keep them that way.', who); return; }
       await say(f.chBoard ? 'The Ballast Badge says this Board can hold you to a measure. Keep giving it one.' : 'Thursday at 14:00. Bring both cases, laid out the same way.', who); return;
     case 'noorch':
@@ -2612,7 +2744,7 @@ async function talk(npc) {
       if (f.chPolDrillB && !f.chPolDrillC) { await chPolDrillC(); return; }
       if (f.chPolLib && !f.chPolDojoMet) { await chPolDojoIntro(); return; }
       if (f.chPolDay80 && !f.chPolCheck) { await chPolCheck(); return; }
-      if (f.chPolStart) { await say(f.chPolCheck ? 'Six accounts in MFA-Exempt, each on an open entry in date. That’s how it stays.' : f.chPolDojoMet && !f.chPolDojoDone ? 'The three terminals, south-west: dates, who approves, and whether a control covers its gap.' : 'board-display and cp-patch are closed, my decisions both. The rest of the shared services’ exceptions are mine, with dates.', who); return; }
+      if (f.chPolStart) { await say(f.chPolCheck ? 'Six accounts in MFA-Exempt, each on an open entry in date. That’s how it stays.' : f.chPolDojoMet && !f.chPolDojoDone ? 'The three terminals, south-west: dates, who approves, and whether a control covers its gap.' : f.chPolRegister ? 'board-display and cp-patch are closed, my decisions both. The five service accounts are mine to run, with dates; the chair decides them.' : 'board-display is closed, my decision. The register’s yours to write up at 10:30.', who); return; }
       if (f.chSupStart) { await say(f.chSupThu ? 'cp-xfer is back, key-only, from Thimbleford’s range, every session logged. It was my call both times, on the facts you brought, and our own logs.' : f.chSupIncident ? 'cp-xfer stays suspended until Thimbleford’s answer covers the 23:52 login. My call, on your advice.' : 'Wellhollow keeps our off-site copies. Its renewal is on my desk.', who); return; }
       await say(!f.chAppetite ? 'Edda Thornquist. I run the shared services. You’ll want me at the Board at nine.' : f.chBoard ? (G.ch.decision && G.ch.decision.override ? 'The upgrade is funded. The Board chose the trade-off, with your advice against it in the minute, and I signed for running the interim checks.' : G.ch.final && G.ch.final.R6 === 2 ? 'The upgrade is funded as you sent it. What it leaves, the owners have signed.' : 'The upgrade waits a year and the extension carries us. Fair, laid out the way you laid it out.') : 'My request is with Marit: the platform leaves its vendor’s support next year. It’s a fair case. Make yours as plainly.', who); return;
     case 'quellan':
@@ -2620,7 +2752,7 @@ async function talk(npc) {
       if (f.chSupDay71 && !f.chSupIncident) { await chSupIncident(); return; }
       if (f.chSupDojoDone && !f.chSupReturn) { await chSupReturn(); return; }
       if (f.chSupDay73 && !f.chSupThu) { await chSupThursday(); return; }
-      if (f.chPolStart) { await say(f.chPolDrillB ? 'fin-ap’s exception is mine, to Day 155, and its control is checked now, not just written down.' : 'fin-ap’s exception is mine. I wrote down what I was told covers it.', who); return; }
+      if (f.chPolStart) { await say(f.chPolDrillB ? 'fin-ap’s exception is mine to run, to Day 155, and its control is checked now, and it covers sign-ins from outside the office. The rest waits for the mailboxes. And the call-back rule is mine, from Tuesday.' : 'fin-ap’s exception is mine. I wrote down what I was told covers it.', who); return; }
       if (f.chSupStart) { await say(f.chSupThu ? 'The members’ staff have been told what we know. Thimbleford’s amendment is with Ilka.' : f.chSupIncident ? 'cp-xfer is suspended, and Thimbleford has our questions. Noor has the facts.' : 'Inkmere and Thimbleford are both mine. Tell me what each one needs in its contract.', who); return; }
       if (f.chDrillB && !f.chDrillC) { await chDrillC(); return; }
       if (f.chDirective && !f.chDojoMet) { await chDojoIntro(); return; }
@@ -2848,6 +2980,8 @@ const CH_LINES = [
           {cost: 80, res: 'Low', what: 'An isolated restore space, sized for every member at once.'}]},
   {id: 'R4', name: 'Payment fraud by email', cat: 'fin', catName: 'Financial', owner: 'Marit Quellan', rank: 6, rec: 1,
    interim: 'Marit approves every change to a payment detail herself and holds it five working days, until the line is funded.',
+   // Funded from next year's lines, R4 stays as now until it delivers: this is the interim for that gap (chGapAcceptance).
+   gapInterim: 'Marit approves every change to a payment detail herself and holds it five working days, until a call-back rule is in force or the line delivers.',
    opts: [{cost: 0, res: 'Medium', what: 'As now: fin-ap, the shared accounts-payable mailbox, excepted from MFA; no call-back rule, and no checked list of the suppliers’ known numbers to call.', breaks: [CH_TOL_CALLBACK]},
           {cost: 20, res: 'Low', what: 'Named finance mailboxes with MFA, a scanner that supports it, and a call-back rule, every supplier’s known number checked first.'}]},
   {id: 'R5', name: 'The 911 center’s own segment', cat: 'safety', catName: 'Safety-of-life services', owner: 'Celia Marrow', rank: 1, rec: 1,
@@ -2892,14 +3026,14 @@ const CH_DRILLS = {
       {label: 'Not true: two accounts people use are excepted, and were used 252 times without MFA', good: true, needs: ['policy', 'signins'],
        needsWhy: 'the answer rests on two records: the policy’s exceptions and the sign-in records. You read only one of them.',
        why: 'The policy excepts eight accounts; the records show two of them used by people, without MFA, 252 times in 30 days.'},
-      {label: 'True as written: the policy turns MFA on for each account in the shared directory', why: 'For every account but eight. The exceptions list is part of the policy.'},
-      {label: 'Not true, and the 6 service accounts are a breach in progress: disable them today', why: 'Nothing in these records shows misuse, and the service accounts sign in from their own servers. Each exception needs an owner and an expiry.'}],
+      {label: 'True: the exceptions are only machines that can’t do MFA', why: 'Two of the eight are used by people: fin-ap and board-display, 252 times without MFA in 30 days. The exceptions list is part of the policy.'},
+      {label: 'Not true, and the 6 excepted service accounts are a breach in progress: disable them today', why: 'Nothing in these records shows misuse, and the service accounts sign in from their own servers. Each exception needs an owner and an expiry.'}],
     reasons: [
-      {label: 'The exceptions name them, and the directory’s log shows two used without MFA', good: true, why: 'The policy’s own list, and what happened over 30 days.'},
+      {label: 'The policy’s list names them, and the directory’s log shows two used without MFA', good: true, why: 'The policy’s own list, and what happened over 30 days.'},
       {label: 'The datasheet says MFA works for any user, so any gap that is left must be a small one', why: 'A datasheet says what a product can do, not what the policy does.'},
       {label: 'Edda says that everyone has MFA, and she owns the shared services', why: 'An honest memory is not a record.'}],
     alts: [
-      {label: 'The two accounts used MFA despite the exception', good: true, why: 'Ruled out: the sign-in records show 252 sign-ins without MFA.'},
+      {label: 'The two accounts used MFA after all', good: true, why: 'Ruled out: the sign-in records show 252 sign-ins without MFA.'},
       {label: 'The six service accounts are people’s accounts', good: true, why: 'Ruled out: their sign-ins are non-interactive, from their own servers.'},
       {label: 'The datasheet is out of date for this version of the product', why: 'Beside the point: the policy and the records decide it.'},
       {label: 'Edda knew of the gap and left it out', why: 'Nothing points to it: an honest claim, from memory.'}],
@@ -3163,7 +3297,7 @@ async function chBoardRound() {
   let msg = '15:00. ';
   if (d.restored.length) msg += 'Your allocation leaves R5, the 911 center’s segment, at $0. The Board funds it, $120k, and the minute says so: I won’t ask Celia to sign that. ';
   if (d.override) msg += 'The Board funds the upgrade in full, $250k. Marit’s figures: a year of support now and the upgrade next year is $340k for the same platform.' + (d.cut.length ? ' To pay for it, ' + names(d.cut) + (d.cut.length === 1 ? ' waits' : ' wait') + ' a year.' : '') + (d.restored.length ? '' : ' The center’s segment stays funded: I won’t ask Celia to sign for that.');
-  else if (d.persuaded && c.sent.R6 !== up) msg += 'The Board approves your allocation as sent. The extension carries the platform for a year, and the upgrade comes back at the start of next year’s budget cycle. Laid out side by side, it keeps every line inside what we signed on Monday.';
+  else if (d.persuaded && c.sent.R6 !== up) msg += 'The Board approves your allocation as sent. The extension carries the platform for a year, and the upgrade comes back at the start of next year’s budget cycle. Laid out side by side, it keeps every line inside what we signed on Monday once each line delivers.';
   else msg += 'The Board approves your allocation' + (d.cut.length ? ', less ' + names(d.cut) + ', to fit $480k' : ' as sent') + '.';
   await say(msg + ' (game)', who);
   // What the decision leaves above appetite: the Board's decision and its approval of the residual risk, in the minute (the
@@ -3171,12 +3305,18 @@ async function chBoardRound() {
   const above = chAboveAppetite(c.final);
   const dec = {decidedBy: 'the Compact Board (minute, Day 67), ' + (d.override ? 'against the CISO’s advice' : d.restored.length || d.cut.length ? 'correcting the CISO’s allocation' : 'on the CISO’s allocation'), approvedBy: 'the Compact Board'};
   for (const l of above) c.accept.push(chAcceptance(l, c.final, dec, 67));
+  // A funded line stays as now until it delivers (next year's money): where that breaks a tolerance today (R4: no
+  // call-back rule), its owner accepts the gap and signs; the Board sees it in the minute (the tolerances bind now).
+  const gap = CH_LINES.filter(l => !above.includes(l) && chLineNow(l).gap);
+  for (const l of gap) c.accept.push(chGapAcceptance(l, 67));
   const ids = above.map(l => l.id), list = ids.length > 1 ? ids.slice(0, -1).join(', ') + ' and ' + ids[ids.length - 1] : ids[0];
+  const gapTxt = gap.length ? ' Until its line delivers, ' + gap.map(l => l.id + ' stays as now and breaks the ' + chLineNow(l).breaks.map(chTolName).join(' and ') + ' tolerance: ' + l.owner + ', its owner, accepts that gap and signs, with interim measures').join('; ') + '. The Board sees it.' : '';
   const head = d.override ? 'The Board overrode your allocation: the upgrade in full' + (d.cut.length ? ', paid for by deferring ' + d.cut.join(', ') : '') + '. ' : 'The Board approved your allocation' + (d.cut.length ? ', less ' + d.cut.join(', ') : d.persuaded && c.sent.R6 !== up ? ' as sent, the extension carrying the platform' : ' as sent') + '. ';
   const minute = above.length ? 'The minute records the Board’s decision to carry ' + list + ' above appetite until Day ' + CH_EXPIRY_DAY + (d.override ? ', with the CISO’s advice against it and the objection noted' : '') + ', and its acceptance of the residual risk, approved by the Board. Each owner signs for the interim measures and owns the treatment plan.'
-    : 'The minute records the decision. No line is left above appetite.';
-  await UI.openModal('The Board’s decision', '<p>' + head + (d.restored.length ? 'It funded R5, which your allocation left at $0. ' : '') + minute + ' (game)</p>' + chAllocTable(c.final) + chAllocSummary(c.final) +
-    (above.length ? '<h3>15:20: the acceptances: the Board’s decision, signed by their owners</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 67)) : '') +
+    : 'The minute records the decision. No line is left above appetite once its line delivers.';
+  await UI.openModal('The Board’s decision', '<p>' + head + (d.restored.length ? 'It funded R5, which your allocation left at $0. ' : '') + minute + gapTxt + ' (game)</p>' + chAllocTable(c.final) + chAllocSummary(c.final) +
+    (above.length ? '<h3>15:20: the acceptances: the Board’s decision, signed by their owners</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 67 && !x.gap)) : '') +
+    (gap.length ? '<h3>15:20: until its line delivers: the owner’s acceptance</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 67 && x.gap)) : '') +
     '<h3>Also before the Board</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 66)),
     [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
   for (const o of [...new Set(above.map(l => l.owner))]) {
@@ -3185,6 +3325,8 @@ async function chBoardRound() {
     else if (o === 'Marit Quellan') await say('I sign ' + mine.join(', ') + ' as ' + (one ? 'its' : 'their') + ' owner, and I’ll run the interim checks. The Board chose it; the minute says so.', o);
     else await say('15:20: ' + o + ' signs ' + mine.join(', ') + ' as the owner, for the interim measures and the treatment plan. (game)');
   }
+  for (const l of gap) await say(l.id === 'R4' ? 'And the gap on R4 until its line delivers is mine: I accept it and sign. Until a call-back rule is in force, I approve every payment-detail change myself and hold it five working days.' : 'The gap on ' + l.id + ' until its line delivers is mine: I accept it and sign.', l.owner);
+  chAudit('Budget: the Board’s minute (Day 67)');
   f.chBoard = true; f.chBallast = true;
   G.focusMax += 4; G.focus = G.focusMax; unlock('act', 'chboard'); touchCSF('Govern'); track();
   await say('You cleared the Compact Board’s budget round. This is the Ballast Badge (game).', who);
@@ -3199,7 +3341,7 @@ function chDrillRows() {
 async function chSummary() {
   const f = G.f, c = G.ch;
   if (!f.chSummary) {
-    f.chSummary = true; touchCSF('Govern');
+    f.chSummary = true; touchCSF('Govern'); chAudit('Budget: the district’s end (Day 67)');
     Series.markEdition('charter', {budget: true});
     await say('An appetite the Board signed, a register with an owner and a date on every line, and a budget the Board decided with its eyes open. Next, the suppliers.', 'Ivor Penhallow');
   }
@@ -3777,7 +3919,8 @@ async function chSupBoardRound() {
   await say('14:00. The members’ representatives, Edda, Marit, Ilka, and Noor for anything legal. Suppliers, and Tuesday. Three questions.', who);
   sup.board = {first: []};
   await chStages(CH_SUP_BOARD_SPECS(), sup.board.first);
-  await say('15:00: the register goes in the minute: eight suppliers tiered, owners and review dates, the plan for the Compact’s four contracts, each acceptance its owner signed on your recommendation, and cp-xfer’s, measured against Monday’s privacy tolerance. Each member’s owner has its tier’s requirements for its own contracts. (game)', who);
+  await say('15:00: the register goes in the minute: eight suppliers tiered, owners and review dates, the plan for the Compact’s four contracts, each acceptance its owner signed on your recommendation, and cp-xfer’s, measured against Monday’s privacy tolerance.' + (G.ch.accept.some(x => x.gap && !x.closed) ? ' Still on the register: ' + G.ch.accept.filter(x => x.gap && !x.closed).map(x => x.line + '’s gap until its line delivers, ' + x.signedBy.split(' ')[0] + '’s').join(', ') + '.' : '') + ' Each member’s owner has its tier’s requirements for its own contracts. (game)', who);
+  chAudit('Suppliers: the Board’s minute (Day 74)');
   f.chSupBoard = true; f.chHawser = true;
   G.focusMax += 4; G.focus = G.focusMax; unlock('act', 'chsupboard'); touchCSF('Govern'); track();
   await say('You cleared the Compact Board’s Supplier round. This is the Hawser Badge (game).', who);
@@ -3793,7 +3936,7 @@ function chSupDrillRows() {
 async function chSupSummary() {
   const f = G.f, sup = chSup();
   if (!f.chSupSummary) {
-    f.chSupSummary = true; touchCSF('Govern');
+    f.chSupSummary = true; touchCSF('Govern'); chAudit('Suppliers: the district’s end (Day 74)');
     Series.markEdition('charter', {suppliers: true});
     await say('Eight suppliers in tiers, a plan within the money, and Tuesday told from our own records. Next, policy.', 'Ivor Penhallow');
   }
@@ -3833,12 +3976,15 @@ async function chSupSummary() {
    One decider per decision: the CISO drafts the policy, decides what changes in
    the draft (except its legal wording, which is counsel's), issues the
    standards, measures them and recommends; the Board approves the policy; each
-   exception's business owner decides on it and signs, and that signature is
-   its approval, except where the exception exists because of a Board decision
-   (then the Board approves it in its minute and the owner signs for the
-   control); a member's service is that member's owner's; Edda decides the
-   shared directory's settings. The CISO never approves, signs, renews or closes
-   an exception.
+   exception's business owner asks for it and signs for running its control, and
+   who decides follows the CISO's check (6.2, 6.2a): a standard one, the owner
+   (the signature is its approval); an escalated one (the CISO against, a
+   partial control, a risk above appetite or a broken tolerance, safety-of-life
+   or personal records, a second renewal), the Board's chair for the Compact's
+   services, within five working days, or a member's own leadership for that
+   member's service; where the exception exists because of a Board decision, the
+   Board in its minute (6.3). Edda decides the shared directory's settings. The
+   CISO never approves, signs, renews or closes an exception.
    Defender side only: every record here is the Compact's own (registers, rule
    settings, sign-in and change records, notices). No technique, no ATT&CK ID.
    Every document, account, group, rule, count, time and date is invented
@@ -3848,23 +3994,27 @@ async function chSupSummary() {
 'use strict';
 
 const CH_POL_DAY = {78: 'Monday', 79: 'Tuesday', 80: 'Wednesday', 81: 'Thursday'};
-const CH_POL_NEXT_BOARD = 155;   // the next quarterly Board: no review date may fall after it this quarter
+const CH_POL_NEXT_BOARD = 155;   // the next quarterly Board this quarter (then every 91 days: chNextBoard)
+const CH_POL_BOARD_EVERY = 91;   // the Board meets each quarter: Day 155, 246, 337 …
 const CH_POL_MAX_DAYS = 365;     // an exception's expiry: no more than 12 months (365 days) after its start
 const CH_POL_REVIEW_MAX = 446;   // a document's review date: no more than 12 months after the Board approves POL-1 (Day 81)
 
-/* ---------- The documents (game). None has a review date on record; four are inherited, with no owner recorded either ---------- */
+/* ---------- The documents (game). None has a review date on record; four are inherited, with no owner recorded either, so
+   POL-1 section 4 sets one: the CISO, as issuer (Edda's team operates STD-1, STD-4 and STD-5); POL-1 is the Board's ---------- */
 const CH_POL_DOCS = [
-  {id: 'POL-1', name: 'The Compact’s security policy', kind: 'policy', bot: 428,
+  {id: 'POL-1', name: 'The Compact’s security policy', kind: 'policy', bot: 428, owner: 'the Compact Board (kept by the CISO)',
    what: 'Your draft, v0.1 (Friday, Day 75). The Board approves it; you keep it, measure it and report on it. Sections: scope, who decides, the appetite statement binds, standards, measurement, exceptions, legal questions, review.'},
-  {id: 'STD-1', name: 'Sign-in', kind: 'standard', bot: 155,
+  {id: 'STD-1', name: 'Sign-in', kind: 'standard', bot: 155, owner: 'the CISO, as issuer; operated by Edda’s team',
    what: 'Inherited: “the sign-in policy”. MFA for every account in the shared directory, except the accounts in MFA-Exempt, through the register.'},
-  {id: 'STD-2', name: 'Vendor access', kind: 'standard', bot: 155,
+  {id: 'STD-2', name: 'Vendor access', kind: 'standard', bot: 155, owner: 'the CISO, as issuer',
    what: 'Inherited: written by Edda’s team from each member’s own decision in its week. Vendor support on demand per ticket, from the vendor’s documented range, MFA for every vendor user.'},
-  {id: 'STD-3', name: 'Suppliers', kind: 'standard', bot: 155,
+  {id: 'STD-3', name: 'Suppliers', kind: 'standard', bot: 155, owner: 'the CISO, as issuer',
    what: 'Yours (Friday, Day 68): the tiering rule and the clause catalogue, with each tier’s must-haves.'},
-  {id: 'STD-4', name: 'Accounts', kind: 'standard', bot: 155,
-   what: 'Inherited: “A leaver’s account in the shared directory is disabled by the end of their last working day.”'},
-  {id: 'STD-5', name: 'Updates', kind: 'standard', bot: 155,
+  {id: 'STD-4', name: 'Accounts', kind: 'standard', bot: 155, owner: 'the CISO, as issuer; operated by Edda’s team',
+   what: 'Inherited: “A leaver’s account in the shared directory is disabled by the end of their last working day.”',
+   // v2, from Wednesday's replies (Day 80 09:20, agreed by the five members' owners at 12:40): the library and the papers carry it.
+   v2: 'v2, Day 80: “A leaver’s account in the shared directory is disabled by the end of their last working day. Each member sends its leaver notice to reach the Compact by 12:00 that day (agreed by each member’s owner, Day 80); where one arrives later, the account is disabled within two working hours of its arrival, and the late notice is recorded as the member’s.” Changed after Tuesday’s records, with the reason recorded beside it.'},
+  {id: 'STD-5', name: 'Updates', kind: 'standard', bot: 155, owner: 'the CISO, as issuer; operated by Edda’s team',
    what: 'Inherited: critical fixes on every system the Compact runs, within 14 days of their release.'}];
 // The review dates the policy library offers for each document (cycled; index 0 = none). Valid: a day no more than
 // 12 months after Day 81 (CH_POL_REVIEW_MAX).
@@ -3874,13 +4024,15 @@ const CH_POL_REVIEW_TEXT = {when: 'when something changes', 155: 'Day 155, the q
 /* ---------- POL-1 section 6: the exception rule (game) ---------- */
 const CH_POL_RULE = [
   '6.1 An exception departs from one clause of a standard, for named accounts or systems, exactly, for a stated business reason, with compensating controls that cover the gap.',
-  '6.2 Its owner is the business owner of the service in scope (for a member’s service, that member’s). The owner decides on it and signs; the signature is its approval.',
+  '6.2 Its owner is the business owner of the service in scope (for a member’s service, that member’s). The owner asks for it and signs for running its control. Who decides follows the CISO’s check (6.4): a standard exception, the owner decides, and the signature is its approval; an escalated one, the owner cannot approve it (6.2a).',
+  '6.2a Escalated: the CISO recommends against; the control covers only part of the gap; a risk goes above appetite or a tolerance breaks (6.7); the system serves a safety-of-life service or holds personal records; or it is a second renewal. For the Compact’s services the Board’s chair decides, on the papers, within five working days, and the Board minutes it at its next meeting; for a member’s own service, that member’s own leadership above the owner decides, and the Compact Board sees it. Until it is decided, the standard applies.',
   '6.3 Where it exists because of a Board decision (a line the Board chose not to fund), the Board approves it in its minute, and the owner signs for running the control.',
-  '6.4 The CISO writes it up, checks the control against the gap, records it and recommends; the recommendation is recorded as the CISO’s. The CISO never approves, signs, renews or closes one. One the CISO recommends against still stands on its owner’s signature, and goes to the next quarterly Board with the recommendation beside it.',
-  '6.5 It runs from a start date to an expiry no more than 12 months (365 days) later, with a review date no later than its expiry and no later than the next quarterly Board.',
+  '6.4 The CISO writes it up, checks the control against the gap, records it and recommends; the recommendation is recorded as the CISO’s. The CISO never approves, signs, renews or closes one. One the CISO recommends against is escalated (6.2a). Where the exception comes from the CISO’s own recommendation, the Board’s papers say so, and its control is checked by Edda’s team, not the CISO.',
+  '6.5 It runs from a start date to an expiry no more than 12 months (365 days) later, with a review date no later than its expiry and no later than the next quarterly Board. Where the review falls on the expiry day, the renewal is decided at the review, before 17:00.',
   '6.6 At its expiry it closes, or renews through the same route with fresh evidence: the review’s record and the control’s own records. An expired exception is not open, and nothing past its expiry stays in a group such as MFA-Exempt.',
+  '6.6a At its expiry, unless a renewal is on the register, Edda’s team takes the account or system out of the group on the expiry date, as a change dated in advance when the exception is recorded. The CISO reports any miss, and any sign-in outside an open exception, to its owner and to the next quarterly Board.',
   '6.7 One that leaves a risk above appetite or breaks a tolerance is also an acceptance on the risk register. The Board sees every exception at its quarterly meeting.',
-  '6.8 A difference meant to last is not an exception: it goes to the standard’s review.'];
+  '6.8 A difference meant to last is not an exception: it goes to the standard’s review. A second renewal also opens the standard’s review.'];
 
 /* ---------- The exception register (game). Entries as of Monday, Day 78, 08:45 ---------- */
 // EX-00 is the town's, quoted from Town Hall (story.js:487, :522; council-data.js:309, :315, :318, :341): read only.
@@ -3897,47 +4049,54 @@ const CH_POL_EXC_INIT = [
   {id: 'EX-01', short: 'board-display', std: 'STD-1', scope: 'board-display, the Board room’s display PC',
    clause: 'STD-1: MFA for every account in the shared directory', reason: 'until the Board room’s display signs in as the meeting’s host',
    controls: 'none written (Day 65)', owner: 'Edda Thornquist', start: 65, expiry: 75, expiryAt: '17:00', review: null,
+   tol: 'within: no personal records, the Board room’s PC only',
    note: 'Owner and expiry set on Day 65, after the MFA records were read.'},
   {id: 'EX-02', short: 'five service accounts', std: 'STD-1', scope: 'cp-backup, cp-logfwd, cp-files-lib, cp-files-cl and cp-files-ap: five Compact service accounts',
    clause: 'STD-1: MFA for every account in the shared directory', reason: 'machine accounts: they can’t answer MFA',
    controls: 'a sign-in rule: each one non-interactive only, from its own server’s address (Beatriz, Day 65); checked Day 78 08:40: applied on every sign-in since Day 65',
-   owner: 'Edda Thornquist', start: 65, expiry: 155, review: null, note: 'Owner and expiry set on Day 65.'},
+   owner: 'Edda Thornquist', start: 65, expiry: 155, review: null, note: 'Owner and expiry set on Day 65.',
+   // 6.2a: personal records. CL-FS-01 is the Clinic's shared drive, where its daily lists of patients sat (Crossroads,
+   // clinic-data.js: "90 days of daily lists and a recall list with 1,180 inactive patients sat on that share").
+   critical: 'cp-files-cl reaches CL-FS-01, the Clinic’s shared drive, which holds its daily lists of patients',
+   recommendedBy: 'the CISO: for (the sign-in rule applied on every sign-in since Day 65)',
+   tol: 'privacy: not reachable from outside (each only from its own server), every sign-in logged: within'},
   {id: 'EX-03', short: 'cp-patch', std: 'STD-1', scope: 'cp-patch, PATCH-01’s update account',
    clause: 'STD-1: MFA for every account in the shared directory', reason: 'until PATCH-01, the old update server, is retired',
-   controls: 'non-interactive only, from PATCH-01', owner: 'Edda Thornquist', start: 65, expiry: 75, review: null,
+   controls: 'non-interactive only, from PATCH-01', owner: 'Edda Thornquist', start: 65, expiry: 75, review: null, tol: 'within: an update account, non-interactive only',
    note: 'Owner and expiry set on Day 65. Edda’s change record: PATCH-01 retired Day 75 (Friday) 16:10.'},
   {id: 'EX-04', short: 'fin-ap', std: 'STD-1', boardLine: 'R4', scope: 'fin-ap, the finance office’s shared accounts-payable mailbox',
    clause: 'STD-1: MFA for every account in the shared directory', reason: 'its scanner couldn’t do MFA; named mailboxes with MFA are R4’s line',
    controls: 'sign-ins only from the finance office (the location rule, Day 65), as Marit states it; not checked yet',
-   owner: 'Marit Quellan', start: 65, expiry: null, review: null, note: 'Owner set on Day 65; no expiry, no review.'}];
+   owner: 'Marit Quellan', start: 65, expiry: null, review: null, note: 'Owner set on Day 65; no expiry, no review.',
+   recommendedBy: 'the CISO: for, its control to be checked'}];
 
 /* ---------- The intake (Monday 10:30): one row per entry to write up; each cycles four write-ups ---------- */
 // The as-sent register is the CISO's advice (the scorecard reads it). disp, for an expired entry: 'owner' (to its
 // owner, to close or renew through the route), 'open', 'renew-ciso', 'ciso-close'.
 const CH_POL_INTAKE = {
   'EX-02': [
-    {label: 'Yours, as the CISO · expires Day 155 · review Day 155', owner: 'the CISO', expiry: 155, review: 155,
+    {label: 'The CISO’s · expires Day 155 · review Day 155, at the quarterly Board', owner: 'the CISO', expiry: 155, review: 155,
      why: 'You keep the register. The accounts run in Edda’s shared services, so she is their owner.'},
-    {label: 'Edda’s · expires Day 155 · review Day 155, at the quarterly Board', owner: 'Edda Thornquist', expiry: 155, review: 155, ok: true},
+    {label: 'Edda’s · expires Day 155 · review Day 155, at the quarterly Board', owner: 'Edda Thornquist', expiry: 155, review: 155, good: true},
     {label: 'Edda’s · expires Day 155 · review when something changes', owner: 'Edda Thornquist', expiry: 155, review: 'when',
      why: 'A review “when something changes” never comes on a quiet entry. A date: Day 155.'},
-    {label: 'Edda’s · no expiry, as machine accounts never do MFA · review Day 155', owner: 'Edda Thornquist', expiry: null, review: 155,
+    {label: 'Edda’s · no expiry: machine accounts never do MFA · review Day 155, at the quarterly Board', owner: 'Edda Thornquist', expiry: null, review: 155,
      why: 'An exception has an expiry, at most 12 months on. A difference meant to last goes to STD-1’s review.'}],
   'EX-03': [
     {label: 'Open: nothing has used cp-patch since Friday', disp: 'open',
      why: 'It expired on Friday, and PATCH-01 was retired. Expired is not open: to Edda, to close.'},
     {label: 'Renewed by you to Day 155, in case PATCH-01 comes back', disp: 'renew-ciso',
      why: 'You never renew one, and nothing needs it: PATCH-01 was retired on Friday. To Edda, to close.'},
-    {label: 'Expired Friday, PATCH-01 retired: to Edda, its owner, to close', disp: 'owner', ok: true},
+    {label: 'Expired Friday, PATCH-01 retired: you send it to Edda, its owner, to close', disp: 'owner', good: true},
     {label: 'Expired: you take cp-patch out of MFA-Exempt yourself, now', disp: 'ciso-close',
      why: 'Right that it ends, but the directory’s settings are Edda’s, and so is closing her exception.'}],
   'EX-04': [
-    {label: 'Marit’s · expires Day 155 · review Day 155 · control: the finance-office rule', owner: 'Marit Quellan', expiry: 155, review: 155, ok: true},
-    {label: 'Marit’s · expires when the named mailboxes arrive · review Day 155', owner: 'Marit Quellan', expiry: 'when', review: 155,
+    {label: 'Marit’s · expires Day 155 · review Day 155 · control: as stated, to be checked', owner: 'Marit Quellan', expiry: 155, review: 155, good: true},
+    {label: 'Marit’s · expires when the named mailboxes arrive · review Day 155 · control: the finance-office rule', owner: 'Marit Quellan', expiry: 'when', review: 155,
      why: '“When the mailboxes arrive” is not a date. An expiry is a day, at most 12 months on.'},
-    {label: 'Edda’s, as she runs the directory · expires Day 155 · review Day 155', owner: 'Edda Thornquist', expiry: 155, review: 155,
+    {label: 'Edda’s: she runs the directory · expires Day 155 · review Day 155 · control: the finance-office rule', owner: 'Edda Thornquist', expiry: 155, review: 155,
      why: 'Edda runs the directory. The mailbox and its payments are finance’s: Marit owns it.'},
-    {label: 'Marit’s · expires Day 428 · review Day 428', owner: 'Marit Quellan', expiry: 428, review: 428,
+    {label: 'Marit’s · expires Day 428 · review Day 428 · control: the finance-office rule', owner: 'Marit Quellan', expiry: 428, review: 428,
      why: 'Day 428 is within 12 months, but its review must come by the next quarterly Board, Day 155.'}]};
 
 /* ---------- Drills (Monday and Tuesday). Records are the evidence; two decisive sources each ---------- */
@@ -3968,14 +4127,14 @@ const CH_POL_DRILLS = {
          res: ['Reviews of board-display’s exception since Day 65: none recorded', 'No renewal recorded: nothing extends it past Friday 17:00']}]}
     ],
     verdicts: [
-      {label: 'Not valid: it expired on Friday at 17:00, and no review renewed it', good: true, needs: ['entry', 'reviews'],
+      {label: 'Not valid: the exception expired on Friday at 17:00, and no review renewed it', good: true, needs: ['entry', 'reviews'],
        needsWhy: 'the answer rests on two records: the exception’s expiry and its review record. You read only one of them.',
        why: 'Its record ends it on Friday at 17:00, and the review record shows nothing renewing it. Expired is not open, whatever the directory still lets in.'},
       {label: 'Valid: nobody has complained about the exception in two weeks, and it signs in fine', why: 'No complaint is not a review, and the directory lets in whatever sits in the group. Its record ended it on Friday.'},
       {label: 'Valid until its review, and it still sits in MFA-Exempt', why: 'The group is what the directory does. The record says when the exception ends: Friday at 17:00.'},
       {label: 'Not valid, and board-display has been misused after Friday at 17:00', why: 'Two sign-ins on Monday morning, both from the Board room’s PC. Nothing shows misuse.'}],
     reasons: [
-      {label: 'Its record ends it on Friday at 17:00, and the review record shows no renewal', good: true, why: 'The expiry, then the review record.'},
+      {label: 'Its record ends it on Friday at 17:00, and the review record, the team’s, shows no renewal', good: true, why: 'The expiry, then the review record.'},
       {label: 'Nobody raised a problem with it in two weeks: the best review there is', why: 'Silence is not a review.'},
       {label: 'The directory accepted Monday’s 08:31 sign-in: the exception is still in force', why: 'The directory lets in the group. It doesn’t read the register.'}],
     alts: [
@@ -3984,7 +4143,7 @@ const CH_POL_DRILLS = {
       {label: 'The Board room’s PC was replaced last week', why: 'Beside the point: the exception ended on Friday either way.'},
       {label: 'Someone outside the Compact used board-display', why: 'Nothing points to it: both sign-ins came from the Board room’s PC.'}],
     path: '<p>“Is this exception still valid?” is decided by <b>its expiry date</b> and <b>the review record</b>. That nobody complained, or that the directory still lets the account in, says nothing about whether it stands.</p>',
-    response: ['09:50, Edda’s decision, as its owner: closed. board-display out of MFA-Exempt; the Board room’s PC signs in as the meeting’s host, with MFA', 'The register records it closed, citing the record and the time', 'From now on Beatriz reads MFA-Exempt against the register every Monday, so nothing past its expiry stays in the group'],
+    response: ['09:50, Edda’s decision, as its owner: closed. board-display out of MFA-Exempt; the Board room’s PC signs in as the meeting’s host, with MFA', 'The register records it closed, citing the record and the time. Monday’s 08:31 and 08:34 are recorded as two sign-ins without MFA outside an exception: a STD-1 miss, cause: nothing removed it at expiry (6.6a), reported to Edda and the next Board', 'Removal at expiry is scheduled when each exception is recorded; Beatriz’s Monday read checks it'],
     techs: [], acts: ['chpolvalid']
   },
   polcover: {
@@ -4000,8 +4159,8 @@ const CH_POL_DRILLS = {
     sources: [
       {id: 'marit', name: 'Marit’s write-up', qs: [
         {q: 'What covers it?', kind: 'trap', res: ['“Covered since Day 65: Beatriz set a rule, finance office only.”', '(What she was told. The rule’s own settings decide it.)']}]},
-      {id: 'summary', name: 'The weekly sign-in summary', qs: [
-        {q: 'Where did fin-ap sign in from?', kind: 'trap', res: ['fin-ap: 49 sign-ins this week, all from the finance office’s three PCs', '(Where the people sat, not what the rule made them do.)']},
+      {id: 'summary', name: 'The 7-day sign-in summary', qs: [
+        {q: 'Where did fin-ap sign in from?', kind: 'trap', res: ['fin-ap: 49 sign-ins in the 7 days to 08:00, all from the finance office’s three PCs', '(Where the people sat, not what the rule made them do.)']},
         {q: 'Every sign-in to the shared directory this week', kind: 'broad', rows: 4600,
          wall: ['{t}  account {i}  MFA ok  member PC', '{t}  cp-backup  non-interactive  CP-OPS-02', '{t}  account {n}  MFA ok  home']}]},
       {id: 'rule', name: 'The location rule’s settings (Beatriz, 08:40)', qs: [
@@ -4015,31 +4174,31 @@ const CH_POL_DRILLS = {
       {label: 'No: the rule leaves fin-ap out, and its sign-ins say not applied', good: true, needs: ['rule', 'log'],
        needsWhy: 'the answer rests on two records: the rule’s scope and fin-ap’s own sign-ins. You read only one of them.',
        why: 'The rule applies to FIN-STAFF, and fin-ap isn’t in it; each of fin-ap’s sign-ins says so. The control is stated, not in place.'},
-      {label: 'Covered: all 49 sign-ins this week show the finance office’s three PCs', why: 'They came from there because that is where people sat. The rule wasn’t applied to one of them.'},
+      {label: 'Covered: all 49 sign-ins in the 7 days show the finance office’s three PCs', why: 'They came from there because that is where people sat. The rule wasn’t applied to one of them.'},
       {label: 'It is covered: Marit has it in writing that the rule was set up on Day 65', why: 'The rule exists, for FIN-STAFF. fin-ap isn’t in that group.'},
       {label: 'No, and Noor should end fin-ap’s exception before Marit decides', why: 'The exception is Marit’s to decide, and nothing here is a legal question. The fix is fin-ap in the rule’s scope: Edda’s call.'}],
     reasons: [
-      {label: 'The rule names FIN-STAFF only, and fin-ap’s sign-ins say not applied', good: true, why: 'What the control applies to, then whether it applied.'},
+      {label: 'The rule names FIN-STAFF only, and the excepted account’s sign-ins say not applied', good: true, why: 'What the control applies to, then whether it applied.'},
       {label: 'Each sign-in came from inside the office, which is where the exception allows', why: 'Where people sat is not a control.'},
       {label: 'Edda’s team set it up on Day 65, and its rules have passed each review', why: 'It works, for the group it names.'}],
     alts: [
-      {label: 'Another rule covers fin-ap', good: true, why: 'Ruled out: each sign-in lists the rules applied, and no location rule is among them.'},
+      {label: 'Another location rule, set for this mailbox alone, covers fin-ap', good: true, why: 'Ruled out: each sign-in lists the rules applied, and no location rule is among them.'},
       {label: 'The summary counts a different account', good: true, why: 'Ruled out: the summary and the records give the same 49 sign-ins.'},
-      {label: 'Someone outside the office signed in as fin-ap', why: 'Nothing points to it: every sign-in came from the three PCs.'},
+      {label: 'Someone outside the office signed in as fin-ap', why: 'Nothing points to it in the 7 days read. The weeks before go into the response.'},
       {label: 'The finance office’s PCs are shared by its staff', why: 'True, and beside the question: the rule’s scope decides it.'}],
     path: '<p>“Does the control cover the gap?” is decided by <b>the control’s scope</b> (what it applies to) and <b>the sign-in records</b> for the excepted account (whether it applied). Where people happened to sit is not a control.</p>',
-    response: ['10:15, Edda’s decision (the directory’s settings): fin-ap goes into the rule’s scope. Beatriz adds it at 10:20', 'fin-ap’s next sign-in, 10:31: location rule applied', 'The register’s entry now cites the rule’s scope and that sign-in: a control checked, not just stated', 'The exception stays Marit’s, on her signature, to Day 155'],
+    response: ['10:15, Edda’s decision (the directory’s settings): fin-ap goes into the rule’s scope. Beatriz adds it at 10:20', 'Beatriz reads fin-ap’s sign-ins for the whole time the rule wasn’t applied, Day 65 08:00 to 10:20 today: 99, all from the finance office’s three PCs; its mailbox rules and forwarding: none added since Day 65 (game)', 'fin-ap’s next sign-in, 10:31: location rule applied', 'The register’s entry now cites the rule’s scope and that sign-in. The rule covers sign-ins from outside the finance office; a password used at its PCs is not covered, so the control is partial (6.2a) until the named mailboxes arrive', 'Marit signs for running its control, to Day 155. Partial, it is escalated: its owner does not approve it alone (6.2a)'],
     techs: [], acts: ['chpolcover']
   },
   polfollow: {
     id: 'polfollow', title: 'Is STD-4 followed?', budget: 3,
-    intro: '<p>STD-4, inherited, says a leaver’s account in the shared directory is disabled by the end of their last working day. Edda’s team attests that it is followed. Beatriz drew a sample. Is STD-4 being followed?</p>',
+    intro: '<p>STD-4, inherited, says a leaver’s account in the shared directory is disabled by the end of their last working day. Edda’s team attests that it is followed. On Monday you set the measurement’s plan, before anything was drawn: every leaver notice of the 30 days to Day 77, 30 of them, fewer than 50, so all are read. Beatriz exported them, and you matched each to its disable time. Is STD-4 being followed?</p>',
     artefact: '<pre class="art">STD-4 · Accounts (inherited, game data)\n' +
       '“A leaver’s account in the shared directory\n' +
       ' is disabled by the end of their last\n' +
       ' working day.”\n' +
       'Attested   each quarter, by Edda’s team</pre>' +
-      '<p class="small">An attestation says what someone believes. A sample of records, read against the standard’s own words, says what happened.</p>',
+      '<p class="small">An attestation says what someone believes. The records, read against the standard’s own words, say what happened.</p>',
     question: 'Is STD-4 being followed?',
     sources: [
       {id: 'attest', name: 'The team’s quarterly attestation', qs: [
@@ -4049,30 +4208,30 @@ const CH_POL_DRILLS = {
       {id: 'words', name: 'STD-4’s own wording', qs: [
         {q: 'What exactly does it require?', kind: 'focus', key: true,
          res: ['“A leaver’s account in the shared directory is disabled by the end of their last working day.”', 'The step: Edda’s team disables it, from the member’s leaver notice']}]},
-      {id: 'sample', name: 'Beatriz’s sample (the 30 days to Day 77)', qs: [
-        {q: 'When was each sampled account disabled?', kind: 'focus', key: true,
-         res: ['Every third of the 30 leaver notices, in date order: 10 leavers', '7 disabled by the end of their last working day', '3 later: 2, 4 and 9 days after. Each of the three: the member’s notice reached the Compact after the last working day']},
+      {id: 'sample', name: 'The leaver records (all 30, the 30 days to Day 77)', qs: [
+        {q: 'When was each leaver’s account disabled?', kind: 'focus', key: true,
+         res: ['The CISO’s plan (Monday, before the draw): the 30 leaver notices in the 30 days to Day 77; fewer than 50, so all 30. Beatriz exported them; the CISO matched each to its disable time', '27 disabled by the end of the last working day', '3 later: 2, 4 and 9 days after. Each of the three: the member’s notice reached the Compact after the last working day']},
         {q: 'Every change in the directory this month', kind: 'broad', rows: 2300,
          wall: ['Day {i}  {t}  account {n}  password reset', 'Day {i}  {t}  account {n}  disabled', 'Day {i}  {t}  group change']}]}
     ],
     verdicts: [
-      {label: 'Not as written: 3 of 10 in the sample were disabled late', good: true, needs: ['words', 'sample'],
-       needsWhy: 'the answer rests on two records: STD-4’s own words and the sample. You read only one of them.',
-       why: 'STD-4 says by the end of the last working day. In the sample, 7 of 10 were; 3 were disabled 2, 4 and 9 days after.'},
-      {label: 'Followed: the team attests it at each quarterly review, signed by its lead', why: 'An attestation says what someone believes. The sample shows 3 of 10 late.'},
+      {label: 'Not as written: 3 of the 30 leavers’ accounts were disabled late', good: true, needs: ['words', 'sample'],
+       needsWhy: 'the answer rests on two records: STD-4’s own words and the leaver records. You read only one of them.',
+       why: 'STD-4 says by the end of the last working day. Of the 30, 27 were; 3 were disabled 2, 4 and 9 days after.'},
+      {label: 'Followed: the team attests it at each quarterly review, signed by its lead', why: 'An attestation says what someone believes. The records show 3 of 30 late.'},
       {label: 'In effect: none of the 30 leavers signed in after their last day', why: 'STD-4 says disabled by the end of the last working day. Nobody signing in is an outcome, not the standard.'},
-      {label: 'Not known until each leaver this year has been checked, one by one', why: 'A sample answers it, and says how much: 3 of 10 late.'}],
+      {label: 'Not known until each leaver this year has been checked, one by one', why: 'Every record of the 30 days already answers it: not as written, 3 of 30 late. A longer period adds to that; it doesn’t undo it.'}],
     reasons: [
-      {label: 'The sample, read against STD-4’s words: 3 of 10 disabled late', good: true, why: 'The standard’s wording, then the records.'},
+      {label: 'The records, read against STD-4’s words: 3 of 30 disabled late in the weeks read', good: true, why: 'The standard’s wording, then the records.'},
       {label: 'The attestation is signed by the team’s lead, who runs the step each week', why: 'A signature on a belief is still a belief.'},
       {label: 'Measured against the sign-in log, no leaver’s account was used after they left', why: 'That is the outcome so far, not what STD-4 says.'}],
     alts: [
-      {label: 'The sample was unlucky, and the rest were on time', good: true, why: 'Weighed: 10 of 30 says about 3 in 10, not exactly. Measure again before STD-4’s review, with a bigger sample.'},
+      {label: 'The 30 days were not a usual month', good: true, why: 'Weighed: every record of the period was read, so 3 of 30 is exact for it. Whether other months differ, the next 30 days’ records say, before STD-4’s review.'},
       {label: 'The three were late because their notices were', good: true, why: 'Weighed, and named: each notice reached the Compact after the last day. STD-4 still wasn’t met.'},
       {label: 'The team disabled them on time, and the record is wrong', why: 'Nothing points to it: the change record gives each time.'},
       {label: 'The three were contractors, not staff', why: 'Beside the point: STD-4 covers every leaver’s account.'}],
-    path: '<p>“Is the policy being followed?” is decided by <b>a sample of records</b>, read against <b>the standard’s own wording</b>. An attestation says what someone believes; an outcome that went well says nothing about the rule.</p>',
-    response: ['Your report says what the sample shows: 7 of 10 disabled on time, against STD-4’s own words', 'The three late ones each came from a leaver notice that reached the Compact after the last day. The members’ notices are theirs to change', 'STD-4 is measured again, by a bigger sample, before its review'],
+    path: '<p>“Is the policy being followed?” is decided by <b>the records</b> (every one, where there are fewer than 50; otherwise a sample planned before the draw), read against <b>the standard’s own wording</b>. An attestation says what someone believes; an outcome that went well says nothing about the rule.</p>',
+    response: ['Your report says what the records show: 27 of 30 disabled on time, against STD-4’s own words', 'The three late ones each came from a leaver notice that reached the Compact after the last day. The members’ notices are theirs to change', 'STD-4 is measured again on every record of the next 30 days, before its review'],
     techs: [], acts: ['chpolmeasure']
   }
 };
@@ -4097,7 +4256,7 @@ const CH_POL_REPLY = [
 
 /* ---------- The directive (game; Wednesday 11:30): a permanent exception, "because it's always been this way" ---------- */
 const CH_POL_DIRECTIVE = [
-  {label: 'Never permanent: you decide and sign, with an expiry, a review and a control for the gap', good: true},
+  {label: 'Not as a permanent one: the exception is yours to decide and sign, with an expiry, a review and a control', good: true},
   {label: 'Grant it permanently: it has always been this way, and you keep the register', why: 'An exception has an expiry, and its owner signs it. A difference meant to last goes to STD-5’s review.'},
   {label: 'Refuse it outright: an old PC like that is unacceptable, and it comes off the network', why: 'An absolute, and not your decision: the PC is the Library’s. There is a route: an exception with a control, or STD-5’s review.'},
   {label: 'Grant the exception yourself for a year, with the segment as its control', why: 'You write it up and recommend. Its owner decides and signs; you never grant one.'},
@@ -4109,12 +4268,18 @@ const CH_POL_DOJO = [
    opts: ['Day 445, a Thursday',
           'Day 445, a Wednesday',
           'Day 444, a Wednesday'], good: 0,
-   explain: '365 days is 52 weeks and one day: Day 445, one weekday on from Wednesday.'},
+   explain: '365 days is 52 weeks and one day: Day 445, one weekday on from Wednesday. Day 444 counts Day 80 as one of the 365; the rule counts 365 days later, so the longest is Day 445.'},
   {q: 'The Board chose not to fund a line, so an account stays excepted from MFA for a year. Who approves the exception?',
    opts: ['The Board, in its minute: its owner signs for running the control',
           'Its owner alone, who runs the control and the account in that service',
           'The CISO, who keeps the exception register and checks it'], good: 0,
-   explain: 'The choice was the Board’s, so the Board approves it in its minute, and the owner signs for the control. Otherwise the owner decides and signs. The CISO never approves one.'},
+   explain: 'The choice was the Board’s, so the Board approves it in its minute, and the owner signs for the control. Otherwise the CISO’s check decides: a standard one, its owner decides and signs; an escalated one, the chair. The CISO never approves one.',
+   // Round 2 of the same terminal (6.2a): an escalated exception.
+   then: {q: 'Its owner signs; the CISO recommends against. Who decides?',
+     opts: ['The Board’s chair, for the Board, within five working days',
+            'Its owner: the signature is its approval, the CISO’s advice beside it',
+            'The CISO, who recommended against it and keeps the register'], good: 0,
+     explain: 'A CISO’s “against” escalates it (6.2a): the chair decides for the Compact’s services, a member’s own leadership for its own. One decider, and never the CISO.'}},
   {q: 'Gap: a shared mailbox excepted from MFA, so a stolen password would sign in. Control: an alert on any sign-in from outside the country. Covered?',
    opts: ['No: a stolen password used inside the country raises nothing',
           'Yes: a sign-in from abroad pages the on-call lead within a minute',
@@ -4125,9 +4290,9 @@ const CH_POL_DOJO = [
 const CH_POL_BOARD_SPECS = () => [
   {title: 'Round 1: what we approve', who: 'Ivor Penhallow',
    ask: '“What are we approving today: the policy, or every standard under it too?”',
-   resp: [{label: 'The policy. I issue the standards under it, each with an owner and a review date', good: true},
+   resp: [{label: 'The policy: I issue the standards under it, each with an owner and a review date', good: true},
           {label: 'Every standard too: the Board signs each rule, and each change to it, before it applies', why: 'The Board governs the programme and approves its policy. The standards under it are the CISO’s to issue, and the Board sees each one.'},
-          {label: 'Nothing: a policy is the CISO’s own, and it is only read here', why: 'NIST’s example asks for approval from senior management on policy. Here, that is this Board.'},
+          {label: 'Nothing: a policy is the CISO’s own, and it is only read here', why: 'Monday’s lifecycle: the Board approves the policy, and the CISO issues the standards under it. (NIST’s example asks for approval from senior management; for the Compact, the Board holds that.)'},
           {label: 'The members’ own rules as well: the Board decides them for the six', why: 'The Board decides nothing for a member. Each member’s owner decides for its own.'}]},
   {title: 'Round 2: the register', who: 'Ivor Penhallow',
    ask: '“The register says what we carry. Will you tell us what is in it?”',
@@ -4154,14 +4319,20 @@ const CH_POL_BOARD_SPECS = () => [
    Library's Director asks for a permanent exception), the policy library's
    review dates, the Policy terminals. Thursday: the morning's checks (the
    Library's exception goes on the register), the Compact Board's Policy round,
-   POL-1 approved, the standards issued and published, the Bowline Badge and the
-   week's summary ("Next: The Board report").
+   POL-1 approved, the standards issued and published, the Sheet Bend Badge and
+   the week's summary ("Next: The Board report").
    One decider per decision: the CISO drafts, decides what changes (except the
    legal wording, Noor's), issues the standards, measures and recommends; the
-   Board approves POL-1; each exception's owner decides on it and signs (Edda for
-   the shared services' accounts, Marit for fin-ap, Director Strand for the
-   Library's PC); Edda decides the shared directory's settings. The CISO never
-   approves, signs, renews or closes an exception.
+   Board approves POL-1; each exception's owner asks for it and signs for running
+   its control (Edda for the shared services' accounts, Marit for fin-ap,
+   Director Strand for the Library's PC), and who decides follows the CISO's
+   check: a standard one, its owner (Director Strand's); an escalated one, the
+   Board's chair on the papers (the five service accounts and fin-ap, Tuesday),
+   or the Board in its minute where its own decision left it (6.3); Marit decides
+   the call-back rule (her process); Edda decides the shared directory's
+   settings. The CISO never approves, signs, renews or closes an exception.
+   Tolerances bind: chAudit checks every register risk at each minute and
+   district end (risk.js).
    Timeline: scratchpad charter-timeline.md (slice 3).
    ============================================================ */
 'use strict';
@@ -4169,7 +4340,8 @@ const CH_POL_BOARD_SPECS = () => [
 /* ---------- The week opens (your desk, after Suppliers) ---------- */
 async function chPolStart() {
   await UI.openModal('Friday, Day 75', '<p>Between the weeks you drafted POL-1, the Compact’s security policy (v0.1), and listed the documents under it (game):</p><ul><li>POL-1: scope, who decides, the appetite statement, standards, measurement, exceptions, legal questions, review;</li><li>five standards under it: STD-1 Sign-in, STD-2 Vendor access, STD-3 Suppliers, STD-4 Accounts, STD-5 Updates. Four are inherited, with no owner or review date on record; STD-3 is yours;</li><li>the exception records from the Budget and Suppliers weeks, for one register.</li></ul>' +
-    '<p>The lifecycle, one decider per step: you draft; each consultee answers for its own part, and you decide what changes, except the legal wording, which is counsel’s; the Board approves the policy, and you issue the standards under it; you publish; each document is measured by sample against its own words; and each is reviewed on its date.</p>' +
+    '<p>Section 1: POL-1 binds the systems the Compact runs, because each member’s representative approves it at the Board; what a member runs itself, it decides for itself. Section 5: each measurement’s plan is set by the CISO before the records are drawn: the population, the period, the size, and how they are picked (a random start, then every n-th). Where there are fewer than 50, every record is read. (game)</p>' +
+    '<p>The lifecycle, one decider per step: you draft; each consultee answers for its own part, and you decide what changes, except the legal wording, which is counsel’s; the Board approves the policy, and you issue the standards under it; you publish; each document is measured against its own words, by the plan section 5 sets; and each is reviewed on its date. Until the Board approves it on Thursday, POL-1 is a draft: what binds today is the appetite statement’s rule for acceptances (Day 64).</p>' +
     '<p class="small">CSF 2.0 GV.PO-01: “Policy for managing cybersecurity risks is established based on organizational context, cybersecurity strategy, and priorities and is communicated and enforced”. One of NIST’s examples for it: “Require approval from senior management on policy”.</p>',
     [{label: 'Monday', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.f.chPolStart = true; G.day = 78; G.focus = G.focusMax; chPol(); chExcInit(); touchCSF('Govern'); unlock('fact', 'chcsfpo'); unlock('act', 'chpolcycle'); track();
@@ -4197,16 +4369,27 @@ async function chPolDrillB() {
   await say('09:00. fin-ap’s entry says it’s covered by the finance-office rule. Marit wrote that from what I told her on Day 65. Here are the rule’s settings, and fin-ap’s sign-ins. Does the control cover the gap?', 'Beatriz Solano');
   await chPolDrill('polcover');
   const e = chExc('EX-04');
-  e.controls = 'sign-ins only from the finance office: the location rule, with fin-ap in its scope since Day 79 10:20 (Edda’s decision); checked: fin-ap’s sign-in at 10:31, location rule applied';
-  await say('10:31: fin-ap’s next sign-in: location rule applied. Its entry now cites the rule’s scope and that sign-in. The exception stays Marit’s, on her signature. (game)');
+  e.controls = 'sign-ins only from the finance office: the location rule, with fin-ap in its scope since Day 79 10:20 (Edda’s decision); checked: fin-ap’s sign-in at 10:31, location rule applied; lookback Day 65 08:00 to 10:20: 99 sign-ins, all from the three PCs, no mailbox rule or forwarding added. Partial: a password used at the finance office’s PCs is not covered';
+  e.partial = true; e.recommendedBy = 'the CISO: for, its control partial until the named mailboxes arrive (Day 79)';
+  await say('10:31: fin-ap’s next sign-in: location rule applied. Its entry now cites the rule’s scope and that sign-in, and the lookback. The rule covers sign-ins from outside the office, not a password used at its PCs: partial, so escalated (6.2a). Marit signs for running it. (game)');
+  // Decision 2: the call-back tolerance holds from here, on every path (Marit's process, her decision).
+  await say('10:40. From today, no payment detail changes without a call-back on a number we already hold. The suppliers’ numbers have been checked against our own payment records since Day 67. My process, my decision. (game)', 'Marit Quellan');
+  G.f.chPolCallback = true; G.ch.pol.callbackAt = 'Day 79 10:40';
+  e.controls += '; payment-detail changes called back on a known number (Marit, Day 79)';
+  for (const a of G.ch.accept.filter(x => x.gap && x.line === 'R4' && !x.closed)) Object.assign(a, {closed: true, closedDay: 79, closedNote: 'the call-back rule holds the tolerance from 10:40 (Marit, its owner)'});
+  // 6.2a: the chair decides the escalated entries on the papers, within five working days (EX-04 is the Board's, 6.3, where
+  // the Board's own decision left R4). Signed under the draft's section 6; they stand from Thursday's approval.
+  const due = ['EX-02', 'EX-04'].map(chExc).filter(x => chExcDeciderKey(x) === 'chair' && !x.decidedBy);
+  for (const x of due) chExcDecide(x, 'Ivor Penhallow', 79, 'on the papers, to Day 155, under the draft’s section 6; it stands from Thursday’s approval');
+  if (due.length) await say('13:00, on the papers (6.2a): ' + due.map(x => x.id + ' ' + x.short).join(' and ') + ', escalated, so mine to decide: approved to Day 155. ' + due.map(x => x.owner.split(' ')[0]).filter((v, i, a) => a.indexOf(v) === i).join(' and ') + (due.length > 1 && due[0].owner !== due[1].owner ? ' sign' : ' signs') + ' for running the controls. Under the draft’s section 6; it stands from Thursday’s approval, and the Board minutes it then. (game)', 'Ivor Penhallow');
   G.f.chPolDrillB = true; unlock('act', 'chpolcover'); touchCSF('Protect'); track();
   await say('14:00: Edda’s desk: STD-4.');
 }
 async function chPolDrillC() {
   const who = 'Edda Thornquist';
-  await say('14:00. STD-4: my team attests it every quarter. Beatriz drew a sample from the leaver notices anyway. Is it followed?', who);
+  await say('14:00. STD-4: my team attests it every quarter. Beatriz exported the leaver notices for the plan you set: all 30. Is it followed?', who);
   await chPolDrill('polfollow');
-  await say('Seven of ten, then, and the three late ones came from late notices. I’ll answer that in my reply to your draft.', who);
+  await say('Twenty-seven of thirty, then, and the three late ones came from late notices. I’ll answer that in my reply to your draft.', who);
   G.f.chPolDrillC = true; unlock('act', 'chpolmeasure'); touchCSF('Govern'); track();
   await say('End the day at your desk.');
 }
@@ -4214,7 +4397,7 @@ async function chPolDrillC() {
 /* ---------- The exception register (Monday 10:30, the wall) ---------- */
 async function chPolRegisterTask() {
   const p = chPol(), seed = chExc('EX-00');
-  await UI.openModal('The register’s first entry: the town’s list', '<p>08:50, Beatriz’s export: the town’s directory is the shared directory, so the town’s list, MFA-Exceptions, sits beside the Compact’s MFA-Exempt. MFA-Exceptions has no members today. Its history, as the town recorded it, is the register’s first entry. (game)</p>' +
+  await UI.openModal('The register’s first entry: the town’s list', '<p>08:50, Beatriz’s export: the shared directory holds the town’s accounts too, so the town’s list, MFA-Exceptions, sits beside the Compact’s MFA-Exempt. MFA-Exceptions has no members today. Its history, as the town recorded it, is the register’s first entry. (game)</p>' +
     '<p>' + chExcItemHtml(seed) + '</p>' +
     '<p>The town’s rule covered the town’s list. MFA-Exempt is the Compact’s own group, made under the Compact’s sign-in policy, and the town’s rule never reached it: on Day 65 none of its exceptions had an owner or an expiry. (game)</p>' +
     '<p class="small">Quoted from the town’s records (Town Hall). What they don’t state, the register shows as not stated.</p>',
@@ -4263,7 +4446,8 @@ async function chPolReplies() {
     [{label: 'Read Noor’s', meta: {good: true}}], {closable: false, cls: 'drill'});
   p.replies = {first: []};
   await chStages(CH_POL_REPLY, p.replies.first);
-  await say('09:20: section 7 is Noor’s. And you add Edda’s point to STD-4: the member’s leaver notice reaches the Compact by 12:00 on the last working day. STD-4 is yours to issue; how each member sends its notices is that member’s decision. (game)');
+  await say('09:20: section 7 is Noor’s. And you add Edda’s point to STD-4, with the reason (Tuesday’s records) recorded beside the change: each member’s leaver notice reaches the Compact by 12:00 on the last working day, and a later one is disabled within two working hours of its arrival. STD-4 is yours to issue. (game)');
+  await say('12:40: the five members’ owners agree the 12:00 notice by e-mail; how each sends it is its own decision. STD-4 v2 goes into the library and the Board papers. (game)');
   G.f.chPolReplies = true; touchCSF('Govern'); track();
   await say('11:30: Director Mina Strand, from the Library, is waiting by the risk register.');
 }
@@ -4283,7 +4467,7 @@ async function chPolDirective() {
     await say(CH_POL_DIRECTIVE[i].why);
   }
   p.directive = {first: first, decision: {owner: 'Director Mina Strand', expiry: 428, review: 155, day: 80}};
-  await say('11:50, her decision: “Then until Day 428, signed: LIB-FILM-01 on its own segment, no internet, no sign-in to the shared directory, used offline. Reviewed at the quarterly Board, Day 155. And when STD-5 is reviewed, I’ll ask for old readers to be allowed that way.” (game)');
+  await say('11:50, her decision: “Then until Day 428, signed: LIB-FILM-01 on its own segment, no internet, no sign-in to the shared directory, used offline. Reviewed at the quarterly Board, Day 155. And when STD-5 is reviewed, I’ll ask for old readers to be allowed that way.” Signed under the draft’s section 6; it stands from Thursday’s approval. (game)');
   await say('Your recommendation, recorded as yours: for, once the control is in and checked. It goes on the register when Edda’s team has set the segment and the check is in. Edda: “15:00, my team.” (game)');
   G.f.chPolDirective = true; unlock('act', 'chexcroute'); touchCSF('Govern'); track();
   await say('14:00: your desk. The policy library.');
@@ -4291,7 +4475,7 @@ async function chPolDirective() {
 
 /* ---------- The policy library (Wednesday 14:00, your desk) ---------- */
 function chPolLibHtml(lib) {
-  return '<table class="sc"><tr><th>Doc</th><th>Review</th><th>Dated</th></tr>' + CH_POL_DOCS.map(d => '<tr><td>' + esc(d.id) + '</td><td>' + esc(typeof lib[d.id] === 'number' ? 'Day ' + lib[d.id] : lib[d.id] === 'when' ? 'on change' : 'none') + '</td><td>' + (chLibValid(lib[d.id]) ? 'yes' : '<b>no</b>') + '</td></tr>').join('') + '</table><p class="small">Dated: a review day within 12 months. “On change”: when something changes, which is no date.</p>';
+  return '<table class="sc"><tr><th>Doc</th><th>Owner</th><th>Review</th><th>Dated</th></tr>' + CH_POL_DOCS.map(d => '<tr><td>' + esc(d.id) + '</td><td>' + esc(d.kind === 'policy' ? 'the Board' : 'the CISO') + '</td><td>' + esc(typeof lib[d.id] === 'number' ? 'Day ' + lib[d.id] : lib[d.id] === 'when' ? 'on change' : 'none') + '</td><td>' + (chLibValid(lib[d.id]) ? 'yes' : '<b>no</b>') + '</td></tr>').join('') + '</table><p class="small">Dated: a review day within 12 months. “On change”: when something changes, which is no date.</p>';
 }
 async function chPolLibTask() {
   const p = chPol();
@@ -4315,13 +4499,15 @@ async function chPolDojoPuzzle(i) {
   if (i < 0) return;
   if (!f.chPolDojoMet) { await say('A training terminal: “Policy”. Edda’s. Talk to her first.'); return; }
   const q = CH_POL_DOJO[i];
-  if (p.dojo[i]) { await say('Solved. ' + q.explain); return; }
-  while (true) {
-    const k = await choose(q.q, q.opts.map((o, j) => ({label: o, meta: {good: j === q.good}})), {shuffle: true});
-    if (k === q.good) break;
-    await say('Not quite. Read it as the register reads it.');
+  if (p.dojo[i]) { await say('Solved. ' + q.explain + (q.then ? ' ' + q.then.explain : '')); return; }
+  for (const s of q.then ? [q, q.then] : [q]) {
+    while (true) {
+      const k = await choose(s.q, s.opts.map((o, j) => ({label: o, meta: {good: j === s.good}})), {shuffle: true});
+      if (k === s.good) break;
+      await say('Not quite. Read it as the register reads it.');
+    }
+    await say('Correct. ' + s.explain);
   }
-  await say('Correct. ' + q.explain);
   p.dojo[i] = true; touchCSF('Govern');
   if (!p.dojo.every(Boolean) || f.chPolDojoDone) return;
   f.chPolDojoDone = true; G.focusMax += 2; G.focus = Math.min(G.focusMax, G.focus + 2); track();
@@ -4336,7 +4522,9 @@ function chPolLibEntry() {
     clause: 'STD-5: critical fixes within 14 days of their release', reason: 'its scanner software needs the old system',
     controls: 'its own segment, no internet, no sign-in to the shared directory, used offline (Edda’s team, set Day 80 15:00); checked Day 81 09:00: no connection in or out since',
     owner: 'Director Mina Strand', start: 81, expiry: 428, review: 155, recommendedBy: 'the CISO: for, once the control was in and checked',
-    note: 'Decided and signed by the Library’s Director on Day 80 at 11:50; on the register from Day 81 09:05, when the check was in.'});
+    member: 'the Library', memberLead: 'the Library’s own leadership, above its Director', tol: 'within: offline, no sign-in to the shared directory',
+    decidedBy: 'Director Mina Strand', decidedDay: 80,
+    note: 'Decided and signed by the Library’s Director on Day 80 at 11:50, under the draft’s section 6 (standard: the owner decides); on the register from Day 81 09:05, when the check was in.'});
 }
 async function chPolCheck() {
   const who = 'Edda Thornquist';
@@ -4350,30 +4538,43 @@ async function chPolCheck() {
 }
 
 /* ---------- The Compact Board's Policy round (Thursday 14:00) ---------- */
+// POL-1's review date: the library's, if it sent a valid one; otherwise the Board sets it in this minute (Day 428).
+function chPolReviewDate() { const lib = chPol().libSent || {}; return chLibValid(lib['POL-1']) ? lib['POL-1'] : CH_POL_DOCS[0].bot; }
 function chPolMinute() {
   const L = chExcInit().filter(e => !e.seed), open = L.filter(e => chExcStatus(e) !== 'closed'), closed = L.filter(e => chExcStatus(e) === 'closed');
-  const past = open.filter(e => chExcStatus(e) === 'expired'), board = open.filter(e => chExcBoardChose(e));
-  return {open: open.map(e => e.id), closed: closed.map(e => e.id), past: past.map(e => e.id), board: board.map(e => e.id),
-    text: '15:00. POL-1 is approved: the Board’s decision. The minute records the register as read: ' + open.length + ' open exception' + (open.length === 1 ? '' : 's') + ' (' + open.map(e => e.id + ' ' + e.short).join(', ') + '), each with its owner, its approver by the rule, its expiry and its review date; closed this week: ' + closed.map(e => e.id + ' ' + e.short).join(' and ') + '; ' + (past.length ? past.map(e => e.id).join(', ') + ' past its expiry' : 'none open past its expiry') + '.' +
-      (board.length ? ' ' + board.map(e => e.id + ' ' + e.short).join(', ') + ': approved here, as the Board’s own decision of Day 67 left it (section 6.3); its owner signs for running the control.' : '') +
-      (open.some(e => e.id === 'EX-05') ? ' EX-05, the Library’s, stands on its owner’s signature, with your recommendation beside it.' : '') + ' (game)'};
+  const past = open.filter(e => chExcStatus(e) === 'expired'), board = open.filter(e => chExcBoardChose(e)), chair = open.filter(e => chExcDeciderKey(e) === 'chair' && e.decidedBy);
+  const own = open.filter(e => e.ownRec), r4 = open.find(e => e.boardLine), lib = chPol().libSent || {};
+  for (const e of board) Object.assign(e, {decidedBy: 'the Compact Board', decidedDay: 81, approvedIn: 'minute, Day 81'});
+  const cls = e => e.preRule ? 'decided in Suppliers' : chExcClass(e).cls;
+  return {open: open.map(e => e.id), closed: closed.map(e => e.id), past: past.map(e => e.id), board: board.map(e => e.id), chair: chair.map(e => e.id), polReview: chPolReviewDate(),
+    text: '15:00. POL-1 is approved: the Board’s decision. POL-1 to be reviewed by Day ' + chPolReviewDate() + ', set in this minute' + (chLibValid(lib['POL-1']) ? '' : ' (the library sent none)') + '. The minute records the register as read: ' + open.length + ' open exception' + (open.length === 1 ? '' : 's') + ' (' + open.map(e => e.id + ' ' + e.short + ', ' + cls(e)).join('; ') + '), each with its owner, its class and its approver by the rule, its expiry and its review date; closed this week: ' + closed.map(e => e.id + ' ' + e.short).join(' and ') + '; ' + (past.length ? past.map(e => e.id).join(', ') + ' past its expiry' : 'none open past its expiry') + '.' +
+      (chair.length ? ' ' + chair.map(e => e.id + ' ' + e.short).join(' and ') + ': escalated, decided by the chair on Tuesday under 6.2a, minuted here; ' + (chair.length > 1 ? 'their owners sign' : 'its owner signs') + ' for running the control' + (chair.length > 1 ? 's' : '') + '.' : '') +
+      (board.length ? ' ' + board.map(e => e.id + ' ' + e.short).join(', ') + ': approved here, the exception to this minute (6.3: ' + board.map(e => e.boardLine).join(', ') + ' carried in the Day 67 minute); its owner signs for running the control.' : '') +
+      (r4 ? ' ' + r4.id + ' sits inside ' + r4.boardLine + ' (6.7): ' + chExcTolerance(r4).text + '.' : '') +
+      (open.some(e => e.id === 'EX-05') ? ' EX-05, the Library’s, a standard one, signed by its owner under the draft and confirmed under POL-1 as approved, with your recommendation beside it.' : '') +
+      (own.length ? ' ' + own.map(e => e.id).join(', ') + ': from the CISO’s own recommendation, as the papers say; ' + (own.length > 1 ? 'their controls are' : 'its control is') + ' checked by Edda’s team (6.4).' : '') +
+      ' Reported under 6.6a: board-display’s two Monday sign-ins without MFA outside an exception, a STD-1 miss. (game)'};
 }
 async function chPolBoardRound() {
   const who = 'Ivor Penhallow', f = G.f, p = chPol();
   await say('14:00. The members’ representatives, Edda, Marit, and Noor for anything legal. POL-1 is in the papers, with the register and the library. Three questions.', who);
   p.board = {first: []};
   await chStages(CH_POL_BOARD_SPECS(), p.board.first);
+  const lib = p.libSent || {};
+  if (!chLibValid(lib['POL-1'])) await say('POL-1 came without a review date within 12 months. It is ours, so we’ll set its review date here: Day ' + chPolReviewDate() + '.', who);
   p.minute = chPolMinute();
   await say(p.minute.text, who);
-  f.chPolBoard = true; f.chBowline = true;
+  chAudit('Policy: the Board’s minute (Day 81)');
+  f.chPolBoard = true; f.chSheetBend = true;
   G.focusMax += 4; G.focus = G.focusMax; unlock('act', 'chpolboard'); touchCSF('Govern'); track();
-  await say('You cleared the Compact Board’s Policy round. This is the Bowline Badge (game).', who);
-  await say('Its power, from the next district on: every exception’s expiry and review date reaches your desk on the Monday before it falls due. And Focus +4.', who);
-  // 15:30: the standards issued under POL-1 and published, each with its review date from the library as sent; any
-  // without one within 12 months gets one before it goes, as section 8 asks (the scorecard still reads the library sent).
-  const lib = p.libSent || {}, bad = CH_POL_DOCS.filter(d => !chLibValid(lib[d.id]));
-  p.published = Object.fromEntries(CH_POL_DOCS.map(d => [d.id, chLibValid(lib[d.id]) ? lib[d.id] : d.bot]));
-  await say('15:30: you issue STD-1 to STD-5 under POL-1, and publish them with it to every member’s staff, each with its owner and its review date' + (bad.length ? '. ' + bad.map(d => d.id).join(', ') + ' had none within 12 months in the library you sent: under section 8 each gets one before it goes (15:40), ' + bad.map(d => d.id + ' Day ' + d.bot).join(', ') + '. The scorecard reads the library as you sent it.' : '.') + ' (game)');
+  await say('You cleared the Compact Board’s Policy round. This is the Sheet Bend Badge (game).', who);
+  await say('Its power, from the next district on: every exception’s expiry and review date reaches its owner, and your desk, on the Monday before it falls due. And Focus +4.', who);
+  // 15:30: the standards issued under POL-1 and published, each with its owner and its review date from the library as
+  // sent; a standard without one within 12 months gets one before it goes, as section 8 asks (the CISO's: STD-1 to STD-5
+  // only; POL-1's date is the Board's, set in its minute). The scorecard still reads the library sent.
+  const bad = CH_POL_DOCS.filter(d => d.kind === 'standard' && !chLibValid(lib[d.id]));
+  p.published = Object.fromEntries(CH_POL_DOCS.map(d => [d.id, d.kind === 'policy' ? chPolReviewDate() : chLibValid(lib[d.id]) ? lib[d.id] : d.bot]));
+  await say('15:30: you issue STD-1 to STD-5 under POL-1, and publish them with it to every member’s staff, each with its owner (the CISO as issuer; Edda’s team operating STD-1, STD-4 and STD-5) and its review date, POL-1 with the Board’s' + (bad.length ? '. ' + bad.map(d => d.id).join(', ') + ' had none within 12 months in the library you sent: under section 8 each gets one before it goes (15:40), ' + bad.map(d => d.id + ' Day ' + d.bot).join(', ') + '. The scorecard reads the library as you sent it.' : '.') + ' (game)');
   await say('16:00: your desk. Close the week.');
 }
 
@@ -4385,7 +4586,7 @@ function chPolDrillRows() {
 async function chPolSummary() {
   const f = G.f, p = chPol();
   if (!f.chPolSummary) {
-    f.chPolSummary = true; touchCSF('Govern');
+    f.chPolSummary = true; touchCSF('Govern'); chAudit('Policy: the district’s end (Day 81)');
     Series.markEdition('charter', {policy: true});
     await say('A policy this Board approved, standards with dates, and a register that says who carries what, and until when. Next, the Board report.', 'Ivor Penhallow');
   }
@@ -4393,10 +4594,10 @@ async function chPolSummary() {
   const wrong = Object.keys(CH_POL_INTAKE).filter(id => sent[id] !== chIntakeRight(id));
   const body = '<p class="big">Policy: done.</p>' +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b> · Day <b>' + G.day + '</b> (' + (CH_DAY[G.day] || '') + ')</p>' +
-    '<p>Monday: board-display closed by its owner on an expired record; the register written up, ' + (wrong.length ? 'with ' + wrong.join(', ') + ' differing from the rule as you sent it' : 'every row as the rule asks') + '; cp-patch closed; the draft out ' + (p.consult && p.consult.first ? 'to the right three at the first try' : 'to the right three, after a false start') + '. Tuesday: fin-ap’s control put in scope, and STD-4 measured by sample. Wednesday: Noor’s wording in; the Library’s request ' + (p.directive && p.directive.first ? 'sent through the route at the first try' : 'sent through the route, after a false start') + '. Thursday: POL-1 approved, the standards issued and published. Its rounds ' + (p.board && ok(p.board.first) ? 'at the first try' : 'with false starts the debriefs named') + '.</p>' +
+    '<p>Monday: board-display closed by its owner on an expired record; the register written up, ' + (wrong.length ? 'with ' + wrong.join(', ') + ' differing from the rule as you sent it' : 'every row as the rule asks') + '; cp-patch closed; the draft out ' + (p.consult && p.consult.first ? 'to the right three at the first try' : 'to the right three, after a false start') + '. Tuesday: fin-ap’s control put in scope and found partial, the call-back rule in force (Marit), the escalated entries decided by the chair, and STD-4 measured on every record. Wednesday: Noor’s wording in; STD-4 v2 agreed with the members’ owners; the Library’s request ' + (p.directive && p.directive.first ? 'sent through the route at the first try' : 'sent through the route, after a false start') + '. Thursday: POL-1 approved, the standards issued and published. Its rounds ' + (p.board && ok(p.board.first) ? 'at the first try' : 'with false starts the debriefs named') + '.</p>' +
     '<h3>Drills (game)</h3><table class="sc"><tr><th>Drill</th><th>Score</th><th>Supported</th></tr>' + chPolDrillRows() + '</table>' +
     '<h3>The exception register</h3>' + chExcRegisterHtml() +
-    '<p>Lesson (game): a policy that says “all” needs a register that is read. Each exception names its clause, its exact scope, its reason and a control that covers the gap; its owner decides and signs, and the Board approves only what its own decision left; it has an expiry and a review date, and at its expiry it closes or renews through the same route with fresh evidence. The CISO writes it up, checks the control against its records, recommends, and never grants one. A policy is drafted, consulted on, approved by the governing body, published, measured by sample against its own words, and reviewed on a date.</p>' +
+    '<p>Lesson (game): a policy that says “all” needs a register that is read. Each exception names its clause, its exact scope, its reason and a control that covers the gap; its owner asks for it and signs for running the control. Who decides follows the check: a standard one, its owner; an escalated one (the CISO against, a partial control, a broken tolerance, safety-of-life or personal records, a second renewal), someone above the owner, the chair within five working days; the Board approves what its own decision left. It has an expiry and a review date, and at its expiry it closes or renews through the same route with fresh evidence. The CISO writes it up, checks the control against its records, recommends, and never grants one. Tolerances bind on what is in force today, not on what next year’s money will buy. A policy is drafted, consulted on, approved by the governing body, published, measured against its own words by a plan set before the records are drawn, and reviewed on a date.</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() +
     (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: ' + qtCount() + ' notes in the suspicion file. Who, and why: not yet known.</p>') +
     '<p class="big">Next: The Board report.</p>';

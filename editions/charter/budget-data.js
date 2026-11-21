@@ -48,6 +48,8 @@ const CH_LINES = [
           {cost: 80, res: 'Low', what: 'An isolated restore space, sized for every member at once.'}]},
   {id: 'R4', name: 'Payment fraud by email', cat: 'fin', catName: 'Financial', owner: 'Marit Quellan', rank: 6, rec: 1,
    interim: 'Marit approves every change to a payment detail herself and holds it five working days, until the line is funded.',
+   // Funded from next year's lines, R4 stays as now until it delivers: this is the interim for that gap (chGapAcceptance).
+   gapInterim: 'Marit approves every change to a payment detail herself and holds it five working days, until a call-back rule is in force or the line delivers.',
    opts: [{cost: 0, res: 'Medium', what: 'As now: fin-ap, the shared accounts-payable mailbox, excepted from MFA; no call-back rule, and no checked list of the suppliers’ known numbers to call.', breaks: [CH_TOL_CALLBACK]},
           {cost: 20, res: 'Low', what: 'Named finance mailboxes with MFA, a scanner that supports it, and a call-back rule, every supplier’s known number checked first.'}]},
   {id: 'R5', name: 'The 911 center’s own segment', cat: 'safety', catName: 'Safety-of-life services', owner: 'Celia Marrow', rank: 1, rec: 1,
@@ -92,14 +94,14 @@ const CH_DRILLS = {
       {label: 'Not true: two accounts people use are excepted, and were used 252 times without MFA', good: true, needs: ['policy', 'signins'],
        needsWhy: 'the answer rests on two records: the policy’s exceptions and the sign-in records. You read only one of them.',
        why: 'The policy excepts eight accounts; the records show two of them used by people, without MFA, 252 times in 30 days.'},
-      {label: 'True as written: the policy turns MFA on for each account in the shared directory', why: 'For every account but eight. The exceptions list is part of the policy.'},
-      {label: 'Not true, and the 6 service accounts are a breach in progress: disable them today', why: 'Nothing in these records shows misuse, and the service accounts sign in from their own servers. Each exception needs an owner and an expiry.'}],
+      {label: 'True: the exceptions are only machines that can’t do MFA', why: 'Two of the eight are used by people: fin-ap and board-display, 252 times without MFA in 30 days. The exceptions list is part of the policy.'},
+      {label: 'Not true, and the 6 excepted service accounts are a breach in progress: disable them today', why: 'Nothing in these records shows misuse, and the service accounts sign in from their own servers. Each exception needs an owner and an expiry.'}],
     reasons: [
-      {label: 'The exceptions name them, and the directory’s log shows two used without MFA', good: true, why: 'The policy’s own list, and what happened over 30 days.'},
+      {label: 'The policy’s list names them, and the directory’s log shows two used without MFA', good: true, why: 'The policy’s own list, and what happened over 30 days.'},
       {label: 'The datasheet says MFA works for any user, so any gap that is left must be a small one', why: 'A datasheet says what a product can do, not what the policy does.'},
       {label: 'Edda says that everyone has MFA, and she owns the shared services', why: 'An honest memory is not a record.'}],
     alts: [
-      {label: 'The two accounts used MFA despite the exception', good: true, why: 'Ruled out: the sign-in records show 252 sign-ins without MFA.'},
+      {label: 'The two accounts used MFA after all', good: true, why: 'Ruled out: the sign-in records show 252 sign-ins without MFA.'},
       {label: 'The six service accounts are people’s accounts', good: true, why: 'Ruled out: their sign-ins are non-interactive, from their own servers.'},
       {label: 'The datasheet is out of date for this version of the product', why: 'Beside the point: the policy and the records decide it.'},
       {label: 'Edda knew of the gap and left it out', why: 'Nothing points to it: an honest claim, from memory.'}],
