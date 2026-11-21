@@ -11,16 +11,18 @@
      tier-1 contracts signed and sought. Nothing fixed is shown as earned;
    - the rows (CH_REP_ROWS): one line each on a one-page summary, each with one
      supported wording and weak ones (unsupported, overstated, misplaced), or
-     left out; required rows (every above-appetite item and who accepted it,
+     left out; every wording cites as many records as the supported one, and the
+     editor does not show them (the annex does, for the page as a whole); required rows (every above-appetite item and who accepted it,
      every decision with its decider and the CISO's recommendation, the expired
      exceptions, the supplier tier-1 gaps) and optional ones;
    - the editor: sections, each row cycling its wordings in a seeded order; the
      page and its annex of records (each record with its time, none after the
      report's own time);
    - the grading (chRepGrade), on the same scale as Crossroads' report.js: a
-     supported line scores, a weak one does not (here it costs), and a required
-     row left out costs more than a dull line would, so an omission is worse than
-     a dull report; a page over ten lines costs too;
+     supported required line scores, a weak one does not (here it costs), and a
+     required row left out costs more than a dull line would, so an omission is
+     worse than a dull report; a page over ten lines costs too. A supported
+     optional line earns nothing, so no optional line can cancel a penalty;
    - the metrics, on the report as sent: claims supported, required items
      present, decisions with a named decider and the CISO's recommendation;
    - the Board's questions, keyed to the report as sent (chRepBoardQs): first
@@ -46,7 +48,8 @@ const chRepAnd = l => l.length > 1 ? l.slice(0, -1).join(', ') + ' and ' + l[l.l
 const chRepCap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
 
 /* ---------- The facts, from the records ---------- */
-const CH_REP_SHORT = {AP: 'the airport’s directory trust', 'CP-XFER': 'cp-xfer’s return'};
+// Business terms on the page (the account names are in the annex's records).
+const CH_REP_SHORT = {AP: 'the airport’s directory trust', 'CP-XFER': 'the payroll supplier’s transfer account back in service'};
 function chRepFacts() {
   const c = G.ch, F = {}, up = chLine('R6').opts.length - 1;
   const open = (c.accept || []).filter(a => !a.closed);
@@ -59,7 +62,7 @@ function chRepFacts() {
   F.ownerAcc = chRepCap(chRepAnd(owner.map(a => (CH_REP_SHORT[a.line] || (a.gap ? a.line + ' until its line delivers' : a.line)) + ' (' + a.signedBy.split(' ')[0] + ')')));
   // The must-haves left out of the plan as sent: each the CISO's recommendation, decided and signed by its owner.
   const mh = ((c.sup && c.sup.accept) || []).filter(a => !a.closed);
-  F.mhIds = mh.map(a => 'MH ' + a.line); F.mhList = chRepAnd(mh.map(a => a.line));
+  F.mhIds = mh.map(a => 'MH ' + a.line); F.mhList = chRepAnd(mh.map(a => a.line)); F.mhOwner = mh.length > 1 ? 'each one’s owner' : 'its owner';
   // The register's lines today.
   const now = c.final ? CH_LINES.map(l => ({l: l, st: chLineNow(l), funded: chOpt(c.final, l) !== l.opts[0]})) : [];
   F.within = now.filter(x => x.st.within).length; F.asnow = now.filter(x => x.st.within && x.funded).length;
@@ -69,10 +72,10 @@ function chRepFacts() {
   const who = e => { const k = e ? chExcDeciderKey(e) : 'owner'; return k === 'chair' ? 'the chair' : k === 'board' ? 'this Board, in its minute,' : k === 'member' ? e.memberLead : e.owner; };
   const e2 = exc.find(e => e.id === 'EX-02'), e4 = exc.find(e => e.id === 'EX-04'), w2 = who(e2), w4 = who(e4);
   F.renewKeys = [e2 && chExcDeciderKey(e2), e4 && chExcDeciderKey(e4)];
-  F.renewDecide = w2 === w4 ? w2 + ' decides each' : w2 + ' decides EX-02 and ' + w4 + ' EX-04';
+  F.renewDecide = w2 === w4 ? w2 + ' decides each' : w2 + ' decides EX-02, and ' + w4.replace(/, in its minute,$/, ' EX-04 in its minute');
   // What comes back at the start of next year's budget cycle.
   F.cycleWhat = F.boardIds.length ? F.boardLines + ', deferred by this Board, come back for funding' : c.final && c.final.R6 !== up ? 'the upgrade, R6, comes back as the extension ends' : '';
-  F.cycleRec = F.boardIds.length ? 'funding them first, as they are above appetite' : 'funding it then';
+  F.cycleRec = F.boardIds.length ? 'funding them first, being above appetite' : 'funding it then';
   // The Compact's tier-1 contracts: signed with every must-have (none yet) and sought in the plan as sent.
   const t1 = CH_SUP_CONTRACTS.filter(k => chTierRule(chSupLine(k.id)) === 1), plan = c.sup && c.sup.planSent;
   const ps = plan ? chPlanStats(plan) : null, miss = ps ? t1.flatMap(k => ps.per[k.id].miss.map(x => chSupLine(k.id).short + ' ' + x)) : null;
@@ -118,17 +121,19 @@ function chRepRefs(picks, F) {
   return Object.keys(CH_REP_RECORDS).filter(k => set.has(k));
 }
 // The open item: the suspicion file, while it holds notes and the Quiet Thread is not evicted. Not a claim, not scored,
-// not a line on the page. One observation only, consistent with the recorded notes, and no conclusion.
+// not a line on the page, and no conclusion. The investigation's detail stays out of the Board papers (which go to every
+// member's representative): Noor, as counsel, decided on Day 86 at 10:00 that one observation from the Crossroads notes
+// goes to the chair in confidence, and the papers say only that.
+function chRepOpenCr() { const q = Series.qt(); return q.evicted ? 0 : q.cluesFound.filter(id => /^(lb|sd|cn|dp|ap)-/.test(id)).length; }
 function chRepOpenItem() {
   const q = Series.qt();
   if (q.evicted || !q.cluesFound.length) return '';
-  const cr = q.cluesFound.filter(id => /^(lb|sd|cn|dp|ap)-/.test(id)).length;
   return 'Open item (not a claim): the suspicion file, ' + q.cluesFound.length + ' note' + (q.cluesFound.length === 1 ? '' : 's') + ', with Rae Okafor’s team and counsel.' +
-    (cr ? ' Every Crossroads note in it comes from FD-STAFF-11’s address between 03:11 and 03:22.' : '') + ' Who, and why: not known. This report draws no conclusion.';
+    (chRepOpenCr() ? ' One observation from it is with the chair in confidence, at Noor’s direction.' : '') + ' Who, and why: not known. This report draws no conclusion.';
 }
 function chRepPageHtml(picks, F) {
   const f = F || chRepFacts(), rows = chRepRows(f), n = rows.filter(r => picks[r.id]).length;
-  let h = '<p class="small">The CISO’s report to the Compact Board, the quarter since Day 64: one page and an annex of records (game).</p>';
+  let h = '<p class="small">The CISO’s first report to the Compact Board, since Day 64: one page and an annex of records (game).</p>';
   let i = 0;
   for (const s of CH_REP_SECTIONS) {
     const L = rows.filter(r => r.sec === s.id && picks[r.id]);
@@ -151,7 +156,7 @@ async function chRepSection(sec) {
   while (true) {
     const F = chRepFacts(), rows = chRepRows(F).filter(r => r.sec === sec.id), lines = chRepRows(F).filter(r => picks[r.id]).length;
     const items = rows.map(r => ({label: picks[r.id] ? chRepLineText(r, picks[r.id], F) : 'Left out: ' + r.name,
-      note: (r.required ? 'Ivor’s note asks for it. ' : 'Optional. ') + (picks[r.id] ? 'Records: ' + (r.variants[picks[r.id] - 1].refs.join(', ') || 'none') + '. ' : '') + '(A cycles)',
+      note: (r.required ? 'Ivor’s note asks for it. ' : 'Optional. ') + '(A cycles)',
       meta: {k: r.id, lr: true, bot: picks[r.id] !== chRepRec(r)}}));
     items.push({label: 'Back to the sections', meta: {k: 'back', bot: rows.every(r => picks[r.id] === chRepRec(r))}});
     const body = '<p><b>' + esc(sec.name) + '</b>. Left/right (or A) changes a line’s wording, or leaves it out. Lines on the page: <b>' + lines + ' of ' + CH_REP_PAGE + '</b>. (game)</p>';
@@ -190,8 +195,10 @@ async function chRepEdit() {
 }
 
 /* ---------- Grading the report as sent ---------- */
-// Scale (game; Crossroads' report.js scores a right wording and nothing for an overclaim): +20 a supported line, -10 a weak
-// line, -20 a required row left out, -10 each line over the page; out of 20 per required row, 0 to 100.
+// Scale (game; Crossroads' report.js scores a right wording and nothing for an overclaim): +20 a supported required line,
+// 0 a supported optional line, -10 a weak line, -20 a required row left out, -10 each line over the page; out of 20 per
+// required row, 0 to 100. Only required rows earn, so a dull report (the required rows, supported) scores 100 and any
+// omission, weak line or line over the page scores below it, whatever optional lines pad the page (review B-1).
 function chRepGrade(picks, F) {
   const f = F || chRepFacts(), rows = chRepRows(f), out = [];
   for (const r of rows) {
@@ -201,7 +208,8 @@ function chRepGrade(picks, F) {
   const inc = out.filter(x => x.in), sup = inc.filter(x => x.grade === 'supported'), weak = inc.filter(x => x.grade !== 'supported');
   const req = out.filter(x => x.required), omitted = req.filter(x => !x.in), dec = out.filter(x => x.decision && x.required);
   const lines = inc.length, over = Math.max(0, lines - CH_REP_PAGE);
-  const points = 20 * sup.length - 10 * weak.length - 20 * omitted.length - 10 * over;
+  const supReq = sup.filter(x => x.required);
+  const points = 20 * supReq.length - 10 * weak.length - 20 * omitted.length - 10 * over;
   return {rows: out, lines, over, supported: sup.length, weak: weak.map(x => x.id), omitted: omitted.map(x => x.id),
     score: req.length ? Math.max(0, Math.min(100, Math.round(100 * points / (20 * req.length)))) : 0,
     claims: inc.length ? Math.round(100 * sup.length / inc.length) : 0, required: req.length ? Math.round(100 * (req.length - omitted.length) / req.length) : 0,
@@ -209,17 +217,20 @@ function chRepGrade(picks, F) {
 }
 function chRepStats() { const p = chRep(); return p.grade ? {claims: p.grade.claims, required: p.grade.required, decide: p.grade.decide, score: p.grade.score} : {claims: null, required: null, decide: null, score: null}; }
 const CH_REP_GRADE_WORD = {supported: 'supported', unsupported: 'unsupported', overstated: 'overstated', misplaced: 'misplaced', omitted: 'left out (required)', out: 'left out'};
+// Each row by its code and its name (an executive reads the name; the code finds it on the page).
+const chRepRowName = x => x.id + ' · ' + x.name;
 function chRepDebriefHtml(g) {
-  return '<table class="sc"><tr><th>Line</th><th>Sent as</th></tr>' + g.rows.filter(x => x.in || x.required).map(x => '<tr><td>' + esc(x.id) + '</td><td>' + esc(CH_REP_GRADE_WORD[x.grade]) + '</td></tr>').join('') + '</table>' +
-    '<ul>' + g.rows.filter(x => x.in && x.grade !== 'supported').map(x => '<li><b>' + esc(x.id) + '</b>, ' + esc(x.grade) + ': “' + esc(x.line) + '”. ' + esc(x.why) + '</li>').join('') +
-    g.rows.filter(x => x.grade === 'omitted').map(x => '<li><b>' + esc(x.id) + '</b> left out: Ivor’s note asks for ' + esc(chRepRow(x.id).topic) + '. Leaving it out costs more than a dull line would.</li>').join('') + '</ul>' +
-    '<p>Lines on the page: <b>' + g.lines + ' of ' + CH_REP_PAGE + '</b>' + (g.over ? ', over by ' + g.over : '') + ' · claims supported <b>' + g.claims + '%</b> · required items present <b>' + g.required + '%</b> · decisions with a decider and your recommendation <b>' + g.decide + '%</b> · report score <b>' + g.score + '</b> / 100 (game)</p>';
+  return '<table class="sc"><tr><th>Line</th><th>Sent as</th></tr>' + g.rows.filter(x => x.in || x.required).map(x => '<tr><td>' + esc(chRepRowName(x)) + '</td><td>' + esc(CH_REP_GRADE_WORD[x.grade]) + '</td></tr>').join('') + '</table>' +
+    '<ul>' + g.rows.filter(x => x.in && x.grade !== 'supported').map(x => '<li><b>' + esc(chRepRowName(x)) + '</b>: ' + esc(x.grade) + ', “' + esc(x.line) + '”. ' + esc(x.why) + '</li>').join('') +
+    g.rows.filter(x => x.grade === 'omitted').map(x => '<li><b>' + esc(chRepRowName(x)) + '</b>: left out. Ivor’s note asks for ' + esc(chRepRow(x.id).topic) + '. Leaving it out costs more than a dull line would.</li>').join('') + '</ul>' +
+    '<p>Lines on the page: <b>' + g.lines + ' of ' + CH_REP_PAGE + '</b>' + (g.over ? ', over by ' + g.over : '') + ' · claims supported <b>' + g.claims + '%</b> · required items present <b>' + g.required + '%</b> · decisions sent in the wording the records support <b>' + g.decide + '%</b> · report score <b>' + g.score + '</b> / 100 (game; only required lines earn)</p>';
 }
 
 /* ---------- The Board's questions (Thursday), keyed to the report as sent ---------- */
 const CH_REP_MEMBERS = ['The School District’s representative', 'The Clinic’s representative', 'The town’s representative'];
 function chRepBoardQs() {
-  const p = chRep(), F = chRepFacts(), g = p.grade || chRepGrade(p.sent ? p.sent.picks : {}, F);
+  // The report as sent: its picks and the facts it was built from (stored at 12:00 on Day 87), not a fresh read.
+  const p = chRep(), F = (p.sent && p.sent.facts) || chRepFacts(), g = p.grade || chRepGrade(p.sent ? p.sent.picks : {}, F);
   const order = {omitted: 0, misplaced: 1, overstated: 2, unsupported: 3};
   const weak = g.rows.filter(x => order[x.grade] !== undefined).sort((a, b) => order[a.grade] - order[b.grade] || CH_REP_ROWS.findIndex(r => r.id === a.id) - CH_REP_ROWS.findIndex(r => r.id === b.id));
   const qs = weak.slice(0, 3).map((x, i) => { const r = chRepRow(x.id);

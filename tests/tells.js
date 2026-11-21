@@ -163,6 +163,9 @@ const CH_EXTRA = [
   // Slice 3 (Policy, 14 Nov 2026): exceptions and their dates, and the policy's documents.
   ['G:exception', /\b(exception|exceptions|exception’s|excepted|expiry|expires|expired|renew|renews|renewed|renewal|permanent|permanently)\b/i],
   ['G:policy', /\b(policy|policy’s|policies|standard|standards|standard’s|STD-\d|POL-1|rule|rules|rule’s)\b/i],
+  // Slice 4 fix pass (review M-3): a causal or comparative "as" clause marked the weak report wordings. Held to the band in
+  // the Board report only (CH_REP_ONLY below), where it was found; reported in every Charter district.
+  ['G:as', /\bas\b/i],
 ];
 
 // ---- Stems and inflections (review of Crossroads slice 5, 9 Nov 2026, S11) ----
@@ -587,8 +590,8 @@ const chBand = [];
 // The slice-3 groups (exceptions, policy) were introduced for Policy: checked there, in Budget (since the slice-3 review:
 // a player reaches Policy having learned Budget) and across Charter (ch-all), not inside the prologue or Suppliers, whose
 // matches are another sense (a contract's "renewal").
-const CH_POL_ONLY = ['G:exception', 'G:policy'];
-for (const n of CHARTER_BAND) for (const s of CH_DISTRICTS.concat(['ch-all']).filter(s => !CH_POL_ONLY.includes(n) || s === 'ch-policy' || s === 'ch-budget' || s === 'ch-all')) { const st = stat(chScope(s), CH_GROUPS.find(w => w[0] === n)[1]); chBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
+const CH_POL_ONLY = ['G:exception', 'G:policy'], CH_REP_ONLY = ['G:as'];
+for (const n of CHARTER_BAND) for (const s of CH_DISTRICTS.concat(['ch-all']).filter(s => CH_REP_ONLY.includes(n) ? s === 'ch-report' : !CH_POL_ONLY.includes(n) || s === 'ch-policy' || s === 'ch-budget' || s === 'ch-all')) { const st = stat(chScope(s), CH_GROUPS.find(w => w[0] === n)[1]); chBand.push({n: n + '@' + s, st, ok: st.n < CR_BAND_MIN_N || (st.lean >= 1 - WARN && st.lean <= WARN)}); }
 const CH_NAMES = [
   ['N:named', new RegExp(CR_NAMES[0][1].source.replace('|Hugo|Ellerby)', '|Hugo|Ellerby|Marit|Quellan|Dalia|Ilka|Thrushcombe)'))],
   ['N:Edda', /\b(Edda|Thornquist)\b/], ['N:Marit', /\b(Marit|Quellan)\b/], ['N:Ivor', /\b(Ivor|Penhallow)\b/], ['N:Celia', /\b(Celia|Marrow)\b/],
@@ -618,6 +621,25 @@ const chRepSrc = fs.existsSync(root + '/editions/charter/report-data.js') ? fs.r
 const chRepRowCount = ((chRepSrc.split('const CH_REP_ROWS')[1] || '').split('\n];')[0].match(/^  \{id: '/gm) || []).length;
 const chRepRowLists = chGraded.filter(L => L.top === 'CH_REP_ROWS' && /report-data\.js$/.test(L.file));
 const chLfFails = chLf.flatMap(x => x.rows.filter(r => r.fail).map(r => x.s + ' ' + lfFmt(r)));
+// Since the slice-4 review (M-1, M-2): the records each wording cites, and the wordings' lengths, must not point to the
+// supported one. The rows are read from the source (vm), so the refs count as written: every wording in a row cites as
+// many records as the supported one; the editor (chRepSection in report.js) shows no record list per wording; and the
+// supported wording is the longest or second-longest in no more rows than chance gives (2 of n options each), and in
+// at least a third of the rows it is the shortest or third-longest or lower.
+let chRepRefRows = [], chRepRank = {top2: 0, exp: 0, low: 0, n: 0}, chRepEditorRefs = false;
+if (chRepSrc) {
+  const vm = require('vm'), ctx = {}; vm.createContext(ctx);
+  try { vm.runInContext(chRepSrc + '\n;this.__rows = CH_REP_ROWS;', ctx); } catch (e) { ctx.__rows = []; }
+  for (const r of ctx.__rows || []) {
+    const n = r.variants.map(v => (v.refs || []).length), g = r.variants.findIndex(v => v.good);
+    if (n.some(x => x !== n[g])) chRepRefRows.push(r.id + ' ' + n.join('/'));
+    const len = r.variants.map(v => v.label.length), rank = len.filter(x => x > len[g]).length + 1;
+    chRepRank.n++; chRepRank.exp += 2 / len.length; if (rank <= 2) chRepRank.top2++; if (rank >= 3 || len[g] === Math.min(...len)) chRepRank.low++;
+  }
+  const rj = fs.existsSync(root + '/editions/charter/report.js') ? fs.readFileSync(root + '/editions/charter/report.js', 'utf8') : '';
+  const sec = (rj.split('async function chRepSection')[1] || '').split('\nasync function')[0];
+  chRepEditorRefs = /refs/.test(sec);
+}
 if (report && chOpts.length) {
   console.log('\nCharter (' + chGraded.length + ' graded lists, ' + chOpts.length + ' options)\n' + 'word'.padEnd(18) + CH_DISTRICTS.concat(['ch-all']).map(s => s.padEnd(19)).join(''));
   for (const [name, re] of CR_WORDS.concat(CH_GROUPS)) console.log(name.padEnd(18) + CH_DISTRICTS.concat(['ch-all']).map(s => fmt(stat(chScope(s), re)).padEnd(19)).join(''));
@@ -654,6 +676,8 @@ if (chFiles.length) checks.push(
   ['Charter: no name tell — any named character, and Edda, Marit, Ivor, Celia, Joanna, Beatriz, Noor, Ilka, Strand, the deciders together and the suppliers together (' + chNameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', chNameRows.every(x => x.ok)],
   ['Charter: the intake write-ups (CH_POL_INTAKE, the scorecard’s rows) are scanned: ' + chGraded.filter(L => /^policy-data/.test(path.basename(L.file)) && L.items.some(x => /^(Marit’s|Edda’s|The CISO’s|Open:|Expired)/.test(x.label)) && L.items.length === 4 && L.items.some(x => / · |PATCH-01/.test(x.label))).length + ' lists (3 expected)', chGraded.filter(L => /^policy-data/.test(path.basename(L.file)) && L.items.some(x => /^(Marit’s|Edda’s|The CISO’s|Open:|Expired)/.test(x.label)) && L.items.length === 4 && L.items.some(x => / · |PATCH-01/.test(x.label))).length === 3],
   ['Charter: the Board report’s rows (CH_REP_ROWS, the lines the scorecard grades) are scanned: ' + chRepRowLists.length + ' lists, of ' + chRepRowCount + ' rows in the source, each with exactly one supported wording', chRepRowCount > 0 && chRepRowLists.length === chRepRowCount && chRepRowLists.every(L => L.items.filter(x => x.good).length === 1)],
+  ['Charter: the Board report’s wordings cite as many records as the supported one, row by row (' + (chRepRefRows.length ? 'unequal: ' + chRepRefRows.join(', ') : chRepRank.n + ' rows equal') + '), and the editor shows no record list per wording', chRepRank.n > 0 && !chRepRefRows.length && !chRepEditorRefs],
+  ['Charter: no length tell in the Board report’s rows — the supported wording is the longest or second-longest in ' + chRepRank.top2 + ' of ' + chRepRank.n + ' rows (chance ' + chRepRank.exp.toFixed(1) + '), and the shortest or third-longest or lower in ' + chRepRank.low + ' (at least a third)', chRepRank.n > 0 && chRepRank.top2 <= Math.ceil(chRepRank.exp) && chRepRank.low * 3 >= chRepRank.n],
   ['Charter: no lone-feature tell (the same rule as Crossroads); strongest leans: ' + chLf.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !chLfFails.length]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);

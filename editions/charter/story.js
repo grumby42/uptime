@@ -24,7 +24,7 @@ const EDITION = {
   fmActionsCat: 'Leadership practices (game)',   // the Field Manual's heading for EXTRA_ACTIONS (engine default: D3FEND-style)
   fmIntro: 'Descriptions are our own words. No ATT&amp;CK technique in Charter so far; the entries not met yet open in later districts.',
   creditsName: 'Charter edition',
-  creditsFacts: 'Charter (the prologue, Budget, Suppliers, Policy and the Board report): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088, T1906 and T1308, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, and GV.SC-04, GV.SC-05, GV.SC-06, GV.SC-07, GV.SC-08 and GV.SC-10 with the examples quoted, GV.PO-01 with two examples and GV.PO-02, and GV.OV-01 and GV.OV-03 with one example each, from NIST’s CSF 2.0 Implementation Examples (26 February 2024). No ATT&CK technique. Facts recalled from Crossroads are quoted from Crossroads, and the town’s fd-admin exception from Town Hall.'
+  creditsFacts: 'Charter (the prologue, Budget, Suppliers, Policy and the Board report): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088, T1906 and T1308, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, and GV.SC-04, GV.SC-05, GV.SC-06, GV.SC-07, GV.SC-08 and GV.SC-10 with the examples quoted, GV.PO-01 with two examples and GV.PO-02, from NIST’s CSF 2.0 Implementation Examples (26 February 2024), and GV.OV-01 and GV.OV-03 as worded in the CSF 2.0 Core, NIST CSWP 29 (26 February 2024), with one example each from the Implementation Examples. No ATT&CK technique. Facts recalled from Crossroads are quoted from Crossroads, and the town’s fd-admin exception from Town Hall.'
 };
 const CH_TH_KEY = 'uptime.slice1.save', CH_CR_KEY = 'uptime.crossroads.save', CH_NG_KEY = 'uptime.crossroads.ngplus.save';   // read for the carry-over, never written
 const CH_TH_BADGES = [['Key', g => g.badge], ['Seal', g => g.f && g.f.mrSeal], ['Shield', g => g.f && g.f.crShield], ['Lantern', g => g.f && g.f.mkLantern],
@@ -124,7 +124,7 @@ const EDITION_METRICS = [
   // and labelled (game): the report as sent, read line by line against its records.
   {k: 'chRepClaims', label: 'Claims supported (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart},
   {k: 'chRepRequired', label: 'Required items present (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart},
-  {k: 'chRepDecide', label: 'Decisions with a named decider and your recommendation (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart}
+  {k: 'chRepDecide', label: 'Decisions sent in the wording the records support (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart}
 ];
 function editionScorecard() {
   const v = metricVals(), c = G.ch || {};

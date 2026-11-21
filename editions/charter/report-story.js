@@ -26,8 +26,8 @@
 
 /* ---------- The week opens (your desk, after Policy) ---------- */
 async function chRepStart() {
-  await UI.openModal('Friday, Day 82', '<p>Ivor’s note, after the Policy round (game):</p><p>“Your first report to the Board, for Thursday’s meeting at 14:00: the quarter since Day 64, when we last met as the quarterly Board. One page, and an annex of the records behind it. Every risk above appetite and who accepted it, as minuted; every decision we must take, with its decider and your recommendation; the exceptions due and expired; the supplier tier-1 gaps; and your asks. In our terms, not the tools’. The papers go out on Wednesday at 17:00. From Day 155, one at every quarterly Board.”</p>' +
-    '<p class="small">CSF 2.0 GV.OV-01: “Cybersecurity risk management strategy outcomes are reviewed to inform and adjust strategy and direction”. One of NIST’s examples for it: “Measure how well the risk management strategy and risk results have helped leaders make decisions and achieve organizational objectives”.</p>',
+  await UI.openModal('Friday, Day 82', '<p>Ivor’s note, after the Policy round (game):</p><p>“Your first report to the Board, for Thursday’s meeting at 14:00: everything since Day 64, when we last met as the quarterly Board. One page, and an annex of the records behind it. Every risk above appetite and who accepted it, as minuted; every decision we must take, with its decider and your recommendation; the exceptions due and expired; the supplier tier-1 gaps; and your asks. In our terms, not the tools’. The papers go out on Wednesday at 17:00. From Day 155, one at every quarterly Board.”</p>' +
+    '<p class="small">CSF 2.0 (NIST CSWP 29) GV.OV-01: “Cybersecurity risk management strategy outcomes are reviewed to inform and adjust strategy and direction”. One of NIST’s examples for it, in the CSF 2.0 Implementation Examples: “Measure how well the risk management strategy and risk results have helped leaders make decisions and achieve organizational objectives”.</p>',
     [{label: 'Monday', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.f.chRepStart = true; G.day = 85; G.focus = G.focusMax; chRep(); touchCSF('Govern'); unlock('fact', 'chcsfov'); track();
   await say('Day 85, Monday, 08:45. Report week. 09:00: Beatriz has MFA-Exempt and the sign-in records at the identity desk.');
@@ -61,7 +61,7 @@ async function chRepDrillC() {
   const key = chRepWhoKey(), who = 'Edda Thornquist';
   await say(key === 'repwho' ? '14:00. R2 and R3 are mine, and I signed both acceptances. The draft says who accepted them; I think it should say me. The minute and the acceptances are here.' : '14:00. My draft line says the Board accepted R2 and R3 when it approved the budget. The minute and the acceptances are here. Is that right?', who);
   await chRepDrill(key);
-  await say(key === 'repwho' ? 'The Board decided, and I signed for the checks. Fair: the line says both. My draft, my decision to change it.' : 'Nothing was accepted, then, because nothing needed accepting. My draft, my decision to change it.', who);
+  await say(key === 'repwho' ? 'The Board decided, and I signed for the checks. Fair: the line says both. My draft, my decision to change it.' : 'Nothing was accepted, then: the Board’s plan puts both within appetite. My draft, my decision to change it.', who);
   G.f.chRepDrillC = true; unlock('act', 'chrepwho'); touchCSF('Govern'); track();
   await say('End the day at your desk.');
 }
@@ -72,9 +72,14 @@ async function chRepRecords() {
   await UI.openModal('The quarter’s records', '<p>Tuesday, 09:00. What the report is built from: your scorecard as each week left it, the acceptances on the register, and the exceptions. Your results, as recorded. (game)</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() + '<h3>Acceptances on the register</h3>' + chAcceptHtml(c.accept || []) +
     ((c.sup && c.sup.accept.length) ? '<h3>Must-haves left out</h3>' + chClauseAcceptHtml(c.sup.accept) : '') +
-    '<p class="small">CSF 2.0 GV.OV-03: “Organizational cybersecurity risk management performance is measured and reviewed for adjustments needed”. One of NIST’s examples for it: “Collect and communicate metrics on cybersecurity risk management with senior leadership”.</p>',
+    '<p class="small">CSF 2.0 (NIST CSWP 29) GV.OV-03: “Organizational cybersecurity risk management performance is evaluated and reviewed for adjustments needed”. One of NIST’s examples for it, in the CSF 2.0 Implementation Examples: “Collect and communicate metrics on cybersecurity risk management with senior leadership”.</p>',
     [{label: 'Back to the floor', meta: {good: true}}], {closable: false, cls: 'summary'});
   chRep().records = {day: 86, at: '09:00'};
+  // The suspicion file's detail is counsel's to route, not the CISO's to publish in the Board papers (review S-1).
+  if (chRepOpenCr()) {
+    await say('10:00. A note from counsel, about the suspicion file: its detail stays out of the Board papers, which go to every member’s representative. One observation from it goes to the chair in confidence, and the papers say only that it is with counsel. My decision, as counsel.', 'Noor Castellanos');
+    chRep().openItem = {day: 86, at: '10:00', by: 'Noor Castellanos'};
+  }
   G.f.chRepRecords = true; touchCSF('Govern'); track();
   await say('11:00: Edda has a request about the summary, at her desk.');
 }
@@ -137,16 +142,21 @@ async function chRepEditTask() {
 }
 
 /* ---------- The Compact Board's meeting (Thursday 14:00) ---------- */
+// The minute reads the report as sent (its picks and the facts stored with it at 12:00 on Day 87), and lists only the
+// decision rows the report carried, each with the decider the rules name (C2: the chair under 6.2a, or this Board for
+// EX-04 under 6.3); a decision row the report left out is named as not in it (review M-6, S-8).
 function chRepMinute(asked) {
-  const p = chRep(), g = p.grade, F = chRepFacts(), rows = chRepRows(F);
+  const p = chRep(), g = p.grade, F = (p.sent && p.sent.facts) || chRepFacts(), rows = chRepRows(F), sent = (p.sent && p.sent.picks) || {};
   const fixed = asked.filter(q => q.row).map(q => chRepRow(q.row)), rest = g.rows.filter(x => (x.grade !== 'supported' && x.in) || x.grade === 'omitted').filter(x => !asked.some(q => q.row === x.id));
-  const kname = {chair: 'the chair', board: 'this Board, in its minute', owner: 'its owner', member: 'the member’s leadership'};
-  const dec = rows.filter(r => r.decision).map(r => r.id + ' (' + (r.id === 'C2' ? [...new Set(F.renewKeys.map(k => kname[k]))].join(' and ') : 'this Board') + ')');
+  const kname = {chair: 'the chair', board: 'this Board', owner: 'its owner', member: 'the member’s leadership'};
+  const c2 = () => { const k = F.renewKeys || []; return k[0] === k[1] ? kname[k[0]] : kname[k[0]] + ' for EX-02, ' + kname[k[1]] + ' for EX-04'; };
+  const decRows = rows.filter(r => r.decision), dec = decRows.filter(r => sent[r.id]).map(r => r.id + ' (' + (r.id === 'C2' ? c2() : 'this Board') + ')'), notIn = decRows.filter(r => !sent[r.id]).map(r => r.id);
   const oi = chRepOpenItem();
-  return '15:00. The minute records the report as received (Day 87 12:00): ' + g.lines + ' line' + (g.lines === 1 ? '' : 's') + ' and an annex of ' + chRepRefs(p.sent.picks, F).length + ' records.' +
+  return '15:00. The minute records the report as received (Day 87 12:00): ' + g.lines + ' line' + (g.lines === 1 ? '' : 's') + ' and an annex of ' + chRepRefs(sent, F).length + ' records.' +
     (fixed.length ? ' Corrected in this minute, at the members’ questions: ' + fixed.map(r => r.id + ', “' + chRepFill(r.variants[chRepGood(r) - 1].label, F) + '”').join('; ') + '.' : ' No correction asked.') +
     (rest.length ? ' The chair asks for ' + rest.map(x => x.id).join(', ') + ' to be read again against the records before Day 155.' : '') +
-    ' The decisions it puts to the Board: ' + dec.join(', ') + ', each with its decider.' + (oi ? ' The suspicion file noted as an open item, with no conclusion.' : '') + ' (game)';
+    (dec.length ? ' The decisions due, each with its decider: ' + dec.join(', ') + '.' : '') + (notIn.length ? ' Not in the report: ' + notIn.join(', ') + '.' : '') +
+    (oi ? ' The suspicion file noted as an open item, with no conclusion.' : '') + ' (game)';
 }
 async function chRepBoardRound() {
   const who = 'Ivor Penhallow', f = G.f, p = chRep();

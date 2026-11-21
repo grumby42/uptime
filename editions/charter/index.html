@@ -236,7 +236,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261121-1350Z', BUILD_TS = '2026-11-21 13:50 UTC';
+const BUILD_ID = 'ARCD-20261121-1707Z', BUILD_TS = '2026-11-21 17:07 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -1644,7 +1644,7 @@ const FACTS = {
   chnice: {name: 'CISO in the NICE Framework', desc: 'The closest NICE work role is Executive Cybersecurity Leadership (OG-WRL-007). Its tasks include T1227, “Manage cybersecurity budget, staffing, and contracting”; T1059, “Perform cost/benefit analyses of cybersecurity programs, policies, processes, systems, and elements”; T1060, “Advise senior management on organizational cybersecurity efforts”; T1088, “Communicate the value of cybersecurity to organizational stakeholders”; T1906, “Establish a cybersecurity risk management program”; and T1308, “Coordinate cybersecurity policy review and approval processes”. “CISO” is a job title, not a NICE work role: a job may cover one or more work roles, or part of one.', src: 'CISA NICCS, Executive Cybersecurity Leadership work role page and task pages T1059, T1060 and T1308 (the role page shows NICE Framework version 2.0.0); NIST NICE Framework Resource Center, “Occupations, Jobs, and Work Roles”; NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to this role or these tasks'},
   chcsfsc: {name: 'Suppliers in CSF 2.0 Govern', desc: 'GV.SC-04: “Suppliers are known and prioritized by criticality”, with NIST’s example “Develop criteria for supplier criticality based on, for example, the sensitivity of data processed or possessed by suppliers, the degree of access to the organization’s systems, and the importance of the products or services to the organization’s mission”. GV.SC-05: “Requirements to address cybersecurity risks in supply chains are established, prioritized, and integrated into contracts and other types of agreements with suppliers and other relevant third parties”, with the example “Establish security requirements for suppliers, products, and services commensurate with their criticality level and potential impact if compromised”. GV.SC-06: “Planning and due diligence are performed to reduce risks before entering into formal supplier or other third-party relationships”. GV.SC-07: “The risks posed by a supplier, their products and services, and other third parties are understood, recorded, prioritized, assessed, responded to, and monitored over the course of the relationship”. GV.SC-08: “Relevant suppliers and other third parties are included in incident planning, response, and recovery activities”. GV.SC-10: “Cybersecurity supply chain risk management plans include provisions for activities that occur after the conclusion of a partnership or service agreement”, with the example “Establish processes for terminating critical relationships under both normal and adverse circumstances”.', src: 'NIST, CSF 2.0 Implementation Examples (26 February 2024)'},
   chcsfpo: {name: 'Policy in CSF 2.0 Govern', desc: 'GV.PO-01: “Policy for managing cybersecurity risks is established based on organizational context, cybersecurity strategy, and priorities and is communicated and enforced”, with NIST’s examples “Periodically review policy and supporting processes and procedures to ensure that they align with risk management strategy objectives and priorities, as well as the high-level direction of the cybersecurity policy” and “Require approval from senior management on policy”. GV.PO-02: “Policy for managing cybersecurity risks is reviewed, updated, communicated, and enforced to reflect changes in requirements, threats, technology, and organizational mission”.', src: 'NIST, CSF 2.0 Implementation Examples (26 February 2024)'},
-  chcsfov: {name: 'Oversight in CSF 2.0 Govern', desc: 'GV.OV-01: “Cybersecurity risk management strategy outcomes are reviewed to inform and adjust strategy and direction”, with NIST’s example “Measure how well the risk management strategy and risk results have helped leaders make decisions and achieve organizational objectives”. GV.OV-03: “Organizational cybersecurity risk management performance is measured and reviewed for adjustments needed”, with the example “Collect and communicate metrics on cybersecurity risk management with senior leadership”.', src: 'NIST, CSF 2.0 Implementation Examples (26 February 2024)'},
+  chcsfov: {name: 'Oversight in CSF 2.0 Govern', desc: 'GV.OV-01: “Cybersecurity risk management strategy outcomes are reviewed to inform and adjust strategy and direction”, with NIST’s example “Measure how well the risk management strategy and risk results have helped leaders make decisions and achieve organizational objectives”. GV.OV-03: “Organizational cybersecurity risk management performance is evaluated and reviewed for adjustments needed”, with the example “Collect and communicate metrics on cybersecurity risk management with senior leadership”. The subcategories as the CSF 2.0 Core words them (NIST CSWP 29; the Implementation Examples print “measured” for “evaluated” in GV.OV-03), the examples from the Implementation Examples.', src: 'NIST CSWP 29, The NIST Cybersecurity Framework (CSF) 2.0 (26 February 2024), and NIST, CSF 2.0 Implementation Examples (26 February 2024)'},
   chcsf: {name: 'Risk appetite and resources in CSF 2.0 Govern', desc: 'CSF 2.0 subcategory GV.RM-02: “Risk appetite and risk tolerance statements are established, communicated, and maintained”. One of NIST’s implementation examples for it: “Translate risk appetite statements into specific, measurable, and broadly understandable risk tolerance statements”. GV.RR-03: “Adequate resources are allocated commensurate with the cybersecurity risk strategy, roles, responsibilities, and policies”, with the example “Identify resource allocation and investment in line with risk tolerance and response”.', src: 'NIST, CSF 2.0 Implementation Examples (26 February 2024)'}
 };
 const GAME_NOTES = [
@@ -2417,16 +2417,18 @@ function chPolStats() {
      tier-1 contracts signed and sought. Nothing fixed is shown as earned;
    - the rows (CH_REP_ROWS): one line each on a one-page summary, each with one
      supported wording and weak ones (unsupported, overstated, misplaced), or
-     left out; required rows (every above-appetite item and who accepted it,
+     left out; every wording cites as many records as the supported one, and the
+     editor does not show them (the annex does, for the page as a whole); required rows (every above-appetite item and who accepted it,
      every decision with its decider and the CISO's recommendation, the expired
      exceptions, the supplier tier-1 gaps) and optional ones;
    - the editor: sections, each row cycling its wordings in a seeded order; the
      page and its annex of records (each record with its time, none after the
      report's own time);
    - the grading (chRepGrade), on the same scale as Crossroads' report.js: a
-     supported line scores, a weak one does not (here it costs), and a required
-     row left out costs more than a dull line would, so an omission is worse than
-     a dull report; a page over ten lines costs too;
+     supported required line scores, a weak one does not (here it costs), and a
+     required row left out costs more than a dull line would, so an omission is
+     worse than a dull report; a page over ten lines costs too. A supported
+     optional line earns nothing, so no optional line can cancel a penalty;
    - the metrics, on the report as sent: claims supported, required items
      present, decisions with a named decider and the CISO's recommendation;
    - the Board's questions, keyed to the report as sent (chRepBoardQs): first
@@ -2452,7 +2454,8 @@ const chRepAnd = l => l.length > 1 ? l.slice(0, -1).join(', ') + ' and ' + l[l.l
 const chRepCap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
 
 /* ---------- The facts, from the records ---------- */
-const CH_REP_SHORT = {AP: 'the airport’s directory trust', 'CP-XFER': 'cp-xfer’s return'};
+// Business terms on the page (the account names are in the annex's records).
+const CH_REP_SHORT = {AP: 'the airport’s directory trust', 'CP-XFER': 'the payroll supplier’s transfer account back in service'};
 function chRepFacts() {
   const c = G.ch, F = {}, up = chLine('R6').opts.length - 1;
   const open = (c.accept || []).filter(a => !a.closed);
@@ -2465,7 +2468,7 @@ function chRepFacts() {
   F.ownerAcc = chRepCap(chRepAnd(owner.map(a => (CH_REP_SHORT[a.line] || (a.gap ? a.line + ' until its line delivers' : a.line)) + ' (' + a.signedBy.split(' ')[0] + ')')));
   // The must-haves left out of the plan as sent: each the CISO's recommendation, decided and signed by its owner.
   const mh = ((c.sup && c.sup.accept) || []).filter(a => !a.closed);
-  F.mhIds = mh.map(a => 'MH ' + a.line); F.mhList = chRepAnd(mh.map(a => a.line));
+  F.mhIds = mh.map(a => 'MH ' + a.line); F.mhList = chRepAnd(mh.map(a => a.line)); F.mhOwner = mh.length > 1 ? 'each one’s owner' : 'its owner';
   // The register's lines today.
   const now = c.final ? CH_LINES.map(l => ({l: l, st: chLineNow(l), funded: chOpt(c.final, l) !== l.opts[0]})) : [];
   F.within = now.filter(x => x.st.within).length; F.asnow = now.filter(x => x.st.within && x.funded).length;
@@ -2475,10 +2478,10 @@ function chRepFacts() {
   const who = e => { const k = e ? chExcDeciderKey(e) : 'owner'; return k === 'chair' ? 'the chair' : k === 'board' ? 'this Board, in its minute,' : k === 'member' ? e.memberLead : e.owner; };
   const e2 = exc.find(e => e.id === 'EX-02'), e4 = exc.find(e => e.id === 'EX-04'), w2 = who(e2), w4 = who(e4);
   F.renewKeys = [e2 && chExcDeciderKey(e2), e4 && chExcDeciderKey(e4)];
-  F.renewDecide = w2 === w4 ? w2 + ' decides each' : w2 + ' decides EX-02 and ' + w4 + ' EX-04';
+  F.renewDecide = w2 === w4 ? w2 + ' decides each' : w2 + ' decides EX-02, and ' + w4.replace(/, in its minute,$/, ' EX-04 in its minute');
   // What comes back at the start of next year's budget cycle.
   F.cycleWhat = F.boardIds.length ? F.boardLines + ', deferred by this Board, come back for funding' : c.final && c.final.R6 !== up ? 'the upgrade, R6, comes back as the extension ends' : '';
-  F.cycleRec = F.boardIds.length ? 'funding them first, as they are above appetite' : 'funding it then';
+  F.cycleRec = F.boardIds.length ? 'funding them first, being above appetite' : 'funding it then';
   // The Compact's tier-1 contracts: signed with every must-have (none yet) and sought in the plan as sent.
   const t1 = CH_SUP_CONTRACTS.filter(k => chTierRule(chSupLine(k.id)) === 1), plan = c.sup && c.sup.planSent;
   const ps = plan ? chPlanStats(plan) : null, miss = ps ? t1.flatMap(k => ps.per[k.id].miss.map(x => chSupLine(k.id).short + ' ' + x)) : null;
@@ -2524,17 +2527,19 @@ function chRepRefs(picks, F) {
   return Object.keys(CH_REP_RECORDS).filter(k => set.has(k));
 }
 // The open item: the suspicion file, while it holds notes and the Quiet Thread is not evicted. Not a claim, not scored,
-// not a line on the page. One observation only, consistent with the recorded notes, and no conclusion.
+// not a line on the page, and no conclusion. The investigation's detail stays out of the Board papers (which go to every
+// member's representative): Noor, as counsel, decided on Day 86 at 10:00 that one observation from the Crossroads notes
+// goes to the chair in confidence, and the papers say only that.
+function chRepOpenCr() { const q = Series.qt(); return q.evicted ? 0 : q.cluesFound.filter(id => /^(lb|sd|cn|dp|ap)-/.test(id)).length; }
 function chRepOpenItem() {
   const q = Series.qt();
   if (q.evicted || !q.cluesFound.length) return '';
-  const cr = q.cluesFound.filter(id => /^(lb|sd|cn|dp|ap)-/.test(id)).length;
   return 'Open item (not a claim): the suspicion file, ' + q.cluesFound.length + ' note' + (q.cluesFound.length === 1 ? '' : 's') + ', with Rae Okafor’s team and counsel.' +
-    (cr ? ' Every Crossroads note in it comes from FD-STAFF-11’s address between 03:11 and 03:22.' : '') + ' Who, and why: not known. This report draws no conclusion.';
+    (chRepOpenCr() ? ' One observation from it is with the chair in confidence, at Noor’s direction.' : '') + ' Who, and why: not known. This report draws no conclusion.';
 }
 function chRepPageHtml(picks, F) {
   const f = F || chRepFacts(), rows = chRepRows(f), n = rows.filter(r => picks[r.id]).length;
-  let h = '<p class="small">The CISO’s report to the Compact Board, the quarter since Day 64: one page and an annex of records (game).</p>';
+  let h = '<p class="small">The CISO’s first report to the Compact Board, since Day 64: one page and an annex of records (game).</p>';
   let i = 0;
   for (const s of CH_REP_SECTIONS) {
     const L = rows.filter(r => r.sec === s.id && picks[r.id]);
@@ -2557,7 +2562,7 @@ async function chRepSection(sec) {
   while (true) {
     const F = chRepFacts(), rows = chRepRows(F).filter(r => r.sec === sec.id), lines = chRepRows(F).filter(r => picks[r.id]).length;
     const items = rows.map(r => ({label: picks[r.id] ? chRepLineText(r, picks[r.id], F) : 'Left out: ' + r.name,
-      note: (r.required ? 'Ivor’s note asks for it. ' : 'Optional. ') + (picks[r.id] ? 'Records: ' + (r.variants[picks[r.id] - 1].refs.join(', ') || 'none') + '. ' : '') + '(A cycles)',
+      note: (r.required ? 'Ivor’s note asks for it. ' : 'Optional. ') + '(A cycles)',
       meta: {k: r.id, lr: true, bot: picks[r.id] !== chRepRec(r)}}));
     items.push({label: 'Back to the sections', meta: {k: 'back', bot: rows.every(r => picks[r.id] === chRepRec(r))}});
     const body = '<p><b>' + esc(sec.name) + '</b>. Left/right (or A) changes a line’s wording, or leaves it out. Lines on the page: <b>' + lines + ' of ' + CH_REP_PAGE + '</b>. (game)</p>';
@@ -2596,8 +2601,10 @@ async function chRepEdit() {
 }
 
 /* ---------- Grading the report as sent ---------- */
-// Scale (game; Crossroads' report.js scores a right wording and nothing for an overclaim): +20 a supported line, -10 a weak
-// line, -20 a required row left out, -10 each line over the page; out of 20 per required row, 0 to 100.
+// Scale (game; Crossroads' report.js scores a right wording and nothing for an overclaim): +20 a supported required line,
+// 0 a supported optional line, -10 a weak line, -20 a required row left out, -10 each line over the page; out of 20 per
+// required row, 0 to 100. Only required rows earn, so a dull report (the required rows, supported) scores 100 and any
+// omission, weak line or line over the page scores below it, whatever optional lines pad the page (review B-1).
 function chRepGrade(picks, F) {
   const f = F || chRepFacts(), rows = chRepRows(f), out = [];
   for (const r of rows) {
@@ -2607,7 +2614,8 @@ function chRepGrade(picks, F) {
   const inc = out.filter(x => x.in), sup = inc.filter(x => x.grade === 'supported'), weak = inc.filter(x => x.grade !== 'supported');
   const req = out.filter(x => x.required), omitted = req.filter(x => !x.in), dec = out.filter(x => x.decision && x.required);
   const lines = inc.length, over = Math.max(0, lines - CH_REP_PAGE);
-  const points = 20 * sup.length - 10 * weak.length - 20 * omitted.length - 10 * over;
+  const supReq = sup.filter(x => x.required);
+  const points = 20 * supReq.length - 10 * weak.length - 20 * omitted.length - 10 * over;
   return {rows: out, lines, over, supported: sup.length, weak: weak.map(x => x.id), omitted: omitted.map(x => x.id),
     score: req.length ? Math.max(0, Math.min(100, Math.round(100 * points / (20 * req.length)))) : 0,
     claims: inc.length ? Math.round(100 * sup.length / inc.length) : 0, required: req.length ? Math.round(100 * (req.length - omitted.length) / req.length) : 0,
@@ -2615,17 +2623,20 @@ function chRepGrade(picks, F) {
 }
 function chRepStats() { const p = chRep(); return p.grade ? {claims: p.grade.claims, required: p.grade.required, decide: p.grade.decide, score: p.grade.score} : {claims: null, required: null, decide: null, score: null}; }
 const CH_REP_GRADE_WORD = {supported: 'supported', unsupported: 'unsupported', overstated: 'overstated', misplaced: 'misplaced', omitted: 'left out (required)', out: 'left out'};
+// Each row by its code and its name (an executive reads the name; the code finds it on the page).
+const chRepRowName = x => x.id + ' · ' + x.name;
 function chRepDebriefHtml(g) {
-  return '<table class="sc"><tr><th>Line</th><th>Sent as</th></tr>' + g.rows.filter(x => x.in || x.required).map(x => '<tr><td>' + esc(x.id) + '</td><td>' + esc(CH_REP_GRADE_WORD[x.grade]) + '</td></tr>').join('') + '</table>' +
-    '<ul>' + g.rows.filter(x => x.in && x.grade !== 'supported').map(x => '<li><b>' + esc(x.id) + '</b>, ' + esc(x.grade) + ': “' + esc(x.line) + '”. ' + esc(x.why) + '</li>').join('') +
-    g.rows.filter(x => x.grade === 'omitted').map(x => '<li><b>' + esc(x.id) + '</b> left out: Ivor’s note asks for ' + esc(chRepRow(x.id).topic) + '. Leaving it out costs more than a dull line would.</li>').join('') + '</ul>' +
-    '<p>Lines on the page: <b>' + g.lines + ' of ' + CH_REP_PAGE + '</b>' + (g.over ? ', over by ' + g.over : '') + ' · claims supported <b>' + g.claims + '%</b> · required items present <b>' + g.required + '%</b> · decisions with a decider and your recommendation <b>' + g.decide + '%</b> · report score <b>' + g.score + '</b> / 100 (game)</p>';
+  return '<table class="sc"><tr><th>Line</th><th>Sent as</th></tr>' + g.rows.filter(x => x.in || x.required).map(x => '<tr><td>' + esc(chRepRowName(x)) + '</td><td>' + esc(CH_REP_GRADE_WORD[x.grade]) + '</td></tr>').join('') + '</table>' +
+    '<ul>' + g.rows.filter(x => x.in && x.grade !== 'supported').map(x => '<li><b>' + esc(chRepRowName(x)) + '</b>: ' + esc(x.grade) + ', “' + esc(x.line) + '”. ' + esc(x.why) + '</li>').join('') +
+    g.rows.filter(x => x.grade === 'omitted').map(x => '<li><b>' + esc(chRepRowName(x)) + '</b>: left out. Ivor’s note asks for ' + esc(chRepRow(x.id).topic) + '. Leaving it out costs more than a dull line would.</li>').join('') + '</ul>' +
+    '<p>Lines on the page: <b>' + g.lines + ' of ' + CH_REP_PAGE + '</b>' + (g.over ? ', over by ' + g.over : '') + ' · claims supported <b>' + g.claims + '%</b> · required items present <b>' + g.required + '%</b> · decisions sent in the wording the records support <b>' + g.decide + '%</b> · report score <b>' + g.score + '</b> / 100 (game; only required lines earn)</p>';
 }
 
 /* ---------- The Board's questions (Thursday), keyed to the report as sent ---------- */
 const CH_REP_MEMBERS = ['The School District’s representative', 'The Clinic’s representative', 'The town’s representative'];
 function chRepBoardQs() {
-  const p = chRep(), F = chRepFacts(), g = p.grade || chRepGrade(p.sent ? p.sent.picks : {}, F);
+  // The report as sent: its picks and the facts it was built from (stored at 12:00 on Day 87), not a fresh read.
+  const p = chRep(), F = (p.sent && p.sent.facts) || chRepFacts(), g = p.grade || chRepGrade(p.sent ? p.sent.picks : {}, F);
   const order = {omitted: 0, misplaced: 1, overstated: 2, unsupported: 3};
   const weak = g.rows.filter(x => order[x.grade] !== undefined).sort((a, b) => order[a.grade] - order[b.grade] || CH_REP_ROWS.findIndex(r => r.id === a.id) - CH_REP_ROWS.findIndex(r => r.id === b.id));
   const qs = weak.slice(0, 3).map((x, i) => { const r = chRepRow(x.id);
@@ -2777,7 +2788,7 @@ const EDITION = {
   fmActionsCat: 'Leadership practices (game)',   // the Field Manual's heading for EXTRA_ACTIONS (engine default: D3FEND-style)
   fmIntro: 'Descriptions are our own words. No ATT&amp;CK technique in Charter so far; the entries not met yet open in later districts.',
   creditsName: 'Charter edition',
-  creditsFacts: 'Charter (the prologue, Budget, Suppliers, Policy and the Board report): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088, T1906 and T1308, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, and GV.SC-04, GV.SC-05, GV.SC-06, GV.SC-07, GV.SC-08 and GV.SC-10 with the examples quoted, GV.PO-01 with two examples and GV.PO-02, and GV.OV-01 and GV.OV-03 with one example each, from NIST’s CSF 2.0 Implementation Examples (26 February 2024). No ATT&CK technique. Facts recalled from Crossroads are quoted from Crossroads, and the town’s fd-admin exception from Town Hall.'
+  creditsFacts: 'Charter (the prologue, Budget, Suppliers, Policy and the Board report): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088, T1906 and T1308, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, and GV.SC-04, GV.SC-05, GV.SC-06, GV.SC-07, GV.SC-08 and GV.SC-10 with the examples quoted, GV.PO-01 with two examples and GV.PO-02, from NIST’s CSF 2.0 Implementation Examples (26 February 2024), and GV.OV-01 and GV.OV-03 as worded in the CSF 2.0 Core, NIST CSWP 29 (26 February 2024), with one example each from the Implementation Examples. No ATT&CK technique. Facts recalled from Crossroads are quoted from Crossroads, and the town’s fd-admin exception from Town Hall.'
 };
 const CH_TH_KEY = 'uptime.slice1.save', CH_CR_KEY = 'uptime.crossroads.save', CH_NG_KEY = 'uptime.crossroads.ngplus.save';   // read for the carry-over, never written
 const CH_TH_BADGES = [['Key', g => g.badge], ['Seal', g => g.f && g.f.mrSeal], ['Shield', g => g.f && g.f.crShield], ['Lantern', g => g.f && g.f.mkLantern],
@@ -2877,7 +2888,7 @@ const EDITION_METRICS = [
   // and labelled (game): the report as sent, read line by line against its records.
   {k: 'chRepClaims', label: 'Claims supported (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart},
   {k: 'chRepRequired', label: 'Required items present (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart},
-  {k: 'chRepDecide', label: 'Decisions with a named decider and your recommendation (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart}
+  {k: 'chRepDecide', label: 'Decisions sent in the wording the records support (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart}
 ];
 function editionScorecard() {
   const v = metricVals(), c = G.ch || {};
@@ -4993,54 +5004,54 @@ const CH_REP_RECORDS = {
 const CH_REP_SECTIONS = [
   {id: 'risks', name: 'Risks against appetite'},
   {id: 'changed', name: 'What changed since Day 64'},
-  {id: 'decide', name: 'Decisions for the Board'},
+  {id: 'decide', name: 'Decisions due, with their deciders'},
   {id: 'exc', name: 'Exceptions due and expired'},
   {id: 'sup', name: 'Supplier tier-1 gaps'},
   {id: 'ask', name: 'Asks'}];
 const CH_REP_ROWS = [
   {id: 'A1', sec: 'risks', name: 'Above appetite, on its owner’s acceptance', topic: 'the risks above appetite that their owners accepted', req: true, rec: 'in',
    variants: [
-     {label: '{ownerAcc}: above appetite, each one signed by its owner and reviewed on Day 155', good: true, grade: 'supported', refs: ['ACC', 'M74'],
-      why: 'The acceptances say it: above appetite, each decided and signed by its owner, reviewed at the next quarterly Board.'},
-     {label: '{ownerAcc}: above appetite, each one accepted for its owner by this Board at its meeting', grade: 'misplaced', refs: ['ACC'],
+     {label: '{ownerAcc}: above appetite, each one signed by its owner, before this Board at its Day 155 review', good: true, grade: 'supported', refs: ['ACC', 'M74'],
+      why: 'The acceptances say it: above appetite, each decided and signed by its owner, and each goes to the Board’s Day 155 review.'},
+     {label: '{ownerAcc}: above appetite, each one accepted for its owner by this Board at its meeting on Day 74', grade: 'misplaced', refs: ['ACC', 'M74'],
       why: 'Each was decided and signed by its owner. The Board sees them; it did not accept them.'},
-     {label: '{ownerAcc}: back within appetite, each one held there by its interim measures', grade: 'overstated', refs: ['ACC'],
-      why: 'Interim measures run while a risk stays above appetite. They don’t bring it within.'},
-     {label: '{ownerAcc}: low risks, which nobody on the register has needed to sign for', grade: 'unsupported', refs: [],
-      why: 'No record says so. Each is above appetite, on a signed acceptance.'}]},
+     {label: '{ownerAcc}: above appetite, each one signed by its owner, its interim measures proven to hold it', grade: 'overstated', refs: ['ACC', 'X74'],
+      why: '“Proven” says more than the records: they show the interim measures running, not tested.'},
+     {label: '{ownerAcc}: back within appetite, each one held there by the interim measures its owner signed for', grade: 'unsupported', refs: ['ACC', 'M74'],
+      why: 'The acceptances say the opposite: interim measures run while a risk stays above appetite, and each of these still is.'}]},
   {id: 'A2', sec: 'risks', name: 'Above appetite, by this Board’s decision', topic: 'the lines this Board’s own decision left above appetite', req: true, rec: 'in', when: F => F.boardIds.length > 0,
    variants: [
-     {label: '{boardLines}: above appetite to Day 428, this Board’s Day 67 decision, {boardSigners} signing for interim measures', good: true, grade: 'supported', refs: ['M67', 'ACC'],
+     {label: '{boardLines}: above appetite to Day 428, this Board’s decision as minuted on Day 67, {boardSigners} signing for interim measures', good: true, grade: 'supported', refs: ['M67', 'ACC'],
       why: 'The Day 67 minute records the Board’s decision and its approval; the owner signed for the interim checks.'},
-     {label: '{boardLines}: above appetite to Day 428 on the owner’s acceptance alone, {boardSigners} signing it as the line’s owner on Day 67', grade: 'misplaced', refs: ['ACC'],
+     {label: '{boardLines}: above appetite to Day 428 on the owner’s acceptance alone, {boardSigners} signing it, the line’s owner, on Day 67', grade: 'misplaced', refs: ['ACC', 'M67'],
       why: 'The owner signed for running the checks. The minute records that the Board decided and approved it.'},
-     {label: '{boardLines}: as good as within appetite, as the interim checks run every month', grade: 'overstated', refs: ['ACC'],
+     {label: '{boardLines}: near enough within appetite to Day 428, the interim checks running each month', grade: 'overstated', refs: ['ACC', 'M67'],
       why: 'Checks that run each month don’t move a line within appetite. It stays above to Day 428.'},
-     {label: '{boardLines}: deferred to Day 428 by decision, with no acceptance needed before that day', grade: 'unsupported', refs: [],
+     {label: '{boardLines}: deferred to Day 428 by decision, with no acceptance needed before that day', grade: 'unsupported', refs: ['M67', 'ACC'],
       why: 'The minute and the register record an acceptance from Day 67.'}]},
   {id: 'A3', sec: 'risks', name: 'The register, line by line', topic: 'the register', req: false, rec: 'out',
    variants: [
-     {label: '{within} of 6 lines within appetite on the Board’s decision, {asnow} of them unchanged until next year’s money arrives', good: true, grade: 'supported', refs: ['ACC', 'M67'],
-      why: 'Read on what is in force today: the Board’s decision, and the lines still waiting for next year’s money.'},
-     {label: 'Every risk on the register brought down this quarter by the Board’s budget decision, line by line, as the Day 67 minute shows', grade: 'overstated', refs: ['M67'],
-      why: 'A budget decided is not a risk brought down: next year’s money hasn’t delivered.'},
-     {label: 'Risk across the register fell by a third from Day 64, on the ratings in the register', grade: 'unsupported', refs: ['ACC'],
-      why: 'The register was first rated on Day 64. One rating is a starting point, not a fall.'}]},
+     {label: '{within} of 6 lines within appetite on the Board’s treatment plan, {asnow} still at today’s level until next year’s money delivers', good: true, grade: 'supported', refs: ['ACC', 'M67'],
+      why: 'Two readings, each named: the residual on the Board’s treatment plan, and the lines whose level today stays until next year’s money delivers.'},
+     {label: 'Risks on the register brought down this quarter by the Board’s decision, line by line, the Day 67 minute recording each', grade: 'unsupported', refs: ['M67', 'ACC'],
+      why: 'The minute records a plan. A budget decided is not a risk brought down: next year’s money hasn’t delivered.'},
+     {label: 'Risk across the register fell by a third from Day 64, on the ratings in the register', grade: 'overstated', refs: ['ACC', 'APP'],
+      why: 'The register was first rated on Day 64. A fall from one rating is a trend from one point.'}]},
   {id: 'B1', sec: 'changed', name: 'MFA', topic: 'MFA', req: false, rec: 'in',
    variants: [
      {label: 'MFA on every sign-in to the shared directory, but for six accounts on open, dated exceptions', good: true, grade: 'supported', refs: ['SGN', 'EXC'],
       why: 'The register and the sign-in records: six accounts sign in without MFA, each on an open, dated exception.'},
-     {label: 'MFA on every sign-in to the shared directory, for every account and every member, from the policy week on', grade: 'overstated', refs: ['M81'],
+     {label: 'MFA on every sign-in to the shared directory, for every account and every member, from the policy week on', grade: 'overstated', refs: ['M81', 'EXC'],
       why: '“Every account” where the records show six without MFA, by exception.'},
-     {label: 'MFA on every sign-in, and no account has signed in without it this quarter', grade: 'unsupported', refs: [],
+     {label: 'MFA on every sign-in, and no account has signed in without it this quarter', grade: 'unsupported', refs: ['M81', 'EXC'],
       why: 'The sign-in records show fin-ap without MFA 47 times in seven days, on its exception.'}]},
   {id: 'B2', sec: 'changed', name: 'Supplier risk', topic: 'supplier risk', req: false, rec: 'in',
    variants: [
-     {label: 'Suppliers tiered for the first time on Day 71, and tier-1 contracts signed with every must-have still 0 of 2', good: true, grade: 'supported', refs: ['SUP'],
-      why: 'One measure, from Day 71, and the signed tier-1 contracts unchanged since.'},
-     {label: 'Supplier risk fell this quarter, as the plan seeks every must-have at tier 1', grade: 'overstated', refs: ['SUP'],
+     {label: 'Suppliers tiered for the first time on Day 71, the baseline for next quarter’s measure', good: true, grade: 'supported', refs: ['SUP', 'M74'],
+      why: 'One measure, from Day 71: a baseline. The tier-1 gaps themselves are E1’s line.'},
+     {label: 'Supplier risk down this quarter, the plan the Board saw on Day 74 seeking each must-have at tier 1', grade: 'overstated', refs: ['SUP', 'M74'],
       why: 'A trend from one measure, and sought is not signed.'},
-     {label: 'Both tier-1 contracts in place this quarter, signed by both suppliers', grade: 'unsupported', refs: [],
+     {label: 'Both tier-1 contracts in place this quarter, signed by both suppliers, must-haves included', grade: 'unsupported', refs: ['SUP', 'M74'],
       why: 'Ilka’s status: neither tier-1 contract is signed yet.'}]},
   {id: 'B3', sec: 'changed', name: 'Night cover', topic: 'the night cover', req: false, rec: 'out',
    variants: [
@@ -5048,79 +5059,79 @@ const CH_REP_ROWS = [
       why: 'The log’s times, like with like, and the sample named.'},
      {label: 'Response times down 93% this year with the night line, from 138 minutes at the Airport to 10 minutes on Night 33', grade: 'overstated', refs: ['LOG'],
       why: 'A percentage from two nights is a trend drawn from two points, and the runbook shares the credit.'},
-     {label: 'Every incident since Night 33 contained within 10 minutes of its first sign', grade: 'unsupported', refs: [],
+     {label: 'Each incident from Night 33 on contained within 10 minutes of its first sign', grade: 'unsupported', refs: ['SCO'],
       why: 'No record says so. Thimbleford’s notice was read 10 hours 56 minutes after it was sent.'}]},
   {id: 'B4', sec: 'changed', name: 'Exercises', topic: 'staff exercises', req: false, rec: 'out',
    variants: [
-     {label: 'No staff exercise counted this quarter, as the terminals are training and not a measure', good: true, grade: 'supported', refs: ['SCO'],
+     {label: 'No staff exercise counted this quarter, the terminals being training only', good: true, grade: 'supported', refs: ['SCO'],
       why: 'The terminals teach. Nothing on them measures how the members’ staff would act.'},
-     {label: 'Owners trained this quarter, measured as 100% of the terminals’ puzzles solved at the first try', grade: 'overstated', refs: ['SCO'],
+     {label: 'Owners trained this quarter, measured by 100% of the terminals’ puzzles solved at the first try', grade: 'overstated', refs: ['SCO'],
       why: 'A game number shown as operations: puzzles solved are not owners trained.'},
-     {label: 'Readiness up this quarter, as each Board round was answered at the first try', grade: 'overstated', refs: ['SCO'],
+     {label: 'Readiness up this quarter, each Board round having been answered at the first try', grade: 'overstated', refs: ['SCO'],
       why: 'A game number shown as operations: rounds answered say nothing of readiness.'}]},
   {id: 'C1', sec: 'decide', name: 'Staff records and the appetite', topic: 'the staff records left out of the privacy appetite', req: true, rec: 'in', decision: true,
    variants: [
-     {label: 'Day 155: the Board decides whether staff records join the privacy appetite, and I recommend adding them, at Low', good: true, grade: 'supported', refs: ['X74', 'APP'],
+     {label: 'Day 155: the Board decides whether staff records join the privacy appetite, and I recommend adding them at Low', good: true, grade: 'supported', refs: ['X74', 'APP'],
       why: 'The appetite statement is the Board’s, so the Board decides; the recommendation is yours, and named.'},
-     {label: 'Day 155: payroll’s owner decides whether staff records join the privacy appetite, and I recommend adding them', grade: 'misplaced', refs: ['X74'],
+     {label: 'Day 155: payroll’s owner decides whether staff records join the privacy appetite, and I recommend adding them, at Low', grade: 'misplaced', refs: ['X74', 'APP'],
       why: 'Payroll is Marit’s; the appetite statement is the Board’s to change.'},
-     {label: 'Day 155: whoever decides on staff records and the privacy appetite, for the Board to note', grade: 'unsupported', refs: ['X74'],
+     {label: 'Day 155: whoever decides on staff records and the privacy appetite, for the Board to note', grade: 'unsupported', refs: ['X74', 'APP'],
       why: 'A decision with no decider and no recommendation is a note, not a decision.'},
-     {label: 'At this meeting: the Board decides on staff records and the privacy appetite, as a pay-data breach will follow this year', grade: 'overstated', refs: [],
-      why: 'A breach stated as what will happen, with no record behind it. It is for Day 155, as the Day 74 measure says.'}]},
+     {label: 'At this meeting: the Board decides on staff records and the privacy appetite, before the pay-data breach that will follow this year', grade: 'overstated', refs: ['X74', 'APP'],
+      why: 'A breach stated as what will happen, and no record says so. It is for Day 155: the Day 74 measure says so.'}]},
   {id: 'C2', sec: 'decide', name: 'EX-02 and EX-04 at Day 155', topic: 'the two exceptions that expire on Day 155', req: true, rec: 'in', decision: true,
    variants: [
-     {label: 'Day 155: EX-02 and EX-04 expire, {renewDecide} at the review, and I recommend renewing each to Day 246, controls read again', good: true, grade: 'supported', refs: ['EXC', 'M81'],
-      why: 'Both are escalated, so their owners don’t decide alone: the rule names the decider, and your recommendation is beside it.'},
-     {label: 'Day 155: EX-02 and EX-04 expire, their two owners decide, signing alone, and I recommend renewing each to Day 246', grade: 'misplaced', refs: ['EXC'],
+     {label: 'Day 155: EX-02 and EX-04 expire, before then {renewDecide}, and I recommend renewing each to Day 246, controls read again', good: true, grade: 'supported', refs: ['EXC', 'M81'],
+      why: 'Both are escalated, so their owners don’t decide alone: the rule names the decider, the decision comes before the expiry, and your recommendation is beside it.'},
+     {label: 'Day 155: EX-02 and EX-04 expire, before then their two owners decide on them, signing alone, and I recommend renewing each to Day 246', grade: 'misplaced', refs: ['EXC', 'M81'],
       why: 'Both are escalated (6.2a): their owners sign for running the controls, and someone above them decides.'},
-     {label: 'Day 155: EX-02 and EX-04 expire, and they run on as they are until somebody decides on them', grade: 'unsupported', refs: ['EXC'],
-      why: 'Expired is not open, and the rule names who decides. No decider, no recommendation.'},
-     {label: 'Day 155: EX-02 and EX-04 expire, the chair decides, and I recommend renewing both for good, as their controls are proven', grade: 'overstated', refs: ['EXC'],
+     {label: 'Day 155: EX-02 and EX-04 expire, then run on unchanged until somebody decides on them', grade: 'unsupported', refs: ['EXC', 'M81'],
+      why: 'Expired is not open, and the rule names who decides, before the expiry. No decider, no recommendation.'},
+     {label: 'Day 155: EX-02 and EX-04 expire, the chair decides, and I recommend renewing both for good, their controls proven to hold', grade: 'overstated', refs: ['EXC', 'M81'],
       why: 'An exception is never for good, and fin-ap’s control is partial: “proven” says more than the records.'}]},
   {id: 'C3', sec: 'decide', name: 'Next year’s budget cycle', topic: 'what comes back at the start of next year’s budget cycle', req: true, rec: 'in', decision: true, when: F => !!F.cycleWhat,
    variants: [
      {label: 'Day 428: {cycleWhat}, the Board decides, and I recommend {cycleRec}', good: true, grade: 'supported', refs: ['M67'],
       why: 'The budget is the Board’s decision; the recommendation is yours, and named.'},
-     {label: 'Day 428: {cycleWhat}, Edda decides the funding as she runs the shared services, and I recommend {cycleRec}', grade: 'misplaced', refs: ['M67'],
+     {label: 'Day 428: {cycleWhat}, Edda decides it for the shared services she runs, and I recommend {cycleRec}', grade: 'misplaced', refs: ['M67'],
       why: 'Edda runs the shared services. The budget is the Board’s to decide.'},
-     {label: 'Day 428: {cycleWhat}, for the Board to note when the budget cycle opens', grade: 'unsupported', refs: ['M67'],
+     {label: 'Day 428: {cycleWhat}, for the Board to note when next year’s budget cycle opens on that day', grade: 'unsupported', refs: ['M67'],
       why: 'No decider named and no recommendation: a note, not a decision.'}]},
   {id: 'D1', sec: 'exc', name: 'Expired this quarter', topic: 'the exceptions that expired this quarter', req: true, rec: 'in',
    variants: [
-     {label: 'Expired: EX-01 and EX-03 on Day 75, closed by Edda on Day 78, and board-display’s two later sign-ins reported as a miss', good: true, grade: 'supported', refs: ['EXC', 'M81'],
-      why: 'The register: both expired on Friday and closed by their owner on Monday, and the two sign-ins after expiry recorded.'},
-     {label: 'Expired: none this quarter that lapsed, as each one was closed on time by its owner', grade: 'overstated', refs: ['EXC'],
-      why: 'Both lapsed over a weekend, and board-display signed in twice after its expiry.'},
-     {label: 'Expired: EX-01 and EX-03 on Day 75, both closed and signed off from the register by the CISO on Day 78, as its keeper', grade: 'misplaced', refs: ['EXC'],
-      why: 'Edda closed both, as their owner. The CISO never closes one.'},
-     {label: 'Expired: nothing from Day 64 on, as every exception on the register still stands open', grade: 'unsupported', refs: [],
-      why: 'The register shows two expired and closed.'}]},
+     {label: 'Expired: EX-01 and EX-03 on Day 75, closed by Edda on Day 78, two sign-ins by the Board room display after expiry', good: true, grade: 'supported', refs: ['EXC', 'M81'],
+      why: 'The register: both expired on Day 75 and were closed by their owner on Day 78, and the two sign-ins after expiry recorded.'},
+     {label: 'Expired: none this quarter that lapsed, each one closed on time by its owner', grade: 'unsupported', refs: ['EXC', 'M81'],
+      why: 'The register says otherwise: both lapsed over a weekend, and the Board room display signed in twice after its expiry.'},
+     {label: 'Expired: EX-01 and EX-03 on Day 75, both closed and signed off from the register on Day 78 by the register’s keeper', grade: 'misplaced', refs: ['EXC', 'M81'],
+      why: 'Edda closed both, their owner. The register’s keeper, the CISO, never closes one.'},
+     {label: 'Expired: EX-01 and EX-03 on Day 75, closed by Edda on Day 78, and no account will ever sign in on an expired exception again', grade: 'overstated', refs: ['EXC', 'M81'],
+      why: 'A promise beyond the records: they show what happened, not what never will.'}]},
   {id: 'E1', sec: 'sup', name: 'Tier-1 contracts', topic: 'the tier-1 supplier gaps', req: true, rec: 'in',
    variants: [
-     {label: 'Tier-1 gaps: 0 of the Compact’s 2 tier-1 contracts signed with every must-have, {sought}, the members’ 4 theirs to decide', good: true, grade: 'supported', refs: ['SUP'],
-      why: 'Ilka’s status and the register: signed, sought and whose, each as the records say.'},
-     {label: 'Tier-1 gaps: closed for both of the Compact’s tier-1 contracts, as the plan the Board saw on Day 74 seeks every must-have', grade: 'overstated', refs: ['M74'],
+     {label: 'Tier-1 gaps: 0 of the Compact’s 2 signed with every must-have, {sought}, the members’ 4 theirs', good: true, grade: 'supported', refs: ['SUP', 'M74'],
+      why: 'Ilka’s status and the register: signed, sought and whose, each from the records.'},
+     {label: 'Tier-1 gaps: closed for both of the Compact’s tier-1 contracts, the plan the Board saw on Day 74 seeking the must-haves', grade: 'unsupported', refs: ['M74', 'SUP'],
       why: 'Sought is not signed: neither tier-1 contract is signed yet.'},
-     {label: 'Tier-1 gaps: the members’ 4, which the Compact amends for each of them', grade: 'misplaced', refs: ['SUP'],
+     {label: 'Tier-1 gaps: the members’ 4, which the Compact amends for each of them', grade: 'misplaced', refs: ['SUP', 'M74'],
       why: 'Each member’s owner decides its own contracts. The Compact sent each one its tier’s requirements.'},
-     {label: 'Tier-1 gaps: none left in the payroll supplier’s contract, as its incident was closed on Day 74', grade: 'unsupported', refs: [],
-      why: 'No record says so. Its amendment is with its counsel, unsigned.'}]},
+     {label: 'Tier-1 gaps: 0 of the Compact’s 2 signed with every must-have, and both signing in full before Day 155', grade: 'overstated', refs: ['SUP', 'M74'],
+      why: 'A signing stated as what will happen, where the status says one is with counsel and one in negotiation.'}]},
   {id: 'E2', sec: 'sup', name: 'Must-haves left out', topic: 'the must-haves left out of the plan', req: true, rec: 'in', when: F => F.mhIds.length > 0,
    variants: [
-     {label: '{mhList}: left out on my recommendation, its owner deciding on it and signing, to Day 428', good: true, grade: 'supported', refs: ['SUP', 'M74'],
+     {label: '{mhList}: left out on my recommendation, {mhOwner} deciding on it and signing, to Day 428', good: true, grade: 'supported', refs: ['SUP', 'M74'],
       why: 'The recommendation was yours, and it is recorded as yours; the owner decided on it and signed.'},
-     {label: '{mhList}: left out by its owner’s own choice, its owner deciding and signing for it, to Day 428', grade: 'misplaced', refs: ['SUP'],
+     {label: '{mhList}: left out by its owner’s own choice, its owner deciding and signing for it, to Day 428', grade: 'misplaced', refs: ['SUP', 'M74'],
       why: 'Leaving it out was your recommendation. The owner decided on your recommendation.'},
-     {label: '{mhList}: no longer a gap to report, as the interim measure covers it, to Day 428', grade: 'overstated', refs: ['SUP'],
+     {label: '{mhList}: no longer a gap to report, the interim measure covering it to Day 428', grade: 'unsupported', refs: ['SUP', 'M74'],
       why: 'An interim measure runs while the gap stays. It is still a gap.'}]},
   {id: 'F1', sec: 'ask', name: 'The ask', topic: 'the ask', req: false, rec: 'out',
    variants: [
      {label: 'Ask: each member’s representative takes its tier’s requirements for its contracts to its own owner', good: true, grade: 'supported', refs: ['SUP'],
       why: 'The Board decides nothing for a member. Its representatives can carry the requirements home.'},
-     {label: 'Ask: this Board directs each member to put its tier’s requirements into its contracts itself', grade: 'misplaced', refs: [],
+     {label: 'Ask: this Board directs each member to write its tier’s requirements into each one of its own contracts', grade: 'misplaced', refs: ['SUP'],
       why: 'The Board decides nothing for any member.'},
-     {label: 'Ask: more money this year, as a breach will follow within the year without it', grade: 'overstated', refs: [],
+     {label: 'Ask: more staff this year, a breach following within the year without it', grade: 'overstated', refs: ['ACC'],
       why: 'A breach stated as what will happen, and no record behind it.'}]}];
 
 /* ---------- Drills (Monday). Records are the evidence; two decisive sources each ---------- */
@@ -5154,7 +5165,7 @@ const CH_REP_DRILLS = {
       {label: 'No: six accounts sign in without MFA, and each is on an open, dated exception', good: true, needs: ['exc', 'signins'],
        needsWhy: 'the answer rests on two records: the exception register and the sign-in records. You read only one of them.',
        why: 'The register excepts six accounts to Day 155, and the records show them signing in without MFA. The report says so, in one line.'},
-      {label: 'Yes: every exception is open and in date, so the policy has been met in full', why: 'The policy is met; the line says every sign-in. Six accounts sign in without MFA, by exception.'},
+      {label: 'Yes: every exception is open and in date, and the policy has been met in full', why: 'The policy is met; the line says every sign-in. Six accounts sign in without MFA, by exception.'},
       {label: 'Yes: the settings page says MFA is enforced across the whole directory', why: 'A setting, with its exceptions beside it. The records show six accounts without MFA.'},
       {label: 'No, and the six accounts are a breach in progress that the report should name for the Board', why: 'Nothing in these records shows misuse. They are excepted, on dated entries.'}],
     reasons: [
@@ -5199,7 +5210,7 @@ const CH_REP_DRILLS = {
        why: 'A fall needs two measures, and the one that exists has not moved: 0 of 2 signed on Day 71 and on Day 85.'},
       {label: 'Yes: the plan seeks every must-have for both tier-1 lines', why: 'Sought is not signed. Both tier-1 contracts are still unsigned.'},
       {label: 'Yes: Inkmere has signed its contract with the new clauses, so the Compact’s supplier risk has come down', why: 'Inkmere is Tier 2, and one contract. Tier-1 signed: 0 of 2.'},
-      {label: 'No: by that measure supplier risk rose, as Thimbleford had an incident', why: 'One incident, on its side, is not a trend either. There is one measure.'}],
+      {label: 'No: by that measure supplier risk rose, Thimbleford having had an incident', why: 'One incident, on its side, is not a trend either. There is one measure.'}],
     reasons: [
       {label: 'The status says which contracts are signed, and the history has one measure only', good: true, why: 'What is signed, then how many measures there are.'},
       {label: 'The plan went out on Day 73 to Ilka and Noor, who hold the contracts', why: 'Sent is not signed.'},
@@ -5239,7 +5250,7 @@ const CH_REP_DRILLS = {
        needsWhy: 'the answer rests on two records: the minute and the acceptances. You read only one of them.',
        why: 'The minute records the Board’s decision and its approval of the residual risk; the acceptances, Edda’s signature for the interim measures.'},
       {label: 'Edda: she signed the acceptances as their owner, so she accepted them', why: 'She signed for the interim measures and the treatment plan. The minute records that the Board decided.'},
-      {label: 'The CISO: the allocation sent on Wednesday set where each of the two lines landed', why: 'Your allocation was advice. The minute records the Board’s decision.'},
+      {label: 'The CISO: the allocation sent on Day 66 set where each of the two lines landed', why: 'Your allocation was advice. The minute records the Board’s decision.'},
       {label: 'Nobody yet: the acceptances are for the Board to sign on Day 155', why: 'They have been on the register since Day 67. Day 155 is their review.'}],
     reasons: [
       {label: 'The minute says who decided, and the acceptances who signed, and for what', good: true, why: 'The decider, then the signatory.'},
@@ -5273,14 +5284,14 @@ const CH_REP_DRILLS = {
         {q: 'Which acceptances are on the register?', kind: 'focus', key: true, res: ['{accList}', 'None for R2 or R3']}]}
     ],
     verdicts: [
-      {label: 'Nobody: the Board funded both, so neither of them needed an acceptance', good: true, needs: ['minute', 'acc'],
+      {label: 'Nobody: the Board’s plan puts both within appetite, breaking no tolerance while they wait', good: true, needs: ['minute', 'acc'],
        needsWhy: 'the answer rests on two records: the minute and the acceptances. You read only one of them.',
-       why: 'The minute approved them funded, within appetite, and the register holds no acceptance for either.'},
-      {label: 'The Board: its Day 67 minute was the acceptance, as their lines were funded', why: 'It approved their funding. Within appetite, there is nothing to accept.'},
-      {label: 'Edda: as their owner she accepted them when the Board approved them', why: 'An owner signs an acceptance for a risk above appetite. Neither is.'},
-      {label: 'The register itself: both lines were within appetite on the day it was written', why: 'A register records; it decides nothing. The Board funded both, and nothing needed accepting.'}],
+       why: 'The minute decided the treatment, which puts both within appetite, neither breaks a tolerance while its money comes, and the register holds no acceptance for either. Funding is not the reason: R4 was funded too, and its owner accepted the gap while it waits.'},
+      {label: 'The Board: its Day 67 minute was the acceptance, its lines being paid for', why: 'Approving money is not accepting a risk. Within appetite, there is nothing to accept.'},
+      {label: 'Edda: their owner accepted them when the Board approved them', why: 'An owner signs an acceptance for a risk above appetite. Neither is.'},
+      {label: 'The register itself: both lines were within appetite on the day it was written, none of them ever accepted', why: 'A register records; it decides nothing. The Board’s plan puts both within appetite, so nothing needed accepting.'}],
     reasons: [
-      {label: 'The minute approved the funding, and the register lists no acceptance for them', good: true, why: 'The decision, then the register.'},
+      {label: 'The minute decided the treatment, and the register lists no acceptance for them', good: true, why: 'The decision, then the register.'},
       {label: 'An approved line is an accepted one, and the minute approved both', why: 'Approving money is not accepting a risk.'},
       {label: 'Edda owns both, and an owner’s acceptance follows whatever the Board approves', why: 'An owner accepts a risk left above appetite, and these are within.'}],
     alts: [
@@ -5289,7 +5300,7 @@ const CH_REP_DRILLS = {
       {label: 'The extension replaced R2’s review', why: 'Nothing points to it: the extension is R6’s.'},
       {label: 'The minute was written by Marit', why: 'Beside the point: it records the Board’s decision either way.'}],
     path: '<p>“Who accepted it?” is decided by <b>the minute</b> (what the Board decided) and <b>the register’s acceptances</b> (what was accepted, and by whom). Approving a line’s money is not accepting its risk.</p>',
-    response: ['The report says nothing was accepted for R2 or R3: the Board funded both', 'Edda corrects her draft line before the papers go: her paper, her decision', 'What is above appetite, the acceptances say, each with its owner'],
+    response: ['The report says nothing was accepted for R2 or R3: the Board’s decided plan puts both within appetite, and neither breaks a tolerance while it waits', 'Edda corrects her draft line before the papers go: her paper, her decision', 'What is above appetite, the acceptances say, each with its owner'],
     techs: [], acts: ['chrepwho']
   }
 };
@@ -5305,12 +5316,12 @@ const CH_REP_DIRECTIVE = [
 /* ---------- The Reporting terminals (Beatriz's; three puzzles) ---------- */
 const CH_REP_DOJO = [
   {q: 'The register shows six accounts excepted from MFA, each on an open, dated entry. Which line can a report carry?',
-   opts: ['MFA on every sign-in, but for six accounts on open, dated exceptions',
-          'MFA on every sign-in, as each exception is open and dated',
-          'MFA on nearly every sign-in, since six accounts are only a small few'], good: 0,
+   opts: ['MFA on every sign-in to the shared directory, but for six accounts on open, dated exceptions',
+          'MFA on every sign-in to the shared directory, each of its exceptions being open and dated',
+          'MFA on nearly every sign-in to the shared directory, six accounts being only a small few'], good: 0,
    explain: 'Say what the record says, the exceptions included. “Every” where the record says less is an overstatement, and “nearly” hides who.'},
   {q: 'Suppliers were tiered for the first time this quarter. Tier-1 contracts signed with every must-have: 0 of 2. What can the report say?',
-   opts: ['Supplier risk fell, as the plan seeks every clause for both',
+   opts: ['Supplier risk fell, the plan seeking each clause for both',
           'A first measure, 0 of 2: the baseline for next quarter',
           'Supplier risk rose, measured by the one supplier’s incident'], good: 1,
    explain: 'One measure is a baseline, not a trend, either way. A trend needs a second measure.'},
@@ -5326,20 +5337,20 @@ const CH_REP_BOARD_SPECS = () => [
    ask: '“Your annex: why should we read it?”',
    resp: [{label: 'For the records: each line on the page cites them, with their times', good: true},
           {label: 'It needn’t be read: the page is the report, and the annex is for the auditors', why: 'The page stands on the annex. A member who doubts a line reads its record.'},
-          {label: 'For the detail the page left out, as the records run too long for the page', why: 'The page holds what matters; the annex holds the records behind it, not extra lines.'},
-          {label: 'To check the figures, as the page’s figures are only my estimates', why: 'The figures are read from the records, not estimated.'}]},
+          {label: 'For the detail the page left out, the records running too long for the page', why: 'The page holds what matters; the annex holds the records behind it, not extra lines.'},
+          {label: 'To check the figures, the page’s figures being only my estimates', why: 'The figures are read from the records, not estimated.'}]},
   {title: 'Whose report', who: 'Ivor Penhallow',
    ask: '“Who decides what this report says?”',
-   resp: [{label: 'I do, as the CISO: each decision in it stays with its own decider', good: true},
-          {label: 'The Board: it approves the report, as it approves the policy and the appetite', why: 'The Board receives the report and takes the decisions it puts to it. Its words are the CISO’s.'},
+   resp: [{label: 'I do: each decision in it stays with its own decider', good: true},
+          {label: 'The Board: it approves the report, like the policy and the appetite', why: 'The Board receives the report and takes the decisions it puts to it. Its words are the CISO’s.'},
           {label: 'Each owner: each one signs off the line about its own risk', why: 'Owners sign their acceptances. The report is the CISO’s.'},
           {label: 'Counsel: Noor reads every line before it goes to the Board', why: 'Noor answers legal questions. The report is the CISO’s.'}]},
   {title: 'Better or worse', who: 'Ivor Penhallow',
    ask: '“Is anything better than it was on Day 64?”',
-   resp: [{label: 'Where there are two measures, yes or no. Where there is one, it is a baseline', good: true},
+   resp: [{label: 'Where one measure was taken twice, yes or no. One alone is a baseline', good: true},
           {label: 'Everything: the register, the suppliers and the policy are all new this quarter', why: 'New is not better. One measure is a baseline.'},
           {label: 'Nothing can be said until a whole year of measures is in', why: 'Two measures say something. Say what they show.'},
-          {label: 'The night cover: 93% faster, the clearest gain this quarter', why: 'Two nights are a sample, not a trend.'}]}];
+          {label: 'The night cover: 93% faster, the clearest gain this quarter', why: 'Two incidents are a sample, not one measure taken twice.'}]}];
 
 /* ---- editions/charter/report-story.js ---- */
 /* ============================================================
@@ -5370,8 +5381,8 @@ const CH_REP_BOARD_SPECS = () => [
 
 /* ---------- The week opens (your desk, after Policy) ---------- */
 async function chRepStart() {
-  await UI.openModal('Friday, Day 82', '<p>Ivor’s note, after the Policy round (game):</p><p>“Your first report to the Board, for Thursday’s meeting at 14:00: the quarter since Day 64, when we last met as the quarterly Board. One page, and an annex of the records behind it. Every risk above appetite and who accepted it, as minuted; every decision we must take, with its decider and your recommendation; the exceptions due and expired; the supplier tier-1 gaps; and your asks. In our terms, not the tools’. The papers go out on Wednesday at 17:00. From Day 155, one at every quarterly Board.”</p>' +
-    '<p class="small">CSF 2.0 GV.OV-01: “Cybersecurity risk management strategy outcomes are reviewed to inform and adjust strategy and direction”. One of NIST’s examples for it: “Measure how well the risk management strategy and risk results have helped leaders make decisions and achieve organizational objectives”.</p>',
+  await UI.openModal('Friday, Day 82', '<p>Ivor’s note, after the Policy round (game):</p><p>“Your first report to the Board, for Thursday’s meeting at 14:00: everything since Day 64, when we last met as the quarterly Board. One page, and an annex of the records behind it. Every risk above appetite and who accepted it, as minuted; every decision we must take, with its decider and your recommendation; the exceptions due and expired; the supplier tier-1 gaps; and your asks. In our terms, not the tools’. The papers go out on Wednesday at 17:00. From Day 155, one at every quarterly Board.”</p>' +
+    '<p class="small">CSF 2.0 (NIST CSWP 29) GV.OV-01: “Cybersecurity risk management strategy outcomes are reviewed to inform and adjust strategy and direction”. One of NIST’s examples for it, in the CSF 2.0 Implementation Examples: “Measure how well the risk management strategy and risk results have helped leaders make decisions and achieve organizational objectives”.</p>',
     [{label: 'Monday', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.f.chRepStart = true; G.day = 85; G.focus = G.focusMax; chRep(); touchCSF('Govern'); unlock('fact', 'chcsfov'); track();
   await say('Day 85, Monday, 08:45. Report week. 09:00: Beatriz has MFA-Exempt and the sign-in records at the identity desk.');
@@ -5405,7 +5416,7 @@ async function chRepDrillC() {
   const key = chRepWhoKey(), who = 'Edda Thornquist';
   await say(key === 'repwho' ? '14:00. R2 and R3 are mine, and I signed both acceptances. The draft says who accepted them; I think it should say me. The minute and the acceptances are here.' : '14:00. My draft line says the Board accepted R2 and R3 when it approved the budget. The minute and the acceptances are here. Is that right?', who);
   await chRepDrill(key);
-  await say(key === 'repwho' ? 'The Board decided, and I signed for the checks. Fair: the line says both. My draft, my decision to change it.' : 'Nothing was accepted, then, because nothing needed accepting. My draft, my decision to change it.', who);
+  await say(key === 'repwho' ? 'The Board decided, and I signed for the checks. Fair: the line says both. My draft, my decision to change it.' : 'Nothing was accepted, then: the Board’s plan puts both within appetite. My draft, my decision to change it.', who);
   G.f.chRepDrillC = true; unlock('act', 'chrepwho'); touchCSF('Govern'); track();
   await say('End the day at your desk.');
 }
@@ -5416,9 +5427,14 @@ async function chRepRecords() {
   await UI.openModal('The quarter’s records', '<p>Tuesday, 09:00. What the report is built from: your scorecard as each week left it, the acceptances on the register, and the exceptions. Your results, as recorded. (game)</p>' +
     '<h3>Your scorecard</h3>' + scorecardHtml() + '<h3>Acceptances on the register</h3>' + chAcceptHtml(c.accept || []) +
     ((c.sup && c.sup.accept.length) ? '<h3>Must-haves left out</h3>' + chClauseAcceptHtml(c.sup.accept) : '') +
-    '<p class="small">CSF 2.0 GV.OV-03: “Organizational cybersecurity risk management performance is measured and reviewed for adjustments needed”. One of NIST’s examples for it: “Collect and communicate metrics on cybersecurity risk management with senior leadership”.</p>',
+    '<p class="small">CSF 2.0 (NIST CSWP 29) GV.OV-03: “Organizational cybersecurity risk management performance is evaluated and reviewed for adjustments needed”. One of NIST’s examples for it, in the CSF 2.0 Implementation Examples: “Collect and communicate metrics on cybersecurity risk management with senior leadership”.</p>',
     [{label: 'Back to the floor', meta: {good: true}}], {closable: false, cls: 'summary'});
   chRep().records = {day: 86, at: '09:00'};
+  // The suspicion file's detail is counsel's to route, not the CISO's to publish in the Board papers (review S-1).
+  if (chRepOpenCr()) {
+    await say('10:00. A note from counsel, about the suspicion file: its detail stays out of the Board papers, which go to every member’s representative. One observation from it goes to the chair in confidence, and the papers say only that it is with counsel. My decision, as counsel.', 'Noor Castellanos');
+    chRep().openItem = {day: 86, at: '10:00', by: 'Noor Castellanos'};
+  }
   G.f.chRepRecords = true; touchCSF('Govern'); track();
   await say('11:00: Edda has a request about the summary, at her desk.');
 }
@@ -5481,16 +5497,21 @@ async function chRepEditTask() {
 }
 
 /* ---------- The Compact Board's meeting (Thursday 14:00) ---------- */
+// The minute reads the report as sent (its picks and the facts stored with it at 12:00 on Day 87), and lists only the
+// decision rows the report carried, each with the decider the rules name (C2: the chair under 6.2a, or this Board for
+// EX-04 under 6.3); a decision row the report left out is named as not in it (review M-6, S-8).
 function chRepMinute(asked) {
-  const p = chRep(), g = p.grade, F = chRepFacts(), rows = chRepRows(F);
+  const p = chRep(), g = p.grade, F = (p.sent && p.sent.facts) || chRepFacts(), rows = chRepRows(F), sent = (p.sent && p.sent.picks) || {};
   const fixed = asked.filter(q => q.row).map(q => chRepRow(q.row)), rest = g.rows.filter(x => (x.grade !== 'supported' && x.in) || x.grade === 'omitted').filter(x => !asked.some(q => q.row === x.id));
-  const kname = {chair: 'the chair', board: 'this Board, in its minute', owner: 'its owner', member: 'the member’s leadership'};
-  const dec = rows.filter(r => r.decision).map(r => r.id + ' (' + (r.id === 'C2' ? [...new Set(F.renewKeys.map(k => kname[k]))].join(' and ') : 'this Board') + ')');
+  const kname = {chair: 'the chair', board: 'this Board', owner: 'its owner', member: 'the member’s leadership'};
+  const c2 = () => { const k = F.renewKeys || []; return k[0] === k[1] ? kname[k[0]] : kname[k[0]] + ' for EX-02, ' + kname[k[1]] + ' for EX-04'; };
+  const decRows = rows.filter(r => r.decision), dec = decRows.filter(r => sent[r.id]).map(r => r.id + ' (' + (r.id === 'C2' ? c2() : 'this Board') + ')'), notIn = decRows.filter(r => !sent[r.id]).map(r => r.id);
   const oi = chRepOpenItem();
-  return '15:00. The minute records the report as received (Day 87 12:00): ' + g.lines + ' line' + (g.lines === 1 ? '' : 's') + ' and an annex of ' + chRepRefs(p.sent.picks, F).length + ' records.' +
+  return '15:00. The minute records the report as received (Day 87 12:00): ' + g.lines + ' line' + (g.lines === 1 ? '' : 's') + ' and an annex of ' + chRepRefs(sent, F).length + ' records.' +
     (fixed.length ? ' Corrected in this minute, at the members’ questions: ' + fixed.map(r => r.id + ', “' + chRepFill(r.variants[chRepGood(r) - 1].label, F) + '”').join('; ') + '.' : ' No correction asked.') +
     (rest.length ? ' The chair asks for ' + rest.map(x => x.id).join(', ') + ' to be read again against the records before Day 155.' : '') +
-    ' The decisions it puts to the Board: ' + dec.join(', ') + ', each with its decider.' + (oi ? ' The suspicion file noted as an open item, with no conclusion.' : '') + ' (game)';
+    (dec.length ? ' The decisions due, each with its decider: ' + dec.join(', ') + '.' : '') + (notIn.length ? ' Not in the report: ' + notIn.join(', ') + '.' : '') +
+    (oi ? ' The suspicion file noted as an open item, with no conclusion.' : '') + ' (game)';
 }
 async function chRepBoardRound() {
   const who = 'Ivor Penhallow', f = G.f, p = chRep();
