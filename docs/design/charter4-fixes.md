@@ -34,5 +34,10 @@ Fix agent, 2026-11-21 (UTC). Reviewed build ARCD-20261121-1350Z at 966de62; fixe
 - N-7: metric relabelled "Decisions sent in the wording the records support" (story.js:127; the debrief, report.js:226). tests/charter.js debrief check.
 - N-8: charter4-build.md notes the CSWP 29 check; tests/charter.js:840 now locks the CSWP 29 wording.
 
-## Full sequence
-See the end of this file (appended after the run).
+## Full sequence (build ARCD-20261121-1707Z; logs docs/design/ch4/logs/fix, scripts docs/design/ch4/fix)
+- Suites, all exit 0: frontdesk, mailroom, clerks, market, records, basement, server, water, council, quiet, crossroads, charter (138/138, was 134), layout, modalfit, highlight (and Charter), doors (and Crossroads, Charter), sprites, settings, tells (no FAIL; two new Charter checks and the G:as band).
+- tools/lentell.js and tools/tells2.js: only the ch-report row changes (longest-is-correct 10 → 7 of 33, chance 10.5; shortest 4 → 7, chance 8.4; mean rank 1.93 → 2.28, chance 2.26). Outputs in docs/design/ch4/fix.
+- tells --report: lines 1-370 (Town Hall and Crossroads) byte-identical to docs/design/ch4/tells_report_now.txt (cmp).
+- Desktop bots: Town Hall; Crossroads manager and DFIR to the ending and New Game+; Charter through the Board report; GAMER=1. All exit 0, errors [], requests [].
+- Phone bots last and alone (0 other bots before): Town Hall 1577 s, Crossroads manager 772 s, DFIR 745 s, Charter 435 s. All exit 0, errors [], requests [], no horizontal scroll (360/360).
+- Copies: /home/claude/charter.html, /home/claude/crossroads.html, /home/claude/uptime.html; each cmp-identical to its editions/*/index.html (uptime.html = editions/town-hall/index.html).

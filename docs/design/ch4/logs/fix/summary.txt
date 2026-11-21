@@ -1,0 +1,36 @@
+frontdesk exit 0 2s
+mailroom exit 0 17s
+clerks exit 0 43s
+market exit 0 44s
+records exit 0 43s
+basement exit 0 52s
+server exit 0 47s
+water exit 0 52s
+council exit 0 52s
+quiet exit 0 15s
+crossroads exit 0 440s
+charter exit 0 254s
+layout exit 0 201s
+modalfit exit 0 526s
+highlight exit 0 279s
+doors exit 0 0s
+sprites exit 0 12s
+settings exit 0 14s
+tells exit 0 0s
+highlight-charter exit 0 113s
+doors-crossroads exit 0 0s
+doors-charter exit 0 0s
+lentell exit 0 1s
+tells2 exit 0 1s
+bot-th exit 0 278s
+bot-crm exit 0 203s
+bot-crd exit 0 162s
+bot-ch exit 0 112s
+bot-gamer exit 0 11s
+DESKTOP DONE
+other bots before phone: 0
+phone-th exit 0 1577s
+phone-crm exit 0 772s
+phone-crd exit 0 745s
+phone-ch exit 0 435s
+PHONE DONE
