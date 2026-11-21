@@ -553,8 +553,9 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
   // Charter (edition 3): the HUD band and the longest objective; the scorecard, the appetite builder, the allocation page and
   // the Board's decision fit above the controls with no sideways overflow, at phone portrait, phone landscape and desktop;
   // then the Suppliers pages, the Policy pages (the scorecard's policy rows, the exception register, the intake, the
-  // policy library and its debrief), and the Board report's pages (the scorecard's report rows, the editor, its longest
-  // section, the page as it stands and the debrief).
+  // policy library and its debrief), the Board report's pages (the scorecard's report rows, the editor, its longest
+  // section, the page as it stands and the debrief), and the finale's (the scorecard's finale rows, the packet editor, the
+  // packet as it stands, its debrief, the clock with the comparison card, the decision log, the edition's end).
   const CHF = 'file://' + path.resolve(__dirname, '../editions/charter/index.html');
   for (const [name, opt] of Object.entries({
     phone360: { viewport: { width: 360, height: 800 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
@@ -688,6 +689,41 @@ const overlap = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.
     await p.evaluate(() => { UI.openModal('The report you sent', chRepDebriefHtml(G.ch.rep.grade), [{ label: 'Into the Board papers', meta: { good: true } }], { closable: false, cls: 'summary' }); }); await sleep(250);
     const rdb = await modalFit();
     check('Charter ' + name + ': the report’s debrief table fits, cells on one line', fits(rdb) && !rdb.wrapped.length, rdb);
+    // The finale (slice 5): the scorecard with its four finale rows, the packet editor, the packet as it stands (every row in),
+    // its debrief table, the clock with the comparison card, the decision log's table, and the edition's end tables.
+    await shut(); await sleep(100);
+    await p.evaluate(() => { G.f.chFinStart = true; G.f.chFinLog = true; G.f.chFinDetermine = true; G.f.chFinMembers = true; G.f.chHeavingLine = true; const fin = chFin();
+      for (const P of CH_FIN_PACKETS) { const picks = chFinPicks(P.id); for (const r of P.rows) picks[r.id] = chFinRowGood(r); fin.packets[P.id].sent = {picks: Object.assign({}, picks), at: chAt(P.due[0], P.due[1]) - 30, due: chAt(P.due[0], P.due[1]), onTime: true, to: 'Noor and the chair'}; fin.packets[P.id].grade = chFinGrade(P.id, picks); }
+      fin.route = {first: [true, true, true, true, true, false], picks: []}; track(); UI.openModal('Scorecard', scorecardHtml(), [{ label: 'Back' }]); }); await sleep(250);
+    const sc5 = await modalFit();
+    check('Charter ' + name + ': the scorecard with the four finale rows fits, table numbers and targets on one line', fits(sc5) && !sc5.wrapped.length, sc5);
+    await shut(); await sleep(100);
+    await p.evaluate(() => { run(() => chFinEdit('P1')); }); await sleep(300);
+    const pe = await modalFit();
+    check('Charter ' + name + ': the facts packet editor (packet 1, every row in its supported wording, Read, Send) fits above the controls, no overflow', fits(pe), pe);
+    await p.screenshot({ path: OUT + '/layout-charter-' + name + '-packet.png' });
+    await shut(); await sleep(100);
+    await p.evaluate(() => { UI.openModal('The packet as it stands', chFinPacketHtml('P1', G.ch.fin.packets.P1.picks), [{ label: 'Back to the rows', meta: { back: true } }], { closable: false, cls: 'summary' }); }); await sleep(250);
+    const pp = await modalFit();
+    check('Charter ' + name + ': the packet as it stands (every row, the records) fits above the controls, no sideways overflow', fits(pp), pp);
+    await shut(); await sleep(100);
+    await p.evaluate(() => { UI.openModal('Facts packet 1, as sent', chFinDebriefHtml(G.ch.fin.packets.P1.grade, G.ch.fin.packets.P1.sent), [{ label: 'Continue', meta: { good: true } }], { closable: false, cls: 'summary' }); }); await sleep(250);
+    const pd = await modalFit();
+    check('Charter ' + name + ': the packet’s debrief table fits, cells on one line', fits(pd) && !pd.wrapped.length, pd);
+    await shut(); await sleep(100);
+    await p.evaluate(() => { UI.openModal('The disclosure clock', chFinClockHtml(chAt(94, '09:00')) + CH_FIN_SEC_HTML, [{ label: 'Packet 3', meta: { good: true } }], { closable: false, cls: 'summary' }); }); await sleep(250);
+    const ck = await modalFit();
+    check('Charter ' + name + ': the clock (four rules, the comparison card) fits above the controls, its table cells on one line', fits(ck) && !ck.wrapped.length, ck);
+    await p.screenshot({ path: OUT + '/layout-charter-' + name + '-clock.png' });
+    await shut(); await sleep(100);
+    await p.evaluate(() => { UI.openModal('The decision log, as recorded', chFinRouteHtml(), [{ label: 'Pin it to the incident page', meta: { good: true } }], { closable: false, cls: 'summary' }); }); await sleep(250);
+    const rt = await modalFit();
+    check('Charter ' + name + ': the decision log fits above the controls, no sideways overflow', fits(rt), rt);
+    await shut(); await sleep(100);
+    await p.evaluate(() => { UI.openModal('The end of Charter', chFinEditionRows() + chFinRegisterHtml(), [{ label: 'Keep exploring the Compact offices', meta: { good: true } }, { label: 'Credits' }, { label: 'Title screen' }], { closable: false, cls: 'summary' }); }); await sleep(250);
+    const en = await modalFit();
+    check('Charter ' + name + ': the edition’s end (districts and badges, the register today and on the plan) fits, table cells on one line', fits(en) && !en.wrapped.length, en);
+    await p.screenshot({ path: OUT + '/layout-charter-' + name + '-end.png' });
     check('Charter ' + name + ': no console errors or network requests', !errs.length, errs);
     await c.close();
   }

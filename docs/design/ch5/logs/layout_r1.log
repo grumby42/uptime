@@ -1,0 +1,1546 @@
+{
+ "suite": "layout",
+ "palette": "classic",
+ "text": "normal",
+ "passed": 375,
+ "failed": 2,
+ "results": [
+  {
+   "name": "longest objective found from the edition’s objective functions (9 functions, 159 texts): 139 chars",
+   "ok": true
+  },
+  {
+   "name": "phone360: nothing off-screen, no horizontal scroll",
+   "ok": true
+  },
+  {
+   "name": "phone360: HUD band sits above the map, not over it",
+   "ok": true
+  },
+  {
+   "name": "phone360: objective not truncated",
+   "ok": true
+  },
+  {
+   "name": "phone360: longest objective wraps in full, no overlap",
+   "ok": true
+  },
+  {
+   "name": "phone360: the objective’s door carries a marker (hub → Front Desk door 4,6)",
+   "ok": true
+  },
+  {
+   "name": "phone360: Council Chambers: the objective’s door carries a marker (west wall 0,7 → Council Board), HUD clear of the map",
+   "ok": true
+  },
+  {
+   "name": "phone360: touch controls stay visible and tappable with a modal open",
+   "ok": true
+  },
+  {
+   "name": "phone360: the modal sits above the controls",
+   "ok": true
+  },
+  {
+   "name": "phone360: the pad drives the modal (D-pad moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "phone360: drill modal: controls visible, modal clear of them, options never overlap, body still shown",
+   "ok": true
+  },
+  {
+   "name": "phone360: battle: alert card, tool card and sprites never overlap, all on screen",
+   "ok": true
+  },
+  {
+   "name": "phone360: battle: the choice panel never covers the sprites or the cards, and sits on screen",
+   "ok": true
+  },
+  {
+   "name": "phone360: battle: every option and note in the choice panel is fully visible (or reachable by scrolling it), none under the controls",
+   "ok": true
+  },
+  {
+   "name": "phone360: battle: the action menu fits its panel without scrolling (nothing clipped at the bottom)",
+   "ok": true
+  },
+  {
+   "name": "phone360: battle: nothing off-screen",
+   "ok": true
+  },
+  {
+   "name": "phone360: scorecard: numbers and targets on one line, no overflow",
+   "ok": true
+  },
+  {
+   "name": "phone360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "phone412: nothing off-screen, no horizontal scroll",
+   "ok": true
+  },
+  {
+   "name": "phone412: HUD band sits above the map, not over it",
+   "ok": true
+  },
+  {
+   "name": "phone412: objective not truncated",
+   "ok": true
+  },
+  {
+   "name": "phone412: longest objective wraps in full, no overlap",
+   "ok": true
+  },
+  {
+   "name": "phone412: the objective’s door carries a marker (hub → Front Desk door 4,6)",
+   "ok": true
+  },
+  {
+   "name": "phone412: Council Chambers: the objective’s door carries a marker (west wall 0,7 → Council Board), HUD clear of the map",
+   "ok": true
+  },
+  {
+   "name": "phone412: touch controls stay visible and tappable with a modal open",
+   "ok": true
+  },
+  {
+   "name": "phone412: the modal sits above the controls",
+   "ok": true
+  },
+  {
+   "name": "phone412: the pad drives the modal (D-pad moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "phone412: drill modal: controls visible, modal clear of them, options never overlap, body still shown",
+   "ok": true
+  },
+  {
+   "name": "phone412: battle: alert card, tool card and sprites never overlap, all on screen",
+   "ok": true
+  },
+  {
+   "name": "phone412: battle: the choice panel never covers the sprites or the cards, and sits on screen",
+   "ok": true
+  },
+  {
+   "name": "phone412: battle: every option and note in the choice panel is fully visible (or reachable by scrolling it), none under the controls",
+   "ok": true
+  },
+  {
+   "name": "phone412: battle: the action menu fits its panel without scrolling (nothing clipped at the bottom)",
+   "ok": true
+  },
+  {
+   "name": "phone412: battle: nothing off-screen",
+   "ok": true
+  },
+  {
+   "name": "phone412: scorecard: numbers and targets on one line, no overflow",
+   "ok": true
+  },
+  {
+   "name": "phone412: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: nothing off-screen, no horizontal scroll",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: HUD band sits above the map, not over it",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: objective not truncated",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: longest objective wraps in full, no overlap",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: the objective’s door carries a marker (hub → Front Desk door 4,6)",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: Council Chambers: the objective’s door carries a marker (west wall 0,7 → Council Board), HUD clear of the map",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: touch controls stay visible and tappable with a modal open",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: the pad drives the modal (D-pad moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: drill modal: controls visible, modal clear of them, options never overlap, body still shown",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: battle: alert card, tool card and sprites never overlap, all on screen",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: battle: the choice panel never covers the sprites or the cards, and sits on screen",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: battle: every option and note in the choice panel is fully visible (or reachable by scrolling it), none under the controls",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: battle: the action menu fits its panel without scrolling (nothing clipped at the bottom)",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: battle: nothing off-screen",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: scorecard: numbers and targets on one line, no overflow",
+   "ok": true
+  },
+  {
+   "name": "phoneLand: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "desktop: nothing off-screen, no horizontal scroll",
+   "ok": true
+  },
+  {
+   "name": "desktop: HUD band sits above the map, not over it",
+   "ok": true
+  },
+  {
+   "name": "desktop: objective not truncated",
+   "ok": true
+  },
+  {
+   "name": "desktop: longest objective wraps in full, no overlap",
+   "ok": true
+  },
+  {
+   "name": "desktop: the objective’s door carries a marker (hub → Front Desk door 4,6)",
+   "ok": true
+  },
+  {
+   "name": "desktop: Council Chambers: the objective’s door carries a marker (west wall 0,7 → Council Board), HUD clear of the map",
+   "ok": true
+  },
+  {
+   "name": "desktop: the modal fits the window",
+   "ok": true
+  },
+  {
+   "name": "desktop: battle: alert card, tool card and sprites never overlap, all on screen",
+   "ok": true
+  },
+  {
+   "name": "desktop: battle: the choice panel never covers the sprites or the cards, and sits on screen",
+   "ok": true
+  },
+  {
+   "name": "desktop: battle: every option and note in the choice panel is fully visible (or reachable by scrolling it), none under the controls",
+   "ok": true
+  },
+  {
+   "name": "desktop: battle: the action menu fits its panel without scrolling (nothing clipped at the bottom)",
+   "ok": true
+  },
+  {
+   "name": "desktop: battle: nothing off-screen",
+   "ok": true
+  },
+  {
+   "name": "desktop: scorecard: numbers and targets on one line, no overflow",
+   "ok": true
+  },
+  {
+   "name": "desktop: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360: HUD band clear of the map, nothing truncated, no horizontal scroll",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360: the longest objective (94 chars) wraps in full, at most 3 lines",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360: scorecard modal fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360: rota modal (week table and seven leads) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360: report finding modal (claim and the four wording options) fits above the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phoneLand: HUD band clear of the map, nothing truncated, no horizontal scroll",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phoneLand: the longest objective (94 chars) wraps in full, at most 3 lines",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phoneLand: scorecard modal fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phoneLand: rota modal (week table and seven leads) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phoneLand: report finding modal (claim and the four wording options) fits above the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phoneLand: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop: HUD band clear of the map, nothing truncated, no horizontal scroll",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop: the longest objective (94 chars) wraps in full, at most 3 lines",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop: scorecard modal fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop: rota modal (week table and seven leads) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop: report finding modal (claim and the four wording options) fits above the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phone360: the week-2 rota pins “Leave this night uncovered” last, with the district’s 07:00, and the cursor doesn’t open on it",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phone360: rota (On-call rota, week 2 · night 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phone360: invSource (Inventory · where the list comes from) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phone360: invTable (Inventory · who holds what) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phone360: invOwner (Inventory · owner) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phone360: drillHub (Drill · Two dates for the token’s last u) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phone360: finding (Finding 1 of 7) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phone360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phoneLand: the week-2 rota pins “Leave this night uncovered” last, with the district’s 07:00, and the cursor doesn’t open on it",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phoneLand: rota (On-call rota, week 2 · night 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phoneLand: invSource (Inventory · where the list comes from) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phoneLand: invTable (Inventory · where the list comes from) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phoneLand: invOwner (Inventory · who holds what) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phoneLand: drillHub (Drill · Two dates for the token’s last u) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phoneLand: finding (Finding 1 of 7) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District phoneLand: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District land844: the week-2 rota pins “Leave this night uncovered” last, with the district’s 07:00, and the cursor doesn’t open on it",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District land844: rota (On-call rota, week 2 · night 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District land844: invSource (Inventory · where the list comes from) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District land844: invTable (Inventory · who holds what) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District land844: invOwner (Inventory · owner) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District land844: drillHub (Drill · Two dates for the token’s last u) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District land844: finding (Finding 1 of 7) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District land844: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District desktop: the week-2 rota pins “Leave this night uncovered” last, with the district’s 07:00, and the cursor doesn’t open on it",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District desktop: rota (On-call rota, week 2 · night 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District desktop: invSource (Inventory · where the list comes from) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District desktop: invTable (Inventory · who holds what) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District desktop: invOwner (Inventory · owner) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District desktop: drillHub (Drill · Two dates for the token’s last u) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District desktop: finding (Finding 1 of 7) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads School District desktop: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phone360: the weekend plan shows the week-2 rota’s table with Nights 12 to 14",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phone360: downtime (Downtime · 07:45) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phone360: weekend (The weekend) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phone360: weekendPlan (The weekend · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phone360: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phone360: drillHub (Drill · Question 3: 412 record views on) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phone360: finding (Finding 1 of 10) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phone360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phoneLand: the weekend plan shows the week-2 rota’s table with Nights 12 to 14",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phoneLand: downtime (Downtime · 07:45) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phoneLand: weekend (The weekend) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phoneLand: weekendPlan (The weekend · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phoneLand: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phoneLand: drillHub (Drill · Question 3: 412 record views on) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phoneLand: finding (Finding 1 of 10) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic phoneLand: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic land844: the weekend plan shows the week-2 rota’s table with Nights 12 to 14",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic land844: downtime (Downtime · 07:45) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic land844: weekend (The weekend) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic land844: weekendPlan (The weekend · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic land844: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic land844: drillHub (Drill · Question 3: 412 record views on) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic land844: finding (Finding 1 of 10) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic land844: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic desktop: the weekend plan shows the week-2 rota’s table with Nights 12 to 14",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic desktop: downtime (Downtime · 07:45) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic desktop: weekend (The weekend) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic desktop: weekendPlan (The weekend · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic desktop: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic desktop: drillHub (Drill · Question 3: 412 record views on) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic desktop: finding (Finding 1 of 10) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Clinic desktop: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phone360: the 24-hour plan shows Night 18 and the week-3 rota’s table",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phone360: backupPack (The backup center · what Oxlow needs) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phone360: plan24 (The next 24 hours · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phone360: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phone360: drillHub (Drill · Question 3: the vendor says it w) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phone360: finding (Finding 1 of 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phone360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phoneLand: the 24-hour plan shows Night 18 and the week-3 rota’s table",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phoneLand: backupPack (The backup center · what Oxlow needs) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phoneLand: plan24 (The next 24 hours · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phoneLand: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phoneLand: drillHub (Drill · Question 3: the vendor says it w) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phoneLand: finding (Finding 1 of 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch phoneLand: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch land844: the 24-hour plan shows Night 18 and the week-3 rota’s table",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch land844: backupPack (The backup center · what Oxlow needs) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch land844: plan24 (The next 24 hours · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch land844: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch land844: drillHub (Drill · Question 3: the vendor says it w) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch land844: finding (Finding 1 of 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch land844: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch desktop: the 24-hour plan shows Night 18 and the week-3 rota’s table",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch desktop: backupPack (The backup center · what Oxlow needs) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch desktop: plan24 (The next 24 hours · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch desktop: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch desktop: drillHub (Drill · Question 3: the vendor says it w) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch desktop: finding (Finding 1 of 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Dispatch desktop: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phone360: the weekend plan shows Night 27 and the week-4 rota’s table",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phone360: owners (Who owns what · the office network) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phone360: weekend (The weekend · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phone360: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phone360: drillHub (Drill · Question 2, again: when did the) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phone360: finding (Finding 1 of 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phone360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phoneLand: the weekend plan shows Night 27 and the week-4 rota’s table",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phoneLand: owners (Who owns what · the office network) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phoneLand: weekend (The weekend · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phoneLand: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phoneLand: drillHub (Drill · Question 2, again: when did the) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phoneLand: finding (Finding 1 of 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport phoneLand: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport land844: the weekend plan shows Night 27 and the week-4 rota’s table",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport land844: owners (Who owns what · the office network) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport land844: weekend (The weekend · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport land844: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport land844: drillHub (Drill · Question 2, again: when did the) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport land844: finding (Finding 1 of 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport land844: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport desktop: the weekend plan shows Night 27 and the week-4 rota’s table",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport desktop: owners (Who owns what · the office network) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport desktop: weekend (The weekend · the plan) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport desktop: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport desktop: drillHub (Drill · Question 2, again: when did the) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport desktop: finding (Finding 1 of 8) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads Airport desktop: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phone360: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phone360: roadmap (The programme roadmap) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phone360: stores (The letters and the stores · 04:10) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phone360: drillHub (Drill · CMP-01, question 1: the 01:52 si) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phone360: finding (Finding 1 of 6) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phone360: challenge (The challenge · round 1) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phone360: qtFile (The suspicion file, laid out) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phone360: ending (The end of the Crossroads edition) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phone360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phoneLand: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phoneLand: roadmap (The programme roadmap) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phoneLand: stores (The letters and the stores · 04:10) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phoneLand: drillHub (Drill · CMP-01, question 1: the 01:52 si) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phoneLand: finding (Finding 1 of 6) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phoneLand: challenge (The challenge · round 1) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phoneLand: qtFile (The suspicion file, laid out) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phoneLand: ending (The end of the Crossroads edition) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale phoneLand: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale land844: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale land844: roadmap (The programme roadmap) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale land844: stores (The letters and the stores · 04:10) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale land844: drillHub (Drill · CMP-01, question 1: the 01:52 si) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale land844: finding (Finding 1 of 6) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale land844: challenge (The challenge · round 1) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale land844: qtFile (The suspicion file, laid out) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale land844: ending (The end of the Crossroads edition) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale land844: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale desktop: aarCards (AAR · contributing factors) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale desktop: roadmap (The programme roadmap) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale desktop: stores (The letters and the stores · 04:10) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale desktop: drillHub (Drill · CMP-01, question 1: the 01:52 si) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale desktop: finding (Finding 1 of 6) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale desktop: challenge (The challenge · round 1) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale desktop: qtFile (The suspicion file, laid out) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale desktop: ending (The end of the Crossroads edition) fits above the controls, body at least 30% of the box or whole, a full option row shown",
+   "ok": true
+  },
+  {
+   "name": "Crossroads finale desktop: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: HUD band clear of the map, nothing truncated, no horizontal scroll",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the longest objective (86 chars) wraps in full, at most 3 lines",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: scorecard modal fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the appetite builder fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the allocation page (six lines, the summary, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the Board’s decision (final allocation and the acceptances) fits, tables on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the scorecard with the three supplier rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the supplier tiering page (eight suppliers, the rule, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the clause plan (four contracts, the envelope, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: a contract’s clauses (Thimbleford’s six, the goodwill and envelope line) fit above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the must-haves left out (owner-signed acceptances) fit, table on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the incident timeline (three columns, the hours lost) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the scorecard with the three policy rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the exception register (its table on one line per cell, every entry) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the register’s intake (three rows, the rule, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the policy library (six documents, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the library’s debrief table fits, cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the scorecard with the three report rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the report’s page (six sections, Read, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the report’s longest section (every line in, filled from the records) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the page as it stands (every line, the annex) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the report’s debrief table fits, cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the scorecard with the four finale rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the facts packet editor (packet 1, every row in its supported wording, Read, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the packet as it stands (every row, the records) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the packet’s debrief table fits, cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the clock (four rules, the comparison card) fits above the controls, its table cells on one line",
+   "ok": false,
+   "info": {
+    "top": 6,
+    "bottom": 625,
+    "padTop": 631,
+    "H": 800,
+    "btnsOk": true,
+    "overflow": false,
+    "wrapped": [
+     "Day 92 06:25",
+     "Day 92 10:25",
+     "Day 92 06:25",
+     "Day 93 06:25",
+     "Day 93 15:00",
+     "Day 107 15:00",
+     "no clock of its own"
+    ]
+   }
+  },
+  {
+   "name": "Charter phone360: the decision log fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360: the edition’s end (districts and badges, the register today and on the plan) fits, table cells on one line",
+   "ok": false,
+   "info": {
+    "top": 6,
+    "bottom": 625,
+    "padTop": 631,
+    "H": 800,
+    "btnsOk": true,
+    "overflow": false,
+    "wrapped": [
+     "Drills, every need met",
+     "Heaving Line"
+    ]
+   }
+  },
+  {
+   "name": "Charter phone360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: HUD band clear of the map, nothing truncated, no horizontal scroll",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the longest objective (86 chars) wraps in full, at most 3 lines",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: scorecard modal fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the appetite builder fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the allocation page (six lines, the summary, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the Board’s decision (final allocation and the acceptances) fits, tables on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the scorecard with the three supplier rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the supplier tiering page (eight suppliers, the rule, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the clause plan (four contracts, the envelope, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: a contract’s clauses (Thimbleford’s six, the goodwill and envelope line) fit above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the must-haves left out (owner-signed acceptances) fit, table on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the incident timeline (three columns, the hours lost) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the scorecard with the three policy rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the exception register (its table on one line per cell, every entry) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the register’s intake (three rows, the rule, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the policy library (six documents, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the library’s debrief table fits, cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the scorecard with the three report rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the report’s page (six sections, Read, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the report’s longest section (every line in, filled from the records) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the page as it stands (every line, the annex) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the report’s debrief table fits, cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the scorecard with the four finale rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the facts packet editor (packet 1, every row in its supported wording, Read, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the packet as it stands (every row, the records) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the packet’s debrief table fits, cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the clock (four rules, the comparison card) fits above the controls, its table cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the decision log fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: the edition’s end (districts and badges, the register today and on the plan) fits, table cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter phoneLand: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: HUD band clear of the map, nothing truncated, no horizontal scroll",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the longest objective (86 chars) wraps in full, at most 3 lines",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: scorecard modal fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the appetite builder fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the allocation page (six lines, the summary, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the Board’s decision (final allocation and the acceptances) fits, tables on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the scorecard with the three supplier rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the supplier tiering page (eight suppliers, the rule, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the clause plan (four contracts, the envelope, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: a contract’s clauses (Thimbleford’s six, the goodwill and envelope line) fit above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the must-haves left out (owner-signed acceptances) fit, table on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the incident timeline (three columns, the hours lost) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the scorecard with the three policy rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the exception register (its table on one line per cell, every entry) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the register’s intake (three rows, the rule, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the policy library (six documents, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the library’s debrief table fits, cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the scorecard with the three report rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the report’s page (six sections, Read, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the report’s longest section (every line in, filled from the records) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the page as it stands (every line, the annex) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the report’s debrief table fits, cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the scorecard with the four finale rows fits, table numbers and targets on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the facts packet editor (packet 1, every row in its supported wording, Read, Send) fits above the controls, no overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the packet as it stands (every row, the records) fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the packet’s debrief table fits, cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the clock (four rules, the comparison card) fits above the controls, its table cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the decision log fits above the controls, no sideways overflow",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: the edition’s end (districts and badges, the register today and on the plan) fits, table cells on one line",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone390x844: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone390x844: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone390x844: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land844x390: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land844x390: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land844x390: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Town Hall desktop: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Town Hall desktop: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Town Hall desktop: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone390x844: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone390x844: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone390x844: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land844x390: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land844x390: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land844x390: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Charter phone390x844: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Charter phone390x844: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Charter phone390x844: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Charter land844x390: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Charter land844x390: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Charter land844x390: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: a long body keeps at least 30% of the modal next to six long options, and a full option row shows",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: a lone Back button under a long body is shown whole, not squeezed or scrolled",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop: modal probes raise no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "series menu: fits a phone, opens the edition, no errors or requests",
+   "ok": true
+  },
+  {
+   "name": "series menu: the Crossroads entry opens the Crossroads edition",
+   "ok": true
+  },
+  {
+   "name": "series menu: the Charter entry opens the Charter edition",
+   "ok": true
+  }
+ ]
+}

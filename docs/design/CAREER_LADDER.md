@@ -14,14 +14,14 @@ Labels used below:
 Town Hall's ranks so far: Intern → Tier 1 (Front Desk) → Tier 2 (Clerks' Row) → Tier 3 senior analyst (IT Basement) → Tier 3 lead investigator (Server Room) → **Security team lead** (Council Chambers, the finale). The finale already teaches: a one-page IR plan mapped to SP 800-61 Rev. 3's example roles, a risk register with business owners (CSF 2.0 Govern), the delegation mini-game (eight leads, each with skills, a load and a capacity of 3), plain-words council briefings, the road-budget directive, and incident command. The Quiet Thread's suspicion file has been handed to the town attorney, the council's risk committee and **an outside incident-response firm (game)**, and is still open. SPEC_council.md says the ladder beyond team lead is "NOT built here (separate backlog item)". This document is that item's design spec.
 
 ### NICE Framework version used here
-- **Current version:** NICE Framework Components **v2.2.0, 28 April 2026** (NIST "Current Version" page and change log; NIST news release of the same date). The structure document is still NIST SP 800-181 Rev. 1 (November 2020).
-- **What changed recently** (change log): v2.2.0 added one work role, "Cybersecurity Supply Chain Risk Management (C-SCRM) Work Role (OG-WRL-017)". v2.1.0 (3 December 2025) made a "Comprehensive revision of Cybercrime Investigation (IN-WRL-001)". v2.0.0 (5 March 2025) added DD-WRL-009 and removed the Cyberspace Effects and Cyberspace Intelligence categories. No change log entry renames or retires a role used below.
-- **How it was checked:** work-role **IDs and names** were checked against NIST's work-role list (nist.gov, NICE Framework work role videos page). Role **descriptions and task statements** were read from the CISA NICCS pages for each role and task. Caveat: NICCS lags behind. Its role pages say "Version: 2.0.0" and its NICE landing page still says Components v1.0.0. The change log above records no change after v2.0.0 to the roles cited here, but **task lists were not re-read from the v2.2.0 files themselves**: the JSON and XLSX on nist.gov / csrc.nist.gov could not be fetched from this session. Before any of this goes into CREDITS.md, re-check each task against the v2.2.0 spreadsheet.
+- **Version used here: 2.0.0**, the NICE Framework version the CISA NICCS role and task pages show (corrected 21 November 2026 in the Charter finale build; this line said v2.2.0 before). Every role and task below is quoted as NICCS shows it. NIST has published later component releases (v2.1.0, 3 December 2025; v2.2.0, 28 April 2026, per NIST's "Current Version" page and news release); their summaries of changes list no change to the roles and tasks cited here, and nothing below is quoted from them. The structure document is still NIST SP 800-181 Rev. 1 (November 2020).
+- **What NIST's later releases changed** (change log, for reference only): v2.2.0 added one work role, "Cybersecurity Supply Chain Risk Management (C-SCRM) Work Role (OG-WRL-017)". v2.1.0 (3 December 2025) made a "Comprehensive revision of Cybercrime Investigation (IN-WRL-001)". v2.0.0 (5 March 2025) added DD-WRL-009 and removed the Cyberspace Effects and Cyberspace Intelligence categories. No change log entry renames or retires a role used below.
+- **How it was checked:** work-role **IDs and names** were checked against NIST's work-role list (nist.gov, NICE Framework work role videos page). Role **descriptions and task statements** were read from the CISA NICCS pages for each role and task. Its role pages say "Version: 2.0.0", the version this document uses (some task pages show another number, or none, and its NICE landing page says Components v1.0.0). NIST's change log records no change after v2.0.0 to the roles cited here. Each task the editions quote is re-read on its own NICCS page before use and logged in CREDITS.md with the version NICCS shows.
 - Minor source quirk: the NIST videos page prints "Incident Response" against both PD-WRL-003 and PD-WRL-004. PD-WRL-004 is Infrastructure Support (its description on that page is about infrastructure). This document does not use PD-WRL-004.
 
 ### Plain caveats that apply to every rung
 - **Titles vary by organisation.** "SOC lead", "IR manager", "principal DFIR consultant", "CISO", "vCISO", "fractional CISO" and "CIO" are job titles. NICE work roles describe *groupings of work*, not titles. One person often covers several roles and one role is often split across people. The mappings below are "closest", never "equals".
-- **NICE has no work role named for a team lead, an IR manager, a principal consultant, a CISO, a vCISO/fractional CISO or a CIO.** The names in v2.2.0's list carry no seniority level and no employment model (in-house vs contracted). "Principal", "fractional" and "virtual" are market terms with no NICE equivalent.
+- **NICE has no work role named for a team lead, an IR manager, a principal consultant, a CISO, a vCISO/fractional CISO or a CIO.** The names in the work-role list (version 2.0.0 on NICCS) carry no seniority level and no employment model (in-house vs contracted). "Principal", "fractional" and "virtual" are market terms with no NICE equivalent.
 - **"CISO" does have a federal-law counterpart.** FISMA's "senior agency information security officer", and NIST's glossary says organisations "may use the term" CISO for it. "CIO" also has one: the agency CIO in 40 U.S.C. § 11315. Both are US federal-agency definitions, not definitions for a town or a company. Both are cited where useful below.
 - **No salaries or statistics** unless from a primary source. The only figure in this document is the BLS one in §5. It covers a broad occupation, not any one title.
 
@@ -29,7 +29,7 @@ Town Hall's ranks so far: Intern → Tier 1 (Front Desk) → Tier 2 (Clerks' Row
 
 ## 1. Rung 1 — Security team lead / SOC lead (built: Town Hall finale)
 
-### Closest NICE work roles (v2.2.0)
+### Closest NICE work roles (version 2.0.0, as NICCS shows it)
 **No clean match.** This is the same conclusion already in CREDITS.md and the Field Manual. The two closest roles:
 - **PD-WRL-003 Incident Response**: "Responsible for investigating, analyzing, and responding to network cybersecurity incidents." (NICCS role page)
 - **OG-WRL-014 Systems Security Management**: "Responsible for managing the cybersecurity of a program, organization, system, or enclave." (NICCS)
@@ -210,7 +210,7 @@ CSF 2.0 Govern (CSWP 29):
 - **GV.OV-01** "Cybersecurity risk management strategy outcomes are reviewed to inform and adjust strategy and direction"
 - **GV.OV-03** "Organizational cybersecurity risk management performance is evaluated and reviewed for adjustments needed"
 - Supply chain: **GV.SC-04** "Suppliers are known and prioritized by criticality"; **GV.SC-05** "Requirements to address cybersecurity risks in supply chains are established, prioritized, and integrated into contracts ..."; **GV.SC-06** "Planning and due diligence are performed to reduce risks before entering into formal supplier or other third-party ..."; **GV.SC-07** "The risks posed by a supplier, their products and services, and other third parties are understood, recorded, prioritized, ..."; **GV.SC-10** (provisions "after the conclusion" of a relationship).
-- New in NICE v2.2.0: **OG-WRL-017** Cybersecurity Supply Chain Risk Management. ID and name confirmed in NIST's 28 April 2026 release; its description and tasks were **not** verified here.
+- Not on the version 2.0.0 pages used here: **OG-WRL-017** Cybersecurity Supply Chain Risk Management, added in NIST's later v2.2.0 release (28 April 2026), where its ID and name were confirmed; its description and tasks were **not** verified here.
 
 Board reporting:
 - **US public companies:** SEC final rule, press release 2023-139 (26 July 2023). Form 8-K Item 1.05 discloses material incidents, generally within four business days of determining materiality. Regulation S-K Item 106 requires describing "the board of directors' oversight of risks from cybersecurity threats" and "management's role and expertise in assessing and managing material risks from cybersecurity threats".
@@ -234,11 +234,11 @@ Board reporting:
 - **Scorecard (game design):** risks within appetite (%); register risks with a business owner and review date (%); budget spent against top-five risks (%); governing-body reports on time and with no unsupported claim; critical suppliers with security clauses (%); policy exceptions with an expiry (%); disclosure facts to counsel within the plan's time.
 
 **Candidate real cases (handle with care: real, named people):**
-- **Uber / Joseph Sullivan (former Chief Security Officer).** DOJ, N.D. Cal. On 5 October 2022 a jury convicted Sullivan of obstruction of FTC proceedings (18 U.S.C. § 1505) and misprision of felony (18 U.S.C. § 4). On 5 May 2023 he was sentenced to three years' probation and a $50,000 fine. Per DOJ, Uber paid the hackers "$100,000 in bitcoin" in December 2016 for non-disclosure agreements that falsely stated no data was taken. Sullivan told a subordinate they "can't let this get out". The breach involved about 57 million users and drivers and was disclosed in November 2017. Lesson: concealment is a choice with personal consequences; the facts go to counsel. This is the strongest primary-sourced CISO boss. An appeal's outcome was **not** verified here, so do not state one.
+- **Uber / Joseph Sullivan (former Chief Security Officer).** DOJ, N.D. Cal. On 5 October 2022 a jury convicted Sullivan of obstruction of FTC proceedings (18 U.S.C. § 1505) and misprision of felony (18 U.S.C. § 4). On 5 May 2023 he was sentenced to three years' probation and a $50,000 fine. Per DOJ, Uber paid the hackers "$100,000 in bitcoin" in December 2016 for non-disclosure agreements that falsely stated no data was taken. Sullivan told a subordinate they "can't let this get out". The breach involved about 57 million users and drivers and was disclosed in November 2017. Lesson: concealment is a choice with personal consequences; the facts go to counsel. This is the strongest primary-sourced CISO boss. The appeal is verified (21 November 2026, on the courts' own pages; docs/design/facts_slice5.md): the Ninth Circuit affirmed in a published opinion (No. 23-927; filed 13 March 2025, amended 12 November 2025, rehearing en banc denied), in the court's words "Sullivan did not inform Uber’s general counsel of these developments, despite telling other employees to the contrary"; the Supreme Court denied certiorari on 29 June 2026 (No. 25-1082). The court said it need not decide whether a bug bounty program may give researchers prior authorisation (footnote 6), so nothing here says bug bounty payments are illegal.
 - **SEC v. SolarWinds Corp. and Timothy G. Brown** (S.D.N.Y., No. 1:23-cv-09518):
   - The SEC charged the company and its CISO on 30 October 2023 (press release 2023-227). Its allegations included internal presentations saying the "current state of security leaves us in a very vulnerable state for our critical assets".
   - On 20 November 2025 the SEC filed a joint stipulation "to dismiss, with prejudice", "in the exercise of its discretion" (Litigation Release 26423).
-  - **These were allegations, never findings**, and the case ended in dismissal. If used at all, use it as a dojo discussion of the gap between internal reports and public statements, with the outcome stated. Do not use it as a boss. A July 2024 partial-dismissal ruling is described only in secondary sources (law-firm alerts), so it is not stated here.
+  - **These were allegations, never findings**, and the case ended in dismissal. If used at all, use it as a dojo discussion of the gap between internal reports and public statements, with the outcome stated. Do not use it as a boss. The July 2024 ruling is now read on the court's own site (S.D.N.Y., 23 Civ. 9518 (PAE), filed 18 July 2024): the court "denies in part, but grants in large part, the motion to dismiss", sustaining at the pleading stage only the fraud claims based on the pre-incident Security Statement (facts_slice5.md).
 
 ---
 
@@ -368,7 +368,7 @@ Why not CISO straight after Town Hall: the jump from team lead to executive skip
 - **Setting:** same town, bigger scope. Federal/FTC/SEC sources appear only as comparisons, labelled as not binding a town.
 - **Quiet Thread:** resolved only in the final edition. Edition 2 advances it (new verified-technique clues, a clearer picture) but must not resolve it.
 - **CIO:** playable, last edition; Audra Finch appears as the CIO counterpart in the CISO and vCISO editions first.
-- **Taken as recommended until Ted says otherwise:** team lead gets a short prologue in edition 2, not its own edition (1); no pay data (8); US-framed (9); at least three `needs` drills per district in executive editions (10); the build agent re-verifies NICE tasks against the v2.2.0 files and fetches Capital One from CourtListener/govinfo before citing (11). Real-person retellings (6) are deferred to the CISO edition.
+- **Taken as recommended until Ted says otherwise:** team lead gets a short prologue in edition 2, not its own edition (1); no pay data (8); US-framed (9); at least three `needs` drills per district in executive editions (10); the build agent re-verifies NICE tasks on their NICCS pages (version 2.0.0, as NICCS shows it) and fetches Capital One from CourtListener/govinfo before citing (11). Real-person retellings (6) are deferred to the CISO edition.
 
 ## 7. Open decisions only Ted can make
 
@@ -389,16 +389,16 @@ Why not CISO straight after Town Hall: the jump from team lead to executive skip
 8. **Pay data:** show any? The only primary figure (BLS median $175,140, May 2025) covers a broad occupation that includes CIOs and is not a title-specific salary. I recommend none.
 9. **Jurisdiction:** keep it US-framed (the town is a US town, as CREDITS says) or add international comparisons, as Market Square did with the UK ICO?
 10. **Executive editions' share of hands-on drills:** how much `needs`-drill content to keep once the player is a CISO, vCISO or CIO. I suggest at least three drills per district, with records as the evidence.
-11. **Re-verification before build:** who re-checks the NICE task lists against the v2.2.0 spreadsheet, and the Capital One opinion against the court docket? Neither could be fetched from this session.
+11. **Re-verification before build:** who re-checks the NICE task lists on NICCS (version 2.0.0, as shown there), and the Capital One opinion against the court docket? Neither could be fetched from this session.
 
 ---
 
 ## Sources (all checked 1 November 2026)
 
 **NICE Framework**
-- NIST, NICE Framework current version (Components v2.2.0; JSON/XLSX links): https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center/current-version
+- NIST, NICE Framework "Current Version" page (lists the later Components v2.2.0 release; JSON/XLSX links; the version used here is NICCS's 2.0.0): https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center/current-version
 - NIST, NICE Framework change logs: https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center/current-version/change-logs
-- NIST news, "NICE Releases NICE Framework Components v2.2.0" (28 April 2026; OG-WRL-017): https://www.nist.gov/news-events/news/2026/04/nice-releases-nice-framework-components-v220
+- NIST news, "NICE Releases NICE Framework Components v2.2.0" (28 April 2026; OG-WRL-017; a later release, not the version used here): https://www.nist.gov/news-events/news/2026/04/nice-releases-nice-framework-components-v220
 - NIST, NICE Framework work role list (IDs and names): https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-work-role-videos
 - NICCS, NICE Framework landing page (role descriptions; says v1.0.0): https://niccs.cisa.gov/workforce-development/nice-framework
 - NICCS role pages:
@@ -461,6 +461,9 @@ Why not CISO straight after Town Hall: the jump from team lead to executive skip
 - In re Capital One Consumer Data Security Breach Litigation, E.D. Va. MDL No. 1:19md2915, Memorandum Opinion and Order (25 June 2020). Read via a law firm's copy (court copy still to fetch): https://www.robinsonbradshaw.com/assets/htmldocuments/Capital_One.pdf
 - DOJ N.D. Cal., Sullivan convicted (5 October 2022): https://www.justice.gov/usao-ndca/pr/former-chief-security-officer-uber-convicted-federal-charges-covering-data-breach
 - DOJ N.D. Cal., Sullivan sentenced (5 May 2023): https://www.justice.gov/usao-ndca/pr/former-chief-security-officer-uber-sentenced-three-years-probation-covering-data
+- US Court of Appeals for the Ninth Circuit, United States v. Sullivan, No. 23-927, opinion (filed 13 March 2025): https://cdn.ca9.uscourts.gov/datastore/opinions/2025/03/13/23-927.pdf ; amended opinion and order (12 November 2025): https://cdn.ca9.uscourts.gov/datastore/opinions/2025/11/12/23-927.pdf (checked 21 November 2026)
+- Supreme Court of the United States, docket No. 25-1082, Sullivan v. United States ("Petition DENIED", 29 June 2026): https://www.supremecourt.gov/docket/docketfiles/html/public/25-1082.html (checked 21 November 2026)
+- S.D.N.Y., SEC v. SolarWinds Corp., 23 Civ. 9518 (PAE), opinion and order (filed 18 July 2024): https://nysd.uscourts.gov/sites/default/files/2024-07/SolarWinds%20Opinion%20Dkt.%20125-1.pdf (checked 21 November 2026)
 - SEC press release 2023-227, charges against SolarWinds and its CISO (30 October 2023): https://www.sec.gov/news/press-release/2023-227
 - SEC Litigation Release 26423, dismissal with prejudice (20 November 2025): https://www.sec.gov/enforcement-litigation/litigation-releases/lr-26423
 - CISA-FBI, Guidance for MSPs and their Customers Affected by the Kaseya VSA Supply-Chain Ransomware Attack (July 2021): https://us-cert.cisa.gov/ncas/current-activity/2021/07/04/cisa-fbi-guidance-msps-and-their-customers-affected-kaseya-vsa
@@ -471,13 +474,13 @@ Why not CISO straight after Town Hall: the jump from team lead to executive skip
 
 **Looked at but not relied on:**
 - SFIA prototype NICE-to-SFIA mapping (nist.gov/document/nicerolessfialeveled2026pdf): secondary, and contains copy errors.
-- stigviewer.com/nice/PD-WRL-003: a secondary mirror. It agrees with the NICCS Incident Response task list and labels itself v2.2.0.
+- stigviewer.com/nice/PD-WRL-003: a secondary mirror. It agrees with the NICCS Incident Response task list and labels itself v2.2.0 (its own label; the version used here is NICCS's 2.0.0).
 - Perkins Coie alert on SolarWinds: secondary; replaced by the SEC releases.
 - A Ninth Circuit PDF that turned out to be a different Uber case (Doe v. Uber).
 
 **Not verified, so not used:**
 - OG-WRL-017's description and tasks.
-- Any appeal outcome in US v. Sullivan.
-- The July 2024 SolarWinds ruling (secondary only).
+- ~~Any appeal outcome in US v. Sullivan.~~ Verified 21 November 2026 (see §3 and Sources).
+- ~~The July 2024 SolarWinds ruling (secondary only).~~ Read on the court's own site 21 November 2026 (see §3 and Sources).
 - Any statistic on career paths into CISO, team size, or vCISO market size.
 - Any NICE task about expert-witness testimony (none found).

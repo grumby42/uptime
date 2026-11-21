@@ -1,0 +1,110 @@
+[
+ [
+  "N-3's clock starts at the notice, not the determination",
+  "editions/charter/finale-data.js",
+  "{id: 'N-3', name: 'Notice to the people affected', trigger: 'determination',",
+  "{id: 'N-3', name: 'Notice to the people affected', trigger: 'notice',"
+ ],
+ [
+  "working days count the weekend",
+  "editions/charter/disclosure.js",
+  "const chIsWorkday = d => (d - 1) % 7 < 5;",
+  "const chIsWorkday = d => true;"
+ ],
+ [
+  "N-1's window is 24 hours",
+  "editions/charter/finale-data.js",
+  "{id: 'N-1', name: 'Facts to counsel and the chair', trigger: 'log', window: {h: 4},",
+  "{id: 'N-1', name: 'Facts to counsel and the chair', trigger: 'log', window: {h: 24},"
+ ],
+ [
+  "a packet graded on the supported picks, not as sent",
+  "editions/charter/finale-story.js",
+  "rec.grade = chFinGrade(id, rec.sent.picks); track();",
+  "rec.grade = chFinGrade(id, Object.fromEntries(P.rows.map(r => [r.id, chFinRec(r)]))); track();"
+ ],
+ [
+  "supported optional rows earn (padding cancels penalties)",
+  "editions/charter/disclosure.js",
+  "const points = 20 * supReq.length - 10 * weak.length - 20 * omitted.length;",
+  "const points = 20 * sup.length - 10 * weak.length - 20 * omitted.length;"
+ ],
+ [
+  "the unknown K3 not a required row",
+  "editions/charter/finale-data.js",
+  "{id: 'K3', name: 'Whether our copies were read or copied', topic: 'whether the Compact’s copies were read or copied', req: true, unknown: true,",
+  "{id: 'K3', name: 'Whether our copies were read or copied', topic: 'whether the Compact’s copies were read or copied', req: false, unknown: true,"
+ ],
+ [
+  "a packet always on time",
+  "editions/charter/finale-story.js",
+  "onTime: at <= due,",
+  "onTime: true,"
+ ],
+ [
+  "routing scored on the last pick",
+  "editions/charter/finale-story.js",
+  "    rec.first.push(first); rec.picks.push(d.choices[pick].label);",
+  "    rec.first.push(true); rec.picks.push(d.choices[pick].label);"
+ ],
+ [
+  "S-7: the Board's decision of record not applied",
+  "editions/charter/finale-story.js",
+  "    a.boardDecided = {day: 95, at: '15:00', by: 'the Compact Board (minute, Day 95)', decision: 'carried to its Day 155 review, its interim measures kept'};\n",
+  "    a.boardDecidedX = {day: 95};\n"
+ ],
+ [
+  "S-7: the finale's invariant switched off",
+  "editions/charter/disclosure.js",
+  "  if (!G.f.chFinBoard) return bad;\n  const st = chRiskStates();",
+  "  return bad;\n  const st = chRiskStates();"
+ ],
+ [
+  "the open item draws a conclusion",
+  "editions/charter/disclosure.js",
+  "    ' Who, and why: not known. No link to Wellhollow’s incident is drawn. For counsel: in scope for any notice?';",
+  "    ' Who: the front-desk PC’s user. No link to Wellhollow’s incident is drawn. For counsel: in scope for any notice?';"
+ ],
+ [
+  "the statement decided by Ada",
+  "editions/charter/finale-story.js",
+  "fin.statement = {by: 'Ivor Penhallow', day: 94,",
+  "fin.statement = {by: 'Ada Pemberton', day: 94,"
+ ],
+ [
+  "the Board's questions not keyed to the packets",
+  "editions/charter/finale-story.js",
+  "  const qs = weak.slice(0, 3).map((x, i) => { const r = x.P.rows.find(y => y.id === x.id);",
+  "  const qs = weak.slice(0, 0).map((x, i) => { const r = x.P.rows.find(y => y.id === x.id);"
+ ],
+ [
+  "containment: exporting first graded right",
+  "editions/charter/finale-data.js",
+  "{label: 'Export the job log first, then pause the copies once it is kept elsewhere', why:",
+  "{label: 'Export the job log first, then pause the copies once it is kept elsewhere', good: true, why:"
+ ],
+ [
+  "the comparison card says calendar days",
+  "editions/charter/finale-data.js",
+  "“A report pursuant to Item 1.05 is to be filed within four business days after",
+  "“A report pursuant to Item 1.05 is to be filed within four calendar days after"
+ ],
+ [
+  "Sullivan's sentence misstated as prison",
+  "editions/charter/data.js",
+  "on 5 May 2023 he was sentenced to three years’ probation and a $50,000 fine",
+  "on 5 May 2023 he was sentenced to three years in prison and a $50,000 fine"
+ ],
+ [
+  "a packet record dated after its packet is due",
+  "editions/charter/finale-data.js",
+  "  WH2: {name: 'Wellhollow’s second answer', at: [93, '09:00']},",
+  "  WH2: {name: 'Wellhollow’s second answer', at: [94, '09:00']},"
+ ],
+ [
+  "the routing names the CISO for the statement",
+  "editions/charter/finale-data.js",
+  "  {id: 'D-4', short: 'The Compact’s public statement', who: 'Ivor Penhallow, the chair'},",
+  "  {id: 'D-4', short: 'The Compact’s public statement', who: 'You, the CISO'},"
+ ]
+]

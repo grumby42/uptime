@@ -76,6 +76,17 @@
 // Thread as one open item with no conclusion; GV.OV-01 and GV.OV-03 word for word; the invariant at all eight
 // checkpoints, with the report's required rows read against the records (rules and records agree), and its failures
 // re-created and caught; the outcome-rule NPC test over the report week too.
+// The finale (slice 5): the disclosure clock (each rule's trigger in its own words: N-1 and N-2 from the incident log's first
+// entry, N-3 from counsel's determination in working days, N-4 none; moving another event moves no clock); the incident log,
+// containment (an export first is the wrong first step: pausing destroys nothing), the drills (one from one source,
+// unsupported), the facts packets graded as sent (classes, unknowns as required rows, padding never cancels a penalty,
+// sent times against their rules), decider routing (one decider each; the first pick scored), the directive, Noor's
+// determination, the comparison card quoted from the SEC's rule, the chair's statement on counsel's and communications'
+// advice with no personal details, the Board's questions keyed to the packets as sent, the minute with the S-7 decision
+// (the Board the decider of record for an owner's acceptance that breaks its tolerance; the chair within five working days
+// from now on) and its failure re-created and caught, the Quiet Thread as one open item for counsel with no conclusion,
+// the real cases as their records state them, the edition's end ("Next edition: coming later (the vCISO edition)"), on
+// the poor-advice run and on the recommended run; the invariant at all ten checkpoints.
 // Usage: node tests/charter.js   (UPTIME_FILE=file:///.../charter/index.html to test another build)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -920,9 +931,9 @@ async function session(ctx, seed) {
   await A.follow(() => false, [], /End of the Board report/);
   const rSum = await A.modalText();
   const rE = await A.page.evaluate(() => ({ obj: objective(), ser: Series.load().editions.charter, keep: { th: localStorage.getItem('uptime.slice1.save'), cr: localStorage.getItem('uptime.crossroads.save'), ng: localStorage.getItem('uptime.crossroads.ngplus.save') } }));
-  check('the Board report summary: “Next: The finale”, the drills, the report as sent with its grades, the minute, the lesson (every line against its record, a trend needs two measures, every risk above appetite on the page even when the board knows, one decider and your recommendation, an omission worse than a dull line), the scorecard on the report as sent; the series records the report; the objective done; the earlier saves byte-for-byte as seeded',
+  check('the Board report summary: “Next: The finale”, the drills, the report as sent with its grades, the minute, the lesson (every line against its record, a trend needs two measures, every risk above appetite on the page even when the board knows, one decider and your recommendation, an omission worse than a dull line), the scorecard on the report as sent; the series records the report; the objective moves on to the finale (next week, your desk); the earlier saves byte-for-byte as seeded',
     /Next: The finale\./.test(rSum) && /Who accepted R2 and R3\?/.test(rSum) && /D1 · Expired this quarter: left out/.test(rSum) && /a trend only where there are two measures/.test(rSum) && /even when the board already knows/.test(rSum) && /An omission is worse than a dull line/.test(rSum) && /Claims supported \(your report as sent\)/.test(rSum) &&
-    rE.ser.report === true && rE.obj.done && /^The Board report done\. Next: The finale\.$/.test(rE.obj.text) && rE.keep.th === TH_SAVE && rE.keep.cr === CR_SAVE && rE.keep.ng === NG_SAVE, { obj: rE.obj, sum: rSum.slice(0, 900) });
+    rE.ser.report === true && !rE.obj.done && /^Next week, Monday: your desk\.$/.test(rE.obj.text) && rE.keep.th === TH_SAVE && rE.keep.cr === CR_SAVE && rE.keep.ng === NG_SAVE, { obj: rE.obj, sum: rSum.slice(0, 900) });
   await A.settle([/^Keep exploring/]);
   const rFm = await A.page.evaluate(() => fmHtml());
   check('Field Manual (the Board report): GV.OV-01 and GV.OV-03 quoted, and the reporting practices (a line checked like a finding, a trend needs two measures, who decided as minuted, what the board knows still goes in, one page and an annex, answering from the records)',
@@ -1032,13 +1043,13 @@ async function session(ctx, seed) {
   // No NPC states an outcome before its time (finding 3, general): every NPC's line is read at every step of the
   // objective chain (each prefix of its flags), and no outcome appears before the flag of the step that produces it.
   const qEarly = await A.page.evaluate(async () => {
-    const src = [objective, supObjective, polObjective, repObjective].map(f => f.toString()).join('\n'), chain = [];
+    const src = [objective, supObjective, polObjective, repObjective, finObjective].map(f => f.toString()).join('\n'), chain = [];
     for (const m of src.matchAll(/!f\.(\w+)\)/g)) if (!chain.includes(m[1])) chain.push(m[1]);
     const keep = JSON.stringify(G), oSay = UI.say, oModal = UI.openModal, oChoose = UI.choose, lines = [];
     let k = 0;
     UI.say = (t, w) => { lines.push({k: k, who: w || '', t: t}); return Promise.resolve(); };
     UI.openModal = () => Promise.reject(new Error('task')); UI.choose = () => Promise.reject(new Error('task'));
-    const npcs = ['penhallow', 'noorch', 'beatrizch', 'edda', 'quellan', 'strand', 'thrushcombe', 'ferredaysup'];
+    const npcs = ['penhallow', 'noorch', 'beatrizch', 'edda', 'quellan', 'strand', 'thrushcombe', 'ferredaysup', 'noorfin', 'ada'];
     for (k = 0; k <= chain.length; k++) {
       for (const id of npcs) {
         const g = JSON.parse(keep); g.f = Object.fromEntries(chain.slice(0, k).map(x => [x, true])); Object.assign(G, g);
@@ -1056,12 +1067,17 @@ async function session(ctx, seed) {
     [/Hawser Badge/, 'chSupBoard'], [/Ballast Badge/, 'chBoard'], [/upgrade is funded|upgrade waits a year/, 'chBoard'],
     // The Board report (slice 4): each drill's outcome, the directive's, the page in the papers (17:00), the badge.
     [/that is what the records say, so that is the line|My MFA line is corrected/, 'chRepDrillA'], [/My supplier line is changed|one measure, where it stands/, 'chRepDrillB'], [/My draft line is changed/, 'chRepDrillC'],
-    [/One line, with the minute’s reference\. Your page/, 'chRepDirective'], [/Your report is in the papers/, 'chRepSent'], [/The members have your page/, 'chRepDay87'], [/Rolling Hitch/, 'chRepBoard']];
+    [/One line, with the minute’s reference\. Your page/, 'chRepDirective'], [/Your report is in the papers/, 'chRepSent'], [/The members have your page/, 'chRepDay87'], [/Rolling Hitch/, 'chRepBoard'],
+    // The finale (slice 5): the pause, each drill's outcome, the packet with the chair, the members told, Wellhollow's second
+    // answer, Marit's worry with Noor, the determination, the statement out, the badge and the clocks after the debrief.
+    [/Paused at 07:40|paused at 07:40, my decision/i, 'chFinContain'], [/Nothing in from their range/, 'chFinDrillB'], [/Your packet is with me/, 'chFinPacket1'], [/my checkpoint\. What has changed/, 'chFinMembers'],
+    [/copied out between 21:58|stay paused until Wellhollow’s answers cover the store/, 'chFinAnswer2'], [/My worry went to Noor/, 'chFinDirective'], [/runs from my determination|determination, as counsel/, 'chFinDetermine'],
+    [/It went out at 14:00/, 'chFinStatement'], [/Heaving Line/, 'chFinBoard'], [/due on Day 107/, 'chFinBoard']];
   // A task's own lines (the scene that produces the outcome, cut at its first choice) are at their time on that step; an
   // NPC's idle line on that step, or any line on an earlier step, is early.
   const qEarlyBad = qEarly.lines.filter(l => qRules.some(([re, fl]) => { const i = qEarly.chain.indexOf(fl); return re.test(l.t) && i >= 0 && (l.k < i || (l.k === i && !l.task)); }));
   check('no NPC line states an outcome before its timeline time: each NPC read at every step of the objective chain (' + qEarly.chain.length + ' steps), and no outcome (cp-patch closed, board-display closed, fin-ap’s control checked, 27 of 30, the Library’s decision, the badges, the morning’s read, cp-xfer back or suspended, the upgrade decided) appears before the step that produces it; Edda before the intake says only board-display',
-    qEarly.chain.length > 55 && qEarly.chain.includes('chRepDay87') && qEarly.lines.length > 250 && !qEarlyBad.length && qEarly.lines.some(l => l.k === qEarly.chain.indexOf('chPolRegister') && /^board-display is closed, my decision\. The register’s yours to write up at 10:30\.$/.test(l.t)),
+    qEarly.chain.length > 75 && qEarly.chain.includes('chRepDay87') && qEarly.chain.includes('chFinDay94') && qEarly.lines.length > 250 && !qEarlyBad.length && qEarly.lines.some(l => l.k === qEarly.chain.indexOf('chPolRegister') && /^board-display is closed, my decision\. The register’s yours to write up at 10:30\.$/.test(l.t)),
     { bad: qEarlyBad.slice(0, 5), n: qEarly.lines.length });
 
   // A Crossroads save code is refused by Charter's import; Charter's own still loads.
@@ -1076,6 +1092,180 @@ async function session(ctx, seed) {
     /GV\.SC-04: “Suppliers are known and prioritized by criticality”/.test(fmT) && /GV\.SC-10/.test(fmT) && /A supplier’s incident, from your side/.test(fmT) && /The clock starts where the contract says/.test(fmT) && /Any supplier incident in Suppliers is told only through the Compact’s records/.test(fmT) && /check your own logs and edge too/.test(fmT) && /Leaving one out when the money covers it is poor advice/.test(fmT), null);
   check('Field Manual: GV.RM-02 and GV.RR-03 quoted, the NICE tasks, “CISO” a job title (a job may cover one or more work roles, or part of one), the game notes labelled (game); Charter’s practices under “Leadership practices (game)”, not D3FEND, and no ATT&CK claim in its intro',
     /GV\.RM-02/.test(fmT) && /GV\.RR-03/.test(fmT) && /T1059/.test(fmT) && /OG-WRL-007/.test(fmT) && /\(game\)/.test(fmT) && /a job may cover one or more work roles, or part of one/.test(fmT) && !/seniority/.test(fmT) && /<h3>Leadership practices \(game\)<\/h3>/.test(fmT) && !/D3FEND/.test(fmT) && !/IDs are from MITRE/.test(fmT) && /open in later districts/.test(fmT), null);
+
+  // ======== The finale (slice 5), on this run: the override path, Inkmere C1 left out, the suspicion file holding
+  // Crossroads notes. Deliberate mistakes: the log opened late (first pick), containment after an export (first pick),
+  // drill 1 read from one decisive source, packet 1 sent with an unsupported row, a misplaced row and the unknown left
+  // out, and held past its due time; a wrong first routing pick; the directive's false start; packet 3 with weak rows,
+  // sent through Ada (late); a wrong first answer at the Board. ========
+  const fS = await A.follow(p => p.f.chFinStart, [], /The incident log: when does it start\?/);
+  const fS0 = await A.page.evaluate(() => ({ day: G.day, wd: CH_DAY[G.day], m: metricVals(), sc: editionScorecard(), fm: G.fm, rs: FACTS.chcsfrs.desc, rsSrc: FACTS.chcsfrs.src, badges: EDITION.badgeFlags,
+    clock0: chFinClock().map(x => x.rule.id + ':' + x.state) }));
+  check('Finale opens on Day 92, a Monday: the notice as received at 06:10 (Wellhollow’s words, its detection time 22:47 on Day 91); the finale metrics show “—”; the Heaving Line Badge not yet; RS.CO-02, RS.CO-03 and GV.RR-02 quoted as the CSF 2.0 Core words them (NIST CSWP 29), each with one example from the Implementation Examples, and no claim that CSF names counsel; before the log is opened no rule’s clock has started',
+    !!fS && fS0.day === 92 && fS0.wd === 'Monday' && (92 - 1) % 7 === 0 && fS0.m.chFinClaims === null && fS0.m.chFinOnTime === null && /Heaving Line Badge: not yet/.test(fS0.sc) && fS0.badges.includes('chHeavingLine') && fS0.fm['fact:chcsfrs'] &&
+    fS0.rs.includes('RS.CO-02: “Internal and external stakeholders are notified of incidents”') && fS0.rs.includes('“Notify law enforcement agencies and regulatory bodies of incidents based on criteria in the incident response plan and management approval”') &&
+    fS0.rs.includes('RS.CO-03: “Information is shared with designated internal and external stakeholders”') && fS0.rs.includes('“Regularly update senior leadership on the status of major incidents”') &&
+    fS0.rs.includes('GV.RR-02: “Roles, responsibilities, and authorities related to cybersecurity risk management are established, communicated, understood, and enforced”') && fS0.rs.includes('“Document who is responsible and accountable for cybersecurity risk management activities and how those teams and individuals are to be consulted and informed”') &&
+    /none of these texts names counsel/.test(fS0.rs) && /CSWP 29/.test(fS0.rsSrc) && fS0.clock0.join() === 'N-1:not started,N-2:not started,N-3:not started,N-4:no clock of its own'.replace(/not started/g, 'not started: its trigger has not happened'), fS0);
+  await A.pickLabel(/^Open it at 08:45 with the office/);
+  await A.follow(p => p.f.chFinLog, []);
+  // The clock primitive, on its own rules (before the week is played on).
+  const fC = await A.page.evaluate(() => {
+    const R = id => CH_FIN_RULES.find(r => r.id === id), keepF = JSON.stringify(G.f), out = {};
+    out.n1 = chAtText(chFinDue(R('N-1')).due); out.n2 = chAtText(chFinDue(R('N-2')).due); out.n3pre = chFinDue(R('N-3')); out.n4 = chFinDue(R('N-4'));
+    G.f.chFinDetermine = true; out.n3 = chAtText(chFinDue(R('N-3')).due); out.n3start = chAtText(chFinDue(R('N-3')).start);
+    // The trigger is the rule's: moving Wellhollow's detection or the notice's arrival moves no clock but its own.
+    const keepE = JSON.stringify(CH_FIN_EVENTS); CH_FIN_EVENTS.detected.at = [90, '01:00']; CH_FIN_EVENTS.notice.at = [91, '01:00'];
+    out.n3moved = chAtText(chFinDue(R('N-3')).due); out.n1moved = chAtText(chFinDue(R('N-1')).due);
+    Object.assign(CH_FIN_EVENTS, JSON.parse(keepE)); G.f = JSON.parse(keepF);
+    out.wd = [chWdAdd(93, 10), chWdAdd(91, 10), chWdAdd(92, 10), chWdAdd(95, 1), chWdAdd(74, 5)];
+    out.triggers = CH_FIN_RULES.map(r => r.id + ':' + r.trigger);
+    out.c1 = chDur(chAt(92, '06:10') - chAt(91, '22:47'));
+    out.log = G.ch.fin.log;
+    return out;
+  });
+  const fSay0 = await sayLog();
+  check('Finale clock (the primitive): N-1 runs from the incident log’s first entry (06:25), due Day 92 10:25; N-2 due Day 93 06:25; N-3 has no clock before counsel’s determination, then runs ten working days from it (Day 93 15:00 to Day 107 15:00, the weekends skipped); N-4 has no clock of its own; moving Wellhollow’s detection or the notice’s arrival moves none of them (each starts where its rule says); C1’s clock 7 hours 23 minutes; working days: Day 93 + 10 = 107, Day 91 + 10 = 103, Day 92 + 10 = 106, Day 95 + 1 = 96, Day 74 + 5 = 81',
+    fC.n1 === 'Day 92 10:25' && fC.n2 === 'Day 93 06:25' && fC.n3pre === null && fC.n4 === null && fC.n3 === 'Day 107 15:00' && fC.n3start === 'Day 93 15:00' && fC.n3moved === 'Day 107 15:00' && fC.n1moved === 'Day 92 10:25' &&
+    fC.wd.join() === '107,103,106,96,81' && fC.triggers.join() === 'N-1:log,N-2:log,N-3:determination,N-4:null' && fC.c1 === '7 hours 23 minutes', fC);
+  check('Finale, the incident log played: “open it at 08:45” explained (a clock that starts late is still late) and retried; the log’s first entry recorded at Day 92 06:25, the false start kept; the questions to Wellhollow at 06:40 in writing',
+    fC.log && fC.log.first === false && fC.log.at.join() === '92,06:25' && fSay0.some(x => /a clock that starts late is still late/.test(x)) && fSay0.some(x => /^\|06:40: your questions to Wellhollow’s security contact, in writing/.test(x)), fC.log);
+  await A.follow(p => false, [], /Your recommendation to Edda/);
+  await A.pickLabel(/^Export the job log first/);
+  await A.follow(p => p.f.chFinContain, []);
+  const fCt = await A.page.evaluate(() => G.ch.fin.contain), fSay1 = await sayLog();
+  check('Finale containment, played: “export the job log first” explained (pausing destroys nothing: pause now, export after) and retried; the pause recorded as Edda’s decision at 07:40, on your recommendation, the export at 08:05 after it',
+    fCt.first === false && fCt.by === 'Edda Thornquist' && fCt.at.join() === '92,07:40' && fCt.exported.join() === '92,08:05' && fSay1.some(x => /Pausing the copies destroys nothing/.test(x)) && fSay1.some(x => /^Edda Thornquist\|Paused at 07:40, my decision, on your recommendation/.test(x)), fCt);
+  await A.goTo('choffice', 18, 2);
+  await A.settle([], /Investigation drill · What does Wellhollow hold of ours\?/);
+  await A.settle([], /^Drill ·/);
+  await A.pickLabel(/^Query: The data-flow record/);
+  await A.pickLabel(/^What goes to Wellhollow\?/);
+  await A.settle([], /^Drill ·/);
+  await A.pickLabel(/I have enough: decide/);
+  await A.settle([]);
+  await A.follow(p => p.f.chFinDrillB, []);
+  const fD = await A.page.evaluate(() => G.ch.fin.drills);
+  check('Finale drill 1 (what Wellhollow holds of ours), read from the data-flow record alone: the right verdict, unsupported (needs: the data-flow record and the copy job); drill 2 (has anything reached our systems) supported',
+    fD.finhold.verdictOk && !fD.finhold.supported && fD.finedge.verdictOk && fD.finedge.supported, fD);
+  await A.follow(p => false, [], /Facts packet 1 · to Noor and the chair/);
+  const fOI = await A.page.evaluate(() => ({ oi: chFinOpenItem(), html: chFinPacketHtml('P1', {K1: 1}) }));
+  await A.page.evaluate(() => { const P = chFinPicks('P1'), g = (id, gr) => chFinPacketDef('P1').rows.find(r => r.id === id).variants.findIndex(v => v.grade === gr) + 1;
+    Object.assign(P, {K1: g('K1', 'supported'), K2: g('K2', 'unsupported'), K3: 0, K4: g('K4', 'supported'), K5: g('K5', 'misplaced'), K6: 0}); });
+  await A.pickLabel(/^Send it$/);
+  await A.settle([], /Send facts packet 1\?/);
+  const fSend = await A.modalText();
+  await A.pickLabel(/^Hold it past 10:25/);
+  await A.settle([], /Facts packet 1, as sent/);
+  const fDeb = await A.modalText();
+  await A.follow(p => p.f.chFinPacket1, []);
+  const fP1 = await A.page.evaluate(() => ({ p: G.ch.fin.packets.P1, m: metricVals() }));
+  check('Finale packet 1 (the open item): the suspicion file holds Crossroads notes on this run, so packet 1 carries one defender-side observation (CP-OPS-02’s sign-in log, 30 days, no sign-in from FD-STAFF-11’s address, every Crossroads note’s address), “Who, and why: not known”, no link to Wellhollow’s incident drawn, and the question for counsel; not a row, not scored; no conclusion and no technique',
+    /^Open item \(not a claim\): the suspicion file, 7 notes, with Rae Okafor’s team and counsel\. One observation: CP-OPS-02’s sign-in log, 30 days to 09:00, shows no sign-in from FD-STAFF-11’s address, the address every Crossroads note comes from\. Who, and why: not known\. No link to Wellhollow’s incident is drawn\. For counsel: in scope for any notice\?$/.test(fOI.oi) &&
+    fOI.html.includes('For counsel: in scope for any notice?') && !/T1\d{3}|caused|responsible|insider|attacker/i.test(fOI.oi), fOI.oi);
+  check('Finale packet 1, as sent: K1 and K4 supported, K2 unsupported (“not known” where our own records say it), K5 misplaced (the pause as the CISO’s own decision), K3 (whether our copies were read: not known) left out though required, K6 not sent; held past 10:25: Noor and the chair had it at Day 93 09:10, late against N-1’s Day 92 10:25; graded on the slice 4 scale: score 0, claims 50%, required 80%, no unknown stated; the debrief says what is not known is a fact counsel needs',
+    fP1.p.sent.onTime === false && fP1.p.sent.at === 93 * 1440 + 9 * 60 + 10 && fP1.p.sent.due === 92 * 1440 + 625 && fP1.p.grade.score === 0 && fP1.p.grade.claims === 50 && fP1.p.grade.required === 80 && !fP1.p.grade.unknownsStated.length &&
+    fP1.p.grade.weak.join() === 'K2,K5' && fP1.p.grade.omitted.join() === 'K3' && /Due: Day 92 10:25 \(N-1\)/.test(fSend) && /K3 · Whether our copies were read or copied: left out\./.test(fDeb) && /what is not known is a fact counsel needs/.test(fDeb) && /late/.test(fDeb) && fP1.m.chFinOnTime === 0, { g: fP1.p.grade, s: fP1.p.sent });
+  await A.follow(p => p.f.chFinMembers, []);
+  const fM = await A.page.evaluate(() => ({ oi: G.ch.fin.openItem, clock: chFinClock().map(x => x.rule.id + ':' + x.state) })), fSay2 = await sayLog();
+  check('Finale members’ call (11:00): Noor does not have packet 1 yet (held), says so; N-2 done at 11:00; each member’s counsel decides for its own; the open item decided by Noor, as counsel, when the packet reached her (Day 93 09:10): not in scope for any notice on these facts, out of the Board papers; N-1 late, N-2 met',
+    fSay2.some(x => /^Noor Castellanos\|11:00\. I don’t have your packet yet\./.test(x)) && fSay2.some(x => /N-2, done\. Each member’s counsel decides for its own member/.test(x)) && fM.oi && fM.oi.by === 'Noor Castellanos' && fM.oi.inScope === false && fM.oi.day === 93 && fM.oi.at === '09:10' &&
+    fSay2.some(x => /not in scope for any notice on these facts\. It stays with Rae Okafor’s team and me, and out of the Board papers\. My decision, as counsel\.$/.test(x)) && fM.clock[0] === 'N-1:late' && fM.clock[1] === 'N-2:met', fM);
+  await A.follow(p => false, [], /D-1: Pausing the nightly copies to Wellhollow\. Who decides\?/);
+  await A.pickLabel(/^Noor Castellanos, counsel for the town/);
+  await A.follow(p => p.f.chFinRoute, []);
+  const fR = await A.page.evaluate(() => ({ r: G.ch.fin.route, m: metricVals(), dec: CH_FIN_DECISIONS, lists: CH_FIN_ROUTE.map(d => ({d: d.decision, good: d.choices.find(c => c.good).label, n: d.choices.length})) })), fSay3 = await sayLog();
+  check('Finale decision log: one decider per decision, as the rules name them (the pause: Edda; the town’s notice: Noor; the Clinic’s: its own counsel; the statement: the chair, on Noor’s and Ada’s advice; the Library’s data: Director Strand; the packets: the CISO, who decides no disclosure); each list offers four deciders, its right one among them; the wrong first pick (Noor for the pause) explained and retried, scored on the first pick (5 of 6, 83%)',
+    fR.dec.map(d => d.id + '=' + d.who).join('|') === 'D-1=Edda Thornquist|D-2=Noor Castellanos|D-3=The Clinic’s own counsel|D-4=Ivor Penhallow, the chair|D-5=Director Mina Strand|D-6=You, the CISO' &&
+    fR.lists.every((x, i) => x.n === 4 && x.good.startsWith(fR.dec[i].who.split(',')[0].replace('You', 'You'))) && fR.r.first.join() === 'false,true,true,true,true,true' && fR.m.chFinRouted === 83 && fSay3.some(x => /Noor decides the legal questions for the town and the shared services\. This one is Edda’s\./.test(x)), fR);
+  await A.follow(p => p.f.chFinAnswer2, []);
+  await A.follow(p => false, [], /Marit’s request: what do you tell her\?/);
+  await A.pickLabel(/^Agreed: we hold it for Wellhollow/);
+  await A.follow(p => p.f.chFinPacket2, []);
+  await A.follow(p => p.f.chFinDrillC, []);
+  const fT = await A.page.evaluate(() => ({ fin: G.ch.fin, clock: chFinClockHtml(chAt(93, '16:00')) })), fSay4 = await sayLog();
+  check('Finale Tuesday: Wellhollow’s second answer (files on one store copied out, 21:58 to 22:40 on Day 91, whose not known) and our own job log (every night Day 58 to Day 92 on that store) at Edda’s desk; Marit’s request (hold packet 2) explained and retried (counsel decides on what is known and what is not); packet 2 sent at 13:45, on time, every row supported; Noor’s determination at 15:00, as counsel for the town and the shared services (each member’s counsel for its own); drill 3 supported: N-3 from Day 93 15:00, due Day 107 15:00',
+    fSay4.some(x => /^Edda Thornquist\|09:00\. Wellhollow’s second answer: files on one of its stores were copied out between 21:58 and 22:40 on Day 91\. Whose files, they don’t know yet\./.test(x)) && fSay4.some(x => /every copy from Day 58 to Day 92, 35 nights, went to that one/.test(x)) &&
+    fT.fin.directive.first === false && fSay4.some(x => /A packet held back to look complete keeps counsel from deciding/.test(x)) && fT.fin.packets.P2.sent.onTime && fT.fin.packets.P2.grade.score === 100 && fT.fin.packets.P2.sent.at === 93 * 1440 + 13 * 60 + 45 &&
+    fT.fin.determination.by === 'Noor Castellanos' && fT.fin.determination.at.join() === '93,15:00' && fT.fin.drills.finclock.verdictOk && fT.fin.drills.finclock.supported && /<td>N-3<\/td><td>93 15:00<\/td><td>107 15:00<\/td><td>running<\/td>/.test(fT.clock), fT.fin.determination);
+  await A.follow(p => false, [], /The disclosure clock/);
+  const fK = await A.modalText();
+  check('Finale Wednesday 09:00, the clock: each rule in its own words with its trigger and due time, the Compact’s own rules (no law stated, counsel decides), and the comparison card labelled “How a US public company would be timed (comparison only)”: Form 8-K General Instruction B.1, Instruction 1 to Item 1.05 and Item 1.05(c) quoted, the registrant deciding, not the CISO; not the Compact’s rule',
+    /How a US public company would be timed \(comparison only\)/.test(fK) && /Not the Compact’s rule: the Compact is a public authority, not an SEC registrant/.test(fK) &&
+    fK.includes('“A report pursuant to Item 1.05 is to be filed within four business days after the registrant determines that it has experienced a material cybersecurity incident.”') &&
+    fK.includes('“A registrant’s materiality determination regarding a cybersecurity incident must be made without unreasonable delay after discovery of the incident.”') &&
+    fK.includes('“if the United States Attorney General determines that disclosure required by paragraph (a) of this Item 1.05 poses a substantial risk to national security or public safety, and notifies the Commission of such determination in writing”') &&
+    /“the registrant”\. The rule names no officer/.test(fK) && /no law is stated here: counsel decides what any law asks/.test(fK) && !/four calendar days|the CISO determines/i.test(fK), fK.slice(0, 400));
+  await A.follow(p => false, [], /Facts packet 3 · for the Compact’s statement/);
+  await A.page.evaluate(() => { const P = chFinPicks('P3'), g = (id, gr) => chFinPacketDef('P3').rows.find(r => r.id === id).variants.findIndex(v => v.grade === gr) + 1;
+    Object.assign(P, {M1: g('M1', 'supported'), M2: g('M2', 'overstated'), M3: g('M3', 'supported'), M4: g('M4', 'misplaced'), M5: g('M5', 'overstated')}); });
+  await A.pickLabel(/^Send it$/);
+  await A.settle([], /Send facts packet 3\?/);
+  await A.pickLabel(/^Send it to Ada at 10:00 to publish/);
+  await A.follow(p => p.f.chFinStatement, []);
+  const fSt = await A.page.evaluate(() => ({ s: G.ch.fin.statement, p3: G.ch.fin.packets.P3 })), fSay5 = await sayLog();
+  check('Finale statement: packet 3 sent to Ada to publish, reached the chair through her at 11:15, late against the chair’s 11:00; the chair decides at 12:00, on Noor’s and Ada’s advice, out at 14:00: the chair’s words, from the records’ wording (M2 and M4 taken from the record in place of yours), with no personal details; the supplier’s cause in no line',
+    fSt.p3.sent.onTime === false && fSt.p3.sent.at === 94 * 1440 + 11 * 60 + 15 && fSt.p3.grade.weak.join() === 'M2,M4,M5' && fSt.s.by === 'Ivor Penhallow' && fSt.s.advice.join() === 'Noor Castellanos,Ada Pemberton' && fSt.s.corrected.join() === 'M2,M4' &&
+    fSt.s.text === 'On Day 92 our backup supplier told us of an incident on its service, which holds copies of our members’ records. Not yet known: whether our members’ copies were among the files taken from the supplier’s store. We stopped sending copies to the supplier on Day 92 and told each member the same morning. Each member’s own counsel decides any notice to its people, and our chair decided this statement.' &&
+    !/Wellhollow|Edda|Marit|Beatriz|patient [A-Z]|cp-|CP-|FD-STAFF|caused/.test(fSt.s.text) && fSay5.some(x => /Ada decides nothing alone|The chair decides the statement\. Ada advises on it and drafts it/.test(x)) && fSay5.some(x => /^Ada Pemberton\|Plain words, what we know and what we don’t, and nobody’s details/.test(x)), fSt.s);
+  await A.follow(p => p.f.chFinDay94, []);
+  const fBq = await A.follow(p => p.f.chFinBoard, [], /A member’s question/);
+  const fBask = await A.page.evaluate(() => chFinBoardQs().map(q => q.packet + ':' + q.row + '|' + q.ask));
+  check('Finale Board: the packets as sent bring a member’s question about their own weak rows', !!(fBq && fBq.ui && fBq.ui.options), null);
+  if (fBq && fBq.ui && fBq.ui.options) { const k = fBq.ui.options.findIndex(o => !(o.meta && o.meta.good)); await A.pickLabel(new RegExp('^' + esc(fBq.ui.options[k].label) + '$')); }
+  await A.follow(p => p.f.chFinBoard, []);
+  const fB = await A.page.evaluate(() => ({ b: G.ch.fin.board, min: G.ch.fin.minute, f: G.f, fm: G.focusMax, aud: G.ch.audit, acc: G.ch.accept.map(a => ({line: a.line, bd: a.boardDecided || null, decider: a.decider})), m: metricVals() })), fSay6 = await sayLog();
+  check('Finale Board, played: the members’ questions keyed to the packets as sent (the omission first, P1’s K3, then the misplaced rows, P1’s K5 and P3’s M4), each quoting your own row or naming what was missing; a wrong first answer recorded; the minute records each packet’s sent time against its due time (P1 late, P2 on time, P3 late), the decisions with their deciders (the pause Edda’s, the town’s notice Noor’s with N-3 due Day 107 15:00, each member’s its own counsel’s, the statement the chair’s), corrects K3, K5 and M4 in the records’ wording, asks for K2, M2 and M5 to be read again, and notes the open item with counsel, no conclusion',
+    fB.b.asked.join() === 'K3,K5,M4' && fB.b.first[0] === false && /said nothing about whether the Compact’s copies were read or copied/.test(fBask[0]) && fBask[1].includes('said: Copies to Wellhollow paused at 07:40 on my own decision') && fBask[2].includes('said: The Compact decides any notice') &&
+    /P1 sent Day 93 09:10, late against Day 92 10:25; P2 sent Day 93 13:45, on time against Day 93 14:00; P3 sent Day 94 11:15, late against Day 94 11:00/.test(fB.min) && /the copies paused \(Edda, Day 92 07:40\); any notice for the town \(Noor, her determination Day 93 15:00, N-3 due Day 107 15:00\); each member’s notice \(its own counsel\); the statement \(the chair, Day 94 12:00, on Noor’s and Ada’s advice\)/.test(fB.min) &&
+    /Corrected in this minute, at the members’ questions: K3, “Whether our copies were read or copied: not known at 09:20/.test(fB.min) && /The chair asks for K2, M2, M5 to be read again against the records/.test(fB.min) && /The suspicion file noted as an open item, with counsel, with no conclusion/.test(fB.min), { asked: fB.b.asked, ask: fBask, min: fB.min });
+  check('Finale minute (review_charter4 S-7, decided): this Board, the decider of record, decides the one owner’s acceptance that breaks its tolerance (cp-xfer’s return, Marit, Day 74, the privacy tolerance): carried to its Day 155 review, its interim measures kept; the rule from today (the chair within five working days of the signing, then this Board’s next minute); the airport’s trust (above the level, no tolerance broken) stays its owner’s; the Board’s own lines stay the Board’s; the invariant clean at the nine checkpoints so far (the tenth is the edition’s end); the Heaving Line Badge, Focus +4',
+    /Decided in this minute, this Board the decider of record: the payroll supplier’s transfer account back in service \(Marit, Day 74\), breaking this Board’s privacy tolerance on its owner’s acceptance: carried to its Day 155 review, its interim measures kept\./.test(fB.min) && /From today, an owner’s acceptance that breaks one of this Board’s tolerances goes to the chair within five working days of its signing, and into this Board’s next minute\./.test(fB.min) &&
+    fB.acc.find(a => a.line === 'CP-XFER').bd && fB.acc.find(a => a.line === 'CP-XFER').bd.day === 95 && !fB.acc.find(a => a.line === 'AP').bd && fB.acc.filter(a => a.decider === 'Board').every(a => !a.bd) &&
+    fB.aud.length === 9 && fB.aud.every(a => !a.bad.length) && fB.aud.map(a => a.day).join() === '67,67,74,74,81,81,88,88,95' && fB.f.chHeavingLine && fSay6.some(x => /Heaving Line Badge \(game\)/.test(x)), { n: fB.aud.length, aud: fB.aud.filter(a => a.bad.length), acc: fB.acc, tail: fB.min.slice(-420) });
+  await A.follow(() => false, [], /The end of Charter/);
+  const fEnd = await A.modalText();
+  const fE = await A.page.evaluate(() => ({ m: metricVals(), obj: objective(), ser: Series.load().editions.charter, qt: Series.qt(), keep: { th: localStorage.getItem('uptime.slice1.save'), cr: localStorage.getItem('uptime.crossroads.save'), ng: localStorage.getItem('uptime.crossroads.ngplus.save') }, reg: chFinRegisterHtml(), aud: G.ch.audit }));
+  check('Finale, the edition’s end: the scorecard on the packets as sent (rows supported 64%, required facts present 92%, on time 33%, routed 83%); the clock at Thursday 16:00 (N-3 running to Day 107 15:00); the edition district by district with every badge; the register today and on the Board’s plan, side by side (S-7); the lesson; the Quiet Thread still open; “Next edition: coming later (the vCISO edition)”; the series record (finale, edition complete); the objective done; the invariant clean at all ten checkpoints; the earlier saves byte-for-byte as seeded',
+    fE.m.chFinClaims === 64 && fE.m.chFinRequired === 92 && fE.m.chFinOnTime === 33 && fE.m.chFinRouted === 83 && /The clock, at Thursday 16:00/.test(fEnd) && /N-393 15:00107 15:00running/.test(fEnd) && /Heaving Line yes/.test(fEnd) && /Rolling Hitch yes/.test(fEnd) && /Ballast yes/.test(fEnd) &&
+    /The register: today and on the Board’s plan/.test(fEnd) && /<th>Today<\/th><th>Target<\/th>/.test(fE.reg) && /Reported separately, each named/.test(fE.reg) && /the CISO decides none of them/.test(fEnd) && /The Quiet Thread is still open/.test(fEnd) && /Next edition: coming later \(the vCISO edition\)\./.test(fEnd) &&
+    fE.aud.length === 10 && fE.aud.every(a => !a.bad.length) && fE.aud[9].day === 95 && fE.ser.finale === true && fE.ser.editionComplete === true && fE.obj.done && /^Charter done\. Next edition: coming later \(the vCISO edition\)\.$/.test(fE.obj.text) && !fE.qt.evicted && fE.keep.th === TH_SAVE && fE.keep.cr === CR_SAVE && fE.keep.ng === NG_SAVE, { m: fE.m, end: fEnd.slice(0, 600) });
+  await A.settle([/^Keep exploring/]);
+  // The packets primitive and the finale's rule, on synthetic data.
+  const fX = await A.page.evaluate(() => {
+    const out = {}, P1 = chFinPacketDef('P1'), set = (P, f) => Object.fromEntries(P.rows.map(r => [r.id, f(r)]));
+    out.dull = chFinGrade('P1', set(P1, r => r.req ? chFinRowGood(r) : 0));
+    out.pad = chFinGrade('P1', set(P1, r => r.id === 'K3' ? 0 : chFinRowGood(r)));
+    out.padWeak = chFinGrade('P1', set(P1, r => r.id === 'K1' ? r.variants.findIndex(v => !v.good) + 1 : chFinRowGood(r)));
+    out.grades = CH_FIN_PACKETS.flatMap(P => P.rows.map(r => r.variants.map(v => v.grade)));
+    out.refsOk = CH_FIN_PACKETS.every(P => P.rows.every(r => r.variants.every(v => v.refs.every(k => CH_FIN_RECORDS[k]) && v.refs.length === r.variants[chFinRowGood(r) - 1].refs.length)));
+    out.unknownReq = CH_FIN_PACKETS.flatMap(P => P.rows.filter(r => r.unknown)).every(r => r.req) && CH_FIN_PACKETS.flatMap(P => P.rows.filter(r => r.unknown)).length === 3;
+    out.recTimes = CH_FIN_PACKETS.every(P => { const due = chAt(P.due[0], P.due[1]); return P.rows.every(r => r.variants.every(v => v.refs.every(k => chAt(CH_FIN_RECORDS[k].at[0], CH_FIN_RECORDS[k].at[1]) < due))); });
+    out.sendFirst = Object.entries(CH_FIN_SEND).every(([k, L]) => { const P = chFinPacketDef(k), due = chAt(P.due[0], P.due[1]); return L.every(o => (chAt(o.at[0], o.at[1]) <= due) === !!o.good); });
+    // S-7: the Board's decision of record removed; then the chair's within five working days; then the chair's too late.
+    const a = G.ch.accept.find(x => x.line === 'CP-XFER'), keep = JSON.stringify(a.boardDecided);
+    delete a.boardDecided; out.s7none = chAuditNow();
+    a.chairDecided = {day: 81}; out.s7chair = chAuditNow();
+    a.chairDecided = {day: 82}; out.s7late = chAuditNow();
+    delete a.chairDecided; a.boardDecided = JSON.parse(keep); out.s7clean = chAuditNow();
+    return out;
+  });
+  check('Finale packets (the primitive): every row has one supported wording and weak ones of the three classes; every wording cites only the packet’s records, as many as the supported one; the three unknowns (K3, L3, M2) are required rows; every record cited is dated before its packet is due; each send choice is on time exactly when it is the recommended one; a dull packet scores 100, and supported optional rows never cancel a penalty (the unknown left out with K6 in: below 100; one weak required row with K6 in: below 100)',
+    out_ok(fX), { dull: fX.dull.score, pad: fX.pad.score, padWeak: fX.padWeak.score });
+  function out_ok(x) { return x.grades.every(g => g.filter(y => y === 'supported').length === 1 && g.every(y => ['supported', 'unsupported', 'overstated', 'misplaced'].includes(y))) && ['unsupported', 'overstated', 'misplaced'].every(c => x.grades.some(g => g.includes(c))) && x.refsOk && x.unknownReq && x.recTimes && x.sendFirst && x.dull.score === 100 && x.pad.score < 100 && x.pad.omitted.join() === 'K3' && x.padWeak.score < 100; }
+  check('Finale invariant (S-7), re-created on purpose: with the Board’s decision of record taken off cp-xfer’s acceptance, the invariant reports its privacy tolerance broken on its owner’s acceptance alone; the chair’s decision within five working days of Day 74 (Day 81) clears it; the chair’s on Day 82 (six working days) does not; restored, clean',
+    fX.s7none.some(x => /^CP-XFER: breaks the privacy tolerance on its owner’s acceptance alone/.test(x)) && !fX.s7chair.length && fX.s7late.some(x => /^CP-XFER: /.test(x)) && !fX.s7clean.length, { none: fX.s7none, late: fX.s7late });
+  const fSrc = await A.page.evaluate(() => ({ all: JSON.stringify([CH_FIN_PACKETS, CH_FIN_DRILLS, CH_FIN_DIRECTIVE, CH_FIN_DOJO, CH_FIN_BOARD_SPECS(), CH_FIN_ROUTE, CH_FIN_CONTAIN, CH_FIN_LOGOPEN, CH_FIN_SEND, CH_FIN_RULES.map(r => r.text)]), story: [chFinStart, chFinContain, chFinAnswer2, chFinDirective, chFinDetermine, chFinStatement, chFinMembers, chFinBoardRound].map(f => f.toString()).join('\n'),
+    good: JSON.stringify(CH_FIN_PACKETS.flatMap(P => P.rows.map(r => r.variants.find(v => v.good).label))), p3: JSON.stringify(chFinPacketDef('P3').rows), cases: FACTS.chcases.desc, sec: FACTS.chfinsec.desc, nice: FACTS.chnicefin.desc, niceSrc: FACTS.chnicefin.src, dojo: CH_FIN_DOJO, spec: CH_FIN_BOARD_SPECS() }));
+  check('Finale content: defender side only (no ATT&CK ID, no attack verb or mechanism, nothing on how Wellhollow’s side was reached or why); addresses only from RFC 5737 (198.51.100.0/24) and no domain; the Quiet Thread in no row, drill, question or option; no supported row says “likely”, “never” or “all” where the record says less; packet 3 (for the statement) names no person but “our chair”, no account or host; no weekday drift (no Friday, Saturday or Sunday; Day 91 by number)',
+    !/\bT1\d{3}\b|phish|malware|exploit|ransom|spray|brute|credential stuffing|vulnerab/i.test(fSrc.all) && !/(\d{1,3}\.){3}\d{1,3}/.test(fSrc.all.replace(/198\.51\.100\.(0\/24|\{n\})/g, '')) && !/\.(com|net|org|io)\b/.test(fSrc.all) &&
+    !/svc-print|FD-STAFF|suspicion|Quiet Thread/i.test(fSrc.all) && !/\blikely\b|\bnever\b|\bevery account\b/.test(fSrc.good) && !/Edda|Marit|Noor|Beatriz|Ivor|Ada|cp-|CP-|FD-/.test(fSrc.p3) && !/Friday|Saturday|Sunday/.test(fSrc.all + fSrc.story), null);
+  check('Finale real cases, as their records state them: United States v. Sullivan (convicted 5 October 2022, 18 U.S.C. § 1505 and § 4; sentenced 5 May 2023 to three years’ probation and a $50,000 fine; Ninth Circuit No. 23-927, filed 13 March 2025, amended 12 November 2025; certiorari denied 29 June 2026, No. 25-1082; the court’s words on Uber’s general counsel; the bug bounty question not decided) and SEC v. SolarWinds (allegations; the July 2024 opinion “denies in part, but grants in large part”; dismissed “with prejudice”, “in the exercise of its discretion”, Litigation Release No. 26423, 20 November 2025); no prison, no illegal bug bounty and no finding against anyone in a right answer; NICE tasks T1310, T1054, T0006, T1234, T1779, T1476 word for word, the role page’s version 2.0.0',
+    fSrc.cases.includes('on 5 October 2022 a federal jury convicted Uber’s former Chief Security Officer of obstructing an FTC proceeding (18 U.S.C. § 1505) and of misprision of felony (18 U.S.C. § 4)') && fSrc.cases.includes('on 5 May 2023 he was sentenced to three years’ probation and a $50,000 fine') &&
+    fSrc.cases.includes('(No. 23-927; filed 13 March 2025, amended 12 November 2025): “Sullivan did not inform Uber’s general counsel of these developments, despite telling other employees to the contrary.”') && fSrc.cases.includes('denied certiorari on 29 June 2026 (No. 25-1082)') && fSrc.cases.includes('need not decide whether a bug bounty program') &&
+    fSrc.cases.includes('“denies in part, but grants in large part, the motion to dismiss”') && fSrc.cases.includes('“with prejudice”, “in the exercise of its discretion”') && /allegations, never findings/.test(fSrc.cases) &&
+    fSrc.dojo.every(q => !/prison|illegal|found that|was false|settled|penalty paid/i.test(q.opts[q.good])) && fSrc.spec.every(s => s.resp.filter(r => r.good).every(r => !/prison|illegal/i.test(r.label))) &&
+    ['T1310, “Implement protective or corrective measures when a cybersecurity incident or vulnerability is discovered”', 'T1054, “Scope analysis reports to various audiences that accounts for data sharing classification restrictions”', 'T0006, “Advocate organization\'s official position in legal and legislative proceedings”', 'T1234, “Develop Computer Network Defense (CND) guidance for organizational stakeholders”', 'T1779, “Coordinate strategic planning efforts with internal and external partners”', 'T1476, “Promote awareness of cybersecurity policy and strategy among management”'].every(t => fSrc.nice.includes(t)) && /version 2\.0\.0/.test(fSrc.niceSrc) && !/T1221/.test(fSrc.nice), null);
 
   check('full run: no console errors or network requests', !A.errors.length && !A.requests.length, { e: A.errors, r: A.requests });
 
@@ -1116,6 +1306,19 @@ async function session(ctx, seed) {
       rrE.rep.grade.lines === 8 && rrE.rep.grade.supported === 8 && rrE.rep.grade.score === 100 && rrE.m.chRepClaims === 100 && rrE.m.chRepRequired === 100 && rrE.m.chRepDecide === 100 &&
       rrE.rep.board.asked.join() === 'The annex,Whose report,Better or worse' && /No correction asked/.test(rrE.rep.minute) && rrE.oi === '' && !/suspicion file/.test(rrE.page) && !/board-display|cp-xfer|CP-XFER/.test(rrE.rep.grade.rows.map(x => x.line).join(' ')) && /The decisions due, each with its decider: C1 \(this Board\), C2 \(the chair\), C3 \(this Board\)\./.test(rrE.rep.minute), { rows: rrE.rows, g: rrE.rep.grade, asked: rrE.rep.board.asked });
     check('recommended path: the invariant clean at all eight checkpoints (Days 67, 74, 81 and 88)', rrE.aud.length === 8 && rrE.aud.every(a => !a.bad.length) && rrE.aud.map(a => a.day).join() === '67,67,74,74,81,81,88,88', rrE.aud);
+    // The finale on the recommended path: the bot's choices to the edition's end; no note in this browser's suspicion file.
+    await R.follow(() => false, [], /The end of Charter/);
+    const rfE = await R.page.evaluate(() => ({ fin: G.ch.fin, aud: G.ch.audit, m: metricVals(), obj: objective(), oi: chFinOpenItem(), acc: G.ch.accept.map(a => ({line: a.line, bd: !!a.boardDecided, decider: a.decider, closed: !!a.closed})), ser: Series.load().editions.charter, p1: chFinPacketHtml('P1', G.ch.fin.packets.P1.sent.picks) }));
+    const rfEnd = await R.modalText();
+    await R.settle([/^Keep exploring/]);
+    check('recommended path, the finale: the log opened at 06:25 and containment at the first try; every drill supported; the three packets sent on time to counsel and the chair (P1 Day 92 10:00, P2 Day 93 13:45, P3 Day 94 10:00), every row supported, the unknowns stated (K3, L3, M2), each packet scored 100; every decision routed at the first pick; the metrics 100/100/100/100; no open item and no Noor decision on one (no note in the file); the Board’s three standing questions (who heard first, the court record, our statement) and no correction',
+      rfE.fin.log.first && rfE.fin.contain.first && rfE.fin.needs.met === 3 && ['P1', 'P2', 'P3'].every(k => rfE.fin.packets[k].sent.onTime && rfE.fin.packets[k].grade.score === 100 && rfE.fin.packets[k].grade.claims === 100) &&
+      rfE.fin.packets.P1.sent.at === 92 * 1440 + 600 && rfE.fin.packets.P2.sent.at === 93 * 1440 + 825 && rfE.fin.packets.P3.sent.at === 94 * 1440 + 600 &&
+      ['P1', 'P2', 'P3'].flatMap(k => rfE.fin.packets[k].grade.unknownsStated).join() === 'K3,L3,M2' && rfE.fin.route.first.every(Boolean) && rfE.m.chFinClaims === 100 && rfE.m.chFinRequired === 100 && rfE.m.chFinOnTime === 100 && rfE.m.chFinRouted === 100 &&
+      rfE.oi === '' && !rfE.fin.openItem && !/Open item/.test(rfE.p1) && rfE.fin.board.asked.join() === 'Who heard first,The court record,Our statement' && /No correction asked/.test(rfE.fin.minute), { fin: { board: rfE.fin.board, needs: rfE.fin.needs }, m: rfE.m });
+    check('recommended path, the finale minute and the edition’s end: on this path too, this Board decides cp-xfer’s acceptance as decider of record (the privacy tolerance, Marit, Day 74), Marit’s closed gap acceptance (R4) needs nothing; the rule from today; the invariant clean at all ten checkpoints; “Next edition: coming later (the vCISO edition)”; the series record of the edition’s end; the objective done',
+      /Decided in this minute, this Board the decider of record: the payroll supplier’s transfer account back in service \(Marit, Day 74\)/.test(rfE.fin.minute) && rfE.acc.find(a => a.line === 'CP-XFER').bd && !rfE.acc.find(a => a.line === 'R4').bd && rfE.acc.find(a => a.line === 'R4').closed &&
+      rfE.aud.length === 10 && rfE.aud.every(a => !a.bad.length) && /Next edition: coming later \(the vCISO edition\)\./.test(rfEnd) && rfE.ser.finale === true && rfE.ser.editionComplete === true && rfE.obj.done, { min: rfE.fin.minute, aud: rfE.aud.slice(-2) });
     check('recommended run: no console errors or network requests', !R.errors.length && !R.requests.length, { e: R.errors, r: R.requests });
     await ctxR.close();
   }

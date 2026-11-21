@@ -236,7 +236,7 @@ body.portrait.bigtext #panel{font-size:17px}
 </div>
 <div id="modal" role="dialog" aria-modal="true"></div>
 <script>
-const BUILD_ID = 'ARCD-20261121-1707Z', BUILD_TS = '2026-11-21 17:07 UTC';
+const BUILD_ID = 'ARCD-20261121-1955Z', BUILD_TS = '2026-11-21 19:55 UTC';
 /* ---- engine/core-data.js ---- */
 /* ============================================================
    UPTIME · engine/core-data.js
@@ -1497,8 +1497,9 @@ function qtFmHtml() {
    cabling, no alert mix (THREATS is empty), no ATT&CK technique in this slice.
    Its loops are the risk register, the appetite statement, the budget, drills
    whose evidence is records, the Board and its acceptances, the supplier
-   register, (District 3) the exception register and the policy library, and
-   (District 4) the Board report.
+   register, (District 3) the exception register and the policy library,
+   (District 4) the Board report, and (the finale) the disclosure clock, the
+   facts packets and the decision log.
    People, the Compact's numbers, accounts, counts, times, prices and ratings are
    invented (game). Real facts are cited in CREDITS.md, section "Charter".
    Timeline: scratchpad charter-timeline.md; every line here is checked against it.
@@ -1522,7 +1523,8 @@ Object.assign(PAL, {
   ferreday: ['#1a1a2e', '#3b2418', '#c98a54', '#2a5a8a'],
   quellan: ['#1a1a2e', '#5b3a26', '#f0c8a0', '#6e2a4a'],
   thrushcombe: ['#1a1a2e', '#2a2a2a', '#e0b090', '#4a6e3a'],
-  strand: ['#1a1a2e', '#2b1d16', '#a8703f', '#6e2a4a']   // Director Mina Strand keeps her Crossroads colours
+  strand: ['#1a1a2e', '#2b1d16', '#a8703f', '#6e2a4a'],   // Director Mina Strand keeps her Crossroads colours
+  ada: ['#1a1a2e', '#5b3a26', '#e0b090', '#b8432f']        // Ada Pemberton keeps her Town Hall colours
 });
 
 /* ---------- Tiles (single UTF-16 units, so map rows keep their lengths) ---------- */
@@ -1583,7 +1585,7 @@ const ACCOUNTS_TOTAL = 1;   // unused (no MFA metric here)
 /* ---------- People ---------- */
 const NPCS = [
   {id: 'penhallow', name: 'Ivor Penhallow', role: 'chair of the Compact Board', map: 'chboard', x: 8, y: 3, dir: 'down', pal: 'penhallow'},
-  {id: 'noorch', name: 'Noor Castellanos', role: 'town attorney, counsel for the town and the shared services', map: 'chboard', x: 4, y: 4, dir: 'down', pal: 'noor', cond: G => !G.f.chAppetite || (!!G.f.chDay66 && !G.f.chBoard) || (!!G.f.chSupThu && !G.f.chSupBoard) || (!!G.f.chPolCheck && !G.f.chPolBoard) || (!!G.f.chRepDay87 && !G.f.chRepBoard)},
+  {id: 'noorch', name: 'Noor Castellanos', role: 'town attorney, counsel for the town and the shared services', map: 'chboard', x: 4, y: 4, dir: 'down', pal: 'noor', cond: G => !G.f.chAppetite || (!!G.f.chDay66 && !G.f.chBoard) || (!!G.f.chSupThu && !G.f.chSupBoard) || (!!G.f.chPolCheck && !G.f.chPolBoard) || (!!G.f.chRepDay87 && !G.f.chRepBoard) || chFinNoorBoard(G)},
   {id: 'beatrizch', name: 'Beatriz Solano', role: 'identity team lead (the shared directory)', map: 'choffice', x: 12, y: 2, dir: 'down', pal: 'solano'},
   {id: 'edda', name: 'Edda Thornquist', role: 'the Compact’s shared-services director', map: 'choffice', x: 18, y: 2, dir: 'down', pal: 'thornquist'},
   {id: 'quellan', name: 'Marit Quellan', role: 'the Compact’s finance director', map: 'choffice', x: 24, y: 2, dir: 'down', pal: 'quellan'},
@@ -1592,8 +1594,15 @@ const NPCS = [
   {id: 'ferredaysup', name: 'Joanna Ferreday', role: 'airport manager, the Regional Airport', map: 'choffice', x: 6, y: 3, dir: 'left', pal: 'ferreday', cond: G => !!G.f.chSupDay72 && !G.f.chSupDirective},
   {id: 'thrushcombe', name: 'Ilka Thrushcombe', role: 'the Compact’s procurement lead', map: 'choffice', x: 27, y: 3, dir: 'up', pal: 'thrushcombe', cond: G => !!G.f.chSupDrillC && !G.f.chSupBoard},
   // Policy (slice 3): the Library's Director, by the risk register on Wednesday (the directive). Met in Crossroads.
-  {id: 'strand', name: 'Director Mina Strand', role: 'library director', map: 'choffice', x: 6, y: 3, dir: 'left', pal: 'strand', cond: G => !!G.f.chPolReplies && !G.f.chPolDirective}
+  {id: 'strand', name: 'Director Mina Strand', role: 'library director', map: 'choffice', x: 6, y: 3, dir: 'left', pal: 'strand', cond: G => !!G.f.chPolReplies && !G.f.chPolDirective},
+  // The finale: Noor by the window in the offices (the members' call, her determination, her terminals), and in the Board
+  // room for the statement and the debrief; Ada Pemberton, the town's communications officer (met in Town Hall), in the
+  // Board room, advising the chair on the Compact's statement.
+  {id: 'noorfin', name: 'Noor Castellanos', role: 'town attorney, counsel for the town and the shared services', map: 'choffice', x: 21, y: 3, dir: 'down', pal: 'noor', cond: G => !!G.f.chFinStart && !G.f.chFinDay94 && !chFinNoorBoard(G)},
+  {id: 'ada', name: 'Ada Pemberton', role: 'communications officer, the town', map: 'chboard', x: 12, y: 4, dir: 'down', pal: 'ada', cond: G => chFinNoorBoard(G)}
 ];
+// Noor (and Ada) are in the Board room for the chair's statement (Wednesday 12:00) and the debrief (Thursday 14:00).
+function chFinNoorBoard(G) { return (!!G.f.chFinPacket3 && !G.f.chFinStatement) || (!!G.f.chFinDay94 && !G.f.chFinBoard); }
 
 /* ---------- No ATT&CK technique and no wild alerts in this slice (the engine's alert tables stay empty) ---------- */
 const TECH = {};
@@ -1638,13 +1647,29 @@ const EXTRA_ACTIONS = {
   chrepwho: {name: 'Who decided, as minuted', desc: 'The minute says who decided; the acceptance says who signed, and for what. A report names both, from the records, and never moves a decision to the person who signed for the checks.'},
   chrepdir: {name: 'What the board knows still goes in', desc: 'Every risk the board carries above appetite goes on the page each time, in one line with the minute’s reference. The report states it; it doesn’t argue it.'},
   chrepbuild: {name: 'One page and an annex', desc: 'A report to the board is one page in its terms, every line tied to a dated record in the annex: risks against appetite and who accepted them, what changed, the decisions it must take with one decider each and your recommendation, exceptions due and expired, supplier gaps and asks. Leaving out a required item is worse than a dull line.'},
-  chrepboard: {name: 'Answering the board from the records', desc: 'When a member questions a line, answer from its record. A line the record does not support is corrected in the minute, in the wording the record supports.'}
+  chrepboard: {name: 'Answering the board from the records', desc: 'When a member questions a line, answer from its record. A line the record does not support is corrected in the minute, in the wording the record supports.'},
+  // The finale (slice 5)
+  chfinlog: {name: 'Open the incident log at once', desc: 'The first record of an incident starts the plan’s clocks. Open the log when the notice is in, not when everyone agrees it is an incident or when a supplier confirms it: a clock that starts late is still late.'},
+  chfincontain: {name: 'Contain without destroying evidence', desc: 'Pausing a supplier’s feed or access destroys nothing, so it is not delayed for an export or an answer. Keep the logs and your own copies as they are; delete nothing on either side. The platform’s owner decides, on the CISO’s recommendation.'},
+  chfinhold: {name: 'What a supplier holds, from your own records', desc: 'In a supplier’s incident, read what it holds of yours from your own data-flow record and the job that feeds it, not from its notice or the contract.'},
+  chfinedge: {name: 'Did anything reach us?', desc: 'Read your account lists and your edge log for the supplier’s range. A register says what was set up; a view is a view; logs say what happened, for your side only.'},
+  chfinpacket: {name: 'A facts packet for counsel', desc: 'At each checkpoint: what is known, what is not known, since when, and from which record, one row each. What is not known goes in, stated as not known. No “likely” as fact, no silence read as “no”, no claim about another party’s cause, and every decision named with its own decider. It goes to counsel directly, on time.'},
+  chfinroute: {name: 'One decider per decision, in an incident', desc: 'Containment on a shared platform is its director’s; any legal duty to notify is counsel’s, each member’s own for that member; the public statement is the chair’s, on counsel’s and communications’ advice; a member’s service is its leadership’s. The CISO decides what the facts say, recommends, and decides no disclosure.'},
+  chfindirective: {name: 'Facts go to counsel, unknowns included', desc: 'When someone asks to hold the facts back until they look complete, or to word them so the open question disappears, the facts still go to counsel at the checkpoint, with what is not known stated as not known. Counsel decides on both.'},
+  chfinclock: {name: 'The clock starts where its rule says', desc: 'Each notification rule names its trigger: the first log entry, a determination, a notice. Count from the recorded time of that trigger, in the rule’s own units (hours, working days), not from detection, arrival or the moment anyone feels sure.'},
+  chfinrules: {name: 'Rules with named triggers', desc: 'Write each notification rule with its trigger, its window, who receives and who decides, so the clock is read from the record and not argued.'},
+  chfinstatement: {name: 'The statement is the chair’s', desc: 'The public statement is decided by the governing body’s chair, on counsel’s and communications’ advice, from the facts packet: plain words, what is known and what is not, no personal details, nothing about another party’s cause.'},
+  chfinboard: {name: 'The debrief from the packets as sent', desc: 'After an incident, the board reads the facts packets as they were sent, with their times and their rules. A row the record does not support is corrected in the minute.'}
 };
 const FACTS = {
   chnice: {name: 'CISO in the NICE Framework', desc: 'The closest NICE work role is Executive Cybersecurity Leadership (OG-WRL-007). Its tasks include T1227, “Manage cybersecurity budget, staffing, and contracting”; T1059, “Perform cost/benefit analyses of cybersecurity programs, policies, processes, systems, and elements”; T1060, “Advise senior management on organizational cybersecurity efforts”; T1088, “Communicate the value of cybersecurity to organizational stakeholders”; T1906, “Establish a cybersecurity risk management program”; and T1308, “Coordinate cybersecurity policy review and approval processes”. “CISO” is a job title, not a NICE work role: a job may cover one or more work roles, or part of one.', src: 'CISA NICCS, Executive Cybersecurity Leadership work role page and task pages T1059, T1060 and T1308 (the role page shows NICE Framework version 2.0.0); NIST NICE Framework Resource Center, “Occupations, Jobs, and Work Roles”; NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to this role or these tasks'},
   chcsfsc: {name: 'Suppliers in CSF 2.0 Govern', desc: 'GV.SC-04: “Suppliers are known and prioritized by criticality”, with NIST’s example “Develop criteria for supplier criticality based on, for example, the sensitivity of data processed or possessed by suppliers, the degree of access to the organization’s systems, and the importance of the products or services to the organization’s mission”. GV.SC-05: “Requirements to address cybersecurity risks in supply chains are established, prioritized, and integrated into contracts and other types of agreements with suppliers and other relevant third parties”, with the example “Establish security requirements for suppliers, products, and services commensurate with their criticality level and potential impact if compromised”. GV.SC-06: “Planning and due diligence are performed to reduce risks before entering into formal supplier or other third-party relationships”. GV.SC-07: “The risks posed by a supplier, their products and services, and other third parties are understood, recorded, prioritized, assessed, responded to, and monitored over the course of the relationship”. GV.SC-08: “Relevant suppliers and other third parties are included in incident planning, response, and recovery activities”. GV.SC-10: “Cybersecurity supply chain risk management plans include provisions for activities that occur after the conclusion of a partnership or service agreement”, with the example “Establish processes for terminating critical relationships under both normal and adverse circumstances”.', src: 'NIST, CSF 2.0 Implementation Examples (26 February 2024)'},
   chcsfpo: {name: 'Policy in CSF 2.0 Govern', desc: 'GV.PO-01: “Policy for managing cybersecurity risks is established based on organizational context, cybersecurity strategy, and priorities and is communicated and enforced”, with NIST’s examples “Periodically review policy and supporting processes and procedures to ensure that they align with risk management strategy objectives and priorities, as well as the high-level direction of the cybersecurity policy” and “Require approval from senior management on policy”. GV.PO-02: “Policy for managing cybersecurity risks is reviewed, updated, communicated, and enforced to reflect changes in requirements, threats, technology, and organizational mission”.', src: 'NIST, CSF 2.0 Implementation Examples (26 February 2024)'},
   chcsfov: {name: 'Oversight in CSF 2.0 Govern', desc: 'GV.OV-01: “Cybersecurity risk management strategy outcomes are reviewed to inform and adjust strategy and direction”, with NIST’s example “Measure how well the risk management strategy and risk results have helped leaders make decisions and achieve organizational objectives”. GV.OV-03: “Organizational cybersecurity risk management performance is evaluated and reviewed for adjustments needed”, with the example “Collect and communicate metrics on cybersecurity risk management with senior leadership”. The subcategories as the CSF 2.0 Core words them (NIST CSWP 29; the Implementation Examples print “measured” for “evaluated” in GV.OV-03), the examples from the Implementation Examples.', src: 'NIST CSWP 29, The NIST Cybersecurity Framework (CSF) 2.0 (26 February 2024), and NIST, CSF 2.0 Implementation Examples (26 February 2024)'},
+  chcsfrs: {name: 'Incident communication in CSF 2.0', desc: 'RS.CO-02: “Internal and external stakeholders are notified of incidents”, with NIST’s example “Notify law enforcement agencies and regulatory bodies of incidents based on criteria in the incident response plan and management approval”. RS.CO-03: “Information is shared with designated internal and external stakeholders”, with the example “Regularly update senior leadership on the status of major incidents”. GV.RR-02: “Roles, responsibilities, and authorities related to cybersecurity risk management are established, communicated, understood, and enforced”, with the example “Document who is responsible and accountable for cybersecurity risk management activities and how those teams and individuals are to be consulted and informed”. The subcategories as the CSF 2.0 Core words them (NIST CSWP 29), the examples from the Implementation Examples. NIST offers the examples as illustrations, and none of these texts names counsel.', src: 'NIST CSWP 29, The NIST Cybersecurity Framework (CSF) 2.0 (26 February 2024), and NIST, CSF 2.0 Implementation Examples (26 February 2024)'},
+  chfinsec: {name: 'How a US public company is timed (comparison only)', desc: 'Not the Compact’s rule: the Compact is a public authority, not an SEC registrant. Form 8-K, General Instruction B.1: “A report pursuant to Item 1.05 is to be filed within four business days after the registrant determines that it has experienced a material cybersecurity incident.” Instruction 1 to Item 1.05: “A registrant’s materiality determination regarding a cybersecurity incident must be made without unreasonable delay after discovery of the incident.” Item 1.05(c) lets disclosure be delayed only if the US Attorney General determines that it poses a substantial risk to national security or public safety and notifies the Commission in writing. The registrant decides; the rule names no officer.', src: 'SEC, final rule, Release No. 33-11216 (Federal Register, 4 August 2023; effective 5 September 2023), and the SEC’s fact sheet for it'},
+  chcases: {name: 'Two real cases, as their records state them', desc: 'United States v. Sullivan: on 5 October 2022 a federal jury convicted Uber’s former Chief Security Officer of obstructing an FTC proceeding (18 U.S.C. § 1505) and of misprision of felony (18 U.S.C. § 4); on 5 May 2023 he was sentenced to three years’ probation and a $50,000 fine. The Ninth Circuit affirmed (No. 23-927; filed 13 March 2025, amended 12 November 2025): “Sullivan did not inform Uber’s general counsel of these developments, despite telling other employees to the contrary.” The court said it need not decide whether a bug bounty program may give researchers prior authorisation. The Supreme Court denied certiorari on 29 June 2026 (No. 25-1082). SEC v. SolarWinds Corp. and Brown: the SEC’s allegations, never findings. In July 2024 the court “denies in part, but grants in large part, the motion to dismiss”, letting only fraud claims based on the pre-incident Security Statement go on at the pleading stage; on 20 November 2025 the SEC dismissed the case “with prejudice”, “in the exercise of its discretion”.', src: 'US Department of Justice, N.D. Cal., press releases of 5 October 2022 and 5 May 2023; US Court of Appeals for the Ninth Circuit, United States v. Sullivan, No. 23-927, opinion and amended opinion; Supreme Court of the United States, docket No. 25-1082; S.D.N.Y., SEC v. SolarWinds Corp., 23 Civ. 9518 (PAE), opinion and order of 18 July 2024; SEC Litigation Release No. 26423 (20 November 2025)'},
+  chnicefin: {name: 'The CISO in an incident, in the NICE Framework', desc: 'Among the tasks of Executive Cybersecurity Leadership (OG-WRL-007): T1310, “Implement protective or corrective measures when a cybersecurity incident or vulnerability is discovered”; T1054, “Scope analysis reports to various audiences that accounts for data sharing classification restrictions”; T0006, “Advocate organization\'s official position in legal and legislative proceedings” (shared with Cybersecurity Legal Advice, OG-WRL-006); T1234, “Develop Computer Network Defense (CND) guidance for organizational stakeholders”; T1779, “Coordinate strategic planning efforts with internal and external partners”; and T1476, “Promote awareness of cybersecurity policy and strategy among management”. None of them names a board, a regulator, counsel or a deadline.', src: 'CISA NICCS, Executive Cybersecurity Leadership work role page (it shows NICE Framework version 2.0.0) and task pages T1310, T1054, T0006, T1234, T1779 and T1476'},
   chcsf: {name: 'Risk appetite and resources in CSF 2.0 Govern', desc: 'CSF 2.0 subcategory GV.RM-02: “Risk appetite and risk tolerance statements are established, communicated, and maintained”. One of NIST’s implementation examples for it: “Translate risk appetite statements into specific, measurable, and broadly understandable risk tolerance statements”. GV.RR-03: “Adequate resources are allocated commensurate with the cybersecurity risk strategy, roles, responsibilities, and policies”, with the example “Identify resource allocation and investment in line with risk tolerance and response”.', src: 'NIST, CSF 2.0 Implementation Examples (26 February 2024)'}
 };
 const GAME_NOTES = [
@@ -1659,6 +1684,8 @@ const GAME_NOTES = [
   'Insurance and indemnity clauses are counsel’s and procurement’s call; the game shows them and never lets the CISO choose them. The Hawser Badge’s effects (every Tier 1 supplier’s security contact, or its account manager where its contract names none yet, on the incident page; Focus +4) are invented. (game)',
   'Policy: POL-1, the Compact’s security policy, the five standards under it (STD-1 to STD-5) and their wording, the exception rule, every exception, account (cp-backup, cp-logfwd, cp-patch, cp-files-lib, cp-files-cl, cp-files-ap), group (FIN-STAFF), rule, host (PATCH-01, LIB-FILM-01), count, record, time and date, and the Sheet Bend Badge’s effects (every exception’s expiry and review date to its owner and your desk the Monday before it falls due; Focus +4) are invented. (game)',
   'The register’s first entry, the town’s fd-admin exception, is quoted from the town’s own records (Town Hall) and nothing is added to it: what they do not state is shown as not stated. (game)',
+  'The finale: Wellhollow’s incident and every notice, answer, time, store, count and record of it, the Compact’s notification rules (N-1 to N-4) and their windows, the facts packets and their rows, the grading and the packet score, the decision log, the statement, the members’ questions, and the Heaving Line Badge’s effects are invented. The incident is told only through the Compact’s records: nothing says how Wellhollow’s side was reached, or why. The SEC rule is a labelled comparison only: the Compact is not an SEC registrant, and Charter never says what any law requires. (game)',
+  'The real cases (United States v. Sullivan; SEC v. SolarWinds Corp. and Brown) are told only as their records state them, in the Disclosure terminals and one of the Board’s questions: never as a story, and with no characterisation of anyone. (game)',
   'The Board report: the one-page summary and its ten-line limit, every row and wording, the annex’s records and their times, the grading and the report score, the members’ questions, the contracts status, and the Rolling Hitch Badge’s effects (every line in a report to the Board arriving with its record’s reference and time; Focus +4) are invented. Each line is filled from your own records. The suspicion file appears on the page as one open item, with no conclusion. (game)'
 ];
 
@@ -1867,7 +1894,7 @@ function chAcceptHtml(list) {
   return '<table class="sc"><tr><th>Line</th><th>Left</th><th>Decided</th><th>Signed</th><th>Review</th></tr>' + list.map(x => '<tr><td>' + esc(x.line) + '</td><td>' + esc(x.residual) + '</td><td>' + esc(x.decider || x.decidedBy.split(' ')[0]) + '</td><td>' + esc(x.signedBy.split(' ')[0]) + '</td><td>Day ' + x.review + '</td></tr>').join('') + '</table>' +
     '<ul>' + list.map(x => '<li><b>' + esc(x.line) + ' ' + esc(x.name) + '</b>: residual ' + esc(x.residual) + ' against a ' + esc(x.appetite) + ' appetite' + (x.breaks && x.breaks.length ? ', and it breaks the tolerance “' + esc(x.breaks.join('”, “')) + '”' : '') + '. ' +
       'Decided by ' + esc(x.decidedBy) + (x.approvedBy ? '; carrying the residual risk approved by ' + esc(x.approvedBy) : '') + '. ' +
-      'Signed by ' + esc(x.signedBy) + ', its owner' + (x.signedFor ? ', for ' + esc(x.signedFor) : '') + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '.' + (x.interim ? ' Meanwhile: ' + esc(x.interim) : '') + (x.closed ? ' Closed Day ' + x.closedDay + ': ' + esc(x.closedNote) + '.' : '') + '</li>').join('') + '</ul>';
+      'Signed by ' + esc(x.signedBy) + ', its owner' + (x.signedFor ? ', for ' + esc(x.signedFor) : '') + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '.' + (x.interim ? ' Meanwhile: ' + esc(x.interim) : '') + (x.closed ? ' Closed Day ' + x.closedDay + ': ' + esc(x.closedNote) + '.' : '') + (x.boardDecided ? ' This Board’s decision of record (' + esc(x.boardDecided.by) + '): ' + esc(x.boardDecided.decision) + '.' : '') + '</li>').join('') + '</ul>';
 }
 
 /* ---------- The systemic invariant: tolerances bind at every checkpoint ---------- */
@@ -1914,6 +1941,9 @@ function chAuditNow() {
   }
   // The Board report (District 4): once a report is sent, its required rows are what the records say (report.js).
   if (c.rep && c.rep.sent && typeof chRepAuditNow === 'function') for (const x of chRepAuditNow()) bad.push(x);
+  // The finale (review_charter4 S-7): from the Day 95 minute, an owner's acceptance that breaks a Board tolerance carries
+  // the Board's decision of record, or the chair's within five working days (disclosure.js).
+  if (typeof chFinAuditNow === 'function') for (const x of chFinAuditNow()) bad.push(x);
   return bad;
 }
 function chAudit(where) { const c = G.ch, bad = chAuditNow(); (c.audit || (c.audit = [])).push({where: where, day: G.day, bad: bad}); return bad;
@@ -2670,6 +2700,211 @@ function chRepAuditNow() {
   return bad;
 }
 
+/* ---- editions/charter/disclosure.js ---- */
+/* ============================================================
+   UPTIME · editions/charter/disclosure.js
+   Charter's disclosure primitives (game models), used by the finale:
+   - the disclosure clock: the game's own notification rules for the Compact
+     (CH_FIN_RULES, finale-data.js; the Compact is a public authority, not an SEC
+     registrant, and no law is named). Each rule names its trigger in its own
+     words, and the clock starts at the recorded time of that trigger, not at
+     the time anyone prefers (chFinDue): hours, or working days (Saturday and
+     Sunday skipped: chWdAdd). A rule whose trigger has not happened has no clock;
+   - the facts packets: what counsel (and, for the statement, the chair and
+     communications) needs at each checkpoint, row by row, each row with one
+     supported wording and weak ones (unsupported, overstated, misplaced), graded
+     on the slice 4 scale: +20 a supported required row, 0 a supported optional
+     one, -10 a weak row, -20 a required row left out. Only required rows earn,
+     so no optional row cancels a penalty. What is not known, stated as not
+     known, is a required row: it earns. Every wording cites as many records as
+     the supported one, and the editor shows none. Each packet as sent is the
+     CISO's, with its sent time against its rule's due time (on time or late);
+   - the decision log: each decision of the incident with the one decider the
+     rules name (whoever is on duty). The CISO's routing is advice, scored on
+     the first pick; the decision is always made by its decider;
+   - the finale's rule for tolerances (review_charter4 S-7, decided in the
+     finale spec's build): the Board is the decider of record for an owner's
+     acceptance that breaks one of its own tolerances, and until its next minute
+     the chair decides it within five working days of the signing.
+   The CISO recommends and supplies facts; the CISO never decides disclosure.
+   State: G.ch.fin (chFin() creates it, so a save from slice 4 loads too).
+   ============================================================ */
+'use strict';
+
+function chFin() {
+  const c = G.ch;
+  if (!c.fin) c.fin = {drills: {}, needs: {met: 0, total: 0}, log: null, contain: null, packets: {}, route: null, directive: null, dojo: [false, false, false], determination: null, openItem: null, statement: null, board: null, minute: null};
+  if (G.targets && G.targets.chFinClaims === undefined) Object.assign(G.targets, {chFinClaims: 100, chFinRequired: 100, chFinOnTime: 100, chFinRouted: 100});
+  return c.fin;
+}
+
+/* ---------- Time: Day and clock, working days ---------- */
+const CH_WD = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const chWeekday = d => CH_WD[(d - 1) % 7];
+const chIsWorkday = d => (d - 1) % 7 < 5;
+const chMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+// A moment as minutes from Day 0 00:00, and back.
+const chAt = (d, t) => d * 1440 + chMin(t);
+const chAtText = m => 'Day ' + Math.floor(m / 1440) + ' ' + chHm(m % 1440);
+// n working days after day d (d itself not counted; Saturday and Sunday skipped).
+function chWdAdd(d, n) { let x = d, k = 0; while (k < n) { x++; if (chIsWorkday(x)) k++; } return x; }
+function chDur(m) { const h = Math.floor(m / 60), r = m % 60; return h + ' hour' + (h === 1 ? '' : 's') + (r ? ' ' + r + ' minute' + (r === 1 ? '' : 's') : ''); }
+
+/* ---------- The clock ---------- */
+// The recorded events the rules can name as triggers (game times, finale-data.js: CH_FIN_EVENTS), less any not yet
+// recorded in this run: a trigger that has not happened starts no clock.
+function chFinEvents() {
+  const fin = chFin(), out = {};
+  for (const k in CH_FIN_EVENTS) { const e = CH_FIN_EVENTS[k]; if (!e.when || e.when(G.f, fin)) out[k] = e; }
+  return out;
+}
+function chFinDue(rule, ev) {
+  const E = ev || chFinEvents(), t = rule.trigger && E[rule.trigger];
+  if (!t) return null;
+  const start = chAt(t.at[0], t.at[1]);
+  if (rule.window.h) return {start, due: start + rule.window.h * 60, from: t};
+  if (rule.window.wd) return {start, due: chAt(chWdAdd(t.at[0], rule.window.wd), t.at[1]), from: t};
+  return {start, due: null, from: t};
+}
+// The clock as it stands at a moment: each rule, its trigger, its due time, and what was done when (a done time
+// recorded by the run, e.g. the packet as sent).
+function chFinClock(now) {
+  const E = chFinEvents(), fin = chFin();
+  return CH_FIN_RULES.map(r => {
+    if (!r.window.h && !r.window.wd) return {rule: r, d: null, done: null, state: 'no clock of its own'};
+    const d = chFinDue(r, E), done = r.done ? r.done(fin, G.f) : null;
+    const state = !d ? 'not started: its trigger has not happened' : done !== null && done !== undefined ? (done <= d.due ? 'met' : 'late') : (now !== undefined && now > d.due ? 'overdue' : 'running');
+    return {rule: r, d, done, state};
+  });
+}
+function chFinClockHtml(now) {
+  const dt = m => esc(Math.floor(m / 1440) + ' ' + chHm(m % 1440)), word = st => ({'no clock of its own': 'none', 'not started': 'waits'})[st.split(':')[0]] || st.split(':')[0];
+  return '<table class="sc"><tr><th>Rule</th><th>Starts (Day)</th><th>Due (Day)</th><th>Now</th></tr>' + chFinClock(now).map(x =>
+    '<tr><td>' + esc(x.rule.id) + '</td><td>' + (x.d ? dt(x.d.start) : '—') + '</td><td>' + (x.d && x.d.due !== null ? dt(x.d.due) : '—') + '</td><td>' + esc(word(x.state)) + '</td></tr>').join('') + '</table>' +
+    '<ul>' + chFinClock(now).map(x => '<li><b>' + esc(x.rule.id + ' ' + x.rule.name) + '</b>: “' + esc(x.rule.text) + '” ' + (!x.rule.window.h && !x.rule.window.wd ? 'No clock of its own.' : 'Its clock starts at ' + esc(x.rule.startsAt) + (x.d ? ': ' + esc(chAtText(x.d.start)) + '.' : ', which has not happened yet.')) + ' Who: ' + esc(x.rule.decider) + '.</li>').join('') + '</ul>' +
+    '<p class="small">The Compact’s own rules (game). The Compact is a public authority, not an SEC registrant, and no law is stated here: counsel decides what any law asks, Noor for the town and the shared services, each member’s own counsel for that member.</p>';
+}
+
+/* ---------- Facts packets ---------- */
+function chFinPacketDef(id) { return CH_FIN_PACKETS.find(p => p.id === id); }
+function chFinRowGood(r) { return r.variants.findIndex(v => v.good) + 1; }
+function chFinCycle(r) { return [0].concat(shuffleOrder(r.variants.map(v => ({label: v.label})), {shuffle: true}).map(i => i + 1)); }
+function chFinRec(r) { return r.req || r.rec === 'in' ? chFinRowGood(r) : 0; }
+function chFinPicks(id) {
+  const fin = chFin(), P = chFinPacketDef(id), rec = fin.packets[id] || (fin.packets[id] = {picks: null, sent: null, grade: null});
+  if (!rec.picks) rec.picks = Object.fromEntries(P.rows.map(r => [r.id, 0]));
+  return rec.picks;
+}
+function chFinRefs(P, picks) {
+  const set = new Set();
+  for (const r of P.rows) if (picks[r.id]) for (const x of r.variants[picks[r.id] - 1].refs) set.add(x);
+  return Object.keys(CH_FIN_RECORDS).filter(k => set.has(k));
+}
+// The open item (packet 1 only): the suspicion file, while it holds notes and the Quiet Thread is not evicted. Not a
+// claim, not scored, not a row, and no conclusion: one defender-side observation consistent with the recorded notes,
+// for counsel to decide whether it is in scope for any notice.
+function chFinOpenItem() {
+  const q = Series.qt();
+  if (q.evicted || !q.cluesFound.length) return '';
+  const cr = q.cluesFound.filter(id => /^(lb|sd|cn|dp|ap)-/.test(id)).length;
+  return 'Open item (not a claim): the suspicion file, ' + q.cluesFound.length + ' note' + (q.cluesFound.length === 1 ? '' : 's') + ', with Rae Okafor’s team and counsel.' +
+    (cr ? ' One observation: CP-OPS-02’s sign-in log, 30 days to 09:00, shows no sign-in from FD-STAFF-11’s address, the address every Crossroads note comes from.' : '') +
+    ' Who, and why: not known. No link to Wellhollow’s incident is drawn. For counsel: in scope for any notice?';
+}
+function chFinPacketHtml(id, picks) {
+  const P = chFinPacketDef(id), on = P.rows.filter(r => picks[r.id]);
+  let h = '<p class="small">' + esc(P.head) + ' (game)</p>';
+  h += on.length ? '<ol>' + on.map(r => '<li>' + esc(r.variants[picks[r.id] - 1].label) + '</li>').join('') + '</ol>' : '<p>The packet is empty.</p>';
+  if (P.openItem) { const oi = chFinOpenItem(); if (oi) h += '<p class="small">' + esc(oi) + '</p>'; }
+  const refs = chFinRefs(P, picks);
+  h += '<h3>The records</h3>' + (refs.length ? '<ul class="small">' + refs.map(k => '<li>' + esc(k) + ' · ' + esc(CH_FIN_RECORDS[k].name) + ' · ' + esc('Day ' + CH_FIN_RECORDS[k].at[0] + ' ' + CH_FIN_RECORDS[k].at[1]) + '</li>').join('') + '</ul>' : '<p class="small">No record cited.</p>');
+  return h;
+}
+// The packet editor: each row cycles its wordings in a seeded order (so the first one shown says nothing about its
+// grade), or is left out. No records are shown per wording.
+async function chFinEdit(id) {
+  const P = chFinPacketDef(id), picks = chFinPicks(id);
+  let cur = 0;
+  while (true) {
+    const done = P.rows.every(r => picks[r.id] === chFinRec(r));
+    const items = P.rows.map(r => ({label: picks[r.id] ? r.variants[picks[r.id] - 1].label : 'Left out: ' + r.name,
+      note: (r.req ? 'Noor’s checkpoint asks for it. ' : 'Optional. ') + '(A cycles)', meta: {k: r.id, lr: true, bot: picks[r.id] !== chFinRec(r)}}));
+    items.push({label: 'Read the packet as it stands', meta: {k: 'read'}});
+    items.push({label: 'Send it', meta: {k: 'send', bot: done}});
+    const body = '<p>' + esc(P.intro) + ' Left/right (or A) changes a row’s wording, or leaves it out. Rows in it: <b>' + P.rows.filter(r => picks[r.id]).length + ' of ' + P.rows.length + '</b>. (game)</p>';
+    const r = await UI.openModal(P.title, body, items, {closable: false, cursor: cur, inView: true, lr: true, cls: 'drill'});
+    const step = (i, d) => { const row = P.rows[i]; if (!row) return; const cy = chFinCycle(row), at = cy.indexOf(picks[row.id] || 0); picks[row.id] = cy[(at + (d > 0 ? 1 : cy.length - 1)) % cy.length]; cur = i; };
+    if (r && typeof r === 'object' && r.lr) { step(r.i, r.d); continue; }
+    if (r >= 0 && r < P.rows.length) { step(r, 1); continue; }
+    const k = items[r] && items[r].meta.k;
+    if (k === 'read') { await UI.openModal('The packet as it stands', chFinPacketHtml(id, picks), [{label: 'Back to the rows', meta: {back: true}}], {closable: false, cls: 'summary'}); cur = r; continue; }
+    if (k === 'send') return Object.assign({}, picks);
+  }
+}
+// Grading a packet as sent (the slice 4 scale; no page limit: a packet is not a page).
+function chFinGrade(id, picks) {
+  const P = chFinPacketDef(id), out = [];
+  for (const r of P.rows) {
+    const p = picks[r.id] || 0, v = p ? r.variants[p - 1] : null;
+    out.push({id: r.id, packet: id, name: r.name, topic: r.topic, required: !!r.req, unknown: !!r.unknown, pick: p, in: !!p, grade: v ? v.grade : r.req ? 'omitted' : 'out', why: v ? v.why : '', line: v ? v.label : ''});
+  }
+  const inc = out.filter(x => x.in), sup = inc.filter(x => x.grade === 'supported'), weak = inc.filter(x => x.grade !== 'supported');
+  const req = out.filter(x => x.required), omitted = req.filter(x => !x.in), supReq = sup.filter(x => x.required);
+  const points = 20 * supReq.length - 10 * weak.length - 20 * omitted.length;
+  return {rows: out, supported: sup.length, weak: weak.map(x => x.id), omitted: omitted.map(x => x.id), unknownsStated: req.filter(x => x.unknown && x.grade === 'supported').map(x => x.id),
+    score: req.length ? Math.max(0, Math.min(100, Math.round(100 * points / (20 * req.length)))) : 0,
+    claims: inc.length ? Math.round(100 * sup.length / inc.length) : 0, required: req.length ? Math.round(100 * (req.length - omitted.length) / req.length) : 0, n: inc.length, reqN: req.length, reqIn: req.length - omitted.length};
+}
+const CH_FIN_GRADE_WORD = {supported: 'supported', unsupported: 'unsupported', overstated: 'overstated', misplaced: 'misplaced', omitted: 'left out (required)', out: 'left out'};
+function chFinDebriefHtml(g, sent) {
+  return '<table class="sc"><tr><th>Row</th><th>Sent as</th></tr>' + g.rows.filter(x => x.in || x.required).map(x => '<tr><td>' + esc(x.id + ' · ' + x.name) + '</td><td>' + esc(CH_FIN_GRADE_WORD[x.grade]) + '</td></tr>').join('') + '</table>' +
+    '<ul>' + g.rows.filter(x => x.in && x.grade !== 'supported').map(x => '<li><b>' + esc(x.id + ' · ' + x.name) + '</b>: ' + esc(x.grade) + ', “' + esc(x.line) + '”. ' + esc(x.why) + '</li>').join('') +
+    g.rows.filter(x => x.grade === 'omitted').map(x => '<li><b>' + esc(x.id + ' · ' + x.name) + '</b>: left out. The checkpoint asks for ' + esc(x.topic) + '. Leaving it out costs more than a dull row would' + (x.unknown ? ', and what is not known is a fact counsel needs' : '') + '.</li>').join('') + '</ul>' +
+    '<p>Rows sent: <b>' + g.n + '</b> · claims supported <b>' + g.claims + '%</b> · required rows present <b>' + g.required + '%</b> · unknowns stated as unknowns <b>' + g.unknownsStated.length + '</b>' + (sent ? ' · sent ' + esc(chAtText(sent.at)) + ', due ' + esc(chAtText(sent.due)) + ': <b>' + (sent.onTime ? 'on time' : 'late') + '</b>' + (sent.to ? ' · to ' + esc(sent.to) : '') : '') + ' · packet score <b>' + g.score + '</b> / 100 (game; only required rows earn)</p>';
+}
+function chFinStats() {
+  const fin = chFin(), sent = CH_FIN_PACKETS.map(P => fin.packets[P.id]).filter(x => x && x.sent && x.grade);
+  if (!sent.length) return {claims: null, required: null, onTime: null, routed: fin.route ? chFinRoutePct() : null, score: null};
+  const inc = sent.reduce((n, x) => n + x.grade.n, 0), sup = sent.reduce((n, x) => n + x.grade.supported, 0);
+  const req = sent.reduce((n, x) => n + x.grade.reqN, 0), reqIn = sent.reduce((n, x) => n + x.grade.reqIn, 0);
+  return {claims: inc ? Math.round(100 * sup / inc) : 0, required: req ? Math.round(100 * reqIn / req) : 0,
+    onTime: Math.round(100 * sent.filter(x => x.sent.onTime).length / sent.length), routed: fin.route ? chFinRoutePct() : null,
+    score: Math.round(sent.reduce((n, x) => n + x.grade.score, 0) / sent.length)};
+}
+
+/* ---------- The decision log: one decider per decision ---------- */
+function chFinRoutePct() { const r = chFin().route; return r && r.first.length ? Math.round(100 * r.first.filter(Boolean).length / r.first.length) : null; }
+function chFinRouteHtml() {
+  return '<table class="sc"><tr><th>Decision</th><th>Decider</th></tr>' + CH_FIN_DECISIONS.map(d => '<tr><td>' + esc(d.short) + '</td><td>' + esc(d.who) + '</td></tr>').join('') + '</table>';
+}
+
+/* ---------- Tolerances bind (review_charter4 S-7, decided in the finale) ---------- */
+// From the Day 95 minute on: an open acceptance whose line breaks one of the Board's tolerances is the Board's (its
+// decider), or carries the Board's decision in a minute, or the chair's within five working days of its signing.
+function chFinAuditNow() {
+  const bad = [], c = G.ch;
+  if (!G.f.chFinBoard) return bad;
+  const st = chRiskStates();
+  for (const a of (c.accept || []).filter(x => !x.closed && x.decider !== 'Board')) {
+    const r = st.find(x => x.id === a.line);
+    const breaks = r ? r.breaks : (a.breaks || []);
+    if (!breaks.length) continue;
+    const chairOk = a.chairDecided && a.chairDecided.day <= chWdAdd(a.day, 5);
+    if (!a.boardDecided && !chairOk) bad.push(a.line + ': breaks the ' + breaks.map(chTolName).join(', ') + ' tolerance on its owner’s acceptance alone, with no decision by the Board or the chair');
+  }
+  return bad;
+}
+// The register as it stands and as the Board decided it (S-7's last point): today's residual (no line has delivered:
+// each one's "as now" option, its tolerances read now) and the target (the Board's decided option).
+function chFinRegisterHtml() {
+  const c = G.ch; if (!c.final) return '';
+  const rows = CH_LINES.map(l => { const now = l.opts[0], o = chOpt(c.final, l), heldNow = chBreaks(now).filter(t => !chHeldTol().includes(t));
+    const today = chLevelWithin(l.cat, now.res) && !heldNow.length, target = chLevelWithin(l.cat, o.res) && !chBreaks(o).length;
+    return '<tr><td>' + l.id + '</td><td>' + now.res + (today ? '' : ', above') + '</td><td>' + o.res + (target ? '' : ', above') + '</td></tr>'; }).join('');
+  return '<table class="sc"><tr><th>Line</th><th>Today</th><th>Target</th></tr>' + rows + '</table>' +
+    '<p class="small">Today: the residual as things stand, no line’s money having delivered yet, with each tolerance read as it is today. Target: the residual on the Board’s decided plan. Reported separately, each named. (game)</p>';
+}
+
 /* ---- editions/charter/prologue-data.js ---- */
 /* ============================================================
    UPTIME · editions/charter/prologue-data.js
@@ -2771,8 +3006,9 @@ const CH_REVIEW = [
    remit, the risk-appetite statement, the budget brief and the register's
    owners and review dates. District 1, Budget, is in budget-*.js; District 2,
    Suppliers, in suppliers-*.js; District 3, Policy, in policy-*.js; District 4,
-   The Board report, in report-*.js; the primitives are in risk.js, supplier.js,
-   policy.js and report.js.
+   The Board report, in report-*.js; the finale (a material incident and the
+   disclosure clock), in finale-*.js; the primitives are in risk.js,
+   supplier.js, policy.js, report.js and disclosure.js.
    Timeline: scratchpad charter-timeline.md.
    ============================================================ */
 'use strict';
@@ -2782,20 +3018,20 @@ const EDITION = {
   saveKey: 'uptime.charter.save',
   ownMetrics: true,           // the analyst scorecard is replaced by the CISO's (EDITION_METRICS)
   noTools: true,              // no tool console: the CISO's tools are the register, the budget and the Board
-  badgeFlags: ['chBallast', 'chHawser', 'chSheetBend', 'chRollingHitch'],
+  badgeFlags: ['chBallast', 'chHawser', 'chSheetBend', 'chRollingHitch', 'chHeavingLine'],
   title: 'Charter edition',
-  blurb: 'Four weeks after the Compact-wide incident, the Compact Board appoints its first CISO: you. Set the risk appetite with the Board, then the budget: one sum, six risks, and an upgrade that wants the money too. Then the suppliers: tiers, contract clauses, and a supplier’s incident told from the Compact’s own records. Then policy: an exception register with owners, expiries and reviews, and a policy the Board approves. Then the Board report: one page from your own records, every line checked against them.',
+  blurb: 'Four weeks after the Compact-wide incident, the Compact Board appoints its first CISO: you. Set the risk appetite with the Board, then the budget: one sum, six risks, and an upgrade that wants the money too. Then the suppliers: tiers, contract clauses, and a supplier’s incident told from the Compact’s own records. Then policy: an exception register with owners, expiries and reviews, and a policy the Board approves. Then the Board report: one page from your own records, every line checked against them. Then the finale: a supplier’s incident, the disclosure clock, and the facts on time to the people who decide.',
   fmActionsCat: 'Leadership practices (game)',   // the Field Manual's heading for EXTRA_ACTIONS (engine default: D3FEND-style)
   fmIntro: 'Descriptions are our own words. No ATT&amp;CK technique in Charter so far; the entries not met yet open in later districts.',
   creditsName: 'Charter edition',
-  creditsFacts: 'Charter (the prologue, Budget, Suppliers, Policy and the Board report): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088, T1906 and T1308, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, and GV.SC-04, GV.SC-05, GV.SC-06, GV.SC-07, GV.SC-08 and GV.SC-10 with the examples quoted, GV.PO-01 with two examples and GV.PO-02, from NIST’s CSF 2.0 Implementation Examples (26 February 2024), and GV.OV-01 and GV.OV-03 as worded in the CSF 2.0 Core, NIST CSWP 29 (26 February 2024), with one example each from the Implementation Examples. No ATT&CK technique. Facts recalled from Crossroads are quoted from Crossroads, and the town’s fd-admin exception from Town Hall.'
+  creditsFacts: 'Charter (the prologue, Budget, Suppliers, Policy, the Board report and the finale): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088, T1906 and T1308, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, and GV.SC-04, GV.SC-05, GV.SC-06, GV.SC-07, GV.SC-08 and GV.SC-10 with the examples quoted, GV.PO-01 with two examples and GV.PO-02, from NIST’s CSF 2.0 Implementation Examples (26 February 2024), GV.OV-01, GV.OV-03, GV.RR-02, RS.CO-02 and RS.CO-03 as worded in the CSF 2.0 Core, NIST CSWP 29 (26 February 2024), with one example each from the Implementation Examples; in the finale, NICE tasks T1310, T1054, T0006, T1234, T1779 and T1476 (CISA NICCS); the SEC’s Form 8-K Item 1.05 rule (Release No. 33-11216) and its fact sheet, as a labelled comparison only; United States v. Sullivan, from the Department of Justice’s releases of 5 October 2022 and 5 May 2023, the Ninth Circuit’s opinion in No. 23-927 (filed 13 March 2025, amended 12 November 2025) and the Supreme Court’s docket in No. 25-1082; and SEC v. SolarWinds Corp. and Brown, from the S.D.N.Y. opinion of 18 July 2024 and SEC Litigation Release No. 26423 (20 November 2025), as allegations and their outcome only. No ATT&CK technique. Facts recalled from Crossroads are quoted from Crossroads, and the town’s fd-admin exception and Ada Pemberton from Town Hall.'
 };
 const CH_TH_KEY = 'uptime.slice1.save', CH_CR_KEY = 'uptime.crossroads.save', CH_NG_KEY = 'uptime.crossroads.ngplus.save';   // read for the carry-over, never written
 const CH_TH_BADGES = [['Key', g => g.badge], ['Seal', g => g.f && g.f.mrSeal], ['Shield', g => g.f && g.f.crShield], ['Lantern', g => g.f && g.f.mkLantern],
   ['Vault', g => g.f && g.f.rhVault], ['Beacon', g => g.f && g.f.bmBeacon], ['Crown', g => g.f && g.f.svCrown], ['Tide', g => g.f && g.f.wtTide], ['Charter', g => g.f && g.f.ccCharter]];
 const CH_CR_BADGES = [['Bookmark', 'lbBookmark'], ['Slate', 'sdSlate'], ['Pulse', 'cnPulse'], ['Relay', 'dpRelay'], ['Windsock', 'apWindsock'], ['Compass', 'fnCompass']];
 const CH_TRACK = {manager: 'IR manager', dfir: 'principal DFIR consultant'};
-const CH_DAY = {64: 'Monday', 65: 'Tuesday', 66: 'Wednesday', 67: 'Thursday', 71: 'Monday', 72: 'Tuesday', 73: 'Wednesday', 74: 'Thursday', 78: 'Monday', 79: 'Tuesday', 80: 'Wednesday', 81: 'Thursday', 85: 'Monday', 86: 'Tuesday', 87: 'Wednesday', 88: 'Thursday'};
+const CH_DAY = {64: 'Monday', 65: 'Tuesday', 66: 'Wednesday', 67: 'Thursday', 71: 'Monday', 72: 'Tuesday', 73: 'Wednesday', 74: 'Thursday', 78: 'Monday', 79: 'Tuesday', 80: 'Wednesday', 81: 'Thursday', 85: 'Monday', 86: 'Tuesday', 87: 'Wednesday', 88: 'Thursday', 92: 'Monday', 93: 'Tuesday', 94: 'Wednesday', 95: 'Thursday'};
 
 /* ---------- State ---------- */
 function newState(seed) {
@@ -2805,11 +3041,11 @@ function newState(seed) {
     focus: 50, focusMax: 50, rep: 50, uptime: 99.95,
     health: {}, rank: 'CISO', badge: false, track: {}, name: 'Lead',
     m: {closed: 0, judged: 0, correctShown: 0, evOk: 0, ttaSum: 0, ttaN: 0, esc: 0, escOk: 0, missed: 0, surfaced: 0, overreact: 0, autoClosed: 0, events: 0, today: 0},
-    targets: {chWithin: 100, chOwned: 100, chTop5: 80, chSupCrit: 100, chSupTier: 100, chSupNotify: 100, chSupMust: 100, chPolExc: 100, chPolExp: 100, chPolRev: 100, chRepClaims: 100, chRepRequired: 100, chRepDecide: 100},
+    targets: {chWithin: 100, chOwned: 100, chTop5: 80, chSupCrit: 100, chSupTier: 100, chSupNotify: 100, chSupMust: 100, chPolExc: 100, chPolExp: 100, chPolRev: 100, chRepClaims: 100, chRepRequired: 100, chRepDecide: 100, chFinClaims: 100, chFinRequired: 100, chFinOnTime: 100, chFinRouted: 100},
     mfaSet: [], fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
     fpWeight: 50, queue: 0, steps: 0, auto: false, autoReview: false, playMs: 0,
     ch: {carry: null, remit: null, appetite: null, register: null, drills: {}, needs: {met: 0, total: 0}, alloc: null, sent: null,
-      board: null, decision: null, final: null, accept: [], directive: null, dojo: [false, false, false], sup: null, pol: null, rep: null}
+      board: null, decision: null, final: null, accept: [], directive: null, dojo: [false, false, false], sup: null, pol: null, rep: null, fin: null}
   };
 }
 
@@ -2862,11 +3098,12 @@ function chOwnedPct() {
   return Math.round(CH_LINES.filter(l => r.owners[l.id] && !/^(IT|Finance|Dispatch)$/.test(r.owners[l.id]) && r.review[l.id]).length / CH_LINES.length * 100);
 }
 function editionMetricVals() {
-  const a = chScored(), s = a ? chAllocStats(a) : null, ss = G.ch && G.ch.sup ? chSupStats() : null, ps = G.ch && G.ch.pol ? chPolStats() : null, rs = G.ch && G.ch.rep ? chRepStats() : null;
+  const a = chScored(), s = a ? chAllocStats(a) : null, ss = G.ch && G.ch.sup ? chSupStats() : null, ps = G.ch && G.ch.pol ? chPolStats() : null, rs = G.ch && G.ch.rep ? chRepStats() : null, fs = G.ch && G.ch.fin ? chFinStats() : null;
   return {chWithin: s ? s.withinPct : null, chOwned: G.f.chBudgetBrief ? chOwnedPct() : null, chTop5: s ? s.topPct : null,
     chSupCrit: ss ? ss.crit : null, chSupTier: ss ? ss.tier : null, chSupNotify: ss ? ss.notify : null, chSupMust: ss ? ss.must : null,
     chPolExc: ps ? ps.exc : null, chPolExp: ps ? ps.exp : null, chPolRev: ps ? ps.rev : null,
-    chRepClaims: rs ? rs.claims : null, chRepRequired: rs ? rs.required : null, chRepDecide: rs ? rs.decide : null};
+    chRepClaims: rs ? rs.claims : null, chRepRequired: rs ? rs.required : null, chRepDecide: rs ? rs.decide : null,
+    chFinClaims: fs ? fs.claims : null, chFinRequired: fs ? fs.required : null, chFinOnTime: fs ? fs.onTime : null, chFinRouted: fs ? fs.routed : null};
 }
 const EDITION_METRICS = [
   {k: 'chWithin', label: 'Risks within appetite (your advice)', unit: '%', higher: true},
@@ -2888,24 +3125,31 @@ const EDITION_METRICS = [
   // and labelled (game): the report as sent, read line by line against its records.
   {k: 'chRepClaims', label: 'Claims supported (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart},
   {k: 'chRepRequired', label: 'Required items present (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart},
-  {k: 'chRepDecide', label: 'Decisions sent in the wording the records support (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart}
+  {k: 'chRepDecide', label: 'Decisions sent in the wording the records support (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart},
+  // The finale (slice 5): CAREER_LADDER §3 "disclosure facts to counsel within the plan's time", widened and labelled (game):
+  // the facts packets as sent, read row by row against their records, their sent times against their rules, and the routing.
+  {k: 'chFinClaims', label: 'Packet rows supported (your packets as sent)', unit: '%', higher: true, when: () => !!G.f.chFinStart},
+  {k: 'chFinRequired', label: 'Required facts present, unknowns included (your packets as sent)', unit: '%', higher: true, when: () => !!G.f.chFinStart},
+  {k: 'chFinOnTime', label: 'Facts to counsel within the rule’s time (your packets as sent)', unit: '%', higher: true, when: () => !!G.f.chFinStart},
+  {k: 'chFinRouted', label: 'Decisions routed to their decider (your first pick)', unit: '%', higher: true, when: () => !!G.f.chFinStart}
 ];
 function editionScorecard() {
   const v = metricVals(), c = G.ch || {};
   const fmt = (d, x) => x === null || x === undefined ? '—' : x + d.unit;
   const rows = METRICS.filter(d => !d.when || d.when()).map(d => { const tr = G.track[d.k] || {}; return '<tr><td>' + d.label + '</td><td><b>' + fmt(d, v[d.k]) + '</b></td><td>' + fmt(d, tr.best) + '</td><td>' + fmt(d, tr.worst) + '</td><td>≥ ' + (G.targets[d.k] === undefined ? 100 : G.targets[d.k]) + d.unit + '</td></tr>'; }).join('');
-  const ss = G.f.chSupStart ? chSupStats() : null, sup = G.ch && G.ch.sup, pol = G.f.chPolStart ? chPol() : null, rep = G.f.chRepStart ? chRep() : null;
+  const ss = G.f.chSupStart ? chSupStats() : null, sup = G.ch && G.ch.sup, pol = G.f.chPolStart ? chPol() : null, rep = G.f.chRepStart ? chRep() : null, fin = G.f.chFinStart ? chFin() : null, fns = fin ? chFinStats() : null;
   return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
     '<p>' + (c.sent ? 'Scored on your advice: the allocation you sent, against Monday’s appetite and tolerances.' : 'No allocation sent yet.') + (c.final ? ' The Board’s decision: <b>' + chAllocStats(c.final).within + ' of ' + CH_LINES.length + '</b> lines within appetite' + (c.decision && c.decision.override ? ', overriding your advice' : '') + '.' : c.sent ? ' The Board decides on Thursday.' : '') + ' Drills with every needs met: <b>' + c.needs.met + ' of ' + c.needs.total + '</b>. Acceptances on the register: <b>' + (c.accept || []).length + '</b>' + ((c.accept || []).length ? ' (signed by ' + [...new Set(c.accept.map(x => x.signedBy))].map(esc).join(', ') + ')' : '') + '.</p>' +
     (ss ? '<p>Suppliers: scored on your advice, the tiers you sent and your plan for the Compact’s own contracts. The members’ own contracts are their owners’ decisions: <b>' + ss.memFull + ' of ' + ss.members + '</b> with every must-have. Owners and review dates came with every line (the Ballast Badge). Must-haves left out on your recommendation, decided and signed by their owners: <b>' + sup.accept.length + '</b>' + (ss.poor ? ' (poor advice: a plan with every must-have fitted)' : '') + '. Supplier drills with every needs met: <b>' + sup.needs.met + ' of ' + sup.needs.total + '</b>.</p>' : '') +
     (pol ? '<p>Policy: scored on your advice, the two entries you wrote up on Monday (EX-02, EX-04), your advice on the two exceptions that expired (drill 1’s verdict and the intake), and the library you sent.' + (chPolStats().reg ? ' Register entries complete (not scored): <b>' + chPolStats().reg.n + ' of ' + chPolStats().reg.of + '</b> (EX-05 decided by its owner; EX-1x as recorded in Suppliers).' : '') + ' Exceptions on the register now: <b>' + chExcInit().filter(e => !e.seed && chExcStatus(e) !== 'closed').length + '</b> open, each with its owner, class, approver, expiry and review. Policy drills with every needs met: <b>' + pol.needs.met + ' of ' + pol.needs.total + '</b>.</p>' : '') +
     (rep ? '<p>The Board report: scored on your report as sent' + (rep.grade ? ', ' + rep.grade.lines + ' lines of ' + CH_REP_PAGE + ', report score ' + rep.grade.score + ' / 100' : ', not sent yet') + '. Report drills with every needs met: <b>' + rep.needs.met + ' of ' + rep.needs.total + '</b>.</p>' : '') +
-    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + (G.f.chSupStart ? ' · Hawser Badge: ' + (G.f.chHawser ? 'yes' : 'not yet') : '') + (G.f.chPolStart ? ' · Sheet Bend Badge: ' + (G.f.chSheetBend ? 'yes' : 'not yet') : '') + (G.f.chRepStart ? ' · Rolling Hitch Badge: ' + (G.f.chRollingHitch ? 'yes' : 'not yet') : '') + '</p>' +
+    (fin ? '<p>The finale: scored on your packets as sent' + (fns.score !== null ? ', average packet score ' + fns.score + ' / 100' : ', none sent yet') + ', and your first pick for each decision. Finale drills with every needs met: <b>' + fin.needs.met + ' of ' + fin.needs.total + '</b>.</p>' : '') +
+    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + (G.f.chSupStart ? ' · Hawser Badge: ' + (G.f.chHawser ? 'yes' : 'not yet') : '') + (G.f.chPolStart ? ' · Sheet Bend Badge: ' + (G.f.chSheetBend ? 'yes' : 'not yet') : '') + (G.f.chRepStart ? ' · Rolling Hitch Badge: ' + (G.f.chRollingHitch ? 'yes' : 'not yet') : '') + (G.f.chFinStart ? ' · Heaving Line Badge: ' + (G.f.chHeavingLine ? 'yes' : 'not yet') : '') + '</p>' +
     (c.carry ? '<p class="small">Carried: ' + esc(chTracksText(c.carry)) + (c.carry.crBadges.length ? ' · Crossroads badges ' + c.carry.crBadges.join(', ') : '') + (c.carry.thBadges.length ? ' · Town Hall badges ' + c.carry.thBadges.join(', ') : '') + ' · suspicion file ' + qtCount() + ' notes.</p>' : '') +
     '<p class="small">Every number here is a game model (game). Objective: ' + esc(objective().text) + '</p>';
 }
 function peekExtra() {
-  return {chSummary: !!(G.f && G.f.chSummary), chSupSummary: !!(G.f && G.f.chSupSummary), chPolSummary: !!(G.f && G.f.chPolSummary), chRepSummary: !!(G.f && G.f.chRepSummary), ch: G.ch ? JSON.parse(JSON.stringify(G.ch)) : null, series: Series.load().editions.charter || null};
+  return {chSummary: !!(G.f && G.f.chSummary), chSupSummary: !!(G.f && G.f.chSupSummary), chPolSummary: !!(G.f && G.f.chPolSummary), chRepSummary: !!(G.f && G.f.chRepSummary), chFinSummary: !!(G.f && G.f.chFinSummary), ch: G.ch ? JSON.parse(JSON.stringify(G.ch)) : null, series: Series.load().editions.charter || null};
 }
 
 /* ---------- Intro (new game) ---------- */
@@ -3012,7 +3256,32 @@ function repObjective(at) {
   if (!f.chRepDay87) return at('End the day at your desk.', 'choffice', 26, 9);
   if (!f.chRepBoard) return at('Thursday 14:00: the Compact Board room: your report.', 'chboard', 8, 3);
   if (!f.chRepSummary) return at('16:00: your desk: close the week.', 'choffice', 26, 9);
-  return {text: 'The Board report done. Next: The finale.', done: true};
+  return finObjective(at);
+}
+// The finale (Days 92 to 95).
+function finObjective(at) {
+  const f = G.f, fin = G.ch.fin;
+  if (!f.chFinStart) return at('Next week, Monday: your desk.', 'choffice', 26, 9);
+  if (!f.chFinContain) return at('07:20: Edda Thornquist’s desk: what you recommend.', 'choffice', 18, 2);
+  if (!f.chFinDrillA) return at('08:30: Edda’s desk: what Wellhollow holds of ours.', 'choffice', 18, 2);
+  if (!f.chFinDrillB) return at('09:00: Beatriz, at the identity desk: has anything reached our systems?', 'choffice', 12, 2);
+  if (!f.chFinPacket1) return at('09:30: your desk: facts packet 1, due with Noor and the chair at 10:25.', 'choffice', 26, 9);
+  if (!f.chFinMembers) return at('11:00: Noor Castellanos, by the window: the members’ call.', 'choffice', 21, 3);
+  if (!f.chFinRoute) return at('14:00: your desk: the decision log.', 'choffice', 26, 9);
+  if (!f.chFinDay92) return at('End the day at your desk.', 'choffice', 26, 9);
+  if (!f.chFinAnswer2) return at('Tuesday 09:00: Edda’s desk: Wellhollow’s second answer.', 'choffice', 18, 2);
+  if (!f.chFinDirective) return at('11:30: Marit Quellan, at her desk.', 'choffice', 24, 2);
+  if (!f.chFinPacket2) return at('13:30: your desk: facts packet 2, for Noor’s checkpoint at 14:00.', 'choffice', 26, 9);
+  if (!f.chFinDrillC) return at('15:00: Noor, by the window.', 'choffice', 21, 3);
+  if (!f.chFinDay93) return at('End the day at your desk.', 'choffice', 26, 9);
+  if (!f.chFinPacket3) return at('Wednesday 09:00: your desk: the clock, then facts packet 3.', 'choffice', 26, 9);
+  if (!f.chFinStatement) return at('12:00: the Compact Board room: the chair decides the statement.', 'chboard', 8, 3);
+  if (!f.chFinDojoMet) return at('14:30: Noor has three terminals for you. Talk to her first.', 'choffice', 21, 3);
+  if (!f.chFinDojoDone) return at('The Disclosure terminals, south-west: ' + (3 - fin.dojo.filter(Boolean).length) + ' left.', 'choffice', 3 + 2 * Math.max(0, fin.dojo.findIndex(x => !x)), 9);
+  if (!f.chFinDay94) return at('End the day at your desk.', 'choffice', 26, 9);
+  if (!f.chFinBoard) return at('Thursday 14:00: the Compact Board room: the debrief.', 'chboard', 8, 3);
+  if (!f.chFinSummary) return at('16:00: your desk: the edition’s end.', 'choffice', 26, 9);
+  return {text: 'Charter done. Next edition: coming later (the vCISO edition).', done: true};
 }
 
 /* ---------- Interactions ---------- */
@@ -3027,7 +3296,7 @@ function interact() {
   if (ch === 'µ') run(async () => { if (f.chBudgetBrief && !f.chRegister) await chRegisterTask(); else await chRegisterView(); });
   else if (ch === 'Ξ') run(async () => { if (f.chPolDrillA && !f.chPolRegister) await chPolRegisterTask(); else if (f.chPolRegister) await chPolRegisterView(); else await say(f.chPolStart ? 'The exception register: the records are pinned up, waiting to be written up.' : 'A cork board, still empty.'); });
   else if (ch === 'Y') run(chDesk);
-  else if (ch === '¤') run(() => f.chRepStart ? chRepDojoPuzzle([3, 5, 7].indexOf(tx)) : f.chPolStart ? chPolDojoPuzzle([3, 5, 7].indexOf(tx)) : f.chBoard ? chSupDojoPuzzle([3, 5, 7].indexOf(tx)) : chDojoPuzzle([3, 5, 7].indexOf(tx)));
+  else if (ch === '¤') run(() => f.chFinStart ? chFinDojoPuzzle([3, 5, 7].indexOf(tx)) : f.chRepStart ? chRepDojoPuzzle([3, 5, 7].indexOf(tx)) : f.chPolStart ? chPolDojoPuzzle([3, 5, 7].indexOf(tx)) : f.chBoard ? chSupDojoPuzzle([3, 5, 7].indexOf(tx)) : chDojoPuzzle([3, 5, 7].indexOf(tx)));
   else if (ch === '£') run(async () => { if (f.chSupDrillA && !f.chSupTier) await chSupTierTask(); else if (f.chSupTier) await chSupRegisterView(); else await say(f.chDrillC ? 'The contracts cabinet. The two quotes for R1 are filed together now, Quote B’s on top. The supplier register sits in the drawer below.' : 'The contracts cabinet: the members’ vendor contracts, and two new quotes in a folder marked R1.'); });
   else if (ch === 'Ɓ') run(async () => { await say(tx < 15 ? 'The identity desk: the shared directory’s console, and Beatriz’s exports.' : tx < 21 ? 'The shared-services desk: the platform’s support notice is pinned to it.' : 'The finance desk: next year’s budget papers, in Marit’s neat piles.'); });
   else if (ch === '±') run(async () => { await say('The Compact Board’s minutes, by year. This year’s binder ends with the weekend of Night 33.'); });
@@ -3042,14 +3311,29 @@ async function talk(npc) {
       if (f.chSupThu && !f.chSupBoard) { await chSupBoardRound(); return; }
       if (f.chPolCheck && !f.chPolBoard) { await chPolBoardRound(); return; }
       if (f.chRepDay87 && !f.chRepBoard) { await chRepBoardRound(); return; }
+      if (f.chFinPacket3 && !f.chFinStatement) { await chFinStatement(); return; }
+      if (f.chFinDay94 && !f.chFinBoard) { await chFinBoardRound(); return; }
+      if (f.chFinBoard) { await say('The Heaving Line Badge: the facts reach their decider first. The heavy line follows.', who); return; }
+      if (f.chFinStart) { await say(f.chFinStatement ? 'Thursday at 14:00, the debrief. Bring the packets as you sent them.' : f.chFinPacket1 ? (chFin().packets.P1.sent.at <= chAt(92, '11:40') || G.day >= 93 ? 'Your packet is with me, and with Noor. Noor decides the law; I decide what the Compact says.' : 'Noor and I don’t have your packet yet. N-1 says 10:25.') : 'Noor and I want the facts by 10:25, what is not known included.', who); return; }
       if (f.chRepBoard) { await say('The Rolling Hitch Badge: every line you bring us arrives with its record. Keep it that way.', who); return; }
       if (f.chRepStart) { await say(f.chRepDay87 ? 'Thursday at 14:00. The members have your page.' : 'Thursday at 14:00, your first report. One page, and the records behind it.', who); return; }
       if (f.chPolBoard) { await say('The Sheet Bend Badge: every exception’s dates reach its owner, and you, before they fall due. A list that is read is a list we can trust.', who); return; }
       if (f.chSupBoard) { await say(f.chPolStart ? 'Thursday at 14:00, the policy. Bring the register as it stands.' : 'The Hawser Badge: a supplier’s trouble reaches us through our own records first. Keep them that way.', who); return; }
       await say(f.chBoard ? 'The Ballast Badge says this Board can hold you to a measure. Keep giving it one.' : 'Thursday at 14:00. Bring both cases, laid out the same way.', who); return;
     case 'noorch':
+      if (f.chFinStart) { await say(f.chFinBoard ? 'The clocks keep running: the town’s notice is due on Day 107. Mine to see to.' : 'The chair decides. I advise on what we may say.', who); return; }
       await say(f.chAppetite ? 'I’m here for anything legal. The budget is the Board’s.' : 'Bring me the facts, on time. Whether the law asks for anything is mine to answer, or a member’s own counsel’s.', who); return;
+    case 'noorfin':
+      if (f.chFinPacket1 && !f.chFinMembers) { await chFinMembers(); return; }
+      if (f.chFinPacket2 && !f.chFinDrillC) { await chFinDetermine(); return; }
+      if (f.chFinStatement && !f.chFinDojoMet) { await chFinDojoIntro(); return; }
+      await say(f.chFinDojoMet && !f.chFinDojoDone ? 'The three terminals, south-west: the Uber case, the SolarWinds case, and the SEC’s clock, each as its own record says.' : f.chFinDrillC ? 'The town’s clock runs from my determination. Each member’s counsel has its own.' : f.chFinMembers ? 'Tuesday 14:00, my checkpoint. What has changed, and what is still not known.' : 'The facts, on time, what is not known included. What the law asks is mine to answer.', who); return;
+    case 'ada':
+      await say(f.chFinStatement ? 'It went out at 14:00, the chair’s words. Any call about it comes to me.' : 'Plain words, what we know and what we don’t. Facts, not adjectives.', who); return;
     case 'beatrizch':
+      if (f.chFinContain && !f.chFinDrillA) { await say('Edda first: what we send them. Then me: what could have come back.', who); return; }
+      if (f.chFinDrillA && !f.chFinDrillB) { await chFinDrillB(); return; }
+      if (f.chFinStart) { await say(f.chFinDrillB ? 'Nothing in from their range, and no account of theirs anywhere. I check it again each morning.' : 'The account lists and the edge log, when you’re ready.', who); return; }
       if (f.chDay64 && !f.chDrillA) { await chDrillA(); return; }
       if (f.chSupStart && !f.chSupDrillA) { await chSupDrillA(); return; }
       if (f.chPolDay78 && !f.chPolDrillB) { await chPolDrillB(); return; }
@@ -3060,6 +3344,10 @@ async function talk(npc) {
       if (f.chSupStart) { await say(f.chSupDrillA ? 'Inkmere’s line cites the data-flow record now. Thimbleford’s cp-xfer is the only supplier account on the transfer server.' : 'The account lists, when you’re ready.', who); return; }
       await say(f.chDrillA ? 'fin-ap goes to Marit, board-display has an owner and an expiry, and the six service accounts keep theirs, owned and dated.' : 'Exports and resets for Edda. Tomorrow you’ll want the sign-in records, I expect.', who); return;
     case 'edda':
+      if (f.chFinStart && !f.chFinContain) { await chFinContain(); return; }
+      if (f.chFinContain && !f.chFinDrillA) { await chFinDrillA(); return; }
+      if (f.chFinDay92 && !f.chFinAnswer2) { await chFinAnswer2(); return; }
+      if (f.chFinStart) { await say(f.chFinAnswer2 ? 'The copies stay paused until Wellhollow’s answers cover the store and our own evidence agrees. My call.' : f.chFinContain ? 'Paused at 07:40, my decision. The job log is exported.' : 'Our copies go to Wellhollow every night at 01:00.', who); return; }
       if (f.chDrillA && !f.chDrillB) { await chDrillB(); return; }
       if (f.chSupTier && !f.chSupDrillB) { await chSupDrillB(); return; }
       if (f.chPolStart && !f.chPolDrillA) { await chPolDrillA(); return; }
@@ -3073,6 +3361,8 @@ async function talk(npc) {
       if (f.chSupStart) { await say(f.chSupThu ? 'cp-xfer is back, key-only, from Thimbleford’s range, every session logged. It was my call both times, on the facts you brought, and our own logs.' : f.chSupIncident ? 'cp-xfer stays suspended until Thimbleford’s answer covers the 23:52 login. My call, on your advice.' : 'Wellhollow keeps our off-site copies. Its renewal is on my desk.', who); return; }
       await say(!f.chAppetite ? 'Edda Thornquist. I run the shared services. You’ll want me at the Board at nine.' : f.chBoard ? (G.ch.decision && G.ch.decision.override ? 'The upgrade is funded. The Board chose the trade-off, with your advice against it in the minute, and I signed for running the interim checks.' : G.ch.final && G.ch.final.R6 === 2 ? 'The upgrade is funded as you sent it. What it leaves, the owners have signed.' : 'The upgrade waits a year and the extension carries us. Fair, laid out the way you laid it out.') : 'My request is with Marit: the platform leaves its vendor’s support next year. It’s a fair case. Make yours as plainly.', who); return;
     case 'quellan':
+      if (f.chFinAnswer2 && !f.chFinDirective) { await chFinDirective(); return; }
+      if (f.chFinStart) { await say(f.chFinDirective ? 'My worry went to Noor. What the law asks is hers.' : 'Payroll’s copies go to Wellhollow too. Tell me when you know more.', who); return; }
       if (f.chAppetite && !f.chBudgetBrief) { await chBudgetBrief(); return; }
       if (f.chSupDay71 && !f.chSupIncident) { await chSupIncident(); return; }
       if (f.chSupDojoDone && !f.chSupReturn) { await chSupReturn(); return; }
@@ -3268,6 +3558,7 @@ async function chDesk() {
     f.chRepDay87 = true; G.day = 88; G.focus = G.focusMax; track();
     await say('Day 88, Thursday. 14:00: the Compact Board room, your report.'); return;
   }
+  if (f.chRepSummary && await chFinDesk()) return;
   if (f.chRepBoard) { await chRepSummary(); return; }
   if (f.chRepStart) { await say('Your desk: the register on one screen, the Board papers on the other.'); return; }
   if (f.chPolBoard) { await chPolSummary(); return; }
@@ -3275,6 +3566,33 @@ async function chDesk() {
   if (f.chSupBoard) { await chSupSummary(); return; }
   if (f.chSummary) { await say('Your desk: the supplier register on one screen, Thimbleford’s thread on the other.'); return; }
   await say(f.chDay64 ? 'Your desk: the register on one screen, the Board papers on the other.' : 'Your desk: an empty in-tray and a new nameplate.');
+}
+// The finale at your desk (Days 92 to 95): true when the desk had something for this step.
+async function chFinDesk() {
+  const f = G.f;
+  if (!f.chFinStart) { await chFinStart(); return true; }
+  if (f.chFinDrillB && !f.chFinPacket1) { await chFinPacket1(); return true; }
+  if (f.chFinMembers && !f.chFinRoute) { await chFinRoute(); return true; }
+  if (f.chFinRoute && !f.chFinDay92) {
+    await UI.openModal('Monday, done', '<p>The log opened at 06:25, the copies paused at 07:40, what Wellhollow holds and what reached us read from our own records, facts packet 1, the members told, and the decision log. Wellhollow has our questions. (game)</p>', [{label: 'Tuesday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    f.chFinDay92 = true; G.day = 93; G.focus = G.focusMax; track();
+    await say('Day 93, Tuesday, 09:00. Edda has Wellhollow’s second answer.'); return true;
+  }
+  if (f.chFinDirective && !f.chFinPacket2) { await chFinPacket2(); return true; }
+  if (f.chFinDrillC && !f.chFinDay93) {
+    await UI.openModal('Tuesday, done', '<p>Wellhollow’s second answer and our own job log, Marit’s request answered, facts packet 2, Noor’s determination at 15:00, and N-3’s clock read from its rule. (game)</p>', [{label: 'Wednesday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    f.chFinDay93 = true; G.day = 94; G.focus = G.focusMax; track();
+    await say('Day 94, Wednesday, 09:00. The clock, at your desk.'); return true;
+  }
+  if (f.chFinDay93 && !f.chFinPacket3) { await chFinClockView(); return true; }
+  if (f.chFinDojoDone && !f.chFinDay94) {
+    await UI.openModal('Wednesday, done', '<p>The clock read rule by rule, facts packet 3, the chair’s statement out at 14:00, and the Disclosure terminals. (game)</p>', [{label: 'Thursday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    f.chFinDay94 = true; G.day = 95; G.focus = G.focusMax; track();
+    await say('Day 95, Thursday. 14:00: the Compact Board room, the debrief.'); return true;
+  }
+  if (f.chFinBoard) { await chFinEnd(); return true; }
+  if (f.chFinStart) { await say('Your desk: the incident log on one screen, the clock on the other.'); return true; }
+  return false;
 }
 
 /* ---- editions/charter/budget-data.js ---- */
@@ -5554,6 +5872,840 @@ async function chRepSummary() {
     '<p class="big">Next: The finale.</p>';
   while (true) {
     const i = await UI.openModal('End of the Board report', body, [{label: 'Keep exploring the Compact offices', meta: {good: true}}, {label: 'Credits'}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
+    if (i === 1) { await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]); continue; }
+    storeSet(encodeSave(G));
+    if (i === 2) { started = false; titleScreen(); }
+    break;
+  }
+}
+
+/* ---- editions/charter/finale-data.js ---- */
+/* ============================================================
+   UPTIME · editions/charter/finale-data.js
+   Charter's finale: a material incident and the disclosure clock (Days 92 to
+   95). Wellhollow Backup, the Compact's tier-1 off-site backup supplier, tells
+   the Compact of an incident on its service. Told only through the Compact's
+   records: Wellhollow's notices as received, the Compact's own logs, times,
+   decisions, notices and outcomes. Nothing here says how Wellhollow's side was
+   reached, and nothing is said about Wellhollow's cause.
+   The game's notification rules (CH_FIN_RULES), the events they start from,
+   the facts packets (three checkpoints, every row with one supported wording
+   and weak ones), the records they cite, three drills whose evidence is
+   records, the decision log (one decider each), the containment choice, the
+   send choices, the directive, the Disclosure terminals (the real cases, as the
+   court record and the SEC's own releases state them) and the Board's standing
+   questions.
+   One decider per decision: Edda pauses the copies (the shared platform);
+   counsel decides any legal duty to notify (Noor for the town and the shared
+   services; each member's own counsel for that member); the chair decides the
+   Compact's statement, on counsel's and communications' advice; each member's
+   leadership decides what happens to its own data; the CISO decides what each
+   packet says, and never decides disclosure.
+   Every record, count, time, rule and wording is invented (game) unless cited
+   in CREDITS.md ("Facts used in Charter, the finale"). Timeline:
+   docs/design/charter-timeline.md (slice 5); every line is checked against it.
+   ============================================================ */
+'use strict';
+
+const CH_FIN_DAY = {92: 'Monday', 93: 'Tuesday', 94: 'Wednesday', 95: 'Thursday'};
+
+/* ---------- The events the rules start from (game times) ---------- */
+const CH_FIN_EVENTS = {
+  detected: {name: 'Wellhollow’s detection, as its notice states it', at: [91, '22:47']},
+  notice: {name: 'Wellhollow’s notice with our named security contact', at: [92, '06:10']},
+  log: {name: 'the incident log’s first entry', at: [92, '06:25'], when: f => !!f.chFinLog},
+  determination: {name: 'Noor’s determination, for the town and the shared services', at: [93, '15:00'], when: f => !!f.chFinDetermine}};
+
+/* ---------- The Compact's notification rules (game wording; no law is named or stated) ---------- */
+const CH_FIN_RULES = [
+  {id: 'N-1', name: 'Facts to counsel and the chair', trigger: 'log', window: {h: 4}, startsAt: 'the incident log’s first entry',
+   text: 'The CISO gives counsel and the chair the facts known, what is not known, and the records behind each, within 4 hours of the incident log’s first entry, then at each checkpoint counsel sets.',
+   decider: 'the CISO supplies the facts; counsel and the chair receive them', done: fin => fin.packets.P1 && fin.packets.P1.sent ? fin.packets.P1.sent.at : null},
+  {id: 'N-2', name: 'Members told', trigger: 'log', window: {h: 24}, startsAt: 'the incident log’s first entry',
+   text: 'Each member’s representative and its own counsel are told, within 24 hours of the incident log’s first entry, that the member’s data may be involved.',
+   decider: 'the chair tells them, the CISO and Noor beside him', done: (fin, f) => f.chFinMembers ? chAt(92, '11:00') : null},
+  {id: 'N-3', name: 'Notice to the people affected', trigger: 'determination', window: {wd: 10}, startsAt: 'a member’s counsel’s determination (for the town: Noor’s)',
+   text: 'Where a member’s counsel determines that personal records held for that member were, or may have been, acquired by someone not authorised, that member’s notice to the people affected goes out within 10 working days of its counsel’s determination, unless a law-enforcement agency asks in writing for a delay.',
+   decider: 'each member’s own counsel, for its own member (the town: Noor)', done: () => null},
+  {id: 'N-4', name: 'The Compact’s statement', trigger: null, window: {}, startsAt: 'no clock of its own',
+   text: 'The chair decides any public statement by the Compact, on counsel’s and communications’ advice, before any member’s notice goes out.',
+   decider: 'the chair, on Noor’s and Ada’s advice', done: () => null}];
+
+/* ---------- The comparison card [fact]: quoted from the SEC's final rule and fact sheet (CREDITS.md) ---------- */
+const CH_FIN_SEC_HTML = '<h3>How a US public company would be timed (comparison only)</h3>' +
+  '<p class="small">Not the Compact’s rule: the Compact is a public authority, not an SEC registrant. For comparison only.</p>' +
+  '<ul class="small"><li>Form 8-K, General Instruction B.1: “A report pursuant to Item 1.05 is to be filed within four business days after the registrant determines that it has experienced a material cybersecurity incident.”</li>' +
+  '<li>Instruction 1 to Item 1.05: “A registrant’s materiality determination regarding a cybersecurity incident must be made without unreasonable delay after discovery of the incident.”</li>' +
+  '<li>Item 1.05(c): disclosure may be delayed only “if the United States Attorney General determines that disclosure required by paragraph (a) of this Item 1.05 poses a substantial risk to national security or public safety, and notifies the Commission of such determination in writing”.</li>' +
+  '<li>Who decides: “the registrant”. The rule names no officer, and the clock starts at the determination, not at discovery.</li></ul>' +
+  '<p class="small">SEC, Cybersecurity Risk Management, Strategy, Governance, and Incident Disclosure, final rule, Release No. 33-11216 (effective 5 September 2023), Federal Register, 4 August 2023.</p>';
+
+/* ---------- The records the packets cite (game). Each with its time ---------- */
+const CH_FIN_RECORDS = {
+  NOT: {name: 'Wellhollow’s notice, as received', at: [92, '06:10']},
+  LOGI: {name: 'The incident log, from its first entry', at: [92, '06:25']},
+  JOB: {name: 'The copy job’s scope and log, exported', at: [92, '08:05']},
+  DFR: {name: 'The data-flow record', at: [71, '08:30']},
+  EDG: {name: 'The edge log, 35 days', at: [92, '08:30']},
+  ACL: {name: 'The account lists', at: [92, '08:30']},
+  CON: {name: 'Wellhollow’s contract, on the supplier register (C1, C2, C7)', at: [71, '10:30']},
+  MEM: {name: 'The members’ call, as recorded', at: [92, '11:00']},
+  WH2: {name: 'Wellhollow’s second answer', at: [93, '09:00']},
+  JB2: {name: 'The copy job’s target store, night by night', at: [93, '09:40']},
+  RST: {name: 'The test restore from our local copies', at: [93, '12:10']},
+  DET: {name: 'Noor’s determination, as recorded', at: [93, '15:00']}};
+
+/* ---------- The facts packets. Each row: req (required), unknown (what is not known, a required row), rec ('in' or
+   'out' for optional rows); every variant cites as many records as the supported one; grade and why for the debrief ---------- */
+const CH_FIN_PACKETS = [
+  {id: 'P1', title: 'Facts packet 1 · to Noor and the chair', due: [92, '10:25'], dueRule: 'N-1', openItem: true,
+   head: 'Facts packet 1, for Noor and the chair, under N-1: records to Day 92 09:20.',
+   intro: 'Monday, 09:30. What is known, what is not, since when, and from which record. N-1 is due at 10:25.',
+   rows: [
+    {id: 'K1', name: 'Wellhollow’s notice', topic: 'what Wellhollow’s notice says', req: true,
+     variants: [
+       {label: 'Wellhollow’s notice at 06:10: an incident on its backup service, detected 22:47 on Day 91, being investigated', good: true, grade: 'supported', refs: ['NOT', 'LOGI'],
+        why: 'The notice, in its own words and with its own times, attributed to Wellhollow.'},
+       {label: 'Wellhollow’s notice, with us at 06:10: an attack on its backup service that took our copies, at 22:47 on Day 91', grade: 'overstated', refs: ['NOT', 'LOGI'],
+        why: 'The notice says whether copies were read or copied is not yet known. “Took our copies” says more.'},
+       {label: 'Wellhollow’s notice, with us at 06:10: an incident on its backup service on Day 91, contained at 22:47 that night', grade: 'unsupported', refs: ['NOT', 'LOGI'],
+        why: 'No record says it was contained. 22:47 is when Wellhollow says it detected it.'},
+       {label: 'Wellhollow’s notice, with us at 06:10: Wellhollow deciding at 22:47 on Day 91 that no customer need tell anyone', grade: 'misplaced', refs: ['NOT', 'CON'],
+        why: 'Whether anyone must be told is each member’s counsel’s decision, not Wellhollow’s, and the notice says nothing of it.'}]},
+    {id: 'K2', name: 'What Wellhollow holds of ours', topic: 'what Wellhollow holds of the Compact’s', req: true,
+     variants: [
+       {label: 'Wellhollow holds 35 nights of copies of every member’s file shares, records included, by our own records', good: true, grade: 'supported', refs: ['DFR', 'JOB'],
+        why: 'Our own records: the data-flow record and the copy job’s scope.'},
+       {label: 'What Wellhollow holds of ours: not known until Wellhollow says, its notice naming no one’s copies at 06:10', grade: 'unsupported', refs: ['NOT', 'DFR'],
+        why: 'Our own records say it: the data-flow record and the copy job’s scope. “Not known” is for what no record shows.'},
+       {label: 'Wellhollow holds every record any member has kept, for each year from the start of its contract, by the data-flow record', grade: 'overstated', refs: ['DFR', 'JOB'],
+        why: '“Every record, each year” where the job keeps 35 nights of the file shares.'}]},
+    {id: 'K3', name: 'Whether our copies were read or copied', topic: 'whether the Compact’s copies were read or copied', req: true, unknown: true,
+     variants: [
+       {label: 'Whether our copies were read or copied: not known at 09:20, the notice saying Wellhollow does not know yet', good: true, grade: 'supported', refs: ['NOT', 'LOGI'],
+        why: 'What is not known, stated as not known, with since when and from which record. Counsel needs it as much as any fact.'},
+       {label: 'Whether our copies were read or copied: not known at 09:20, and to be treated as no until Wellhollow says', grade: 'overstated', refs: ['NOT', 'LOGI'],
+        why: 'What is not known is not “no”. Treating it as no until told otherwise is silence read as an answer.'},
+       {label: 'Whether our copies were read or copied: yes, in all likelihood, at 09:20, our copies sitting on that system', grade: 'overstated', refs: ['NOT', 'JOB'],
+        why: '“Likely” stated as a finding. The notice says it is not yet known.'},
+       {label: 'Whether our copies were read or copied: no, at 09:20, on Wellhollow’s word to our on-call lead at 06:15', grade: 'unsupported', refs: ['NOT', 'LOGI'],
+        why: 'No record holds such a word. At 06:15 the on-call lead phoned you, not Wellhollow.'}]},
+    {id: 'K4', name: 'Our own systems', topic: 'whether anything from Wellhollow reached the Compact’s systems', req: true,
+     variants: [
+       {label: 'Into our systems from Wellhollow: nothing in 35 days on the edge log, no Wellhollow account at 08:30', good: true, grade: 'supported', refs: ['EDG', 'ACL'],
+        why: 'The edge log and the account lists, each with its time.'},
+       {label: 'Into our systems from Wellhollow: nothing in 35 days, and nothing can ever come in from its incident', grade: 'overstated', refs: ['EDG', 'ACL'],
+        why: 'A promise beyond the records: they show 35 days, not what never will.'},
+       {label: 'Into our systems from Wellhollow: one sign-in from its range at 22:40 on Day 91, on the edge log at 08:30', grade: 'unsupported', refs: ['EDG', 'ACL'],
+        why: 'The edge log shows nothing in from Wellhollow’s range: only our nightly copies going out.'},
+       {label: 'Into our systems from Wellhollow: nothing, Edda having decided at 08:30 that the incident is not ours', grade: 'misplaced', refs: ['EDG', 'ACL'],
+        why: 'Whether the incident touches the town or a member for any notice is counsel’s question. Edda decides the platform.'}]},
+    {id: 'K5', name: 'Containment', topic: 'what was done to contain it', req: true,
+     variants: [
+       {label: 'Copies to Wellhollow paused at 07:40, Edda’s decision on my recommendation, the job log exported at 08:05', good: true, grade: 'supported', refs: ['JOB', 'LOGI'],
+        why: 'Who decided, on whose recommendation, and what was kept, from the log.'},
+       {label: 'Copies to Wellhollow paused at 07:40 on my own decision, Edda carrying it out, the job log exported at 08:05', grade: 'misplaced', refs: ['JOB', 'LOGI'],
+        why: 'The shared platform is Edda’s: she decided, on your recommendation.'},
+       {label: 'Copies to Wellhollow paused at 07:40, our members’ data out of reach from here on, the job log exported at 08:05', grade: 'overstated', refs: ['JOB', 'LOGI'],
+        why: 'Pausing new copies does nothing for the 35 nights already at Wellhollow.'},
+       {label: 'Copies to Wellhollow paused at 07:40, once Wellhollow had cleared it with us, the job log exported at 08:05', grade: 'unsupported', refs: ['JOB', 'LOGI'],
+        why: 'No record of any clearance, and none was needed: the pause is ours.'}]},
+    {id: 'K6', name: 'The contract’s clock', topic: 'the contract’s notice clock', req: false, rec: 'in',
+     variants: [
+       {label: 'Wellhollow’s notice inside its 24-hour clause: detected 22:47 on Day 91, with our contact 06:10, 7 hours 23 minutes', good: true, grade: 'supported', refs: ['CON', 'NOT'],
+        why: 'C1’s own clock: from its stated detection to our named contact.'},
+       {label: 'Wellhollow’s notice outside its 24-hour clause: detected 22:47 on Day 91, with our contact 06:10, 31 hours 23 minutes', grade: 'unsupported', refs: ['CON', 'NOT'],
+        why: '22:47 to 06:10 the next morning is 7 hours 23 minutes.'},
+       {label: 'Wellhollow’s notice inside its clause, at 7 hours 23 minutes, and its handling of the rest to be trusted too', grade: 'overstated', refs: ['CON', 'NOT'],
+        why: 'A notice on time says nothing about the rest of its handling.'}]}]},
+  {id: 'P2', title: 'Facts packet 2 · to Noor', due: [93, '14:00'], dueRule: 'Noor’s checkpoint (N-1)',
+   head: 'Facts packet 2, for Noor, at her checkpoint: records to Day 93 13:20.',
+   intro: 'Tuesday, 13:30. Noor’s checkpoint is 14:00. What has changed since Monday, and what is still not known.',
+   rows: [
+    {id: 'L1', name: 'Wellhollow’s second answer', topic: 'what Wellhollow’s second answer says', req: true,
+     variants: [
+       {label: 'Wellhollow’s answer at 09:00: files on one of its stores copied out, 21:58 to 22:40 on Day 91, whose files not yet named', good: true, grade: 'supported', refs: ['WH2', 'NOT'],
+        why: 'The answer, in its own words and times, attributed to Wellhollow.'},
+       {label: 'Wellhollow’s answer at 09:00: our files copied out of its store, 21:58 to 22:40 on Day 91, by its own account', grade: 'overstated', refs: ['WH2', 'NOT'],
+        why: 'The answer says whose files is not yet known. “Our files” says more.'},
+       {label: 'Wellhollow’s answer at 09:00: nothing copied out of any store, 21:58 to 22:40 on Day 91, by its own account', grade: 'unsupported', refs: ['WH2', 'NOT'],
+        why: 'The answer says the opposite: files on one store were copied out.'},
+       {label: 'Wellhollow’s answer at 09:00: files on one store copied out on Day 91, Wellhollow telling our members’ people itself', grade: 'misplaced', refs: ['WH2', 'NOT'],
+        why: 'Any notice to a member’s people is that member’s decision, on its own counsel’s advice.'}]},
+    {id: 'L2', name: 'Our copies on that store', topic: 'whether the Compact’s copies are on that store', req: true,
+     variants: [
+       {label: 'On that store: every night’s copy from Day 58 to Day 92, 35 nights, by our own job log at 09:40', good: true, grade: 'supported', refs: ['JB2', 'WH2'],
+        why: 'Our own job log names the store for each night.'},
+       {label: 'On that store: every copy the Compact has ever made, of every member, by our own job log at 09:40', grade: 'overstated', refs: ['JB2', 'WH2'],
+        why: '“Ever made” where the log shows 35 nights.'},
+       {label: 'On that store: none of ours, Wellhollow’s answer at 09:00 naming other customers’ copies', grade: 'unsupported', refs: ['WH2', 'JB2'],
+        why: 'The answer names no customer, and our own job log puts every night’s copy on that store.'}]},
+    {id: 'L3', name: 'Ours among the files copied out', topic: 'whether the Compact’s copies were among the files copied out', req: true, unknown: true,
+     variants: [
+       {label: 'Ours among the files copied out: not known at 13:20, Wellhollow still working out whose they were', good: true, grade: 'supported', refs: ['WH2', 'JB2'],
+        why: 'What is not known, stated as not known, with since when and from which record.'},
+       {label: 'Ours among the files copied out: yes at 13:20, every night’s copy from Day 58 on being on that store', grade: 'overstated', refs: ['WH2', 'JB2'],
+        why: 'On the store is not the same as among the files copied out. Wellhollow does not know yet.'},
+       {label: 'Ours among the files copied out: not known at 13:20, but no, nothing in our own logs pointing that way', grade: 'overstated', refs: ['WH2', 'JB2'],
+        why: 'Our logs can’t see Wellhollow’s store. An absence on our side says nothing about theirs.'}]},
+    {id: 'L4', name: 'Members told', topic: 'whether each member has been told', req: true,
+     variants: [
+       {label: 'Each member’s representative and counsel told 11:00 Monday, each counsel deciding for its member', good: true, grade: 'supported', refs: ['MEM', 'NOT'],
+        why: 'N-2, met, and each member’s counsel deciding for its own member.'},
+       {label: 'Each member’s representative and counsel told at 11:00 on Monday, Noor deciding any notice for every one of them', grade: 'misplaced', refs: ['MEM', 'NOT'],
+        why: 'Noor decides for the town and the shared services. Each member’s own counsel decides for that member.'},
+       {label: 'Each member’s representative told at 09:30 on Tuesday, once Wellhollow’s answer at 09:00 had settled it', grade: 'unsupported', refs: ['MEM', 'WH2'],
+        why: 'The call record says Monday 11:00, and nothing is settled.'}]},
+    {id: 'L5', name: 'Restore readiness', topic: 'whether the Compact can restore from its own copies', req: false, rec: 'in',
+     variants: [
+       {label: 'Our local copies intact: a test restore of the Clinic’s share good at 12:10, the other shares not yet tried', good: true, grade: 'supported', refs: ['RST', 'JB2'],
+        why: 'One restore tried, and the rest named as not yet tried.'},
+       {label: 'Every member’s data restorable from our local copies within the hour, the restore at 12:10 proving it', grade: 'overstated', refs: ['RST', 'JB2'],
+        why: 'One share restored is a sample, not every member, and not a time.'},
+       {label: 'Our local copies paused with the job at 07:40 on Monday, the restore at 12:10 made from Wellhollow’s copy', grade: 'unsupported', refs: ['RST', 'JB2'],
+        why: 'Only the copies to Wellhollow were paused, and the restore came from our own.'}]}]},
+  {id: 'P3', title: 'Facts packet 3 · for the Compact’s statement', due: [94, '11:00'], dueRule: 'the chair’s request (N-4)',
+   head: 'Facts packet 3, for the chair, Noor and Ada, for the Compact’s statement: records to Day 94 09:30. No personal details.',
+   intro: 'Wednesday, 09:30. The chair decides the statement at 12:00, on Noor’s and Ada’s advice, and asked for the facts by 11:00. Plain words, no personal details.',
+   rows: [
+    {id: 'M1', name: 'What happened', topic: 'what happened, in plain words', req: true,
+     variants: [
+       {label: 'On Day 92 our backup supplier told us of an incident on its service, which holds copies of our members’ records', good: true, grade: 'supported', refs: ['NOT', 'WH2'],
+        why: 'What the supplier told us, and what it holds, in plain words.'},
+       {label: 'On Day 92 our backup supplier told us its service had been breached and every one of our members’ records stolen', grade: 'overstated', refs: ['NOT', 'WH2'],
+        why: 'Whose files were copied out is not known. “Our records stolen” says more than any record.'},
+       {label: 'On Day 92 our backup supplier told us of an incident on its service, resolved that night, with no records of ours affected', grade: 'unsupported', refs: ['NOT', 'WH2'],
+        why: 'No record says resolved, or no records affected.'}]},
+    {id: 'M2', name: 'What is not known', topic: 'what is not yet known', req: true, unknown: true,
+     variants: [
+       {label: 'Not yet known: whether our members’ copies were among the files taken from the supplier’s store', good: true, grade: 'supported', refs: ['WH2', 'JOB'],
+        why: 'The open question, stated as open.'},
+       {label: 'Not yet known: how the files were taken, though no resident’s record has been misused anywhere', grade: 'overstated', refs: ['WH2', 'JOB'],
+        why: 'Nothing on our side can show that no record has been misused.'},
+       {label: 'Not yet known: nothing of note, the supplier and the Compact having all of the facts in hand already', grade: 'unsupported', refs: ['WH2', 'JOB'],
+        why: 'The records say whose files is still not known.'}]},
+    {id: 'M3', name: 'What we did', topic: 'what the Compact did', req: true,
+     variants: [
+       {label: 'We stopped sending copies to the supplier on Day 92 and told each member the same morning', good: true, grade: 'supported', refs: ['JOB', 'MEM'],
+        why: 'The pause and the members’ call, from the records.'},
+       {label: 'We stopped sending copies to the supplier on Day 92, and every member’s data is secure from here on', grade: 'overstated', refs: ['JOB', 'MEM'],
+        why: 'The copies already at the supplier are where they were.'},
+       {label: 'We stopped sending copies on Day 92, and the Compact has decided that no resident needs telling', grade: 'misplaced', refs: ['JOB', 'MEM'],
+        why: 'Each member’s counsel decides any notice to its people. The Compact decides nothing for a member.'}]},
+    {id: 'M4', name: 'Who decides notice', topic: 'who decides any notice', req: true,
+     variants: [
+       {label: 'Each member’s own counsel decides any notice to its people, and our chair decided this statement', good: true, grade: 'supported', refs: ['DET', 'MEM'],
+        why: 'One decider each, as the rules name them.'},
+       {label: 'The Compact decides any notice to the people of every member, and our chair decided this statement', grade: 'misplaced', refs: ['DET', 'MEM'],
+        why: 'Each member’s own counsel decides for that member.'},
+       {label: 'Our security lead decides any notice to members’ people, counsel advising, and our chair decided this statement', grade: 'misplaced', refs: ['DET', 'MEM'],
+        why: 'The CISO supplies the facts and decides no notice.'}]},
+    {id: 'M5', name: 'The supplier’s cause', topic: 'the supplier’s cause', req: false, rec: 'out',
+     variants: [
+       {label: 'What caused the supplier’s incident is for the supplier to say', good: true, grade: 'supported', refs: ['WH2', 'NOT'],
+        why: 'Another party’s root cause is its own to state.'},
+       {label: 'The supplier’s weak sign-in controls caused its incident', grade: 'overstated', refs: ['WH2', 'NOT'],
+        why: 'A claim about another party’s root cause, with no record behind it.'},
+       {label: 'The supplier told us a member of its staff caused its incident', grade: 'unsupported', refs: ['WH2', 'NOT'],
+        why: 'Neither of its answers says so.'}]}]}];
+
+/* ---------- Sending a packet: to whom and when (the CISO's choice, recorded as sent) ---------- */
+// at: when the packet reaches counsel (or, for packet 3, the chair). The first option is the recommended one.
+const CH_FIN_SEND = {
+  P1: [
+    {label: 'Send it to Noor and the chair at 10:00, open questions included', good: true, at: [92, '10:00'], to: 'Noor and the chair'},
+    {label: 'Hold it past 10:25 for Wellhollow’s answers, and send Noor the whole picture then', at: [93, '09:10'], to: 'Noor and the chair, on Tuesday',
+     why: 'N-1 runs from the log’s first entry, not from Wellhollow’s answers. Counsel needs what is known now, and what is not.'},
+    {label: 'Send it to the chair alone at 10:00, and leave it to him to brief Noor', at: [92, '11:40'], to: 'the chair, who passed it to Noor at 11:40',
+     why: 'N-1 names counsel and the chair. The facts go to counsel directly, not through anyone.'}],
+  P2: [
+    {label: 'Send it to Noor at 13:45, whose files still an open question in it', good: true, at: [93, '13:45'], to: 'Noor'},
+    {label: 'Hold it past 14:00 until Wellhollow says whose files were copied out', at: [93, '16:30'], to: 'Noor, at the end of the day',
+     why: 'Noor set 14:00. What is not known goes in, stated as not known; waiting does not make the packet truer.'},
+    {label: 'Send it to Edda at 13:45, for her to check and pass on to Noor', at: [93, '15:20'], to: 'Edda, who passed it to Noor at 15:20',
+     why: 'The packet is yours, and it goes to counsel. Edda decides the platform, not what counsel reads.'}],
+  P3: [
+    {label: 'Send it to the chair, Noor and Ada at 10:00, the statement the chair’s', good: true, at: [94, '10:00'], to: 'the chair, Noor and Ada'},
+    {label: 'Send it to Ada at 10:00 to publish, the facts in it being ours to state', at: [94, '11:15'], to: 'Ada, who took it to the chair at 11:15',
+     why: 'The chair decides the statement. Ada advises on it and drafts it; she does not publish facts on her own.'},
+    {label: 'Hold it past noon for Wellhollow’s next answer, then send it to the chair', at: [94, '14:30'], to: 'the chair, after the statement was decided',
+     why: 'The chair asked for the facts by 11:00 and decided at 12:00 without them.'}]};
+
+/* ---------- The decision log (Monday 14:00): six decisions, one decider each ---------- */
+const CH_FIN_DECISIONS = [
+  {id: 'D-1', short: 'Pausing the nightly copies to Wellhollow', who: 'Edda Thornquist'},
+  {id: 'D-2', short: 'Whether the town and the shared services must notify anyone', who: 'Noor Castellanos'},
+  {id: 'D-3', short: 'Whether the Clinic must notify its patients', who: 'The Clinic’s own counsel'},
+  {id: 'D-4', short: 'The Compact’s public statement', who: 'Ivor Penhallow, the chair'},
+  {id: 'D-5', short: 'Whether the Library’s data goes back into the off-site copies, and with whom', who: 'Director Mina Strand'},
+  {id: 'D-6', short: 'What the facts packets say', who: 'You, the CISO'}];
+// Each decision's choices (literal lists, so the scanner reads every scored list): four of the six deciders each time,
+// in a cycle, so each decider is offered four times and is right once.
+const CH_FIN_ROUTE = [
+  {decision: 'D-1', choices: [
+    {label: "Edda Thornquist, the shared platform’s director", good: true},
+    {label: "Noor Castellanos, counsel for the town and the shared services", why: "Noor decides the legal questions for the town and the shared services. This one is Edda’s."},
+    {label: "The Clinic’s own counsel, for the Clinic", why: "The Clinic’s counsel decides the legal questions for the Clinic. This one is Edda’s."},
+    {label: "Ivor Penhallow, the chair, on Noor’s and Ada’s advice", why: "The chair decides the Compact’s statement and chairs the Board. This one is Edda’s."}]},
+  {decision: 'D-2', choices: [
+    {label: "Noor Castellanos, counsel for the town and the shared services", good: true},
+    {label: "The Clinic’s own counsel, for the Clinic", why: "The Clinic’s counsel decides the legal questions for the Clinic. This one is Noor’s."},
+    {label: "Ivor Penhallow, the chair, on Noor’s and Ada’s advice", why: "The chair decides the Compact’s statement and chairs the Board. This one is Noor’s."},
+    {label: "Director Mina Strand, for the Library", why: "Director Strand decides for the Library. This one is Noor’s."}]},
+  {decision: 'D-3', choices: [
+    {label: "The Clinic’s own counsel, for the Clinic", good: true},
+    {label: "Ivor Penhallow, the chair, on Noor’s and Ada’s advice", why: "The chair decides the Compact’s statement and chairs the Board. This one is the Clinic’s counsel’s."},
+    {label: "Director Mina Strand, for the Library", why: "Director Strand decides for the Library. This one is the Clinic’s counsel’s."},
+    {label: "You, the CISO, who keep the facts", why: "You decide what your packets say, and advise everyone else. This one is the Clinic’s counsel’s."}]},
+  {decision: 'D-4', choices: [
+    {label: "Ivor Penhallow, the chair, on Noor’s and Ada’s advice", good: true},
+    {label: "Director Mina Strand, for the Library", why: "Director Strand decides for the Library. This one is the chair’s."},
+    {label: "You, the CISO, who keep the facts", why: "You decide what your packets say, and advise everyone else. This one is the chair’s."},
+    {label: "Edda Thornquist, the shared platform’s director", why: "Edda decides the shared platform and how it runs. This one is the chair’s."}]},
+  {decision: 'D-5', choices: [
+    {label: "Director Mina Strand, for the Library", good: true},
+    {label: "You, the CISO, who keep the facts", why: "You decide what your packets say, and advise everyone else. This one is Director Strand’s."},
+    {label: "Edda Thornquist, the shared platform’s director", why: "Edda decides the shared platform and how it runs. This one is Director Strand’s."},
+    {label: "Noor Castellanos, counsel for the town and the shared services", why: "Noor decides the legal questions for the town and the shared services. This one is Director Strand’s."}]},
+  {decision: 'D-6', choices: [
+    {label: "You, the CISO, who keep the facts", good: true},
+    {label: "Edda Thornquist, the shared platform’s director", why: "Edda decides the shared platform and how it runs. This one is yours."},
+    {label: "Noor Castellanos, counsel for the town and the shared services", why: "Noor decides the legal questions for the town and the shared services. This one is yours."},
+    {label: "The Clinic’s own counsel, for the Clinic", why: "The Clinic’s counsel decides the legal questions for the Clinic. This one is yours."}]}
+];
+
+/* ---------- Containment (Monday 07:20, Edda's desk) ---------- */
+const CH_FIN_CONTAIN = [
+  {label: 'Pause the copies to Wellhollow, the job log and our local copies kept as they are', good: true},
+  {label: 'Export the job log first, then pause the copies once it is kept elsewhere', why: 'Pausing the copies destroys nothing: the job log stays where it is. Pause now, export after.'},
+  {label: 'Keep the copies running until Wellhollow says whether its store is sound', why: 'Containment is not delayed for a supplier’s answer when pausing costs no evidence.'},
+  {label: 'Delete the copies Wellhollow holds, with our upload key, before anyone reads them', why: 'That destroys what counsel and Wellhollow need, and it is not ours to do on its side.'}];
+// Opening the incident log (Monday 06:15): the first entry is the clock's start.
+const CH_FIN_LOGOPEN = [
+  {label: 'Open the incident log at 06:25, with the notice as its first record', good: true},
+  {label: 'Open it at 08:45 with the office, when everyone is in to agree it is an incident', why: 'The notice is in. The log starts now: a clock that starts late is still late.'},
+  {label: 'Open it once Wellhollow confirms our copies are involved, and not before', why: 'The log records what is known as it becomes known. Waiting for a supplier keeps counsel waiting too.'}];
+
+/* ---------- Drills (Monday and Tuesday). Records are the evidence; two decisive sources each ---------- */
+const CH_FIN_DRILLS = {
+  finhold: {
+    id: 'finhold', title: 'What does Wellhollow hold of ours?', budget: 3,
+    intro: '<p>Wellhollow’s notice says a storage system holding copies for several customers, the Compact among them, is under investigation. What does Wellhollow hold of the Compact’s? Edda has the data-flow record and the copy job.</p>',
+    artefact: '<pre class="art">Wellhollow · notice to customers (as received 06:10, game data)\n' +
+      '“an incident on our off-site backup service,\n' +
+      ' detected at 22:47 on Day 91 … copies for\n' +
+      ' several customers, the Compact among them …\n' +
+      ' whether customer copies were read or copied\n' +
+      ' is not yet known”</pre>' +
+      '<p class="small">What a supplier holds of ours is read from our own records, not from its notice.</p>',
+    question: 'What does Wellhollow hold of ours?',
+    sources: [
+      {id: 'notice', name: 'Wellhollow’s notice', qs: [
+        {q: 'Whose copies does it name?', kind: 'trap', res: ['“Copies for several customers, the Compact among them.”', '(Whose, not what.)']}]},
+      {id: 'contract', name: 'Wellhollow’s contract', qs: [
+        {q: 'What does it say Wellhollow keeps?', kind: 'trap', res: ['C7: “At the end, return the Compact’s data and delete every copy, confirmed in writing.”', '(What happens at the end, not what is held now.)']}]},
+      {id: 'dataflow', name: 'The data-flow record (Day 71 08:30)', qs: [
+        {q: 'What goes to Wellhollow?', kind: 'focus', key: true,
+         res: ['Wellhollow Backup: copies of every member’s file shares, records included', 'Kinds of records: staff pay and bank details, patients’, students’ and patrons’ records', 'No Wellhollow account on our side']}]},
+      {id: 'job', name: 'The copy job (cp-backup on CP-OPS-02)', qs: [
+        {q: 'What does it send, and how long is it kept?', kind: 'focus', key: true,
+         res: ['Nightly at 01:00: every member’s file shares, to Wellhollow’s store', 'Kept at Wellhollow: 35 nights', 'Last run Day 92 01:00 to 01:42; paused 07:40']},
+        {q: 'Every line of the job log', kind: 'broad', rows: 2900,
+         wall: ['Day {i}  01:{t}  cp-backup  share {n}  sent', 'Day {i}  01:{t}  cp-backup  share {n}  verified', 'Day {i}  01:{t}  cp-backup  retention 35']}]}
+    ],
+    verdicts: [
+      {label: 'Copies of every member’s file shares, records included, kept for five weeks', good: true, needs: ['dataflow', 'job'],
+       needsWhy: 'the answer rests on two records: the data-flow record and the copy job. You read only one of them.',
+       why: 'The data-flow record says what goes, and the job how much is kept: every member’s shares, 35 nights.'},
+      {label: 'The Compact’s copies among several customers’, as the notice says, and no more than that', why: 'The notice says whose. Our own records say what.'},
+      {label: 'Only what the contract names, and it names nothing of ours', why: 'The contract says what happens at the end. The records say what is held.'},
+      {label: 'Everything any member has ever stored, for every year of its contract', why: 'The job keeps 35 nights of the file shares.'}],
+    reasons: [
+      {label: 'The data-flow record says what goes, and the job log how long it is kept', good: true, why: 'What, then how much.'},
+      {label: 'The notice names the Compact, and a supplier’s notice is its record of what it holds', why: 'A notice says what the supplier is investigating.'},
+      {label: 'The contract is the record of what a supplier may keep, and with it of what it keeps', why: 'May keep is not keeps.'}],
+    alts: [
+      {label: 'The job sends only the directory’s exports', good: true, why: 'Ruled out: the job’s scope is every member’s file shares.'},
+      {label: 'Wellhollow keeps more than the job sets', good: true, why: 'Ruled out: the job sets 35 nights at Wellhollow.'},
+      {label: 'The contract is out of date', why: 'Beside the point: the records decide what is held.'},
+      {label: 'Wellhollow’s other customers are members', why: 'Nothing points to it: the notice says several customers.'}],
+    path: '<p>“What does it hold of ours?” is decided by <b>the data-flow record</b> and <b>the copy job</b>. A notice says whose copies are involved; a contract says what happens at the end.</p>',
+    response: ['Packet 1 says: 35 nights of copies of every member’s file shares, records included, from our own records', 'The kinds of records named, no person named', 'Edda keeps the job paused'],
+    techs: [], acts: ['chfinhold']
+  },
+  finedge: {
+    id: 'finedge', title: 'Has anything from Wellhollow reached our systems?', budget: 3,
+    intro: '<p>Wellhollow has no account on our side, by the supplier register. Has anything from Wellhollow reached the Compact’s systems? Beatriz exported the account lists and the edge log at 08:30.</p>',
+    artefact: '<pre class="art">Supplier register · Wellhollow (game data)\n' +
+      'Holds      copies of every member’s data\n' +
+      'Way in     none on our side</pre>' +
+      '<p class="small">A register says what was set up. The logs say what happened.</p>',
+    question: 'Has anything from Wellhollow reached our systems?',
+    sources: [
+      {id: 'register', name: 'The supplier register', qs: [
+        {q: 'Does Wellhollow have a way in?', kind: 'trap', res: ['“No account on our side.”', '(What was set up, not what happened.)']}]},
+      {id: 'word', name: 'Edda’s view', qs: [
+        {q: 'Could anything have come in?', kind: 'trap', res: ['“They’ve no account. Nothing could.”', '(A view. The logs decide it.)']}]},
+      {id: 'acl', name: 'The account lists (08:30)', qs: [
+        {q: 'Any Wellhollow account, anywhere?', kind: 'focus', key: true,
+         res: ['The shared directory: no Wellhollow account', 'CP-OPS-02: cp-backup sends to Wellhollow; no account receives from it', 'No key from Wellhollow on any server']}]},
+      {id: 'edge', name: 'The edge log (35 days to 08:30)', qs: [
+        {q: 'Anything in from Wellhollow’s range?', kind: 'focus', key: true,
+         res: ['198.51.100.0/24, Wellhollow’s documented range: in, none in 35 days', 'Out: CP-OPS-02 to it nightly, 01:00 to 01:45, and nothing since 07:40 on Day 92']},
+        {q: 'Every edge entry in 35 days', kind: 'broad', rows: 88000,
+         wall: ['Day {i}  {t}  out  CP-OPS-02  198.51.100.{n}  443', 'Day {i}  {t}  in  denied  203.0.113.{n}', 'Day {i}  {t}  out  member PC  web']}]}
+    ],
+    verdicts: [
+      {label: 'No: nothing came in from its range in five weeks, and it has no account with us', good: true, needs: ['acl', 'edge'],
+       needsWhy: 'the answer rests on two records: the account lists and the edge log. You read only one of them.',
+       why: 'No account to use, and nothing in from its range: our side shows only our copies going out.'},
+      {label: 'No: the register says Wellhollow has no way in, and nothing could have reached us', why: 'The register says what was set up. The logs show what happened.'},
+      {label: 'Yes: our copies went to its store every night, and that store is the one under investigation', why: 'Out is not in. Our copies going out is K2’s fact.'},
+      {label: 'Not known, and not knowable from our side until Wellhollow reports on its own logs', why: 'Our own logs answer it for our side.'}],
+    reasons: [
+      {label: 'The account lists show no way in, and the edge log nothing in from its range', good: true, why: 'Who could, then what did.'},
+      {label: 'A supplier with no account on the register can’t reach anything we run', why: 'A register is set up once; logs show each day.'},
+      {label: 'Wellhollow would have told us in its notice if our systems had been reached', why: 'Its notice is about its side.'}],
+    alts: [
+      {label: 'A Wellhollow key sits on a server of ours', good: true, why: 'Ruled out: no key from Wellhollow on any server.'},
+      {label: 'Its range reached us after the pause', good: true, why: 'Ruled out: nothing in from it in 35 days, and nothing out since 07:40.'},
+      {label: 'Wellhollow uses a second range', why: 'Beside the point unless the contract names one; it names one.'},
+      {label: 'cp-backup is a person’s account', why: 'Nothing points to it: non-interactive, from CP-OPS-02.'}],
+    path: '<p>“Has anything reached us?” is decided by <b>the account lists</b> and <b>the edge log</b>. A register says what was set up; a view is a view.</p>',
+    response: ['Packet 1 says: nothing in from Wellhollow in 35 days, and no Wellhollow account', 'The copies stay paused: Edda’s decision', 'Business terms in the packet; the hosts and the range are in the records'],
+    techs: [], acts: ['chfinedge']
+  },
+  finclock: {
+    id: 'finclock', title: 'When does N-3’s clock start for the town?', budget: 3,
+    intro: '<p>N-3 gives a member ten working days for its notice to the people affected. For the town, when does its clock start? Noor has the rule and her determination of 15:00.</p>',
+    artefact: '<pre class="art">The Compact’s notification rules · N-3 (game)\n' +
+      '“… within 10 working days of its counsel’s\n' +
+      ' determination …”</pre>' +
+      '<p class="small">A clock starts where its rule says, not where anyone prefers.</p>',
+    question: 'When does N-3’s clock start for the town?',
+    sources: [
+      {id: 'notice', name: 'Wellhollow’s notice', qs: [
+        {q: 'When was it detected?', kind: 'trap', res: ['“Detected at 22:47 on Day 91.”', '(Wellhollow’s clock under its contract, not N-3’s.)']}]},
+      {id: 'view', name: 'Marit’s view', qs: [
+        {q: 'When should it start?', kind: 'trap', res: ['“When Wellhollow tells us whose files. Until then there’s nothing to count.”', '(A preference. The rule names its trigger.)']}]},
+      {id: 'rule', name: 'The rule, N-3', qs: [
+        {q: 'What starts its clock?', kind: 'focus', key: true, res: ['“… within 10 working days of its counsel’s determination …”', 'Counsel: for the town, Noor; for each member, its own counsel']}]},
+      {id: 'det', name: 'Noor’s determination (15:00)', qs: [
+        {q: 'What was determined, for whom, and when?', kind: 'focus', key: true,
+         res: ['Day 93 15:00: personal records held for the town may have been acquired by someone not authorised', 'For the town and the shared services; each member’s counsel decides for its own member']}]}
+    ],
+    verdicts: [
+      {label: 'At Noor’s determination, Day 93 15:00: due Day 107 15:00, ten working days on', good: true, needs: ['rule', 'det'],
+       needsWhy: 'the answer rests on two records: the rule and the determination. You read only one of them.',
+       why: 'The rule names counsel’s determination as its trigger, and the record times it: Day 93 15:00. Ten working days, the weekends skipped, is Day 107 15:00.'},
+      {label: 'At Wellhollow’s detection, Day 91 22:47: due Day 103 22:47, ten working days on', why: 'Detection starts Wellhollow’s clause, not N-3.'},
+      {label: 'At the notice’s arrival, Day 92 06:10: due Day 106 06:10, ten working days on', why: 'The notice starts N-1’s and N-2’s work, not N-3.'},
+      {label: 'Not yet: it waits until Wellhollow says whose files, then runs ten working days', why: 'The rule names counsel’s determination, not Wellhollow’s answer.'}],
+    reasons: [
+      {label: 'The rule names its own trigger, and the record says when it happened', good: true, why: 'The trigger, then its time.'},
+      {label: 'A notice clock always starts at detection, whoever detected it', why: 'Each clock starts where its own rule says.'},
+      {label: 'Ten working days from the notice is the fairest reading for everyone', why: 'Fair is not the rule’s word.'}],
+    alts: [
+      {label: 'A law-enforcement agency asked in writing for a delay', good: true, why: 'Ruled out: no such request is on the record.'},
+      {label: 'Noor’s determination covers every member', good: true, why: 'Ruled out: it is for the town and the shared services; each member’s counsel decides for its own.'},
+      {label: 'The weekend counts as working days', why: 'Beside the point: the rule says working days.'},
+      {label: 'Wellhollow’s clause is longer than 24 hours', why: 'Nothing points to it: C1 says 24 hours.'}],
+    path: '<p>“When does it start?” is decided by <b>the rule’s own trigger</b> and <b>the record of that trigger</b>. A detection time, a notice’s arrival and a preference are other clocks, or none.</p>',
+    response: ['N-3 for the town: from Day 93 15:00, due Day 107 15:00', 'Each member’s counsel decides its own, at its own time', 'The clock goes in Thursday’s papers as the rules set it'],
+    techs: [], acts: ['chfinclock']
+  }
+};
+
+/* ---------- The directive (game; Tuesday 11:30): Marit asks to hold packet 2 ---------- */
+const CH_FIN_DIRECTIVE = [
+  {label: 'It goes to Noor at 14:00, as she asked, whose files left as an open question', good: true},
+  {label: 'Agreed: we hold it for Wellhollow past 14:00, then send Noor a packet with no open question in it', why: 'Counsel decides on what is known and what is not. A packet held back to look complete keeps counsel from deciding.'},
+  {label: 'It goes, without the store: our copies sitting there is Wellhollow’s matter, not ours', why: 'Our own job log says our copies are on that store. That is the fact counsel most needs.'},
+  {label: 'It goes, worded “no evidence of data loss”, true as far as it goes', why: 'Our side can’t see their store. A wording that hides what is not known misleads counsel.'},
+  {label: 'Ask the chair whether Noor needs it today, and do whatever he says', why: 'Noor set the checkpoint. What goes in the packet is yours, and it goes to counsel.'}];
+
+/* ---------- The Disclosure terminals (Noor's; three puzzles: the real cases and the comparison) [fact] ---------- */
+const CH_FIN_DOJO = [
+  {q: 'United States v. Sullivan, as the court record says it. Which line can a briefing carry?',
+   opts: ['Convicted on 5 October 2022 of obstructing an FTC proceeding and of misprision; three years’ probation and a $50,000 fine; affirmed; certiorari denied',
+          'Convicted for paying a bug bounty, which the court held to be illegal in itself; three years in prison; the appeal still open',
+          'Convicted on 5 October 2022 for not telling the public of a breach, a duty the court held every security officer has'], good: 0,
+   explain: 'The record: convicted 5 October 2022 (18 U.S.C. § 1505 and § 4); sentenced 5 May 2023 to three years’ probation and a $50,000 fine; the Ninth Circuit affirmed (No. 23-927; filed 13 March 2025, amended 12 November 2025); certiorari denied 29 June 2026. The court’s words: “Sullivan did not inform Uber’s general counsel of these developments, despite telling other employees to the contrary.” It said it need not decide whether a bug bounty program may give researchers prior authorisation. Lesson: the facts go to counsel.'},
+  {q: 'SEC v. SolarWinds Corp. and Brown: what can a briefing say about how it ended?',
+   opts: ['The court found in July 2024 that the CISO’s Security Statement was false, and he settled with the SEC in 2025',
+          'Allegations only: most claims dismissed in July 2024, then the SEC dismissed the case with prejudice on 20 November 2025',
+          'The SEC won in July 2024, and the case was closed in November 2025, the company paying a penalty'], good: 1,
+   explain: 'The SEC alleged; nothing was found. In July 2024 the court “denies in part, but grants in large part, the motion to dismiss”: only fraud claims based on the pre-incident Security Statement went on, at the pleading stage. On 20 November 2025 the SEC dismissed “with prejudice”, “in the exercise of its discretion” (Litigation Release No. 26423). Discussion question: would our own statement match what our records say?'},
+  {q: 'Comparison only (the Compact is not an SEC registrant): a US public company determines on a Tuesday that an incident is material. When is its Form 8-K Item 1.05 report due?',
+   opts: ['Within four calendar days of discovering the incident, whoever discovered it',
+          'When its CISO judges the facts complete, the delay the company’s own to set',
+          'Within four business days after that determination, the registrant’s own call'], good: 2,
+   explain: 'General Instruction B.1: “within four business days after the registrant determines that it has experienced a material cybersecurity incident”. The determination “must be made without unreasonable delay after discovery”, and only the US Attorney General’s written notice to the SEC can delay disclosure. The registrant decides; the rule names no officer.'}];
+
+/* ---------- The Board's standing questions (Thursday 14:00): used when the packets leave fewer than three weak points ---------- */
+const CH_FIN_BOARD_SPECS = () => [
+  {title: 'Who heard first', who: 'Ivor Penhallow',
+   ask: '“Why did Noor have the facts before most of this Board?”',
+   resp: [{label: 'N-1 names counsel and the chair, within four hours: counsel decides any notice', good: true},
+          {label: 'Noor asked for them first under N-1, and the CISO answers whoever asks first', why: 'The rule names who receives them, not who asks.'},
+          {label: 'The Board needed only the statement, and the facts were for counsel', why: 'The chair had them at 10:00 too; the Board has them today.'},
+          {label: 'To keep the incident quiet until Wellhollow’s answers were in', why: 'Nothing was kept back: what was not known went in as not known.'}]},
+  {title: 'The court record', who: 'Ivor Penhallow',
+   ask: '“In United States v. Sullivan, what does the court record say about counsel?”',
+   resp: [{label: 'That he did not inform Uber’s general counsel, in the appeals court’s own words', good: true},
+          {label: 'That he paid a bug bounty, and that the court held such payments illegal', why: 'The court said it need not decide that.'},
+          {label: 'That he went to prison for keeping it from the company’s counsel', why: 'Three years’ probation and a $50,000 fine.'},
+          {label: 'That any security officer must tell the public within a set number of days', why: 'The record says nothing of the kind.'}]},
+  {title: 'Our statement', who: 'Ivor Penhallow',
+   ask: '“Who decided our statement on Wednesday?”',
+   resp: [{label: 'You did, on Noor’s and Ada’s advice, from the facts packet', good: true},
+          {label: 'Ada did: communications is hers, and she published it', why: 'Ada advised and drafted. The chair decided.'},
+          {label: 'Noor did: anything said in public is a legal matter', why: 'Noor advised. The chair decided.'},
+          {label: 'The CISO did: the facts in it were the CISO’s', why: 'The CISO supplied the facts. The chair decided.'}]}];
+
+/* ---- editions/charter/finale-story.js ---- */
+/* ============================================================
+   UPTIME · editions/charter/finale-story.js
+   Charter's finale: a material incident and the disclosure clock (Days 92 to
+   95). Monday: Wellhollow's notice (06:10), the incident log's first entry
+   (06:25), the CISO's questions to Wellhollow, containment (Edda's decision,
+   07:40), drill 1 (what Wellhollow holds of ours), drill 2 (has anything
+   reached our systems), facts packet 1 to Noor and the chair (N-1, due 10:25),
+   the members' call (N-2), the decision log. Tuesday: Wellhollow's second
+   answer and our own job log, the directive (Marit asks to hold packet 2),
+   facts packet 2 at Noor's checkpoint, Noor's determination (15:00, the start
+   of N-3 for the town), drill 3 (when N-3's clock starts). Wednesday: the
+   clock and the comparison card, facts packet 3 for the statement, the chair's
+   decision on the statement (on Noor's and Ada's advice), the Disclosure
+   terminals. Thursday: the Compact Board's debrief, three questions keyed to
+   the packets as sent, the minute (with the S-7 decision), the Heaving Line
+   Badge, and the edition's end.
+   One decider per decision, whoever is on duty; the CISO recommends and
+   supplies the facts, and never decides disclosure. Tolerances bind: chAudit
+   at the minute and the district's end, with the finale's rule (disclosure.js,
+   chFinAuditNow). The Quiet Thread advances, not resolved: one open item in
+   packet 1, with no conclusion, for counsel to decide whether it is in scope.
+   Timeline: docs/design/charter-timeline.md (slice 5).
+   ============================================================ */
+'use strict';
+
+/* ---------- The week opens (your desk, after the Board report): the notice and the log ---------- */
+async function chFinStart() {
+  const fin = chFin();
+  await UI.openModal('Day 92, Monday, 06:15', '<p>Your phone, before dawn. The on-call lead (game):</p><p>“Wellhollow’s notice reached our security contact at 06:10. I’ve read it to you word for word. Nothing on our dashboards.”</p>' +
+    '<pre class="art">Wellhollow · notice to customers (as received 06:10, game data)\n“an incident on our off-site backup service, detected at 22:47\n on Day 91; unauthorised access to a storage system holding\n copies for several customers, the Compact among them, is under\n investigation; whether customer copies were read or copied is\n not yet known”</pre>' +
+    '<p class="small">CSF 2.0 (NIST CSWP 29) RS.CO-03: “Information is shared with designated internal and external stakeholders”. One of NIST’s examples for it, in the CSF 2.0 Implementation Examples: “Regularly update senior leadership on the status of major incidents”.</p>',
+    [{label: 'The incident log', meta: {good: true}}], {closable: false, cls: 'summary'});
+  G.f.chFinStart = true; G.day = 92; G.focus = G.focusMax; touchCSF('Respond'); unlock('fact', 'chcsfrs'); track();
+  const items = CH_FIN_LOGOPEN.map(o => ({label: o.label, meta: {good: !!o.good}}));
+  let first = true;
+  while (true) {
+    const i = await choose('The incident log: when does it start?', items, {shuffle: true});
+    if (items[i].meta.good) break;
+    first = false;
+    await say(CH_FIN_LOGOPEN[i].why);
+  }
+  fin.log = {first: first, at: CH_FIN_EVENTS.log.at.slice()};
+  G.f.chFinLog = true; unlock('act', 'chfinlog'); track();
+  await say('06:25: the incident log’s first entry, the notice as its first record. N-1 and N-2 run from here: facts to Noor and the chair by 10:25, the members told by Tuesday 06:25. (game)');
+  await say('06:40: your questions to Wellhollow’s security contact, in writing: which store, whose copies, the time window, and what is known of copies read. Each one in the log with its time. (game)');
+  await say('07:20: Edda is already at her desk.');
+}
+
+/* ---------- Containment (07:20, Edda's desk) ---------- */
+async function chFinContain() {
+  const who = 'Edda Thornquist', fin = chFin();
+  await say('07:20. I read it on the way in. Our copies go to Wellhollow every night at 01:00, cp-backup on CP-OPS-02. Last night’s ran 01:00 to 01:42. What do you recommend?', who);
+  const items = CH_FIN_CONTAIN.map(o => ({label: o.label, meta: {good: !!o.good}}));
+  let first = true;
+  while (true) {
+    const i = await choose('Your recommendation to Edda', items, {shuffle: true});
+    if (items[i].meta.good) break;
+    first = false;
+    await say(CH_FIN_CONTAIN[i].why);
+  }
+  fin.contain = {first: first, by: 'Edda Thornquist', at: [92, '07:40'], exported: [92, '08:05']};
+  await say('Paused at 07:40, my decision, on your recommendation. The job log stays where it is, and so do our local copies. I’ll export the log now.', who);
+  G.f.chFinContain = true; unlock('act', 'chfincontain'); touchCSF('Respond'); track();
+  await say('08:05: the job log exported. 08:30: Edda has the data-flow record and the copy job.');
+}
+
+/* ---------- Drills ---------- */
+async function chFinDrill(key) {
+  const fin = chFin(), r = await doDrill(CH_FIN_DRILLS[key]);
+  fin.drills[key] = {score: r.score, verdictOk: r.verdictOk, supported: r.supported, keys: r.keys};
+  fin.needs.total++; if (r.verdictOk && r.supported) fin.needs.met++;
+  track();
+  return r;
+}
+async function chFinDrillA() {
+  await say('08:30. The notice says “copies for several customers, the Compact among them”. What does Wellhollow actually hold of ours? The data-flow record and the copy job are here.', 'Edda Thornquist');
+  await chFinDrill('finhold');
+  G.f.chFinDrillA = true; touchCSF('Respond'); track();
+  await say('09:00: Beatriz, at the identity desk: has anything from Wellhollow reached our systems?');
+}
+async function chFinDrillB() {
+  await say('09:00. Wellhollow has no account on our side, by the register. The account lists and the edge log are exported, to 08:30.', 'Beatriz Solano');
+  await chFinDrill('finedge');
+  G.f.chFinDrillB = true; touchCSF('Respond'); track();
+  await say('09:30: your desk. Facts packet 1, for Noor and the chair, is due at 10:25.');
+}
+
+/* ---------- The facts packets (your desk) ---------- */
+async function chFinPacket(id) {
+  const fin = chFin(), P = chFinPacketDef(id);
+  const picks = await chFinEdit(id);
+  const opts = CH_FIN_SEND[id], items = opts.map(o => ({label: o.label, meta: {good: !!o.good, bot: !!o.good}}));
+  const k = await UI.openModal('Send ' + P.title.split(' · ')[0].toLowerCase() + '?', chFinPacketHtml(id, picks) + '<p>Due: <b>' + esc(chAtText(chAt(P.due[0], P.due[1]))) + '</b> (' + esc(P.dueRule) + '). It goes as you send it, and it is yours: the scorecard reads it as sent.</p>',
+    items, {shuffle: true, closable: false, cls: 'drill'});
+  const o = opts[k], at = chAt(o.at[0], o.at[1]), due = chAt(P.due[0], P.due[1]);
+  const rec = fin.packets[id];
+  rec.sent = {picks: Object.assign({}, picks), at: at, due: due, onTime: at <= due, to: o.to, choice: k, good: !!o.good};
+  rec.grade = chFinGrade(id, rec.sent.picks); track();
+  if (!o.good) await say(o.why);
+  await UI.openModal(P.title.split(' · ')[0] + ', as sent', '<p>' + esc(chAtText(at)) + ': to ' + esc(o.to) + '. (game)</p>' + chFinDebriefHtml(rec.grade, rec.sent),
+    [{label: 'Continue', meta: {good: true}}], {closable: false, cls: 'summary'});
+  unlock('act', 'chfinpacket'); touchCSF('Respond'); track();
+}
+async function chFinPacket1() {
+  await say('09:30. What is known, what is not, since when, and from which record: one row each. Noor and the chair get it under N-1. (game)');
+  await chFinPacket('P1');
+  G.f.chFinPacket1 = true; track();
+  await say('11:00: Noor, by the window: the members’ call.');
+}
+async function chFinPacket2() {
+  await say('13:30. Noor’s checkpoint is 14:00: what has changed since Monday, and what is still not known. (game)');
+  await chFinPacket('P2');
+  const s = chFin().packets.P2.sent;
+  G.f.chFinPacket2 = true; track();
+  await say(s.at <= chAt(93, '14:10') ? '14:10: Noor sends the packet to each member’s counsel, for each to decide for its own member. (game)' : 'Noor has it at ' + chHm(s.at % 1440) + ', and sends it on to each member’s counsel then. (game)');
+  await say('15:00: Noor, by the window.');
+}
+async function chFinPacket3() {
+  await say('09:30. The chair decides the Compact’s statement at 12:00, on Noor’s and Ada’s advice, and asked for the facts by 11:00. Plain words, and no personal details. (game)');
+  await chFinPacket('P3');
+  G.f.chFinPacket3 = true; track();
+  await say('12:00: the Compact Board room. Ivor, Noor and Ada are waiting.');
+}
+
+/* ---------- The members' call (11:00, Noor): N-2, the next checkpoint, and the open item ---------- */
+async function chFinMembers() {
+  const who = 'Noor Castellanos', fin = chFin(), s = fin.packets.P1 && fin.packets.P1.sent, had = s && s.at <= chAt(92, '11:00');
+  await say(had ? '11:00. I have your packet. The chair is on the call with the members’ representatives and their counsel now.' : '11:00. I don’t have your packet yet. The chair is on the call with the members’ representatives and their counsel now.', who);
+  await say('11:00: each member’s representative and its own counsel told that its data may be involved. N-2, done. Each member’s counsel decides for its own member. (game)');
+  await say('My next checkpoint: Tuesday 14:00. Bring me what has changed, and what is still not known.', who);
+  const oi = chFinOpenItem();
+  if (oi) {
+    const at = had ? [92, '11:00'] : [Math.floor(s.at / 1440), chHm(s.at % 1440)];
+    await say((had ? 'And the open item in your packet: ' : 'And the open item, when your packet reaches me: ') + 'not in scope for any notice on these facts. It stays with Rae Okafor’s team and me, and out of the Board papers. My decision, as counsel.', who);
+    fin.openItem = {by: 'Noor Castellanos', day: at[0], at: at[1], inScope: false};
+  }
+  G.f.chFinMembers = true; touchCSF('Respond'); track();
+  await say('14:00: your desk: the decision log.');
+}
+
+/* ---------- The decision log (14:00, your desk): one decider per decision ---------- */
+async function chFinRoute() {
+  const fin = chFin();
+  await UI.openModal('The decision log', '<p>Monday, 14:00. Six decisions this week. For each, who decides? One decider each, whoever is on duty. You recommend and supply the facts. (game)</p>' +
+    '<p class="small">CSF 2.0 (NIST CSWP 29) GV.RR-02: “Roles, responsibilities, and authorities related to cybersecurity risk management are established, communicated, understood, and enforced”. One of NIST’s examples for it, in the CSF 2.0 Implementation Examples: “Document who is responsible and accountable for cybersecurity risk management activities and how those teams and individuals are to be consulted and informed”.</p>',
+    [{label: 'The first decision', meta: {good: true}}], {closable: false, cls: 'summary'});
+  const rec = {first: [], picks: []};
+  for (const d of CH_FIN_ROUTE) {
+    const D = CH_FIN_DECISIONS.find(x => x.id === d.decision), items = d.choices.map(o => ({label: o.label, meta: {good: !!o.good}}));
+    let first = true, pick = null;
+    while (true) {
+      const i = await choose(D.id + ': ' + D.short + '. Who decides?', items, {shuffle: true});
+      if (pick === null) pick = i;
+      if (items[i].meta.good) break;
+      first = false;
+      await say(d.choices[i].why);
+    }
+    rec.first.push(first); rec.picks.push(d.choices[pick].label);
+  }
+  fin.route = rec;
+  await UI.openModal('The decision log, as recorded', chFinRouteHtml() + '<p>Your first picks: <b>' + rec.first.filter(Boolean).length + ' of ' + rec.first.length + '</b> to the decider the rules name. (game)</p>',
+    [{label: 'Pin it to the incident page', meta: {good: true}}], {closable: false, cls: 'summary'});
+  G.f.chFinRoute = true; unlock('act', 'chfinroute'); touchCSF('Govern'); track();
+  await say('End the day at your desk.');
+}
+
+/* ---------- Tuesday 09:00 (Edda's desk): Wellhollow's second answer and our own job log ---------- */
+async function chFinAnswer2() {
+  const who = 'Edda Thornquist';
+  await say('09:00. Wellhollow’s second answer: files on one of its stores were copied out between 21:58 and 22:40 on Day 91. Whose files, they don’t know yet.', who);
+  await say('09:40. And our own job log names the store for every night: every copy from Day 58 to Day 92, 35 nights, went to that one. The copies stay paused, my decision.', who);
+  G.f.chFinAnswer2 = true; touchCSF('Respond'); track();
+  await say('11:30: Marit, at her desk.');
+}
+
+/* ---------- The directive (game; Tuesday 11:30): Marit asks to hold packet 2 ---------- */
+async function chFinDirective() {
+  const who = 'Marit Quellan', fin = chFin();
+  await say('11:30. Payroll’s copies are on that store too. Hold Noor’s packet until Wellhollow says whose files went. If it isn’t ours, we’ll have alarmed every member for nothing.', who);
+  const items = CH_FIN_DIRECTIVE.map(o => ({label: o.label, meta: {good: !!o.good}}));
+  let first = true;
+  while (true) {
+    const i = await choose('Marit’s request: what do you tell her?', items, {shuffle: true});
+    if (items[i].meta.good) break;
+    first = false;
+    await say(CH_FIN_DIRECTIVE[i].why);
+  }
+  fin.directive = {first: first};
+  await say('Fair. Counsel decides on what we know and what we don’t. My worry goes to Noor too, then.', who);
+  G.f.chFinDirective = true; unlock('act', 'chfindirective'); touchCSF('Govern'); track();
+  await say('12:10: from Edda’s team, a test restore of the Clinic’s share from our own local copies: good. 13:30: your desk, facts packet 2. (game)');
+}
+
+/* ---------- Tuesday 15:00 (Noor): the determination, then drill 3 ---------- */
+async function chFinDetermine() {
+  const who = 'Noor Castellanos', fin = chFin();
+  await say('15:00. On the facts in your packets: personal records held for the town may have been acquired by someone not authorised. That is my determination, as counsel for the town and the shared services. Each member’s counsel decides for its own.', who);
+  fin.determination = {by: 'Noor Castellanos', for: 'the town and the shared services', at: CH_FIN_EVENTS.determination.at.slice()};
+  G.f.chFinDetermine = true; touchCSF('Respond'); track();
+  await say('15:30. N-3 for the town starts from that. When does its clock start, and when is it due?', who);
+  await chFinDrill('finclock');
+  G.f.chFinDrillC = true; unlock('act', 'chfinclock'); track();
+  await say('End the day at your desk.');
+}
+
+/* ---------- Wednesday 09:00 (your desk): the clock and the comparison card ---------- */
+async function chFinClockView() {
+  await UI.openModal('The disclosure clock', '<p>Wednesday, 09:00. The Compact’s rules, each with its trigger and its due time, as the records time them. (game)</p>' + chFinClockHtml(chAt(94, '09:00')) + CH_FIN_SEC_HTML +
+    '<p class="small">CSF 2.0 (NIST CSWP 29) RS.CO-02: “Internal and external stakeholders are notified of incidents”. One of NIST’s examples for it, in the CSF 2.0 Implementation Examples: “Notify law enforcement agencies and regulatory bodies of incidents based on criteria in the incident response plan and management approval”.</p>',
+    [{label: 'Packet 3', meta: {good: true}}], {closable: false, cls: 'summary'});
+  G.f.chFinClock = true; unlock('fact', 'chfinsec'); unlock('act', 'chfinrules'); touchCSF('Respond'); track();
+  await chFinPacket3();
+}
+
+/* ---------- Wednesday 12:00 (the Board room): the chair decides the statement ---------- */
+function chFinStatementText() {
+  const P = chFinPacketDef('P3');
+  return P.rows.filter(r => r.req).map(r => r.variants.find(v => v.good).label).join('. ') + '.';
+}
+async function chFinStatement() {
+  const who = 'Ivor Penhallow', fin = chFin(), s = fin.packets.P3 && fin.packets.P3.sent, g = fin.packets.P3 && fin.packets.P3.grade;
+  await say('12:00. Noor on what we may say, Ada on how we say it. ' + (s && s.at <= chAt(94, '12:00') ? 'Your facts are in front of me.' : 'Your facts are not in front of me, so I have Noor’s and Edda’s.'), who);
+  await say('Plain words, what we know and what we don’t, and nobody’s details. If a reporter calls you, you send them to me.', 'Ada Pemberton');
+  const fixed = g ? g.rows.filter(x => x.required && x.grade !== 'supported').map(x => x.id) : [];
+  fin.statement = {by: 'Ivor Penhallow', day: 94, at: '12:00', out: '14:00', advice: ['Noor Castellanos', 'Ada Pemberton'], text: chFinStatementText(), corrected: fixed};
+  await UI.openModal('The Compact’s statement', '<p>12:00: the chair decides, on Noor’s and Ada’s advice. 14:00: it goes out. (game)</p><blockquote>' + esc(fin.statement.text) + '</blockquote>' +
+    (fixed.length ? '<p>From your packet, the chair took the record’s wording for ' + esc(fixed.join(', ')) + '.</p>' : '<p>Each line from your packet, as the records support it.</p>'),
+    [{label: 'Back to the floor', meta: {good: true}}], {closable: false, cls: 'summary'});
+  G.f.chFinStatement = true; unlock('act', 'chfinstatement'); touchCSF('Respond'); track();
+  await say('My decision. 14:30: Noor has three terminals for you, south-west.', who);
+}
+
+/* ---------- The Disclosure terminals (Noor's) ---------- */
+async function chFinDojoIntro() {
+  G.f.chFinDojoMet = true;
+  await say('Three terminals, south-west: what the court record says in the Uber case, how the SolarWinds case ended, and how a US public company is timed. Real cases, read from their own records. Comparisons, not our rules.', 'Noor Castellanos');
+  unlock('fact', 'chcases');
+}
+async function chFinDojoPuzzle(i) {
+  const f = G.f, fin = chFin();
+  if (i < 0) return;
+  if (!f.chFinDojoMet) { await say('A training terminal: “Disclosure”. Noor’s. Talk to her first.'); return; }
+  const q = CH_FIN_DOJO[i];
+  if (fin.dojo[i]) { await say('Solved. ' + q.explain); return; }
+  while (true) {
+    const k = await choose(q.q, q.opts.map((o, j) => ({label: o, meta: {good: j === q.good}})), {shuffle: true});
+    if (k === q.good) break;
+    await say('Not quite. Read it as the record reads.');
+  }
+  await say('Correct. ' + q.explain);
+  fin.dojo[i] = true; touchCSF('Govern');
+  if (!fin.dojo.every(Boolean) || f.chFinDojoDone) return;
+  f.chFinDojoDone = true; G.focusMax += 2; G.focus = Math.min(G.focusMax, G.focus + 2); track();
+  await say('All three. Focus ' + G.focusMax + ' (game). End the day at your desk.', 'Noor Castellanos');
+}
+
+/* ---------- Thursday 14:00 (the Board): three questions keyed to the packets as sent ---------- */
+const CH_FIN_MEMBERS = ['The Clinic’s representative', 'The School District’s representative', 'The town’s representative'];
+function chFinBoardQs() {
+  const fin = chFin(), order = {omitted: 0, misplaced: 1, overstated: 2, unsupported: 3};
+  const rows = CH_FIN_PACKETS.flatMap(P => (fin.packets[P.id] && fin.packets[P.id].grade ? fin.packets[P.id].grade.rows : []).map(x => Object.assign({P: P}, x)));
+  const weak = rows.filter(x => order[x.grade] !== undefined).sort((a, b) => order[a.grade] - order[b.grade] || CH_FIN_PACKETS.indexOf(a.P) - CH_FIN_PACKETS.indexOf(b.P) || a.P.rows.findIndex(r => r.id === a.id) - b.P.rows.findIndex(r => r.id === b.id));
+  const qs = weak.slice(0, 3).map((x, i) => { const r = x.P.rows.find(y => y.id === x.id);
+    return {row: x.id, packet: x.P.id, grade: x.grade, title: 'A member’s question', who: CH_FIN_MEMBERS[i],
+      ask: x.grade === 'omitted' ? '“Your ' + x.P.title.split(' · ')[0].toLowerCase() + ' said nothing about ' + r.topic + '. What should it have said?”' : '“Your ' + x.P.title.split(' · ')[0].toLowerCase() + ' said: ' + x.line + '. Is that what the records show?”',
+      resp: r.variants.map(v => ({label: v.label, good: !!v.good, why: v.why}))}; });
+  for (const s of CH_FIN_BOARD_SPECS()) if (qs.length < 3) qs.push(Object.assign({row: null}, s));
+  return qs;
+}
+// The Board's decision of record on each owner's acceptance that breaks one of its tolerances (S-7), applied in the minute.
+function chFinTolDecide() {
+  const st = chRiskStates(), out = [];
+  for (const a of (G.ch.accept || []).filter(x => !x.closed && x.decider !== 'Board' && !x.boardDecided)) {
+    const r = st.find(x => x.id === a.line); if (!r || !r.breaks.length) continue;
+    a.boardDecided = {day: 95, at: '15:00', by: 'the Compact Board (minute, Day 95)', decision: 'carried to its Day 155 review, its interim measures kept'};
+    out.push(a);
+  }
+  return out;
+}
+function chFinMinute(asked) {
+  const fin = chFin(), dec = chFinTolDecide(), F = CH_FIN_PACKETS.map(P => [P, fin.packets[P.id]]).filter(([, x]) => x && x.sent);
+  const fixed = asked.filter(q => q.row).map(q => { const P = chFinPacketDef(q.packet), r = P.rows.find(y => y.id === q.row); return r.id + ', “' + r.variants.find(v => v.good).label + '”'; });
+  const rest = F.flatMap(([P, x]) => x.grade.rows.filter(y => (y.in && y.grade !== 'supported') || y.grade === 'omitted').map(y => y.id)).filter(id => !asked.some(q => q.row === id));
+  const n3 = chFinDue(CH_FIN_RULES.find(r => r.id === 'N-3'));
+  const sh = a => (CH_REP_SHORT[a.line] || a.line) + ' (' + a.signedBy.split(' ')[0] + ', Day ' + a.day + ')';
+  return '15:00. The minute records the incident as the packets put it: ' + F.map(([P, x]) => P.id + ' sent ' + chAtText(x.sent.at) + ', ' + (x.sent.onTime ? 'on time' : 'late') + ' against ' + chAtText(x.sent.due)).join('; ') + '.' +
+    ' The decisions, each with its decider: the copies paused (Edda, Day 92 07:40); any notice for the town (Noor, her determination Day 93 15:00, N-3 due ' + (n3 ? chAtText(n3.due) : 'when determined') + '); each member’s notice (its own counsel); the statement (the chair, Day 94 12:00, on Noor’s and Ada’s advice).' +
+    (fixed.length ? ' Corrected in this minute, at the members’ questions: ' + fixed.join('; ') + '.' : ' No correction asked.') +
+    (rest.length ? ' The chair asks for ' + rest.join(', ') + ' to be read again against the records.' : '') +
+    (dec.length ? ' Decided in this minute, this Board the decider of record: ' + dec.map(sh).join(', ') + ', breaking this Board’s ' + [...new Set(dec.flatMap(a => chRiskStates().find(r => r.id === a.line).breaks.map(chTolName)))].join(', ') + ' tolerance on its owner’s acceptance: carried to its Day 155 review, its interim measures kept.' : '') +
+    ' From today, an owner’s acceptance that breaks one of this Board’s tolerances goes to the chair within five working days of its signing, and into this Board’s next minute.' +
+    (chFinOpenItem() ? ' The suspicion file noted as an open item, with counsel, with no conclusion.' : '') + ' (game)';
+}
+async function chFinBoardRound() {
+  const who = 'Ivor Penhallow', f = G.f, fin = chFin();
+  await say('14:00. The members’ representatives, Edda, Marit, Noor and Ada. This Board has your three packets as you sent them. Three questions.', who);
+  const qs = chFinBoardQs();
+  fin.board = {first: [], asked: qs.map(q => q.row || q.title)};
+  await chStages(qs, fin.board.first);
+  fin.minute = chFinMinute(qs);
+  await say(fin.minute, who);
+  chAudit('Finale: the Board’s minute (Day 95)');
+  f.chFinBoard = true; f.chHeavingLine = true;
+  G.focusMax += 4; G.focus = G.focusMax; unlock('act', 'chfinboard'); touchCSF('Govern'); track();
+  await say('You brought this Board the facts on time, and counsel first. This is the Heaving Line Badge (game): the light line thrown first, so the heavy one can follow.', who);
+  await say('Its power: in the next edition, every facts packet arrives with its rule’s due time beside it. And Focus +4.', who);
+  await say('16:00: your desk. The edition’s end.');
+}
+
+/* ---------- The edition's end (Thursday 16:00, your desk) ---------- */
+function chFinEditionRows() {
+  const c = G.ch, sup = c.sup, pol = c.pol, rep = c.rep, fin = c.fin, fs = chFinStats();
+  const n = x => x ? x.met + ' of ' + x.total : '—';
+  return '<table class="sc"><tr><th>District</th><th>Drills (needs met)</th></tr>' +
+    '<tr><td>Budget</td><td>' + n(c.needs) + '</td></tr>' +
+    '<tr><td>Suppliers</td><td>' + n(sup && sup.needs) + '</td></tr>' +
+    '<tr><td>Policy</td><td>' + n(pol && pol.needs) + '</td></tr>' +
+    '<tr><td>Board report</td><td>' + n(rep && rep.needs) + '</td></tr>' +
+    '<tr><td>Finale</td><td>' + n(fin && fin.needs) + '</td></tr></table>' +
+    '<p>Badges: ' + [['chBallast', 'Ballast'], ['chHawser', 'Hawser'], ['chSheetBend', 'Sheet Bend'], ['chRollingHitch', 'Rolling Hitch'], ['chHeavingLine', 'Heaving Line']].map(([k, b]) => b + ' ' + (G.f[k] ? 'yes' : '—')).join(' · ') + '.</p>' +
+    '<p>Your advice as sent: report score <b>' + (rep && rep.grade ? rep.grade.score : '—') + '</b> / 100; facts packets, average score <b>' + (fs.score === null ? '—' : fs.score) + '</b> / 100, on time <b>' + (fs.onTime === null ? '—' : fs.onTime + '%') + '</b>; decisions routed at the first pick <b>' + (fs.routed === null ? '—' : fs.routed + '%') + '</b>. (game)</p>';
+}
+async function chFinEnd() {
+  const f = G.f, fin = chFin();
+  if (!f.chFinSummary) {
+    f.chFinSummary = true; touchCSF('Govern'); chAudit('Finale: the district’s end (Day 95)');
+    Series.markEdition('charter', {finale: true, editionComplete: true, heavingLine: !!f.chHeavingLine});
+    await say('The facts reached counsel first, and on time, with what was not known said plainly. That is the job. Thank you.', 'Ivor Penhallow');
+  }
+  const body = '<p class="big">Charter: the edition’s end.</p>' +
+    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b> · Day <b>' + G.day + '</b> (' + (CH_DAY[G.day] || '') + ')</p>' +
+    '<p>Monday: the log opened at 06:25, the copies paused at 07:40 (Edda’s decision), packet 1 ' + (fin.packets.P1 && fin.packets.P1.sent ? (fin.packets.P1.sent.onTime ? 'on time' : 'late') : 'not sent') + ', the members told at 11:00, the decision log. Tuesday: Wellhollow’s second answer, Marit’s request ' + (fin.directive && fin.directive.first ? 'answered at the first try' : 'answered, after a false start') + ', packet 2 ' + (fin.packets.P2 && fin.packets.P2.sent ? (fin.packets.P2.sent.onTime ? 'on time' : 'late') : 'not sent') + ', Noor’s determination at 15:00. Wednesday: the clock, packet 3 ' + (fin.packets.P3 && fin.packets.P3.sent ? (fin.packets.P3.sent.onTime ? 'on time' : 'late') : 'not sent') + ', the chair’s statement. Thursday: the Board’s questions ' + (fin.board && fin.board.first.every(Boolean) ? 'answered at the first try' : 'answered, with false starts the debriefs named') + '.</p>' +
+    '<h3>The clock, at Thursday 16:00</h3>' + chFinClockHtml(chAt(95, '16:00')) +
+    (fin.minute ? '<p class="small">' + esc(fin.minute) + '</p>' : '') +
+    '<h3>The edition, district by district</h3>' + chFinEditionRows() +
+    '<h3>The register: today and on the Board’s plan</h3>' + chFinRegisterHtml() +
+    '<p>Lesson (game): in an incident the CISO establishes the facts on time, contains without destroying evidence, keeps the record of who knew what and when, and puts the facts in front of the deciders. What is not known goes in, stated as not known. Each clock starts where its rule says. Counsel decides any notice, the chair the statement, each owner its service, and the CISO decides none of them.</p>' +
+    '<h3>Your scorecard</h3>' + scorecardHtml() +
+    (Series.qt().evicted ? '' : '<p class="small">The Quiet Thread is still open: ' + qtCount() + ' notes in the suspicion file, with counsel and Rae Okafor’s team. Who, and why: not yet known.</p>') +
+    '<p class="big">Next edition: coming later (the vCISO edition).</p>';
+  while (true) {
+    const i = await UI.openModal('The end of Charter', body, [{label: 'Keep exploring the Compact offices', meta: {good: true}}, {label: 'Credits'}, {label: 'Title screen'}], {nav: 'district-end', closable: false, cls: 'summary'});
     if (i === 1) { await UI.openModal('Credits', creditsHtml(), [{label: 'Back'}]); continue; }
     storeSet(encodeSave(G));
     if (i === 2) { started = false; titleScreen(); }

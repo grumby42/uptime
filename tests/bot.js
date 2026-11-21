@@ -19,8 +19,11 @@
 // mid-Suppliers, then District 3, Policy (the drills, the exception register's intake, the consultation, the replies,
 // the directive, the policy library, the terminals, the Policy round) to its summary, with a save/reload mid-Policy, then
 // District 4, the Board report (the drills, the quarter's records, the directive, the terminals, the report sent as
-// recommended, the members' questions) to its summary, with a save/reload mid-report; it checks the series record, the
-// acceptances, the supplier, policy and report scorecards, the register and the invariant at all eight checkpoints.
+// recommended, the members' questions) to its summary, with a save/reload mid-report, then the finale (the incident log,
+// containment, the drills, the three facts packets sent as recommended and on time, the members' call, the decision log,
+// the directive, Noor's determination, the clock, the chair's statement, the terminals, the Board's debrief) to the
+// edition's end, with a save/reload mid-finale; it checks the series record, the acceptances, the supplier, policy, report
+// and finale scorecards, the register and the invariant at all ten checkpoints.
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -234,7 +237,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
 
   const t0 = Date.now();
-  let savedCheckCh = null, savedCheckChSup = null, savedCheckChPol = null, savedCheckChRep = null, savedCheckCr = null, savedCheckSd = null, savedCheckCn = null, savedCheckDp = null, savedCheckAp = null, savedCheckFn = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
+  let savedCheckCh = null, savedCheckChSup = null, savedCheckChPol = null, savedCheckChRep = null, savedCheckChFin = null, savedCheckCr = null, savedCheckSd = null, savedCheckCn = null, savedCheckDp = null, savedCheckAp = null, savedCheckFn = null, savedCheck = null, savedCheckMail = null, savedCheckClerks = null, savedCheckMarket = null, savedCheckRecords = null, savedCheckBasement = null, savedCheckServer = null, savedCheckWater = null, savedCheckCouncil = null, iter = 0, lastProgress = Date.now(), lastSig = '';
   // Save from the Start menu, reload the page, Continue, and compare the state (plus the export-code round trip).
   async function saveReload() {
     const before = await peek();
@@ -273,7 +276,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     else if (Date.now() - lastProgress > 15000) throw new Error('stuck: ' + sig);
     if (p.extra && p.extra.ccSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
     if (CR && p.extra && p.extra.crSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
-    if (CH && p.extra && p.extra.chRepSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
+    if (CH && p.extra && p.extra.chFinSummary && p.ui && p.ui.type === 'modal' && p.ui.options[0].label.startsWith('Keep exploring')) break;
     if (CH && p.map === 'choffice' && !p.ui && !stats.shots.charter && p.started && p.f.chBudgetBrief) { stats.shots.charter = 1; await shot('charter-office'); }
     if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.alloc && /Budget · next year/.test(await page.textContent('#modal .mhead'))) { stats.shots.alloc = 1; await shot('charter-allocation'); }
     if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.appetite && /^Risk appetite ·/.test(await page.textContent('#modal .mhead'))) { stats.shots.appetite = 1; await shot('charter-appetite'); }
@@ -285,6 +288,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.report && /^The report · the page/.test(await page.textContent('#modal .mhead'))) { stats.shots.report = 1; await shot('charter-report'); }
     if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.reportSec && /^The report · Risks against appetite/.test(await page.textContent('#modal .mhead'))) { stats.shots.reportSec = 1; await shot('charter-report-section'); }
     if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.reportSent && /^Send the report\?/.test(await page.textContent('#modal .mhead'))) { stats.shots.reportSent = 1; await shot('charter-report-send'); }
+    if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.packet && /^Facts packet 1 ·/.test(await page.textContent('#modal .mhead'))) { stats.shots.packet = 1; await shot('charter-packet'); }
+    if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.clock && /^The disclosure clock/.test(await page.textContent('#modal .mhead'))) { stats.shots.clock = 1; await shot('charter-clock'); }
+    if (CH && p.ui && p.ui.type === 'modal' && !stats.shots.end && /^The end of Charter/.test(await page.textContent('#modal .mhead'))) { stats.shots.end = 1; await shot('charter-end'); }
     if (CR && p.map === 'library' && !p.ui && !stats.shots.library && p.started && p.f.lbMet) { stats.shots.library = 1; await shot('library-' + TRACK); }
     if (CR && p.map === 'school' && !p.ui && !stats.shots.school && p.started && p.f.sdMet) { stats.shots.school = 1; await shot('school-' + TRACK); }
     if (CR && p.map === 'clinic' && !p.ui && !stats.shots.clinic && p.started && p.f.cnMet) { stats.shots.clinic = 1; await shot('clinic-' + TRACK); }
@@ -365,6 +371,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     if (CH && !savedCheckChSup && p.map === 'choffice' && p.f.chSupDrillA && !p.f.chSupTier) { savedCheckChSup = await saveReload(); continue; }
     if (CH && !savedCheckChPol && p.map === 'choffice' && p.f.chPolRegister && !p.f.chPolConsult) { savedCheckChPol = await saveReload(); continue; }
     if (CH && !savedCheckChRep && p.map === 'choffice' && p.f.chRepDrillA && !p.f.chRepDrillB) { savedCheckChRep = await saveReload(); continue; }
+    if (CH && !savedCheckChFin && p.map === 'choffice' && p.f.chFinDrillA && !p.f.chFinDrillB) { savedCheckChFin = await saveReload(); continue; }
     // mid-game save/reload check (once, on Day 2 in the hub, idle)
     if (!savedCheckMail && p.map === 'mail' && p.f.mrDrill1 && !p.f.mrReport) { savedCheckMail = await saveReload(); continue; }
     if (!savedCheck && p.day >= 2 && p.map === 'hub' && p.f.vexDone) { savedCheck = await saveReload(); continue; }
@@ -380,23 +387,30 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await shot('summary-charter');
     const ch = fin.extra && fin.extra.ch;
     const sup = ch && ch.sup, pol = ch && ch.pol;
-    const chRes = { edition: 'charter', mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter, errors, requests, saveReloadBudget: savedCheckCh, saveReloadSuppliers: savedCheckChSup, saveReloadPolicy: savedCheckChPol, saveReloadReport: savedCheckChRep,
+    const chRes = { edition: 'charter', mode: MODE, finished: true, seconds: Math.round((Date.now() - t0) / 1000), iterations: iter, errors, requests, saveReloadBudget: savedCheckCh, saveReloadSuppliers: savedCheckChSup, saveReloadPolicy: savedCheckChPol, saveReloadReport: savedCheckChRep, saveReloadFinale: savedCheckChFin,
       suppliers: sup && { tiers: sup.sent, plan: sup.planSent, accept: sup.accept.map(a => a.line + ':' + a.signedBy), needs: sup.needs, incident: sup.incident.first, board: sup.board && sup.board.first, dojo: sup.dojo },
       policy: pol && { intake: pol.intakeSent, library: pol.libSent, register: pol.exc.map(e => e.id + ':' + (e.seed ? 'seed' : e.closed ? 'closed' : 'open') + ':' + (e.seed ? '' : e.owner)), needs: pol.needs, consult: pol.consult, directive: pol.directive && pol.directive.first, board: pol.board && pol.board.first, dojo: pol.dojo, minute: pol.minute && pol.minute.text },
       report: ch && ch.rep && { sent: ch.rep.sent && ch.rep.sent.picks, grade: ch.rep.grade && { lines: ch.rep.grade.lines, score: ch.rep.grade.score, claims: ch.rep.grade.claims, required: ch.rep.grade.required, decide: ch.rep.grade.decide, weak: ch.rep.grade.weak, omitted: ch.rep.grade.omitted }, needs: ch.rep.needs, directive: ch.rep.directive, board: ch.rep.board, dojo: ch.rep.dojo, minute: ch.rep.minute },
+      finale: ch && ch.fin && { packets: Object.fromEntries(Object.entries(ch.fin.packets).map(([k, x]) => [k, x.sent && { at: x.sent.at, due: x.sent.due, onTime: x.sent.onTime, score: x.grade.score, claims: x.grade.claims, required: x.grade.required }])), route: ch.fin.route, needs: ch.fin.needs, directive: ch.fin.directive, board: ch.fin.board, dojo: ch.fin.dojo, minute: ch.fin.minute, statement: ch.fin.statement },
       noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, seriesCharter: ser.editions && ser.editions.charter, audit: ch && ch.audit,
       final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, objective: fin.objective, override: ch && ch.decision, accept: ch && ch.accept.map(a => a.line + ':' + a.signedBy), needs: ch && ch.needs, sent: ch && ch.sent, final: ch && ch.final }, stats };
     console.log(JSON.stringify(chRes, null, 1));
     await browser.close();
-    // The systemic invariant (Charter slice-3 review; slice 4 adds the report's minute and district end): eight checkpoints
-    // (four minutes, four district ends), none with a finding.
-    const audOk = ch && Array.isArray(ch.audit) && ch.audit.length === 8 && ch.audit.every(a => !a.bad.length);
+    // The systemic invariant (Charter slice-3 review; slice 4 adds the report's minute and district end, the finale its
+    // minute and the edition's end): ten checkpoints (five minutes, five district ends), none with a finding.
+    const audOk = ch && Array.isArray(ch.audit) && ch.audit.length === 10 && ch.audit.every(a => !a.bad.length);
     const accOk = audOk && ch && ch.accept.length >= 1 && ch.accept.every(a => a.signedBy === a.owner && a.signedBy !== 'CISO') && sup && sup.accept.every(a => a.signedBy === a.owner);
     const supOk = sup && sup.sent && sup.planSent && fin.metrics.chSupTier === 100 && fin.metrics.chSupCrit === 100 && fin.metrics.chSupNotify === 100 && fin.metrics.chSupMust === 100 && fin.f.chHawser;
     const polOk = pol && pol.intakeSent && pol.libSent && fin.metrics.chPolExc === 100 && fin.metrics.chPolExp === 100 && fin.metrics.chPolRev === 100 && fin.f.chSheetBend && pol.exc.some(e => e.id === 'EX-05') && pol.exc.filter(e => !e.seed).every(e => e.owner && e.owner !== 'the CISO');
     const rep = ch && ch.rep;
     const repOk = rep && rep.sent && rep.grade && fin.metrics.chRepClaims === 100 && fin.metrics.chRepRequired === 100 && fin.metrics.chRepDecide === 100 && rep.grade.score === 100 && !rep.grade.weak.length && !rep.grade.omitted.length && rep.grade.lines <= 10 && fin.f.chRollingHitch && rep.needs.met === 3 && !!rep.minute;
-    process.exit(errors.length || requests.length || !savedCheckChRep || !savedCheckChRep.restored || !savedCheckChRep.exportRoundTrip || !fin.extra.chRepSummary || ser.editions.charter.report !== true || !repOk || !savedCheckCh || !savedCheckCh.restored || !savedCheckCh.exportRoundTrip || !savedCheckChSup || !savedCheckChSup.restored || !savedCheckChSup.exportRoundTrip || !savedCheckChPol || !savedCheckChPol.restored || !savedCheckChPol.exportRoundTrip || !fin.objective.done || !fin.extra.chSummary || !fin.extra.chSupSummary || !fin.extra.chPolSummary || !ser.editions || !ser.editions.charter || ser.editions.charter.budget !== true || ser.editions.charter.suppliers !== true || ser.editions.charter.policy !== true || !accOk || !supOk || !polOk || !chRes.noHorizontalScroll ? 1 : 0);
+    // The finale: the three packets sent as recommended, on time and fully supported, every decision routed at the first
+    // pick, the drills supported, the statement the chair's, the minute, the badge, the series record of the edition's end.
+    const chf = ch && ch.fin, fp = chf ? ['P1', 'P2', 'P3'].map(k => chf.packets[k]) : [];
+    const finOk = !!chf && fp.every(x => x && x.sent && x.sent.onTime && x.grade.score === 100 && x.grade.claims === 100) && chf.needs.met === 3 && chf.route && chf.route.first.every(Boolean) &&
+      !!chf.minute && chf.statement && chf.statement.by === 'Ivor Penhallow' && chf.dojo.every(Boolean) && fin.f.chHeavingLine &&
+      fin.metrics.chFinClaims === 100 && fin.metrics.chFinRequired === 100 && fin.metrics.chFinOnTime === 100 && fin.metrics.chFinRouted === 100 && !!fin.extra.chFinSummary && !!fin.extra.chRepSummary;
+    process.exit(errors.length || requests.length || !finOk || !savedCheckChFin || !savedCheckChFin.restored || !savedCheckChFin.exportRoundTrip || ser.editions.charter.finale !== true || ser.editions.charter.editionComplete !== true || !savedCheckChRep || !savedCheckChRep.restored || !savedCheckChRep.exportRoundTrip || ser.editions.charter.report !== true || !repOk || !savedCheckCh || !savedCheckCh.restored || !savedCheckCh.exportRoundTrip || !savedCheckChSup || !savedCheckChSup.restored || !savedCheckChSup.exportRoundTrip || !savedCheckChPol || !savedCheckChPol.restored || !savedCheckChPol.exportRoundTrip || !fin.objective.done || !fin.extra.chSummary || !fin.extra.chSupSummary || !fin.extra.chPolSummary || !ser.editions || !ser.editions.charter || ser.editions.charter.budget !== true || ser.editions.charter.suppliers !== true || ser.editions.charter.policy !== true || !accOk || !supOk || !polOk || !chRes.noHorizontalScroll ? 1 : 0);
   }
   if (CR) {
     const ser = await page.evaluate(() => JSON.parse(localStorage.getItem('uptime.series') || '{}'));

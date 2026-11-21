@@ -202,7 +202,7 @@ function chAcceptHtml(list) {
   return '<table class="sc"><tr><th>Line</th><th>Left</th><th>Decided</th><th>Signed</th><th>Review</th></tr>' + list.map(x => '<tr><td>' + esc(x.line) + '</td><td>' + esc(x.residual) + '</td><td>' + esc(x.decider || x.decidedBy.split(' ')[0]) + '</td><td>' + esc(x.signedBy.split(' ')[0]) + '</td><td>Day ' + x.review + '</td></tr>').join('') + '</table>' +
     '<ul>' + list.map(x => '<li><b>' + esc(x.line) + ' ' + esc(x.name) + '</b>: residual ' + esc(x.residual) + ' against a ' + esc(x.appetite) + ' appetite' + (x.breaks && x.breaks.length ? ', and it breaks the tolerance “' + esc(x.breaks.join('”, “')) + '”' : '') + '. ' +
       'Decided by ' + esc(x.decidedBy) + (x.approvedBy ? '; carrying the residual risk approved by ' + esc(x.approvedBy) : '') + '. ' +
-      'Signed by ' + esc(x.signedBy) + ', its owner' + (x.signedFor ? ', for ' + esc(x.signedFor) : '') + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '.' + (x.interim ? ' Meanwhile: ' + esc(x.interim) : '') + (x.closed ? ' Closed Day ' + x.closedDay + ': ' + esc(x.closedNote) + '.' : '') + '</li>').join('') + '</ul>';
+      'Signed by ' + esc(x.signedBy) + ', its owner' + (x.signedFor ? ', for ' + esc(x.signedFor) : '') + '. Expires Day ' + x.expiry + '; reviewed Day ' + x.review + '.' + (x.interim ? ' Meanwhile: ' + esc(x.interim) : '') + (x.closed ? ' Closed Day ' + x.closedDay + ': ' + esc(x.closedNote) + '.' : '') + (x.boardDecided ? ' This Board’s decision of record (' + esc(x.boardDecided.by) + '): ' + esc(x.boardDecided.decision) + '.' : '') + '</li>').join('') + '</ul>';
 }
 
 /* ---------- The systemic invariant: tolerances bind at every checkpoint ---------- */
@@ -249,6 +249,9 @@ function chAuditNow() {
   }
   // The Board report (District 4): once a report is sent, its required rows are what the records say (report.js).
   if (c.rep && c.rep.sent && typeof chRepAuditNow === 'function') for (const x of chRepAuditNow()) bad.push(x);
+  // The finale (review_charter4 S-7): from the Day 95 minute, an owner's acceptance that breaks a Board tolerance carries
+  // the Board's decision of record, or the chair's within five working days (disclosure.js).
+  if (typeof chFinAuditNow === 'function') for (const x of chFinAuditNow()) bad.push(x);
   return bad;
 }
 function chAudit(where) { const c = G.ch, bad = chAuditNow(); (c.audit || (c.audit = [])).push({where: where, day: G.day, bad: bad}); return bad;

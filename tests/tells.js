@@ -230,7 +230,7 @@ const files = fs.readdirSync(root + '/editions/town-hall').filter(f => f.endsWit
 const crFiles = fs.existsSync(root + '/editions/crossroads') ? fs.readdirSync(root + '/editions/crossroads').filter(f => f.endsWith('.js')).map(f => 'editions/crossroads/' + f) : [];
 const chFiles = fs.existsSync(root + '/editions/charter') ? fs.readdirSync(root + '/editions/charter').filter(f => f.endsWith('.js')).map(f => 'editions/charter/' + f) : [];
 const DISTRICTS = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water', 'council'];
-const district = f => { const b = path.basename(f); if (f.startsWith('editions/charter/')) return /^budget-/.test(b) ? 'ch-budget' : /^suppliers-/.test(b) ? 'ch-suppliers' : /^policy-/.test(b) ? 'ch-policy' : /^report-/.test(b) ? 'ch-report' : 'ch-prologue'; if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : /^clinic-/.test(b) ? 'cr-clinic' : /^dispatch-/.test(b) ? 'cr-dispatch' : /^airport-/.test(b) ? 'cr-airport' : /^finale-/.test(b) ? 'cr-finale' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
+const district = f => { const b = path.basename(f); if (f.startsWith('editions/charter/')) return /^budget-/.test(b) ? 'ch-budget' : /^suppliers-/.test(b) ? 'ch-suppliers' : /^policy-/.test(b) ? 'ch-policy' : /^report-/.test(b) ? 'ch-report' : /^finale-/.test(b) ? 'ch-finale' : 'ch-prologue'; if (f.startsWith('editions/crossroads/')) return /^library-/.test(b) ? 'cr-library' : /^school-/.test(b) ? 'cr-school' : /^clinic-/.test(b) ? 'cr-clinic' : /^dispatch-/.test(b) ? 'cr-dispatch' : /^airport-/.test(b) ? 'cr-airport' : /^finale-/.test(b) ? 'cr-finale' : 'cr-prologue'; if (/^(data|story|quiet)\.js$/.test(b) || f.startsWith('engine')) return 'frontdesk'; return b.split('-')[0]; };
 function strOf(n) {
   if (!n) return null;
   if (n.type === 'Literal' && typeof n.value === 'string') return n.value;
@@ -574,7 +574,7 @@ if (report) {
   for (const s of scopes) console.log(s.padEnd(12) + lfTop(loneFeatures(s === 'all' ? graded : graded.filter(L => district(L.file) === s), true), 8).map(r => (r.fail ? '!' : r.flag ? '*' : '') + lfFmt(r)).join(', '));
 }
 // ---- Charter (edition 3): a third population, held to Crossroads' rules from its first build ----
-const CH_DISTRICTS = ['ch-prologue', 'ch-budget', 'ch-suppliers', 'ch-policy', 'ch-report'];
+const CH_DISTRICTS = ['ch-prologue', 'ch-budget', 'ch-suppliers', 'ch-policy', 'ch-report', 'ch-finale'];
 const chScope = s => s === 'ch-all' ? chOpts : TYPES.includes(s) ? chOpts.filter(x => x.t === s) : chOpts.filter(x => x.d === s);
 const chListsIn = s => s === 'ch-all' ? chGraded : chGraded.filter(L => district(L.file) === s);
 const chFails = [], chWarns = [];
@@ -597,7 +597,7 @@ const CH_NAMES = [
   ['N:Edda', /\b(Edda|Thornquist)\b/], ['N:Marit', /\b(Marit|Quellan)\b/], ['N:Ivor', /\b(Ivor|Penhallow)\b/], ['N:Celia', /\b(Celia|Marrow)\b/],
   ['N:Joanna', /\b(Joanna|Ferreday)\b/], ['N:Beatriz', /\b(Beatriz|Solano)\b/], ['N:Noor', /\b(Noor|Castellanos)\b/],
   ['N:ch-deciders', /\b(Edda|Thornquist|Marit|Quellan|Ivor|Penhallow|Celia|Marrow|Joanna|Ferreday|Noor|Castellanos|Ilka|Thrushcombe)\b/],
-  ['N:Ilka', /\b(Ilka|Thrushcombe)\b/], ['N:Strand', /\b(Mina|Strand)\b/],
+  ['N:Ilka', /\b(Ilka|Thrushcombe)\b/], ['N:Strand', /\b(Mina|Strand)\b/], ['N:Ada', /\b(Ada|Pemberton)\b/],
   ['N:suppliers', /\b(Thimbleford|Inkmere|Wellhollow|Tarnfield|Pewterlane|Stillmark|Shelfwright|Wrenfold|Brindlemark)\b/]];
 const chPunct = [], chNameRows = [];
 // The lone absence (since the Charter slice-3 review): lists of three or more where every option but one carries the mark,
@@ -640,6 +640,27 @@ if (chRepSrc) {
   const sec = (rj.split('async function chRepSection')[1] || '').split('\nasync function')[0];
   chRepEditorRefs = /refs/.test(sec);
 }
+// The finale's facts packets (since Charter slice 5): every row's wordings are a scored list, held to the same rules as
+// the report's rows: in the scan, one supported wording each, as many records cited as the supported one, and no length
+// tell (the supported wording the longest or second-longest in no more rows than chance, the shortest or third-longest or
+// lower in at least a third).
+const chFinSrc = fs.existsSync(root + '/editions/charter/finale-data.js') ? fs.readFileSync(root + '/editions/charter/finale-data.js', 'utf8') : '';
+let chFinRows = [], chFinRefRows = [], chFinRank = {top2: 0, exp: 0, low: 0, n: 0}, chFinEditorRefs = false;
+if (chFinSrc) {
+  const vm = require('vm'), ctx = {}; vm.createContext(ctx);
+  try { vm.runInContext(chFinSrc + '\n;this.__p = CH_FIN_PACKETS;', ctx); } catch (e) { ctx.__p = []; }
+  chFinRows = (ctx.__p || []).flatMap(P => P.rows);
+  for (const r of chFinRows) {
+    const n = r.variants.map(v => (v.refs || []).length), g = r.variants.findIndex(v => v.good);
+    if (n.some(x => x !== n[g])) chFinRefRows.push(r.id + ' ' + n.join('/'));
+    const len = r.variants.map(v => v.label.length), rank = len.filter(x => x > len[g]).length + 1;
+    chFinRank.n++; chFinRank.exp += 2 / len.length; if (rank <= 2) chFinRank.top2++; if (rank >= 3 || len[g] === Math.min(...len)) chFinRank.low++;
+  }
+  const dj = fs.existsSync(root + '/editions/charter/disclosure.js') ? fs.readFileSync(root + '/editions/charter/disclosure.js', 'utf8') : '';
+  const ed = (dj.split('async function chFinEdit')[1] || '').split('\nfunction ')[0];
+  chFinEditorRefs = /refs/.test(ed);
+}
+const chFinRowLists = chGraded.filter(L => L.top === 'CH_FIN_PACKETS' && /finale-data\.js$/.test(L.file));
 if (report && chOpts.length) {
   console.log('\nCharter (' + chGraded.length + ' graded lists, ' + chOpts.length + ' options)\n' + 'word'.padEnd(18) + CH_DISTRICTS.concat(['ch-all']).map(s => s.padEnd(19)).join(''));
   for (const [name, re] of CR_WORDS.concat(CH_GROUPS)) console.log(name.padEnd(18) + CH_DISTRICTS.concat(['ch-all']).map(s => fmt(stat(chScope(s), re)).padEnd(19)).join(''));
@@ -669,7 +690,7 @@ if (crFiles.length) checks.push(
   ['Crossroads: no name tell — options naming a character, Kole, Priya, Dr Vale and Marsh in the School District, Marisol, Weller, Renata Osei, Kowal and Kit in the Clinic, Imogen, Celia, Lionel, Petra and Felix in Dispatch, and Joanna, Callum, Odette, Ansel and Dario at the Airport, and Edda and the finale’s deciders, within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% from n>=' + PUNCT_BAND_N + ', at chance below it (' + nameRows.map(x => x.n + ' ' + pFmt(x.st)).join(', ') + ')', nameRows.every(x => x.ok)],
   ['Crossroads: no lone-feature tell — no word or pattern (weekday, clock time, ID, digit, quote, n’t) that only one option of a list carries is right in ' + LF_RIGHT * 100 + '% of n>=' + LF_N + ' lists or wrong in ' + LF_WRONG * 100 + '% of n>=' + LF_WN + ' beyond chance (' + LF_K + ' sd + ' + LF_C + '); strongest leans: ' + lfRows.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !lfFails.length]);
 if (chFiles.length) checks.push(
-  ['Charter: source scan found graded lists in the prologue, Budget, Suppliers, Policy and the Board report (' + chGraded.length + ' lists, ' + chOpts.length + ' options)', CH_DISTRICTS.every(d => chGraded.some(L => district(L.file) === d))],
+  ['Charter: source scan found graded lists in the prologue, Budget, Suppliers, Policy, the Board report and the finale (' + chGraded.length + ' lists, ' + chOpts.length + ' options)', CH_DISTRICTS.every(d => chGraded.some(L => district(L.file) === d))],
   ['Charter: no tracked word or group leans ' + THRESH * 100 + '% or more (n>=' + MIN_N + ', stem-matched) in its districts, its list types or overall, and none outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% (no warnings)', !chFails.length && !chWarns.length],
   ['Charter stays within ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '% on every Crossroads group and its own (appetite, budget, accept/sign, Board, owner, you, records, tier; exceptions and policy in Policy and overall), n>=' + CR_BAND_MIN_N + ' (' + chBand.filter(x => x.st.n >= CR_BAND_MIN_N).map(x => x.n + ' ' + fmt(x.st)).join(', ') + ')', chBand.every(x => x.ok)],
   ['Charter: no punctuation tell (; : dash parentheses), the lone-mark and lone-absence picks no better than chance (' + chPunct.map(x => x.n + ' ' + pFmt(x.st) + ' lone ' + loneFmt(x.ln) + ' absent ' + loneFmt(x.la)).join(', ') + ')', chPunct.every(x => x.ok)],
@@ -678,6 +699,9 @@ if (chFiles.length) checks.push(
   ['Charter: the Board report’s rows (CH_REP_ROWS, the lines the scorecard grades) are scanned: ' + chRepRowLists.length + ' lists, of ' + chRepRowCount + ' rows in the source, each with exactly one supported wording', chRepRowCount > 0 && chRepRowLists.length === chRepRowCount && chRepRowLists.every(L => L.items.filter(x => x.good).length === 1)],
   ['Charter: the Board report’s wordings cite as many records as the supported one, row by row (' + (chRepRefRows.length ? 'unequal: ' + chRepRefRows.join(', ') : chRepRank.n + ' rows equal') + '), and the editor shows no record list per wording', chRepRank.n > 0 && !chRepRefRows.length && !chRepEditorRefs],
   ['Charter: no length tell in the Board report’s rows — the supported wording is the longest or second-longest in ' + chRepRank.top2 + ' of ' + chRepRank.n + ' rows (chance ' + chRepRank.exp.toFixed(1) + '), and the shortest or third-longest or lower in ' + chRepRank.low + ' (at least a third)', chRepRank.n > 0 && chRepRank.top2 <= Math.ceil(chRepRank.exp) && chRepRank.low * 3 >= chRepRank.n],
+  ['Charter: the finale’s facts packets (CH_FIN_PACKETS, the rows the scorecard grades) are scanned: ' + chFinRowLists.length + ' lists, of ' + chFinRows.length + ' rows in the source, each with exactly one supported wording', chFinRows.length > 0 && chFinRowLists.length === chFinRows.length && chFinRowLists.every(L => L.items.filter(x => x.good).length === 1)],
+  ['Charter: the packets’ wordings cite as many records as the supported one, row by row (' + (chFinRefRows.length ? 'unequal: ' + chFinRefRows.join(', ') : chFinRank.n + ' rows equal') + '), and the packet editor shows no record list per wording', chFinRank.n > 0 && !chFinRefRows.length && !chFinEditorRefs],
+  ['Charter: no length tell in the packets’ rows — the supported wording is the longest or second-longest in ' + chFinRank.top2 + ' of ' + chFinRank.n + ' rows (chance ' + chFinRank.exp.toFixed(1) + '), and the shortest or third-longest or lower in ' + chFinRank.low + ' (at least a third)', chFinRank.n > 0 && chFinRank.top2 <= Math.ceil(chFinRank.exp) && chFinRank.low * 3 >= chFinRank.n],
   ['Charter: no lone-feature tell (the same rule as Crossroads); strongest leans: ' + chLf.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !chLfFails.length]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);

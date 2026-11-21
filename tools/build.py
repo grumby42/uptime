@@ -32,7 +32,8 @@ def editions():
             m = json.loads(read(meta))
             m['dir'] = os.path.join(EDITIONS, name)
             out.append(m)
-    return sorted(out, key=lambda m: (m.get('slice', 99), m['id']))  # the series menu lists editions in play order
+    # the series menu lists editions in play order: by edition number ("edition", else the slice count), then id
+    return sorted(out, key=lambda m: (m.get('edition', m.get('slice', 99)), m['id']))
 
 
 VALIDATE = r"""
@@ -131,7 +132,7 @@ footer{margin-top:28px;font-size:12px;color:var(--muted)}
 <p class="sub">A security-analyst RPG in small offline editions. Each one runs in your browser, phone or desktop, with no network requests. Saves stay in this browser.</p>
 <ol>
 %(items)s
-<li class="soon">Next edition: coming later</li>
+<li class="soon">Next edition: coming later (the vCISO edition)</li>
 </ol>
 <footer>Build %(build_id)s &middot; %(build_ts)s &middot; Code under the MIT licence; framework data keeps its own terms (see CREDITS.md).</footer>
 </main>
@@ -143,7 +144,7 @@ footer{margin-top:28px;font-size:12px;color:var(--muted)}
 def build_menu(eds, build_id, build_ts):
     items = '\n'.join(
         '<li><a class="ed" href="editions/%s/index.html"><b>%d. %s</b><span>%s. %s</span></a></li>' % (
-            html.escape(e['id']), e.get('slice', i + 1), html.escape(e['name']), html.escape(e['district']), html.escape(e['blurb']))
+            html.escape(e['id']), e.get('edition', e.get('slice', i + 1)), html.escape(e['name']), html.escape(e['district']), html.escape(e['blurb']))
         for i, e in enumerate(eds))
     page = MENU % {'items': items, 'build_id': build_id, 'build_ts': build_ts}
     no_network(page, 'index.html')

@@ -8,7 +8,7 @@ cp.execFileSync('node', [path.join(root, 'tests/tells.js'), '--dump=' + dump], {
 const D = JSON.parse(fs.readFileSync(dump, 'utf8')); fs.unlinkSync(dump);
 const by = {};
 for (const L of D.th.concat(D.cr, D.ch)) (by[L.d] = by[L.d] || []).push(L);
-const order = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water', 'council', 'cr-prologue', 'cr-library', 'cr-school', 'cr-clinic', 'cr-dispatch', 'cr-airport', 'cr-finale', 'ch-prologue', 'ch-budget', 'ch-suppliers', 'ch-policy', 'ch-report'];
+const order = ['frontdesk', 'mailroom', 'clerks', 'market', 'records', 'basement', 'server', 'water', 'council', 'cr-prologue', 'cr-library', 'cr-school', 'cr-clinic', 'cr-dispatch', 'cr-airport', 'cr-finale', 'ch-prologue', 'ch-budget', 'ch-suppliers', 'ch-policy', 'ch-report', 'ch-finale'];
 console.log('district      single  mean rank (chance)  right len / wrong len  Yes/No openers right  wrong');
 for (const d of order.filter(d => by[d])) {
   let n = 0, rk = 0, ch = 0, rl = 0, wl = 0, wn = 0, yr = 0, yw = 0, R = 0, Wn = 0;
