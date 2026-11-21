@@ -1,0 +1,11 @@
+# Backlog (recovered 2026-11-21)
+- Town Hall Yes/No odd-one-out tell (5 of 6 lists) — S
+- Crossroads "No:" rescan — M
+- Town Hall lone-feature leans (report-only)
+- Charter word leans: "without", "two", "used" (flagged, within pass rule)
+- Bot repeatability with a fixed-step clock
+- Finale map: a town desk; the reused trap pair (N2/N8)
+- Dispatch map positions
+- Verify the Chris Sanders credit before release
+- Audra Finch (CAREER_LADDER §7a's CIO counterpart) — use in a later slice; Edda Thornquist is Charter's counterpart
+- Restore the lost scratchpad docs where needed: CAREER_LADDER.md (career-ladder plan: vCISO/fractional CISO edition next, CIO last; Quiet Thread resolved only in the final edition), charter-timeline.md (rebuild from editions/charter/ before slice 4 dialogue)
