@@ -1,0 +1,31 @@
+{
+ "suite": "doors",
+ "passed": 5,
+ "failed": 0,
+ "results": [
+  {
+   "name": "Charter: an old save on the risk register (3,1) loads onto the nearest walkable floor tile",
+   "ok": true
+  },
+  {
+   "name": "every door pair: exit wall matches the arrival side, facing away from the door",
+   "ok": true
+  },
+  {
+   "name": "every exit tile is a working door",
+   "ok": true
+  },
+  {
+   "name": "checked all Charter doors (the Compact offices and the Compact Board room: 2 one-way links, each with its matching door back)",
+   "ok": true
+  },
+  {
+   "name": "no console errors or network requests",
+   "ok": true
+  }
+ ],
+ "doors": [
+  "choffice 0,6 -> chboard 16,5 left (exit left)",
+  "chboard 17,5 -> choffice 1,6 right (exit right)"
+ ]
+}

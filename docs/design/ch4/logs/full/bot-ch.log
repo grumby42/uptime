@@ -1,0 +1,329 @@
+{
+ "edition": "charter",
+ "mode": "desktop",
+ "finished": true,
+ "seconds": 115,
+ "iterations": 1754,
+ "errors": [],
+ "requests": [],
+ "saveReloadBudget": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 65,
+  "map": "choffice",
+  "x": 13,
+  "y": 2
+ },
+ "saveReloadSuppliers": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 71,
+  "map": "choffice",
+  "x": 13,
+  "y": 2
+ },
+ "saveReloadPolicy": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 78,
+  "map": "choffice",
+  "x": 7,
+  "y": 2
+ },
+ "saveReloadReport": {
+  "restored": true,
+  "exportRoundTrip": true,
+  "day": 85,
+  "map": "choffice",
+  "x": 13,
+  "y": 2
+ },
+ "suppliers": {
+  "tiers": {
+   "inkmere": 2,
+   "thimbleford": 1,
+   "wrenfold": 1,
+   "tarnfield": 1,
+   "wellhollow": 1,
+   "stillmark": 1,
+   "shelfwright": 1,
+   "pewterlane": 3
+  },
+  "plan": {
+   "thimbleford": [
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C6",
+    "C8"
+   ],
+   "wellhollow": [
+    "C3",
+    "C4",
+    "C5",
+    "C8"
+   ],
+   "inkmere": [
+    "C1",
+    "C2",
+    "C4"
+   ],
+   "pewterlane": [
+    "C2"
+   ]
+  },
+  "accept": [],
+  "needs": {
+   "met": 3,
+   "total": 3
+  },
+  "incident": [
+   true,
+   true,
+   true,
+   true,
+   true,
+   true
+  ],
+  "board": [
+   true,
+   true,
+   true
+  ],
+  "dojo": [
+   true,
+   true,
+   true
+  ]
+ },
+ "policy": {
+  "intake": {
+   "EX-02": 2,
+   "EX-03": 3,
+   "EX-04": 1
+  },
+  "library": {
+   "POL-1": 428,
+   "STD-1": 155,
+   "STD-2": 155,
+   "STD-3": 155,
+   "STD-4": 155,
+   "STD-5": 155
+  },
+  "register": [
+   "EX-00:seed:",
+   "EX-01:closed:Edda Thornquist",
+   "EX-02:open:Edda Thornquist",
+   "EX-03:closed:Edda Thornquist",
+   "EX-04:open:Marit Quellan",
+   "EX-05:open:Director Mina Strand"
+  ],
+  "needs": {
+   "met": 3,
+   "total": 3
+  },
+  "consult": {
+   "first": true
+  },
+  "directive": true,
+  "board": [
+   true,
+   true,
+   true
+  ],
+  "dojo": [
+   true,
+   true,
+   true
+  ],
+  "minute": "15:00. POL-1 is approved: the Board’s decision. POL-1 to be reviewed by Day 428, set in this minute. The minute records the register as read: 3 open exceptions (EX-02 five service accounts, escalated; EX-04 fin-ap, escalated; EX-05 LIB-FILM-01, standard), each with its owner, its class and its approver by the rule, its expiry and its review date; closed this week: EX-01 board-display and EX-03 cp-patch; none open past its expiry. EX-02 five service accounts and EX-04 fin-ap: escalated, decided by the chair on Tuesday under 6.2a, minuted here; their owners sign for running the controls. EX-04 sits inside R4 (6.7): financial: call-back in force from Day 79 (Marit): within. EX-05, the Library’s, a standard one, signed by its owner under the draft and confirmed under POL-1 as approved, with your recommendation beside it. Reported under 6.6a: board-display’s two Monday sign-ins without MFA outside an exception, a STD-1 miss. (game)"
+ },
+ "report": {
+  "sent": {
+   "A1": 1,
+   "A3": 0,
+   "B1": 1,
+   "B2": 1,
+   "B3": 0,
+   "B4": 0,
+   "C1": 1,
+   "C2": 1,
+   "C3": 1,
+   "D1": 1,
+   "E1": 1,
+   "F1": 0
+  },
+  "grade": {
+   "lines": 8,
+   "score": 100,
+   "claims": 100,
+   "required": 100,
+   "decide": 100,
+   "weak": [],
+   "omitted": []
+  },
+  "needs": {
+   "met": 3,
+   "total": 3
+  },
+  "directive": {
+   "first": true,
+   "item": "cp-xfer’s return"
+  },
+  "board": {
+   "first": [
+    true,
+    true,
+    true
+   ],
+   "asked": [
+    "The annex",
+    "Whose report",
+    "Better or worse"
+   ]
+  },
+  "dojo": [
+   true,
+   true,
+   true
+  ],
+  "minute": "15:00. The minute records the report as received (Day 87 12:00): 8 lines and an annex of 9 records. No correction asked. The decisions it puts to the Board: C1 (this Board), C2 (the chair), C3 (this Board), each with its decider. (game)"
+ },
+ "noHorizontalScroll": true,
+ "hscroll": {
+  "sw": 1280,
+  "iw": 1280
+ },
+ "seriesCharter": {
+  "started": true,
+  "budget": true,
+  "suppliers": true,
+  "policy": true,
+  "report": true
+ },
+ "audit": [
+  {
+   "where": "Budget: the Board’s minute (Day 67)",
+   "day": 67,
+   "bad": []
+  },
+  {
+   "where": "Budget: the district’s end (Day 67)",
+   "day": 67,
+   "bad": []
+  },
+  {
+   "where": "Suppliers: the Board’s minute (Day 74)",
+   "day": 74,
+   "bad": []
+  },
+  {
+   "where": "Suppliers: the district’s end (Day 74)",
+   "day": 74,
+   "bad": []
+  },
+  {
+   "where": "Policy: the Board’s minute (Day 81)",
+   "day": 81,
+   "bad": []
+  },
+  {
+   "where": "Policy: the district’s end (Day 81)",
+   "day": 81,
+   "bad": []
+  },
+  {
+   "where": "Report: the Board’s minute (Day 88)",
+   "day": 88,
+   "bad": []
+  },
+  {
+   "where": "Report: the district’s end (Day 88)",
+   "day": 88,
+   "bad": []
+  }
+ ],
+ "final": {
+  "day": 88,
+  "rank": "CISO",
+  "fm": 100,
+  "metrics": {
+   "closed": 0,
+   "acc": null,
+   "tta": null,
+   "esc": null,
+   "evid": null,
+   "uptime": 99.95,
+   "mfa": 0,
+   "patch": 0,
+   "chWithin": 100,
+   "chOwned": 100,
+   "chTop5": 96,
+   "chSupCrit": 100,
+   "chSupTier": 100,
+   "chSupNotify": 100,
+   "chSupMust": 100,
+   "chPolExc": 100,
+   "chPolExp": 100,
+   "chPolRev": 100,
+   "chRepClaims": 100,
+   "chRepRequired": 100,
+   "chRepDecide": 100
+  },
+  "objective": {
+   "text": "The Board report done. Next: The finale.",
+   "done": true
+  },
+  "override": {
+   "override": false,
+   "cut": [],
+   "restored": [],
+   "persuaded": true
+  },
+  "accept": [
+   "AP:Joanna Ferreday",
+   "R4:Marit Quellan",
+   "CP-XFER:Marit Quellan"
+  ],
+  "needs": {
+   "met": 3,
+   "total": 3
+  },
+  "sent": {
+   "R1": 2,
+   "R2": 1,
+   "R3": 2,
+   "R4": 1,
+   "R5": 1,
+   "R6": 1
+  },
+  "final": {
+   "R1": 2,
+   "R2": 1,
+   "R3": 2,
+   "R4": 1,
+   "R5": 1,
+   "R6": 1
+  }
+ },
+ "stats": {
+  "battles": 0,
+  "says": 260,
+  "steps": 1066,
+  "shots": {
+   "appetite": 1,
+   "charter": 1,
+   "alloc": 1,
+   "tiers": 1,
+   "plan": 1,
+   "timeline": 1,
+   "intake": 1,
+   "library": 1,
+   "report": 1,
+   "reportSec": 1,
+   "reportSent": 1
+  },
+  "alertTechs": {}
+ }
+}
