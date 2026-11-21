@@ -28,3 +28,9 @@ bot-crd exit 0 174s
 bot-ch exit 0 115s
 bot-gamer exit 0 11s
 DESKTOP DONE
+other bots before phone: 0
+phone-th exit 0 1573s
+phone-crm exit 0 774s
+phone-crd exit 0 753s
+phone-ch exit 0 434s
+PHONE DONE

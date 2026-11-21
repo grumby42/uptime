@@ -1,0 +1,7 @@
+# Charter slice 4 build log (District 4, the Board report)
+Build ARCD-20261121-1350Z (committed in 4c804bc; no game code changed after it). Rebuilt from scratch after the 2026-11-21 container reset; the timeline was rebuilt from the code first (charter-timeline.md, d6477ad).
+- Content and design: charter-timeline.md, slice 4 section. Facts and name searches: CREDITS.md, "Facts used in Charter, District 4".
+- Patch scripts: ch4/py/. Tell baselines and outputs: ch4/base, ch4/*.txt (Town Hall and Crossroads lines of tells --report 1-370 byte-identical; lentell and tells2 add only the ch-report row).
+- tools/lentell.js and tools/tells2.js replace the lost scratchpad tools (new definitions: see their headers; their chance figures are not comparable with the old ones).
+- Mutations (ch4/mut): 12 rules broken on purpose, all caught by tests/charter.js (two only by a crash at first; that step is now a named check).
+- Full sequence (ch4/logs/full/summary.txt): every suite, lentell, tells2, highlight and doors for each edition, the desktop bots (Town Hall; Crossroads manager and DFIR to the ending and New Game+; Charter through the Board report), GAMER=1, then the phone bots alone (0 others running): all exit 0, 0 console errors, 0 network requests, no horizontal scroll. tests/charter.js 134/134.
