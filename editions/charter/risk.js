@@ -169,6 +169,16 @@ function chBoardDecide(alloc, persuaded) {
   return {final: f, override, cut, restored, persuaded: won};
 }
 function chAboveAppetite(alloc) { return CH_LINES.filter(l => !chOptWithin(l, chOpt(alloc, l))); }
+// The Day 67 minute's head and its sentence, from the Board's decision as recorded (G.ch.decision, G.ch.final, G.ch.sent):
+// said at 15:00 in the budget round, and read again as a record in the Board report's drill.
+function chBudgetMinuteParts(c) {
+  const d = c.decision || {}, up = chLine('R6').opts.length - 1, cut = d.cut || [];
+  const above = c.final ? chAboveAppetite(c.final) : [], ids = above.map(l => l.id), list = ids.length > 1 ? ids.slice(0, -1).join(', ') + ' and ' + ids[ids.length - 1] : ids[0];
+  const head = d.override ? 'The Board overrode your allocation: the upgrade in full' + (cut.length ? ', paid for by deferring ' + cut.join(', ') : '') + '. ' : 'The Board approved your allocation' + (cut.length ? ', less ' + cut.join(', ') : d.persuaded && c.sent && c.sent.R6 !== up ? ' as sent, the extension carrying the platform' : ' as sent') + '. ';
+  const minute = above.length ? 'The minute records the Board’s decision to carry ' + list + ' above appetite until Day ' + CH_EXPIRY_DAY + (d.override ? ', with the CISO’s advice against it and the objection noted' : '') + ', and its acceptance of the residual risk, approved by the Board. Each owner signs for the interim measures and owns the treatment plan.'
+    : 'The minute records the decision. No line is left above appetite once its line delivers.';
+  return {head, minute, above};
+}
 // An acceptance for a line the Board's decision leaves above appetite. One decider per decision: the Board decided to
 // carry the risk and approved accepting the residual (its minute, with the CISO's advice and objection noted); the
 // business owner signs for the interim measures and owns the treatment plan; the CISO advised and records both.
@@ -237,6 +247,8 @@ function chAuditNow() {
     if (!r || (lvl(r.cat, r.residual) && !r.breaks.length)) continue;
     if (chExcClass(e).cls !== 'escalated' || !/^6\.7: /.test(chExcTolerance(e).text)) bad.push(e.id + ': inside ' + e.boardLine + ', which ' + (r.breaks.length ? 'breaks a tolerance' : 'is above appetite') + ', but not escalated with 6.7 shown');
   }
+  // The Board report (District 4): once a report is sent, its required rows are what the records say (report.js).
+  if (c.rep && c.rep.sent && typeof chRepAuditNow === 'function') for (const x of chRepAuditNow()) bad.push(x);
   return bad;
 }
 function chAudit(where) { const c = G.ch, bad = chAuditNow(); (c.audit || (c.audit = [])).push({where: where, day: G.day, bad: bad}); return bad;

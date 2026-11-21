@@ -132,11 +132,9 @@ async function chBoardRound() {
   // call-back rule), its owner accepts the gap and signs; the Board sees it in the minute (the tolerances bind now).
   const gap = CH_LINES.filter(l => !above.includes(l) && chLineNow(l).gap);
   for (const l of gap) c.accept.push(chGapAcceptance(l, 67));
-  const ids = above.map(l => l.id), list = ids.length > 1 ? ids.slice(0, -1).join(', ') + ' and ' + ids[ids.length - 1] : ids[0];
   const gapTxt = gap.length ? ' Until its line delivers, ' + gap.map(l => l.id + ' stays as now and breaks the ' + chLineNow(l).breaks.map(chTolName).join(' and ') + ' tolerance: ' + l.owner + ', its owner, accepts that gap and signs, with interim measures').join('; ') + '. The Board sees it.' : '';
-  const head = d.override ? 'The Board overrode your allocation: the upgrade in full' + (d.cut.length ? ', paid for by deferring ' + d.cut.join(', ') : '') + '. ' : 'The Board approved your allocation' + (d.cut.length ? ', less ' + d.cut.join(', ') : d.persuaded && c.sent.R6 !== up ? ' as sent, the extension carrying the platform' : ' as sent') + '. ';
-  const minute = above.length ? 'The minute records the Board’s decision to carry ' + list + ' above appetite until Day ' + CH_EXPIRY_DAY + (d.override ? ', with the CISO’s advice against it and the objection noted' : '') + ', and its acceptance of the residual risk, approved by the Board. Each owner signs for the interim measures and owns the treatment plan.'
-    : 'The minute records the decision. No line is left above appetite once its line delivers.';
+  // The head and the minute's sentence (risk.js, chBudgetMinuteParts): the same text the Board report reads as a record.
+  const {head, minute} = chBudgetMinuteParts(c);
   await UI.openModal('The Board’s decision', '<p>' + head + (d.restored.length ? 'It funded R5, which your allocation left at $0. ' : '') + minute + gapTxt + ' (game)</p>' + chAllocTable(c.final) + chAllocSummary(c.final) +
     (above.length ? '<h3>15:20: the acceptances: the Board’s decision, signed by their owners</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 67 && !x.gap)) : '') +
     (gap.length ? '<h3>15:20: until its line delivers: the owner’s acceptance</h3>' + chAcceptHtml(c.accept.filter(x => x.day === 67 && x.gap)) : '') +

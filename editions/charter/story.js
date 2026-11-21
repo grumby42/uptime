@@ -6,8 +6,9 @@
    objective chain, and the prologue (Day 64, Monday): the appointment, the
    remit, the risk-appetite statement, the budget brief and the register's
    owners and review dates. District 1, Budget, is in budget-*.js; District 2,
-   Suppliers, in suppliers-*.js; District 3, Policy, in policy-*.js; the
-   primitives are in risk.js, supplier.js and policy.js.
+   Suppliers, in suppliers-*.js; District 3, Policy, in policy-*.js; District 4,
+   The Board report, in report-*.js; the primitives are in risk.js, supplier.js,
+   policy.js and report.js.
    Timeline: scratchpad charter-timeline.md.
    ============================================================ */
 'use strict';
@@ -17,20 +18,20 @@ const EDITION = {
   saveKey: 'uptime.charter.save',
   ownMetrics: true,           // the analyst scorecard is replaced by the CISO's (EDITION_METRICS)
   noTools: true,              // no tool console: the CISO's tools are the register, the budget and the Board
-  badgeFlags: ['chBallast', 'chHawser', 'chSheetBend'],
+  badgeFlags: ['chBallast', 'chHawser', 'chSheetBend', 'chRollingHitch'],
   title: 'Charter edition',
-  blurb: 'Four weeks after the Compact-wide incident, the Compact Board appoints its first CISO: you. Set the risk appetite with the Board, then the budget: one sum, six risks, and an upgrade that wants the money too. Then the suppliers: tiers, contract clauses, and a supplier’s incident told from the Compact’s own records. Then policy: an exception register with owners, expiries and reviews, and a policy the Board approves.',
+  blurb: 'Four weeks after the Compact-wide incident, the Compact Board appoints its first CISO: you. Set the risk appetite with the Board, then the budget: one sum, six risks, and an upgrade that wants the money too. Then the suppliers: tiers, contract clauses, and a supplier’s incident told from the Compact’s own records. Then policy: an exception register with owners, expiries and reviews, and a policy the Board approves. Then the Board report: one page from your own records, every line checked against them.',
   fmActionsCat: 'Leadership practices (game)',   // the Field Manual's heading for EXTRA_ACTIONS (engine default: D3FEND-style)
   fmIntro: 'Descriptions are our own words. No ATT&amp;CK technique in Charter so far; the entries not met yet open in later districts.',
   creditsName: 'Charter edition',
-  creditsFacts: 'Charter (the prologue, Budget, Suppliers and Policy): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088, T1906 and T1308, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, and GV.SC-04, GV.SC-05, GV.SC-06, GV.SC-07, GV.SC-08 and GV.SC-10 with the examples quoted, and GV.PO-01 with two examples and GV.PO-02, from NIST’s CSF 2.0 Implementation Examples (26 February 2024). No ATT&CK technique. Facts recalled from Crossroads are quoted from Crossroads, and the town’s fd-admin exception from Town Hall.'
+  creditsFacts: 'Charter (the prologue, Budget, Suppliers, Policy and the Board report): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088, T1906 and T1308, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, and GV.SC-04, GV.SC-05, GV.SC-06, GV.SC-07, GV.SC-08 and GV.SC-10 with the examples quoted, GV.PO-01 with two examples and GV.PO-02, and GV.OV-01 and GV.OV-03 with one example each, from NIST’s CSF 2.0 Implementation Examples (26 February 2024). No ATT&CK technique. Facts recalled from Crossroads are quoted from Crossroads, and the town’s fd-admin exception from Town Hall.'
 };
 const CH_TH_KEY = 'uptime.slice1.save', CH_CR_KEY = 'uptime.crossroads.save', CH_NG_KEY = 'uptime.crossroads.ngplus.save';   // read for the carry-over, never written
 const CH_TH_BADGES = [['Key', g => g.badge], ['Seal', g => g.f && g.f.mrSeal], ['Shield', g => g.f && g.f.crShield], ['Lantern', g => g.f && g.f.mkLantern],
   ['Vault', g => g.f && g.f.rhVault], ['Beacon', g => g.f && g.f.bmBeacon], ['Crown', g => g.f && g.f.svCrown], ['Tide', g => g.f && g.f.wtTide], ['Charter', g => g.f && g.f.ccCharter]];
 const CH_CR_BADGES = [['Bookmark', 'lbBookmark'], ['Slate', 'sdSlate'], ['Pulse', 'cnPulse'], ['Relay', 'dpRelay'], ['Windsock', 'apWindsock'], ['Compass', 'fnCompass']];
 const CH_TRACK = {manager: 'IR manager', dfir: 'principal DFIR consultant'};
-const CH_DAY = {64: 'Monday', 65: 'Tuesday', 66: 'Wednesday', 67: 'Thursday', 71: 'Monday', 72: 'Tuesday', 73: 'Wednesday', 74: 'Thursday', 78: 'Monday', 79: 'Tuesday', 80: 'Wednesday', 81: 'Thursday'};
+const CH_DAY = {64: 'Monday', 65: 'Tuesday', 66: 'Wednesday', 67: 'Thursday', 71: 'Monday', 72: 'Tuesday', 73: 'Wednesday', 74: 'Thursday', 78: 'Monday', 79: 'Tuesday', 80: 'Wednesday', 81: 'Thursday', 85: 'Monday', 86: 'Tuesday', 87: 'Wednesday', 88: 'Thursday'};
 
 /* ---------- State ---------- */
 function newState(seed) {
@@ -40,11 +41,11 @@ function newState(seed) {
     focus: 50, focusMax: 50, rep: 50, uptime: 99.95,
     health: {}, rank: 'CISO', badge: false, track: {}, name: 'Lead',
     m: {closed: 0, judged: 0, correctShown: 0, evOk: 0, ttaSum: 0, ttaN: 0, esc: 0, escOk: 0, missed: 0, surfaced: 0, overreact: 0, autoClosed: 0, events: 0, today: 0},
-    targets: {chWithin: 100, chOwned: 100, chTop5: 80, chSupCrit: 100, chSupTier: 100, chSupNotify: 100, chSupMust: 100, chPolExc: 100, chPolExp: 100, chPolRev: 100},
+    targets: {chWithin: 100, chOwned: 100, chTop5: 80, chSupCrit: 100, chSupTier: 100, chSupNotify: 100, chSupMust: 100, chPolExc: 100, chPolExp: 100, chPolRev: 100, chRepClaims: 100, chRepRequired: 100, chRepDecide: 100},
     mfaSet: [], fm: {}, csf: {}, brief: {}, pcs: {}, dojo: [false, false, false],
     fpWeight: 50, queue: 0, steps: 0, auto: false, autoReview: false, playMs: 0,
     ch: {carry: null, remit: null, appetite: null, register: null, drills: {}, needs: {met: 0, total: 0}, alloc: null, sent: null,
-      board: null, decision: null, final: null, accept: [], directive: null, dojo: [false, false, false], sup: null, pol: null}
+      board: null, decision: null, final: null, accept: [], directive: null, dojo: [false, false, false], sup: null, pol: null, rep: null}
   };
 }
 
@@ -97,10 +98,11 @@ function chOwnedPct() {
   return Math.round(CH_LINES.filter(l => r.owners[l.id] && !/^(IT|Finance|Dispatch)$/.test(r.owners[l.id]) && r.review[l.id]).length / CH_LINES.length * 100);
 }
 function editionMetricVals() {
-  const a = chScored(), s = a ? chAllocStats(a) : null, ss = G.ch && G.ch.sup ? chSupStats() : null, ps = G.ch && G.ch.pol ? chPolStats() : null;
+  const a = chScored(), s = a ? chAllocStats(a) : null, ss = G.ch && G.ch.sup ? chSupStats() : null, ps = G.ch && G.ch.pol ? chPolStats() : null, rs = G.ch && G.ch.rep ? chRepStats() : null;
   return {chWithin: s ? s.withinPct : null, chOwned: G.f.chBudgetBrief ? chOwnedPct() : null, chTop5: s ? s.topPct : null,
     chSupCrit: ss ? ss.crit : null, chSupTier: ss ? ss.tier : null, chSupNotify: ss ? ss.notify : null, chSupMust: ss ? ss.must : null,
-    chPolExc: ps ? ps.exc : null, chPolExp: ps ? ps.exp : null, chPolRev: ps ? ps.rev : null};
+    chPolExc: ps ? ps.exc : null, chPolExp: ps ? ps.exp : null, chPolRev: ps ? ps.rev : null,
+    chRepClaims: rs ? rs.claims : null, chRepRequired: rs ? rs.required : null, chRepDecide: rs ? rs.decide : null};
 }
 const EDITION_METRICS = [
   {k: 'chWithin', label: 'Risks within appetite (your advice)', unit: '%', higher: true},
@@ -117,23 +119,29 @@ const EDITION_METRICS = [
   // widen it): the write-ups you sent (EX-02, EX-04), the advice on the exceptions that expired, and the library as sent.
   {k: 'chPolExc', label: 'Exceptions you wrote up with owner, expiry and review (your register)', unit: '%', higher: true, when: () => !!G.f.chPolStart},
   {k: 'chPolExp', label: 'Expired exceptions resolved (your advice)', unit: '%', higher: true, when: () => !!G.f.chPolStart},
-  {k: 'chPolRev', label: 'Policies with a review date (your advice)', unit: '%', higher: true, when: () => !!G.f.chPolStart}
+  {k: 'chPolRev', label: 'Policies with a review date (your advice)', unit: '%', higher: true, when: () => !!G.f.chPolStart},
+  // The Board report (slice 4): CAREER_LADDER §3 "governing-body reports on time and with no unsupported claim", widened
+  // and labelled (game): the report as sent, read line by line against its records.
+  {k: 'chRepClaims', label: 'Claims supported (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart},
+  {k: 'chRepRequired', label: 'Required items present (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart},
+  {k: 'chRepDecide', label: 'Decisions with a named decider and your recommendation (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart}
 ];
 function editionScorecard() {
   const v = metricVals(), c = G.ch || {};
   const fmt = (d, x) => x === null || x === undefined ? '—' : x + d.unit;
   const rows = METRICS.filter(d => !d.when || d.when()).map(d => { const tr = G.track[d.k] || {}; return '<tr><td>' + d.label + '</td><td><b>' + fmt(d, v[d.k]) + '</b></td><td>' + fmt(d, tr.best) + '</td><td>' + fmt(d, tr.worst) + '</td><td>≥ ' + (G.targets[d.k] === undefined ? 100 : G.targets[d.k]) + d.unit + '</td></tr>'; }).join('');
-  const ss = G.f.chSupStart ? chSupStats() : null, sup = G.ch && G.ch.sup, pol = G.f.chPolStart ? chPol() : null;
+  const ss = G.f.chSupStart ? chSupStats() : null, sup = G.ch && G.ch.sup, pol = G.f.chPolStart ? chPol() : null, rep = G.f.chRepStart ? chRep() : null;
   return '<table class="sc score"><tr><th>Metric</th><th>Now</th><th>Best</th><th>Worst</th><th>Target</th></tr>' + rows + '</table>' +
     '<p>' + (c.sent ? 'Scored on your advice: the allocation you sent, against Monday’s appetite and tolerances.' : 'No allocation sent yet.') + (c.final ? ' The Board’s decision: <b>' + chAllocStats(c.final).within + ' of ' + CH_LINES.length + '</b> lines within appetite' + (c.decision && c.decision.override ? ', overriding your advice' : '') + '.' : c.sent ? ' The Board decides on Thursday.' : '') + ' Drills with every needs met: <b>' + c.needs.met + ' of ' + c.needs.total + '</b>. Acceptances on the register: <b>' + (c.accept || []).length + '</b>' + ((c.accept || []).length ? ' (signed by ' + [...new Set(c.accept.map(x => x.signedBy))].map(esc).join(', ') + ')' : '') + '.</p>' +
     (ss ? '<p>Suppliers: scored on your advice, the tiers you sent and your plan for the Compact’s own contracts. The members’ own contracts are their owners’ decisions: <b>' + ss.memFull + ' of ' + ss.members + '</b> with every must-have. Owners and review dates came with every line (the Ballast Badge). Must-haves left out on your recommendation, decided and signed by their owners: <b>' + sup.accept.length + '</b>' + (ss.poor ? ' (poor advice: a plan with every must-have fitted)' : '') + '. Supplier drills with every needs met: <b>' + sup.needs.met + ' of ' + sup.needs.total + '</b>.</p>' : '') +
     (pol ? '<p>Policy: scored on your advice, the two entries you wrote up on Monday (EX-02, EX-04), your advice on the two exceptions that expired (drill 1’s verdict and the intake), and the library you sent.' + (chPolStats().reg ? ' Register entries complete (not scored): <b>' + chPolStats().reg.n + ' of ' + chPolStats().reg.of + '</b> (EX-05 decided by its owner; EX-1x as recorded in Suppliers).' : '') + ' Exceptions on the register now: <b>' + chExcInit().filter(e => !e.seed && chExcStatus(e) !== 'closed').length + '</b> open, each with its owner, class, approver, expiry and review. Policy drills with every needs met: <b>' + pol.needs.met + ' of ' + pol.needs.total + '</b>.</p>' : '') +
-    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + (G.f.chSupStart ? ' · Hawser Badge: ' + (G.f.chHawser ? 'yes' : 'not yet') : '') + (G.f.chPolStart ? ' · Sheet Bend Badge: ' + (G.f.chSheetBend ? 'yes' : 'not yet') : '') + '</p>' +
+    (rep ? '<p>The Board report: scored on your report as sent' + (rep.grade ? ', ' + rep.grade.lines + ' lines of ' + CH_REP_PAGE + ', report score ' + rep.grade.score + ' / 100' : ', not sent yet') + '. Report drills with every needs met: <b>' + rep.needs.met + ' of ' + rep.needs.total + '</b>.</p>' : '') +
+    '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Day ' + G.day + (CH_DAY[G.day] ? ' (' + CH_DAY[G.day] + ')' : '') + ' · appetite statement: ' + (c.appetite ? 'approved' : 'not yet') + ' · Ballast Badge: ' + (G.f.chBallast ? 'yes' : 'not yet') + (G.f.chSupStart ? ' · Hawser Badge: ' + (G.f.chHawser ? 'yes' : 'not yet') : '') + (G.f.chPolStart ? ' · Sheet Bend Badge: ' + (G.f.chSheetBend ? 'yes' : 'not yet') : '') + (G.f.chRepStart ? ' · Rolling Hitch Badge: ' + (G.f.chRollingHitch ? 'yes' : 'not yet') : '') + '</p>' +
     (c.carry ? '<p class="small">Carried: ' + esc(chTracksText(c.carry)) + (c.carry.crBadges.length ? ' · Crossroads badges ' + c.carry.crBadges.join(', ') : '') + (c.carry.thBadges.length ? ' · Town Hall badges ' + c.carry.thBadges.join(', ') : '') + ' · suspicion file ' + qtCount() + ' notes.</p>' : '') +
     '<p class="small">Every number here is a game model (game). Objective: ' + esc(objective().text) + '</p>';
 }
 function peekExtra() {
-  return {chSummary: !!(G.f && G.f.chSummary), chSupSummary: !!(G.f && G.f.chSupSummary), chPolSummary: !!(G.f && G.f.chPolSummary), ch: G.ch ? JSON.parse(JSON.stringify(G.ch)) : null, series: Series.load().editions.charter || null};
+  return {chSummary: !!(G.f && G.f.chSummary), chSupSummary: !!(G.f && G.f.chSupSummary), chPolSummary: !!(G.f && G.f.chPolSummary), chRepSummary: !!(G.f && G.f.chRepSummary), ch: G.ch ? JSON.parse(JSON.stringify(G.ch)) : null, series: Series.load().editions.charter || null};
 }
 
 /* ---------- Intro (new game) ---------- */
@@ -221,7 +229,26 @@ function polObjective(at) {
   if (!f.chPolCheck) return at('Thursday 09:00: Edda’s desk: the morning’s checks.', 'choffice', 18, 2);
   if (!f.chPolBoard) return at('Thursday 14:00: the Compact Board room: the Policy round.', 'chboard', 8, 3);
   if (!f.chPolSummary) return at('16:00: your desk: close the week.', 'choffice', 26, 9);
-  return {text: 'Policy done. Next: The Board report.', done: true};
+  return repObjective(at);
+}
+// District 4, The Board report (Days 85 to 88).
+function repObjective(at) {
+  const f = G.f, rep = G.ch.rep;
+  if (!f.chRepStart) return at('Next week, Monday: your desk.', 'choffice', 26, 9);
+  if (!f.chRepDrillA) return at('Monday 09:00: Beatriz, at the identity desk: a line about MFA.', 'choffice', 12, 2);
+  if (!f.chRepDrillB) return at('11:00: Marit’s desk: a line about the suppliers.', 'choffice', 24, 2);
+  if (!f.chRepDrillC) return at('14:00: Edda’s desk: who accepted R2 and R3.', 'choffice', 18, 2);
+  if (!f.chRepDay85) return at('End the day at your desk.', 'choffice', 26, 9);
+  if (!f.chRepRecords) return at('Tuesday 09:00: your desk: the quarter’s records.', 'choffice', 26, 9);
+  if (!f.chRepDirective) return at('11:00: Edda’s desk: a request about the summary.', 'choffice', 18, 2);
+  if (!f.chRepDojoMet) return at('14:00: Beatriz has three terminals for you. Talk to her first.', 'choffice', 12, 2);
+  if (!f.chRepDojoDone) return at('The Reporting terminals, south-west: ' + (3 - rep.dojo.filter(Boolean).length) + ' left.', 'choffice', 3 + 2 * Math.max(0, rep.dojo.findIndex(x => !x)), 9);
+  if (!f.chRepDay86) return at('End the day at your desk.', 'choffice', 26, 9);
+  if (!f.chRepSent) return at('Wednesday 09:00: your desk: the report, due with Marit for the papers.', 'choffice', 26, 9);
+  if (!f.chRepDay87) return at('End the day at your desk.', 'choffice', 26, 9);
+  if (!f.chRepBoard) return at('Thursday 14:00: the Compact Board room: your report.', 'chboard', 8, 3);
+  if (!f.chRepSummary) return at('16:00: your desk: close the week.', 'choffice', 26, 9);
+  return {text: 'The Board report done. Next: The finale.', done: true};
 }
 
 /* ---------- Interactions ---------- */
@@ -236,7 +263,7 @@ function interact() {
   if (ch === 'µ') run(async () => { if (f.chBudgetBrief && !f.chRegister) await chRegisterTask(); else await chRegisterView(); });
   else if (ch === 'Ξ') run(async () => { if (f.chPolDrillA && !f.chPolRegister) await chPolRegisterTask(); else if (f.chPolRegister) await chPolRegisterView(); else await say(f.chPolStart ? 'The exception register: the records are pinned up, waiting to be written up.' : 'A cork board, still empty.'); });
   else if (ch === 'Y') run(chDesk);
-  else if (ch === '¤') run(() => f.chPolStart ? chPolDojoPuzzle([3, 5, 7].indexOf(tx)) : f.chBoard ? chSupDojoPuzzle([3, 5, 7].indexOf(tx)) : chDojoPuzzle([3, 5, 7].indexOf(tx)));
+  else if (ch === '¤') run(() => f.chRepStart ? chRepDojoPuzzle([3, 5, 7].indexOf(tx)) : f.chPolStart ? chPolDojoPuzzle([3, 5, 7].indexOf(tx)) : f.chBoard ? chSupDojoPuzzle([3, 5, 7].indexOf(tx)) : chDojoPuzzle([3, 5, 7].indexOf(tx)));
   else if (ch === '£') run(async () => { if (f.chSupDrillA && !f.chSupTier) await chSupTierTask(); else if (f.chSupTier) await chSupRegisterView(); else await say(f.chDrillC ? 'The contracts cabinet. The two quotes for R1 are filed together now, Quote B’s on top. The supplier register sits in the drawer below.' : 'The contracts cabinet: the members’ vendor contracts, and two new quotes in a folder marked R1.'); });
   else if (ch === 'Ɓ') run(async () => { await say(tx < 15 ? 'The identity desk: the shared directory’s console, and Beatriz’s exports.' : tx < 21 ? 'The shared-services desk: the platform’s support notice is pinned to it.' : 'The finance desk: next year’s budget papers, in Marit’s neat piles.'); });
   else if (ch === '±') run(async () => { await say('The Compact Board’s minutes, by year. This year’s binder ends with the weekend of Night 33.'); });
@@ -250,6 +277,9 @@ async function talk(npc) {
       if (f.chDay66 && !f.chBoard) { await chBoardRound(); return; }
       if (f.chSupThu && !f.chSupBoard) { await chSupBoardRound(); return; }
       if (f.chPolCheck && !f.chPolBoard) { await chPolBoardRound(); return; }
+      if (f.chRepDay87 && !f.chRepBoard) { await chRepBoardRound(); return; }
+      if (f.chRepBoard) { await say('The Rolling Hitch Badge: every line you bring us arrives with its record. Keep it that way.', who); return; }
+      if (f.chRepStart) { await say(f.chRepDay87 ? 'Thursday at 14:00. The members have your page.' : 'Thursday at 14:00, your first report. One page, and the records behind it.', who); return; }
       if (f.chPolBoard) { await say('The Sheet Bend Badge: every exception’s dates reach its owner, and you, before they fall due. A list that is read is a list we can trust.', who); return; }
       if (f.chSupBoard) { await say(f.chPolStart ? 'Thursday at 14:00, the policy. Bring the register as it stands.' : 'The Hawser Badge: a supplier’s trouble reaches us through our own records first. Keep them that way.', who); return; }
       await say(f.chBoard ? 'The Ballast Badge says this Board can hold you to a measure. Keep giving it one.' : 'Thursday at 14:00. Bring both cases, laid out the same way.', who); return;
@@ -259,6 +289,9 @@ async function talk(npc) {
       if (f.chDay64 && !f.chDrillA) { await chDrillA(); return; }
       if (f.chSupStart && !f.chSupDrillA) { await chSupDrillA(); return; }
       if (f.chPolDay78 && !f.chPolDrillB) { await chPolDrillB(); return; }
+      if (f.chRepStart && !f.chRepDrillA) { await chRepDrillA(); return; }
+      if (f.chRepDirective && !f.chRepDojoMet) { await chRepDojoIntro(); return; }
+      if (f.chRepStart) { await say(f.chRepDojoMet && !f.chRepDojoDone ? 'The three terminals, south-west: a line against its record, a trend from one point, and who decided.' : f.chRepDrillA ? 'Six accounts on open, dated exceptions: that is what the records say, so that is the line.' : 'MFA-Exempt and the sign-in records, when you’re ready.', who); return; }
       if (f.chPolStart) { await say(f.chPolDrillB ? 'fin-ap is in the rule’s scope now, and its sign-ins say so. And every Monday I read MFA-Exempt against the register.' : 'The town’s list is empty, and ours is on the wall now. Tomorrow, fin-ap’s rule.', who); return; }
       if (f.chSupStart) { await say(f.chSupDrillA ? 'Inkmere’s line cites the data-flow record now. Thimbleford’s cp-xfer is the only supplier account on the transfer server.' : 'The account lists, when you’re ready.', who); return; }
       await say(f.chDrillA ? 'fin-ap goes to Marit, board-display has an owner and an expiry, and the six service accounts keep theirs, owned and dated.' : 'Exports and resets for Edda. Tomorrow you’ll want the sign-in records, I expect.', who); return;
@@ -269,6 +302,9 @@ async function talk(npc) {
       if (f.chPolDrillB && !f.chPolDrillC) { await chPolDrillC(); return; }
       if (f.chPolLib && !f.chPolDojoMet) { await chPolDojoIntro(); return; }
       if (f.chPolDay80 && !f.chPolCheck) { await chPolCheck(); return; }
+      if (f.chRepDrillB && !f.chRepDrillC) { await chRepDrillC(); return; }
+      if (f.chRepRecords && !f.chRepDirective) { await chRepDirective(); return; }
+      if (f.chRepStart) { await say(f.chRepDirective ? 'One line, with the minute’s reference. Your page.' : f.chRepDrillC ? 'My draft line is changed. The rest of the page is yours.' : 'R2, R3 and the platform are mine. Bring the records when you want them.', who); return; }
       if (f.chPolStart) { await say(f.chPolCheck ? 'Six accounts in MFA-Exempt, each on an open entry in date. That’s how it stays.' : f.chPolDojoMet && !f.chPolDojoDone ? 'The three terminals, south-west: dates, who approves, and whether a control covers its gap.' : f.chPolRegister ? 'board-display and cp-patch are closed, my decisions both. The five service accounts are mine to run, with dates; the chair decides them.' : 'board-display is closed, my decision. The register’s yours to write up at 10:30.', who); return; }
       if (f.chSupStart) { await say(f.chSupThu ? 'cp-xfer is back, key-only, from Thimbleford’s range, every session logged. It was my call both times, on the facts you brought, and our own logs.' : f.chSupIncident ? 'cp-xfer stays suspended until Thimbleford’s answer covers the 23:52 login. My call, on your advice.' : 'Wellhollow keeps our off-site copies. Its renewal is on my desk.', who); return; }
       await say(!f.chAppetite ? 'Edda Thornquist. I run the shared services. You’ll want me at the Board at nine.' : f.chBoard ? (G.ch.decision && G.ch.decision.override ? 'The upgrade is funded. The Board chose the trade-off, with your advice against it in the minute, and I signed for running the interim checks.' : G.ch.final && G.ch.final.R6 === 2 ? 'The upgrade is funded as you sent it. What it leaves, the owners have signed.' : 'The upgrade waits a year and the extension carries us. Fair, laid out the way you laid it out.') : 'My request is with Marit: the platform leaves its vendor’s support next year. It’s a fair case. Make yours as plainly.', who); return;
@@ -277,6 +313,8 @@ async function talk(npc) {
       if (f.chSupDay71 && !f.chSupIncident) { await chSupIncident(); return; }
       if (f.chSupDojoDone && !f.chSupReturn) { await chSupReturn(); return; }
       if (f.chSupDay73 && !f.chSupThu) { await chSupThursday(); return; }
+      if (f.chRepDrillA && !f.chRepDrillB) { await chRepDrillB(); return; }
+      if (f.chRepStart) { await say(f.chRepSent ? 'Your report is in the papers as you sent it.' : f.chRepDrillB ? 'My supplier line is changed: one measure, where it stands. Your page is due by Wednesday.' : f.chRepDrillA ? 'My MFA line is corrected. Next, the suppliers.' : 'The papers for Thursday go out on Wednesday at 17:00.', who); return; }
       if (f.chPolStart) { await say(f.chPolDrillB ? 'fin-ap’s exception is mine to run, to Day 155, and its control is checked now, and it covers sign-ins from outside the office. The rest waits for the mailboxes. And the call-back rule is mine, from Tuesday.' : 'fin-ap’s exception is mine. I wrote down what I was told covers it.', who); return; }
       if (f.chSupStart) { await say(f.chSupThu ? 'The members’ staff have been told what we know. Thimbleford’s amendment is with Ilka.' : f.chSupIncident ? 'cp-xfer is suspended, and Thimbleford has our questions. Noor has the facts.' : 'Inkmere and Thimbleford are both mine. Tell me what each one needs in its contract.', who); return; }
       if (f.chDrillB && !f.chDrillC) { await chDrillC(); return; }
@@ -447,6 +485,27 @@ async function chDesk() {
     f.chPolDay80 = true; G.day = 81; G.focus = G.focusMax; track();
     await say('Day 81, Thursday, 09:00. Edda has the morning’s checks at her desk.'); return;
   }
+  if (f.chPolBoard && !f.chPolSummary) { await chPolSummary(); return; }
+  if (f.chPolSummary && !f.chRepStart) { await chRepStart(); return; }
+  if (f.chRepDrillC && !f.chRepDay85) {
+    await UI.openModal('Monday, done', '<p>Three draft lines read against their records: MFA, the suppliers, and who accepted R2 and R3. (game)</p>', [{label: 'Tuesday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    f.chRepDay85 = true; G.day = 86; G.focus = G.focusMax; track();
+    await say('Day 86, Tuesday, 09:00. The quarter’s records are on your desk.'); return;
+  }
+  if (f.chRepDay85 && !f.chRepRecords) { await chRepRecords(); return; }
+  if (f.chRepDojoDone && !f.chRepDay86) {
+    await UI.openModal('Tuesday, done', '<p>The quarter’s records read, Edda’s request answered, and the Reporting terminals. Tomorrow, the page. (game)</p>', [{label: 'Wednesday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    f.chRepDay86 = true; G.day = 87; G.focus = G.focusMax; track();
+    await say('Day 87, Wednesday, 09:00. The report is due with Marit for the papers. Your desk.'); return;
+  }
+  if (f.chRepDay86 && !f.chRepSent) { await chRepEditTask(); return; }
+  if (f.chRepSent && !f.chRepDay87) {
+    await UI.openModal('Wednesday, done', '<p>17:00: the papers go out, with your report as you sent it. (game)</p>', [{label: 'Thursday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    f.chRepDay87 = true; G.day = 88; G.focus = G.focusMax; track();
+    await say('Day 88, Thursday. 14:00: the Compact Board room, your report.'); return;
+  }
+  if (f.chRepBoard) { await chRepSummary(); return; }
+  if (f.chRepStart) { await say('Your desk: the register on one screen, the Board papers on the other.'); return; }
   if (f.chPolBoard) { await chPolSummary(); return; }
   if (f.chPolStart) { await say('Your desk: the exception register on one screen, the draft of POL-1 on the other.'); return; }
   if (f.chSupBoard) { await chSupSummary(); return; }
