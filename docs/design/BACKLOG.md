@@ -9,3 +9,4 @@
 - Verify the Chris Sanders credit before release
 - Audra Finch (CAREER_LADDER §7a's CIO counterpart) — use in a later slice; Edda Thornquist is Charter's counterpart
 - Rebuild charter-timeline.md (rebuild from editions/charter/ before slice 4 dialogue)
+- Charter finale (from review_charter4 S-7, carried from slices 1 and 2): an owner's risk acceptance that breaks the Board's own tolerance (cp-xfer, against the privacy tolerance) stays with one owner until Day 155, while an exception that breaks a tolerance escalates to the chair within five working days (LESSONS 11). Decide in the finale spec: record the chair's endorsement of each tolerance-breaking acceptance (as 6.2a does for exceptions), or make the Board the decider of record at Day 155. The slice-4 fix pass only states it on the page ("before this Board at its Day 155 review"). Also: report the current residual and the target separately in the finale's report (A3 now names both readings).
