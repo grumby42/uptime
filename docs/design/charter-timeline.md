@@ -141,7 +141,7 @@ Everything here is (game) unless marked [fact] (CREDITS.md, "Facts used in Chart
 
 ## Facts packets (the primitive; slice 4's claim grades)
 - Each packet: rows, each with one supported wording and weak ones (unsupported, overstated, misplaced); every wording cites as many records as the supported one; the editor shows no records. Unknowns stated as unknowns are required rows, so they earn. Scale: +20 a supported required row, 0 a supported optional row, -10 a weak row, -20 a required row left out (no page limit: a packet is not a page). Score per packet 0 to 100; the scorecard averages. On time: the packet's sent time against its rule's due time.
-- Packet 1 (Day 92 10:00; records to 09:20): K1 Wellhollow's notice; K2 what Wellhollow holds of ours; K3 whether our copies were read or copied (not known); K4 our own systems; K5 containment; K6 the contract's clock (optional). Records: NOT (Day 92 06:10), LOGI (06:25), JOB (08:05), DFR (Day 71 08:30), EDG (08:30), ACL (08:30), CON (the contract, Wellhollow's current one).
+- Packet 1 (Day 92 10:00; records to 09:20): K1 Wellhollow's notice; K2 what Wellhollow holds of ours; K3 whether our copies were read or copied (not known); K4 our own systems; K5 containment; K6 the contract's clock (optional). Records: NOT (Day 92 06:10), LOGI (06:25), JOB (08:05), DFR (Day 71 08:30), EDG (08:30), ACL (08:30), CON (Wellhollow's current contract, on the supplier register: Day 71 10:30, the tiering).
 - Packet 2 (Day 93 13:45; records to 13:20): L1 Wellhollow's second answer; L2 our copies on that store; L3 ours among the files copied out (not known); L4 members told; L5 restore readiness (optional). Records: WH2 (Day 93 09:00), JB2 (09:40), MEM (Day 92 11:00), RST (12:10), NOT.
 - Packet 3 (Day 94 10:00; records to 09:30; for the statement, no personal details): M1 what happened; M2 what is not known; M3 what we did; M4 who decides notice; M5 the supplier's cause (optional). Records: NOT, WH2, JOB, MEM, DET (Noor's determination, Day 93 15:00).
 - The open item (not a claim, not scored, not a row), packet 1 only, when the suspicion file holds a Crossroads note: "the suspicion file, n notes, with Rae Okafor’s team and counsel. One observation: CP-OPS-02’s sign-in log, 30 days to 09:00, shows no sign-in from FD-STAFF-11’s address, the address every Crossroads note comes from ([Crossroads] quiet.js). Who, and why: not known. No link to Wellhollow’s incident is drawn. For counsel: in scope for any notice?" Noor decides (11:00). When only Town Hall notes: the file and "Who, and why: not known", no observation. No note: nothing.
@@ -160,3 +160,9 @@ Everything here is (game) unless marked [fact] (CREDITS.md, "Facts used in Chart
 
 ## Invented names (logged in CREDITS.md)
 - The Heaving Line Badge (the light line thrown first, which carries the heavy line ashore: the facts reach the decider first). Searched four times, 21 Nov 2026. Record IDs (NOT, LOGI, JOB, DFR, EDG, ACL, CON, WH2, JB2, MEM, RST, DET, M95) and the rule IDs N-1 to N-4 are generic.
+
+## Build notes (slice 5, 2026-11-21)
+- Packet 3 is due Day 94 11:00 (the chair's request); the three send choices for each packet are on time exactly when recommended (tests/charter.js). Held: P1 reaches Noor Day 93 09:10, P2 Day 93 16:30; misrouted: P1 Day 92 11:40 through the chair, P2 Day 93 15:20 through Edda, P3 Day 94 11:15 through Ada; P3 held: Day 94 14:30. Noor's open-item decision is timed when packet 1 reaches her.
+- The clock table prints Day numbers in its header ("Starts (Day)") so phone tables stay on one line; states: met, late, running, overdue, waits (trigger not yet), none (N-4).
+- The invariant: nine checkpoints at the Day 95 minute, ten at the edition's end.
+

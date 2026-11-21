@@ -1,0 +1,8 @@
+[
+ [
+  "supported optional rows earn (padding cancels penalties)",
+  "editions/charter/disclosure.js",
+  "const points = 20 * supReq.length - 10 * weak.length - 20 * omitted.length;",
+  "const points = 20 * sup.length - 10 * weak.length - 20 * omitted.length;"
+ ]
+]
