@@ -32,3 +32,6 @@ Build agent, 2026-11-21 (UTC). Spec: docs/design/SPEC_ed3_slice5.md. Timeline fi
 - Desktop bots: Town Hall; Crossroads manager and DFIR to the ending and New Game+; Charter through the finale to the edition's end (ten checkpoints clean, save/reload mid-finale); GAMER=1. All exit 0, errors [], requests [].
 - Phone bots last and alone (0 other bots before): Town Hall 1605 s, Crossroads manager 764 s, DFIR 751 s, Charter 564 s. All exit 0, errors [], requests [], no horizontal scroll.
 - Copies: /home/claude/charter.html, /home/claude/crossroads.html, /home/claude/uptime.html, each cmp-identical to its editions/*/index.html (uptime.html = editions/town-hall/index.html).
+
+## Fix pass (review_charter5.md)
+See docs/design/charter5-fixes.md. Timeline first (dd2cc48). Final build ARCD-20261122-0206Z: charter 171/171; mutation check 17/17; full sequence passed, with the phone bots last and alone.

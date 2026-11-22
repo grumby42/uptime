@@ -65,7 +65,23 @@ Fix agent, 2026-11-21 (UTC). Reviewed build ARCD-20261121-2113Z at 1475b00. Time
 - N-8: the claim that NIST's v2.1.0 and v2.2.0 change summaries "list no change" was dropped from data.js:174 and story.js creditsFacts. CREDITS.md notes it was last checked on 14 November 2026.
 
 ## Mutation check (docs/design/ch5/fix/mut)
-17 of the new rules were broken on purpose (muts.json), each run against tests/charter.js in a copy of the repo (run.py, two workers). Results: results-0.json and results-1.json; summary at the end of this file.
+17 of the new rules were broken on purpose (muts.json), each run against tests/charter.js in a copy of the repo (run.py, two workers; results-0.json and results-1.json). **17 of 17 caught**, each by 1 to 4 checks. Mutations: chFinHas ignoring the clock; the open item decided at 11:00 on every path; the determination always on both packets; N-1 from the log only; the ratification unchecked; optional rows lifting the claims metric; "Who heard first" on every path; no late-packet questions; the suspicion file in the minute; the Board told it has the open item; late packets not named; the praise unconditional; the statement as pasted rows; M4 "decided"; the decision log showing future decisions; packet 2 to Noor alone; K2's "not known" graded unsupported.
 
 ## Bots
 tests/bot.js gains CHSEND=late (packet 1 held, packet 2 through Edda, packet 3 held) and CHSEND=via (packet 1 through the chair, packet 2 held, packet 3 through Ada). Every row is still as recommended. The bot checks each packet's kind, that the packets are late, on time 0%, the Board's three packet questions in order, Noor's determination on packet 1 alone, where the statement's facts came from, and the chair's citation naming what was late.
+
+## Full sequence (build ARCD-20261122-0206Z; logs docs/design/ch5/fix/logs/full, scripts docs/design/ch5/fix/runall.sh and phone.sh)
+- A first run (logs/run1) failed one check of my own: the chair's late-path line ended "throw it on time", which the M-2 test rightly rejects. It now reads "throw it first, at the rule’s time". After a rebuild, the whole sequence was run again on the final build.
+- Suites, all exit 0: frontdesk, mailroom, clerks, market, records, basement, server, water, council, quiet, crossroads, charter (171/171, was 160), layout, modalfit, highlight (and Charter), doors (and Crossroads, Charter), sprites, settings, tells (no FAIL; two new length checks).
+- tools/lentell.js and tools/tells2.js: identical to the baseline (ch5/base) except the ch-finale row. lentell: 50 lists, longest-is-correct 14 (chance 14.9), shortest 14 of 47 (chance 13.4). tells2: mean rank 2.28 (chance 2.30).
+- tells --report: lines 1-370 (Town Hall and Crossroads) are byte-identical to the baseline (cmp).
+- Desktop bots: Town Hall; Crossroads manager and DFIR to the ending and New Game+; Charter through the finale to the edition's end, recommended; Charter CHSEND=late and CHSEND=via (held and misrouted packets, to the edition's end); GAMER=1. All exit 0, errors [], requests [].
+- Phone bots last and alone (0 other bots before): Town Hall 1567 s, Crossroads manager 766 s, DFIR 747 s, Charter 558 s. All exit 0, errors [], requests [], no horizontal scroll (360/360).
+- Copies: /home/claude/charter.html, /home/claude/crossroads.html, /home/claude/uptime.html, each cmp-identical to its editions/*/index.html (uptime.html = editions/town-hall/index.html).
+
+## For Ted to decide
+- S-1 and N-1: the rule now starts at the notice's receipt or the log's first entry, whichever is first. The rule had the CISO's own act as its trigger, and the other option was to keep that and explain the risk in the Field Manual. Changing the rule was preferred, and it moves the due times to 10:10 and Day 93 06:10.
+- M-5: packet 2 now goes to Noor and the chair, and N-1 is unchanged. The alternative was to narrow N-1 to "then to counsel at each checkpoint".
+- S-5: in the game, the job does not encrypt before sending (only the connection), and how Wellhollow keys its store is unknown. That supports Noor's "may have been acquired". The other choice (encrypted, with our key) would weaken the determination and change the story.
+- S-2 and S-13: Edda accepts the off-site gap herself. It breaks no tolerance: the availability tolerance is about a member's service being down. The law-enforcement decision has a named decider and no decision.
+- S-8: the statement promises a next update on Day 96 by 12:00 and gives "the Compact’s information line (game)" with no number.
