@@ -1,0 +1,104 @@
+[
+ [
+  "M-1: chFinHas ignores the clock",
+  "editions/charter/disclosure.js",
+  "return r !== null && t !== null && r <= t;",
+  "return r !== null;"
+ ],
+ [
+  "M-1: open item decided at 11:00 on every path",
+  "editions/charter/finale-story.js",
+  "if (had) await chFinOpenDecide(chAt(92, '11:00'), 'in your packet');",
+  "await chFinOpenDecide(chAt(92, '11:00'), 'in your packet');"
+ ],
+ [
+  "M-1: determination always on both packets",
+  "editions/charter/finale-story.js",
+  "(has2 ? 'On the facts in your packets'",
+  "(true ? 'On the facts in your packets'"
+ ],
+ [
+  "S-1: N-1 from the log's first entry only",
+  "editions/charter/finale-data.js",
+  "trigger: ['notice', 'log'], window: {h: 4}",
+  "trigger: 'log', window: {h: 4}"
+ ],
+ [
+  "S-9a: the ratification not checked",
+  "editions/charter/disclosure.js",
+  "else if (!a.boardDecided && minuteSince) bad.push(",
+  "else if (false) bad.push("
+ ],
+ [
+  "S-10: optional rows lift the claims metric",
+  "editions/charter/disclosure.js",
+  "const reqRows = x => x.grade.rows.filter(y => y.required && y.in)",
+  "const reqRows = x => x.grade.rows.filter(y => y.in)"
+ ],
+ [
+  "M-7: Who heard first on every path",
+  "editions/charter/finale-story.js",
+  "(s.when !== 'p1direct' || direct)",
+  "(true)"
+ ],
+ [
+  "M-7: no question on late or misrouted packets",
+  "editions/charter/finale-story.js",
+  ".concat(sentQ, weak.filter(",
+  ".concat([], weak.filter("
+ ],
+ [
+  "M-3: the minute names the suspicion file",
+  "editions/charter/finale-story.js",
+  "' One matter is with counsel, at counsel’s direction.'",
+  "' The suspicion file noted as an open item, with counsel.'"
+ ],
+ [
+  "M-3: the Board told it has the packets with the open item",
+  "editions/charter/finale-story.js",
+  "This Board has the rows of your three packets as you sent them, with their times.",
+  "This Board has your three packets as you sent them, the suspicion file included."
+ ],
+ [
+  "M-2: late packets not named in the citation",
+  "editions/charter/disclosure.js",
+  "if (!s.onTime || k !== 'rec') out.push(",
+  "if (false) out.push("
+ ],
+ [
+  "M-2: the chair praises on time on every path",
+  "editions/charter/finale-story.js",
+  "await say(iss.length ? 'This Board has the record",
+  "await say(false ? 'This Board has the record"
+ ],
+ [
+  "S-8: the statement is the packet rows pasted",
+  "editions/charter/finale-story.js",
+  "function chFinStatementText() { return CH_FIN_STATEMENT.map(x => x.text).join(' '); }",
+  "function chFinStatementText() { return chFinPacketDef('P3').rows.filter(r => r.req).map(r => r.variants.find(v => v.good).label).join('. ') + '.'; }"
+ ],
+ [
+  "M-4: packet 3 says the chair decided",
+  "editions/charter/finale-data.js",
+  "'Each member’s own counsel decides any notice to its people, and our chair decides this statement', good: true",
+  "'Each member’s own counsel decides any notice to its people, and our chair decided this statement', good: true"
+ ],
+ [
+  "M-4: the decision log shows decisions before their time",
+  "editions/charter/disclosure.js",
+  "d.done && t !== null && chAt(d.done[0], d.done[1]) <= t ?",
+  "d.done ?"
+ ],
+ [
+  "M-5: packet 2 to Noor alone",
+  "editions/charter/finale-data.js",
+  "chair: [93, '13:45'], to: 'Noor and the chair'}",
+  "chair: [93, '13:45'], to: 'Noor'}"
+ ],
+ [
+  "M-6: K2's not-known wording graded unsupported",
+  "editions/charter/finale-data.js",
+  "'What Wellhollow holds of ours: not known until Wellhollow says, its notice naming no one’s copies at 06:10', grade: 'overstated'",
+  "'What Wellhollow holds of ours: not known until Wellhollow says, its notice naming no one’s copies at 06:10', grade: 'unsupported'"
+ ]
+]

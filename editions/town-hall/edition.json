@@ -32,5 +32,6 @@
     "council-data.js",
     "council-quiet.js",
     "council-story.js"
-  ]
+  ],
+  "edition": 1
 }

@@ -645,17 +645,29 @@ if (chRepSrc) {
 // tell (the supported wording the longest or second-longest in no more rows than chance, the shortest or third-longest or
 // lower in at least a third).
 const chFinSrc = fs.existsSync(root + '/editions/charter/finale-data.js') ? fs.readFileSync(root + '/editions/charter/finale-data.js', 'utf8') : '';
-let chFinRows = [], chFinRefRows = [], chFinRank = {top2: 0, exp: 0, low: 0, n: 0}, chFinEditorRefs = false;
+// Since the slice-5 review (M-8, S-11): both ends are checked, not one. In the packets, the supported wording is the
+// longest in no more rows than chance + 1, and the shortest in no more than chance + 1; in the Disclosure terminals and
+// the Board's questions (CH_FIN_DOJO, CH_FIN_BOARD_SPECS, CH_FIN_SENT_QS: the lists every player meets, with the real
+// cases), the right answer is the longest in no more lists than chance (rounded up) and the shortest in no more than
+// chance + 1. On 1475b00 the packets fail (shortest 9 of 16, chance 4.9) and so do the dojo and standing lists
+// (longest 6 of 6, chance 1.75).
+let chFinRows = [], chFinRefRows = [], chFinRank = {top2: 0, exp: 0, low: 0, n: 0, lg: 0, sh: 0, expEnd: 0}, chFinEditorRefs = false, chFinQs = {n: 0, lg: 0, sh: 0, exp: 0, sent: 0};
 if (chFinSrc) {
   const vm = require('vm'), ctx = {}; vm.createContext(ctx);
-  try { vm.runInContext(chFinSrc + '\n;this.__p = CH_FIN_PACKETS;', ctx); } catch (e) { ctx.__p = []; }
+  try { vm.runInContext(chFinSrc + '\n;this.__p = CH_FIN_PACKETS; this.__q = CH_FIN_DOJO.map(q => q.opts.map((t, i) => ({label: t, good: i === q.good}))).concat(CH_FIN_BOARD_SPECS().map(b => b.resp), typeof CH_FIN_SENT_QS === "undefined" ? [] : Object.values(CH_FIN_SENT_QS).flatMap(v => Object.values(v).map(b => b.resp))); this.__sent = typeof CH_FIN_SENT_QS === "undefined" ? 0 : Object.values(CH_FIN_SENT_QS).flatMap(v => Object.values(v)).length;', ctx); } catch (e) { ctx.__p = []; ctx.__q = []; }
   chFinRows = (ctx.__p || []).flatMap(P => P.rows);
   for (const r of chFinRows) {
     const n = r.variants.map(v => (v.refs || []).length), g = r.variants.findIndex(v => v.good);
     if (n.some(x => x !== n[g])) chFinRefRows.push(r.id + ' ' + n.join('/'));
     const len = r.variants.map(v => v.label.length), rank = len.filter(x => x > len[g]).length + 1;
     chFinRank.n++; chFinRank.exp += 2 / len.length; if (rank <= 2) chFinRank.top2++; if (rank >= 3 || len[g] === Math.min(...len)) chFinRank.low++;
+    chFinRank.expEnd += 1 / len.length; if (rank === 1) chFinRank.lg++; if (len[g] === Math.min(...len)) chFinRank.sh++;
   }
+  for (const L of ctx.__q || []) {
+    const len = L.map(o => o.label.length), g = L.findIndex(o => o.good), mx = Math.max(...len);
+    chFinQs.n++; chFinQs.exp += 1 / len.length; if (len[g] === mx) chFinQs.lg++; if (len[g] === Math.min(...len)) chFinQs.sh++;
+  }
+  chFinQs.sent = ctx.__sent || 0;
   const dj = fs.existsSync(root + '/editions/charter/disclosure.js') ? fs.readFileSync(root + '/editions/charter/disclosure.js', 'utf8') : '';
   const ed = (dj.split('async function chFinEdit')[1] || '').split('\nfunction ')[0];
   chFinEditorRefs = /refs/.test(ed);
@@ -702,6 +714,8 @@ if (chFiles.length) checks.push(
   ['Charter: the finale’s facts packets (CH_FIN_PACKETS, the rows the scorecard grades) are scanned: ' + chFinRowLists.length + ' lists, of ' + chFinRows.length + ' rows in the source, each with exactly one supported wording', chFinRows.length > 0 && chFinRowLists.length === chFinRows.length && chFinRowLists.every(L => L.items.filter(x => x.good).length === 1)],
   ['Charter: the packets’ wordings cite as many records as the supported one, row by row (' + (chFinRefRows.length ? 'unequal: ' + chFinRefRows.join(', ') : chFinRank.n + ' rows equal') + '), and the packet editor shows no record list per wording', chFinRank.n > 0 && !chFinRefRows.length && !chFinEditorRefs],
   ['Charter: no length tell in the packets’ rows — the supported wording is the longest or second-longest in ' + chFinRank.top2 + ' of ' + chFinRank.n + ' rows (chance ' + chFinRank.exp.toFixed(1) + '), and the shortest or third-longest or lower in ' + chFinRank.low + ' (at least a third)', chFinRank.n > 0 && chFinRank.top2 <= Math.ceil(chFinRank.exp) && chFinRank.low * 3 >= chFinRank.n],
+  ['Charter: no length tell at either end of the packets’ rows — the supported wording is the longest in ' + chFinRank.lg + ' and the shortest in ' + chFinRank.sh + ' of ' + chFinRank.n + ' rows (chance ' + chFinRank.expEnd.toFixed(1) + ' each; at most chance + 1)', chFinRank.n > 0 && chFinRank.lg <= Math.ceil(chFinRank.expEnd) + 1 && chFinRank.sh <= Math.ceil(chFinRank.expEnd) + 1],
+  ['Charter: no length tell in the Disclosure terminals and the Board’s questions (CH_FIN_DOJO, CH_FIN_BOARD_SPECS, CH_FIN_SENT_QS: ' + chFinQs.n + ' lists, ' + chFinQs.sent + ' on the packets as sent) — the right answer is the longest in ' + chFinQs.lg + ' (at most chance, ' + chFinQs.exp.toFixed(1) + ', rounded up) and the shortest in ' + chFinQs.sh + ' (at most chance + 1)', chFinQs.n >= 6 && chFinQs.sent === 6 && chFinQs.lg <= Math.ceil(chFinQs.exp) && chFinQs.sh <= Math.ceil(chFinQs.exp) + 1],
   ['Charter: no lone-feature tell (the same rule as Crossroads); strongest leans: ' + chLf.map(x => x.s + ' ' + lfTop(x.rows, 3).map(lfFmt).join(', ')).join('; '), !chLfFails.length]);
 if (warns.length) console.log('WARN thin margin (outside ' + Math.round((1 - WARN) * 100) + '–' + WARN * 100 + '%, not a failure):\n  ' + warns.join('\n  '));
 for (const [n, ok] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + n);

@@ -25,7 +25,7 @@ const EDITION = {
   fmActionsCat: 'Leadership practices (game)',   // the Field Manual's heading for EXTRA_ACTIONS (engine default: D3FEND-style)
   fmIntro: 'Descriptions are our own words. No ATT&amp;CK technique in Charter so far; the entries not met yet open in later districts.',
   creditsName: 'Charter edition',
-  creditsFacts: 'Charter (the prologue, Budget, Suppliers, Policy, the Board report and the finale): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088, T1906 and T1308, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page), with the NIST NICE Framework Components v2.1.0 (3 December 2025) and v2.2.0 (28 April 2026) summaries of changes, which list no change to them; NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, and GV.SC-04, GV.SC-05, GV.SC-06, GV.SC-07, GV.SC-08 and GV.SC-10 with the examples quoted, GV.PO-01 with two examples and GV.PO-02, from NIST’s CSF 2.0 Implementation Examples (26 February 2024), GV.OV-01, GV.OV-03, GV.RR-02, RS.CO-02 and RS.CO-03 as worded in the CSF 2.0 Core, NIST CSWP 29 (26 February 2024), with one example each from the Implementation Examples; in the finale, NICE tasks T1310, T1054, T0006, T1234, T1779 and T1476 (CISA NICCS); the SEC’s Form 8-K Item 1.05 rule (Release No. 33-11216) and its fact sheet, as a labelled comparison only; United States v. Sullivan, from the Department of Justice’s releases of 5 October 2022 and 5 May 2023, the Ninth Circuit’s opinion in No. 23-927 (filed 13 March 2025, amended 12 November 2025) and the Supreme Court’s docket in No. 25-1082; and SEC v. SolarWinds Corp. and Brown, from the S.D.N.Y. opinion of 18 July 2024 and SEC Litigation Release No. 26423 (20 November 2025), as allegations and their outcome only. No ATT&CK technique. Facts recalled from Crossroads are quoted from Crossroads, and the town’s fd-admin exception and Ada Pemberton from Town Hall.'
+  creditsFacts: 'Charter (the prologue, Budget, Suppliers, Policy, the Board report and the finale): NICE Framework work role Executive Cybersecurity Leadership (OG-WRL-007) and its tasks T1227, T1059, T1060, T1088, T1906 and T1308, as shown on CISA NICCS (NICE Framework version 2.0.0 on the role page); NIST CSF 2.0 GV.RM-02 and GV.RR-03 with one implementation example each, and GV.SC-04, GV.SC-05, GV.SC-06, GV.SC-07, GV.SC-08 and GV.SC-10 with the examples quoted, GV.PO-01 with two examples and GV.PO-02, from NIST’s CSF 2.0 Implementation Examples (26 February 2024), GV.OV-01, GV.OV-03, GV.RR-02, RS.CO-02 and RS.CO-03 as worded in the CSF 2.0 Core, NIST CSWP 29 (26 February 2024), with one example each from the Implementation Examples; in the finale, NICE tasks T1310, T1054, T0006, T1234, T1779 and T1476 (CISA NICCS); the SEC’s Form 8-K Item 1.05 rule (Release No. 33-11216) and its fact sheet, as a labelled comparison only; United States v. Sullivan, from the Department of Justice’s releases of 5 October 2022 and 5 May 2023, the Ninth Circuit’s opinion in No. 23-927 (filed 13 March 2025, amended 12 November 2025) and the Supreme Court’s docket in No. 25-1082; and SEC v. SolarWinds Corp. and Brown, from the S.D.N.Y. opinion of 18 July 2024 and SEC Litigation Release No. 26423 (20 November 2025), as allegations and their outcome only. No ATT&CK technique. Facts recalled from Crossroads are quoted from Crossroads, and the town’s fd-admin exception and Ada Pemberton from Town Hall.'
 };
 const CH_TH_KEY = 'uptime.slice1.save', CH_CR_KEY = 'uptime.crossroads.save', CH_NG_KEY = 'uptime.crossroads.ngplus.save';   // read for the carry-over, never written
 const CH_TH_BADGES = [['Key', g => g.badge], ['Seal', g => g.f && g.f.mrSeal], ['Shield', g => g.f && g.f.crShield], ['Lantern', g => g.f && g.f.mkLantern],
@@ -129,7 +129,7 @@ const EDITION_METRICS = [
   {k: 'chRepDecide', label: 'Decisions sent in the wording the records support (your report as sent)', unit: '%', higher: true, when: () => !!G.f.chRepStart},
   // The finale (slice 5): CAREER_LADDER §3 "disclosure facts to counsel within the plan's time", widened and labelled (game):
   // the facts packets as sent, read row by row against their records, their sent times against their rules, and the routing.
-  {k: 'chFinClaims', label: 'Packet rows supported (your packets as sent)', unit: '%', higher: true, when: () => !!G.f.chFinStart},
+  {k: 'chFinClaims', label: 'Required packet rows supported (your packets as sent)', unit: '%', higher: true, when: () => !!G.f.chFinStart},
   {k: 'chFinRequired', label: 'Required facts present, unknowns included (your packets as sent)', unit: '%', higher: true, when: () => !!G.f.chFinStart},
   {k: 'chFinOnTime', label: 'Facts to counsel within the rule’s time (your packets as sent)', unit: '%', higher: true, when: () => !!G.f.chFinStart},
   {k: 'chFinRouted', label: 'Decisions routed to their decider (your first pick)', unit: '%', higher: true, when: () => !!G.f.chFinStart}
@@ -266,7 +266,7 @@ function finObjective(at) {
   if (!f.chFinContain) return at('07:20: Edda Thornquist’s desk: what you recommend.', 'choffice', 18, 2);
   if (!f.chFinDrillA) return at('08:30: Edda’s desk: what Wellhollow holds of ours.', 'choffice', 18, 2);
   if (!f.chFinDrillB) return at('09:00: Beatriz, at the identity desk: has anything reached our systems?', 'choffice', 12, 2);
-  if (!f.chFinPacket1) return at('09:30: your desk: facts packet 1, due with Noor and the chair at 10:25.', 'choffice', 26, 9);
+  if (!f.chFinPacket1) return at('09:30: your desk: facts packet 1, due with Noor and the chair at 10:10.', 'choffice', 26, 9);
   if (!f.chFinMembers) return at('11:00: Noor Castellanos, by the window: the members’ call.', 'choffice', 21, 3);
   if (!f.chFinRoute) return at('14:00: your desk: the decision log.', 'choffice', 26, 9);
   if (!f.chFinDay92) return at('End the day at your desk.', 'choffice', 26, 9);
@@ -315,7 +315,8 @@ async function talk(npc) {
       if (f.chFinPacket3 && !f.chFinStatement) { await chFinStatement(); return; }
       if (f.chFinDay94 && !f.chFinBoard) { await chFinBoardRound(); return; }
       if (f.chFinBoard) { await say('The Heaving Line Badge: the facts reach their decider first. The heavy line follows.', who); return; }
-      if (f.chFinStart) { await say(f.chFinStatement ? 'Thursday at 14:00, the debrief. Bring the packets as you sent them.' : f.chFinPacket1 ? (chFin().packets.P1.sent.at <= chAt(92, '11:40') || G.day >= 93 ? 'Your packet is with me, and with Noor. Noor decides the law; I decide what the Compact says.' : 'Noor and I don’t have your packet yet. N-1 says 10:25.') : 'Noor and I want the facts by 10:25, what is not known included.', who); return; }
+      // Fix pass M-1 and N-6: the chair speaks of packet 1 only once it has reached him (and Noor), by the narrative clock.
+      if (f.chFinStart) { await say(f.chFinStatement ? 'Thursday at 14:00, the debrief. Bring the packets as you sent them.' : f.chFinPacket1 ? (chFinHas('P1', 'chair') ? (chFinHas('P1', 'noor') ? 'Your packet is with me, and with Noor. Noor decides the law; I decide what the Compact says.' : 'Your packet is with me. Noor should have it too: N-1 names us both.') : 'Noor and I don’t have your packet yet. N-1 says 10:10.') : 'Noor and I want the facts by 10:10, what is not known included.', who); return; }
       if (f.chRepBoard) { await say('The Rolling Hitch Badge: every line you bring us arrives with its record. Keep it that way.', who); return; }
       if (f.chRepStart) { await say(f.chRepDay87 ? 'Thursday at 14:00. The members have your page.' : 'Thursday at 14:00, your first report. One page, and the records behind it.', who); return; }
       if (f.chPolBoard) { await say('The Sheet Bend Badge: every exception’s dates reach its owner, and you, before they fall due. A list that is read is a list we can trust.', who); return; }
@@ -334,7 +335,7 @@ async function talk(npc) {
     case 'beatrizch':
       if (f.chFinContain && !f.chFinDrillA) { await say('Edda first: what we send them. Then me: what could have come back.', who); return; }
       if (f.chFinDrillA && !f.chFinDrillB) { await chFinDrillB(); return; }
-      if (f.chFinStart) { await say(f.chFinDrillB ? 'Nothing in from their range, and no account of theirs anywhere. I check it again each morning.' : 'The account lists and the edge log, when you’re ready.', who); return; }
+      if (f.chFinStart) { await say(f.chFinDrillB ? 'No connection opened from their range, and no account of theirs anywhere. I check it again each morning.' : 'The account lists and the edge log, when you’re ready.', who); return; }
       if (f.chDay64 && !f.chDrillA) { await chDrillA(); return; }
       if (f.chSupStart && !f.chSupDrillA) { await chSupDrillA(); return; }
       if (f.chPolDay78 && !f.chPolDrillB) { await chPolDrillB(); return; }
@@ -348,7 +349,7 @@ async function talk(npc) {
       if (f.chFinStart && !f.chFinContain) { await chFinContain(); return; }
       if (f.chFinContain && !f.chFinDrillA) { await chFinDrillA(); return; }
       if (f.chFinDay92 && !f.chFinAnswer2) { await chFinAnswer2(); return; }
-      if (f.chFinStart) { await say(f.chFinAnswer2 ? 'The copies stay paused until Wellhollow’s answers cover the store and our own evidence agrees. My call.' : f.chFinContain ? 'Paused at 07:40, my decision. The job log is exported.' : 'Our copies go to Wellhollow every night at 01:00.', who); return; }
+      if (f.chFinStart) { await say(f.chFinAnswer2 ? 'The copies stay paused until Wellhollow’s answers cover the store, our own evidence agrees, and our upload key to its store is replaced. My call.' : f.chFinContain ? 'Paused at 07:40, my decision. The job log is exported.' : 'Our copies go to Wellhollow every night at 01:00.', who); return; }
       if (f.chDrillA && !f.chDrillB) { await chDrillB(); return; }
       if (f.chSupTier && !f.chSupDrillB) { await chSupDrillB(); return; }
       if (f.chPolStart && !f.chPolDrillA) { await chPolDrillA(); return; }
@@ -575,7 +576,7 @@ async function chFinDesk() {
   if (f.chFinDrillB && !f.chFinPacket1) { await chFinPacket1(); return true; }
   if (f.chFinMembers && !f.chFinRoute) { await chFinRoute(); return true; }
   if (f.chFinRoute && !f.chFinDay92) {
-    await UI.openModal('Monday, done', '<p>The log opened at 06:25, the copies paused at 07:40, what Wellhollow holds and what reached us read from our own records, facts packet 1, the members told, and the decision log. Wellhollow has our questions. (game)</p>', [{label: 'Tuesday', meta: {good: true}}], {closable: false, cls: 'summary'});
+    await UI.openModal('Monday, done', '<p>The log opened at 06:25, the copies paused at 07:40, what we sent Wellhollow and what reached us read from our own records, facts packet 1, the members told, and the decision log. Wellhollow has our questions. (game)</p>', [{label: 'Tuesday', meta: {good: true}}], {closable: false, cls: 'summary'});
     f.chFinDay92 = true; G.day = 93; G.focus = G.focusMax; track();
     await say('Day 93, Tuesday, 09:00. Edda has Wellhollow’s second answer.'); return true;
   }

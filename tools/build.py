@@ -30,10 +30,17 @@ def editions():
         meta = os.path.join(EDITIONS, name, 'edition.json')
         if os.path.isfile(meta):
             m = json.loads(read(meta))
+            # every edition.json names its edition number (Charter slice 5 fix pass, S-14): the series menu's order must not
+            # depend on how many slices an edition has
+            if not isinstance(m.get('edition'), int):
+                sys.exit('%s: no "edition" number (the series menu orders editions by it)' % meta)
             m['dir'] = os.path.join(EDITIONS, name)
             out.append(m)
-    # the series menu lists editions in play order: by edition number ("edition", else the slice count), then id
-    return sorted(out, key=lambda m: (m.get('edition', m.get('slice', 99)), m['id']))
+    # the series menu lists editions in play order: by edition number, then id
+    nums = [m['edition'] for m in out]
+    if len(set(nums)) != len(nums):
+        sys.exit('two editions share an edition number: %s' % sorted(nums))
+    return sorted(out, key=lambda m: (m['edition'], m['id']))
 
 
 VALIDATE = r"""
@@ -144,7 +151,7 @@ footer{margin-top:28px;font-size:12px;color:var(--muted)}
 def build_menu(eds, build_id, build_ts):
     items = '\n'.join(
         '<li><a class="ed" href="editions/%s/index.html"><b>%d. %s</b><span>%s. %s</span></a></li>' % (
-            html.escape(e['id']), e.get('edition', e.get('slice', i + 1)), html.escape(e['name']), html.escape(e['district']), html.escape(e['blurb']))
+            html.escape(e['id']), e['edition'], html.escape(e['name']), html.escape(e['district']), html.escape(e['blurb']))
         for i, e in enumerate(eds))
     page = MENU % {'items': items, 'build_id': build_id, 'build_ts': build_ts}
     no_network(page, 'index.html')

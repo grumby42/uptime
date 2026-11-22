@@ -3,8 +3,8 @@
    Charter's finale: a material incident and the disclosure clock (Days 92 to
    95). Monday: Wellhollow's notice (06:10), the incident log's first entry
    (06:25), the CISO's questions to Wellhollow, containment (Edda's decision,
-   07:40), drill 1 (what Wellhollow holds of ours), drill 2 (has anything
-   reached our systems), facts packet 1 to Noor and the chair (N-1, due 10:25),
+   07:40), drill 1 (what we sent Wellhollow), drill 2 (has anything reached
+   our systems), facts packet 1 to Noor and the chair (N-1, due 10:10),
    the members' call (N-2), the decision log. Tuesday: Wellhollow's second
    answer and our own job log, the directive (Marit asks to hold packet 2),
    facts packet 2 at Noor's checkpoint, Noor's determination (15:00, the start
@@ -41,8 +41,8 @@ async function chFinStart() {
   }
   fin.log = {first: first, at: CH_FIN_EVENTS.log.at.slice()};
   G.f.chFinLog = true; unlock('act', 'chfinlog'); track();
-  await say('06:25: the incident log’s first entry, the notice as its first record. N-1 and N-2 run from here: facts to Noor and the chair by 10:25, the members told by Tuesday 06:25. (game)');
-  await say('06:40: your questions to Wellhollow’s security contact, in writing: which store, whose copies, the time window, and what is known of copies read. Each one in the log with its time. (game)');
+  await say('06:25: the incident log’s first entry, the notice as its first record. N-1 and N-2 run from the notice’s receipt at 06:10, the first of the two: facts to Noor and the chair by 10:10, the members told by Tuesday 06:10. (game)');
+  await say('06:40: your questions to Wellhollow’s security contact, in writing: which store, whose copies, the time window and the time zone its times are in, what is known of copies read, and how its store encrypts our copies and who holds the key. Each one in the log with its time. (game)');
   await say('07:20: Edda is already at her desk.');
 }
 
@@ -61,7 +61,10 @@ async function chFinContain() {
   fin.contain = {first: first, by: 'Edda Thornquist', at: [92, '07:40'], exported: [92, '08:05']};
   await say('Paused at 07:40, my decision, on your recommendation. The job log stays where it is, and so do our local copies. I’ll export the log now.', who);
   G.f.chFinContain = true; unlock('act', 'chfincontain'); touchCSF('Respond'); track();
-  await say('08:05: the job log exported. 08:30: Edda has the data-flow record and the copy job.');
+  await say('08:05: the job log exported by Edda’s team, its hash noted, kept on the evidence share. (game)');
+  await say('One more thing is mine. With the copies paused we have no off-site copy: Wellhollow’s is the only one. I accept that gap until the copies resume, our local copies checked each morning, and the Board told on Thursday. My decision.', who);
+  fin.offsite = {by: 'Edda Thornquist', day: 92, at: '08:05', decision: 'the gap accepted until the copies resume, the local copies checked each morning, the Board told on Thursday'};
+  await say('08:30: on your recommendation, Edda holds the edge log from rolling off, so the incident’s days stay in it. Edda has the data-flow record and the copy job. (game)');
 }
 
 /* ---------- Drills ---------- */
@@ -73,28 +76,28 @@ async function chFinDrill(key) {
   return r;
 }
 async function chFinDrillA() {
-  await say('08:30. The notice says “copies for several customers, the Compact among them”. What does Wellhollow actually hold of ours? The data-flow record and the copy job are here.', 'Edda Thornquist');
+  await say('08:30. The notice says “copies for several customers, the Compact among them”. What have we actually sent them, and what does our job keep there? The data-flow record and the copy job are here.', 'Edda Thornquist');
   await chFinDrill('finhold');
   G.f.chFinDrillA = true; touchCSF('Respond'); track();
   await say('09:00: Beatriz, at the identity desk: has anything from Wellhollow reached our systems?');
 }
 async function chFinDrillB() {
-  await say('09:00. Wellhollow has no account on our side, by the register. The account lists and the edge log are exported, to 08:30.', 'Beatriz Solano');
+  await say('09:00. Wellhollow has no account on our side, by the register. The account lists and the edge log are exported, to 08:30, hashes noted, and the edge log is held from rolling off.', 'Beatriz Solano');
   await chFinDrill('finedge');
   G.f.chFinDrillB = true; touchCSF('Respond'); track();
-  await say('09:30: your desk. Facts packet 1, for Noor and the chair, is due at 10:25.');
+  await say('09:30: your desk. Facts packet 1, for Noor and the chair, is due at 10:10.');
 }
 
 /* ---------- The facts packets (your desk) ---------- */
 async function chFinPacket(id) {
   const fin = chFin(), P = chFinPacketDef(id);
   const picks = await chFinEdit(id);
-  const opts = CH_FIN_SEND[id], items = opts.map(o => ({label: o.label, meta: {good: !!o.good, bot: !!o.good}}));
+  const opts = CH_FIN_SEND[id], items = opts.map(o => ({label: o.label, meta: {good: !!o.good, bot: !!o.good, send: o.kind, packet: id}}));
   const k = await UI.openModal('Send ' + P.title.split(' · ')[0].toLowerCase() + '?', chFinPacketHtml(id, picks) + '<p>Due: <b>' + esc(chAtText(chAt(P.due[0], P.due[1]))) + '</b> (' + esc(P.dueRule) + '). It goes as you send it, and it is yours: the scorecard reads it as sent.</p>',
     items, {shuffle: true, closable: false, cls: 'drill'});
   const o = opts[k], at = chAt(o.at[0], o.at[1]), due = chAt(P.due[0], P.due[1]);
   const rec = fin.packets[id];
-  rec.sent = {picks: Object.assign({}, picks), at: at, due: due, onTime: at <= due, to: o.to, choice: k, good: !!o.good};
+  rec.sent = {picks: Object.assign({}, picks), at: at, chair: chAt(o.chair[0], o.chair[1]), kind: o.kind, due: due, onTime: at <= due, to: o.to, choice: k, good: !!o.good};
   rec.grade = chFinGrade(id, rec.sent.picks); track();
   if (!o.good) await say(o.why);
   await UI.openModal(P.title.split(' · ')[0] + ', as sent', '<p>' + esc(chAtText(at)) + ': to ' + esc(o.to) + '. (game)</p>' + chFinDebriefHtml(rec.grade, rec.sent),
@@ -112,7 +115,8 @@ async function chFinPacket2() {
   await chFinPacket('P2');
   const s = chFin().packets.P2.sent;
   G.f.chFinPacket2 = true; track();
-  await say(s.at <= chAt(93, '14:10') ? '14:10: Noor sends the packet to each member’s counsel, for each to decide for its own member. (game)' : 'Noor has it at ' + chHm(s.at % 1440) + ', and sends it on to each member’s counsel then. (game)');
+  // Fix pass M-1: what happens to the packet is told at its own time; held or through Edda, nothing yet.
+  await say(s.at <= chAt(93, '14:10') ? '14:10: Noor sends the packet to each member’s counsel, for each to decide for its own member. (game)' : (s.kind === 'via' ? 'With Edda. ' : 'Held. ') + 'Noor’s checkpoint was 14:00. (game)');
   await say('15:00: Noor, by the window.');
 }
 async function chFinPacket3() {
@@ -122,26 +126,36 @@ async function chFinPacket3() {
   await say('12:00: the Compact Board room. Ivor, Noor and Ada are waiting.');
 }
 
-/* ---------- The members' call (11:00, Noor): N-2, the next checkpoint, and the open item ---------- */
+/* ---------- The members' call (11:00, Noor): N-2, the next checkpoint, the preservation request, and the open item ---------- */
+// Noor decides the open item only once packet 1 has reached her (fix pass M-1): at 11:00 when it has; on the misrouted
+// path at 11:40, after the call, when the chair passes it on; on the held path at Day 93 09:10, in Edda's 09:00 scene.
+async function chFinOpenDecide(at, how) {
+  const fin = chFin();
+  if (!chFinOpenItem() || fin.openItem) return;
+  await say('The open item ' + how + ': not in scope for any notice on these facts. It stays with Rae Okafor’s team and me, and out of the Board papers. My decision, as counsel.', 'Noor Castellanos');
+  fin.openItem = {by: 'Noor Castellanos', day: Math.floor(at / 1440), at: chHm(at % 1440), inScope: false};
+}
 async function chFinMembers() {
-  const who = 'Noor Castellanos', fin = chFin(), s = fin.packets.P1 && fin.packets.P1.sent, had = s && s.at <= chAt(92, '11:00');
-  await say(had ? '11:00. I have your packet. The chair is on the call with the members’ representatives and their counsel now.' : '11:00. I don’t have your packet yet. The chair is on the call with the members’ representatives and their counsel now.', who);
-  await say('11:00: each member’s representative and its own counsel told that its data may be involved. N-2, done. Each member’s counsel decides for its own member. (game)');
+  const who = 'Noor Castellanos', fin = chFin(), had = chFinHas('P1', 'noor', chAt(92, '11:00'));
+  await say(had ? '11:00. I have your packet. The chair is on the call with the members’ representatives and their counsel now, and we’ve briefed him.' : '11:00. I don’t have your packet yet. Anything in it for me to decide, I’ll decide when it reaches me. The chair is on the call with the members’ representatives and their counsel now.', who);
+  await say('11:00: the chair tells each member’s representative and its own counsel that its data may be involved. N-2, done. Each member’s counsel decides for its own member. (game)');
   await say('My next checkpoint: Tuesday 14:00. Bring me what has changed, and what is still not known.', who);
-  const oi = chFinOpenItem();
-  if (oi) {
-    const at = had ? [92, '11:00'] : [Math.floor(s.at / 1440), chHm(s.at % 1440)];
-    await say((had ? 'And the open item in your packet: ' : 'And the open item, when your packet reaches me: ') + 'not in scope for any notice on these facts. It stays with Rae Okafor’s team and me, and out of the Board papers. My decision, as counsel.', who);
-    fin.openItem = {by: 'Noor Castellanos', day: at[0], at: at[1], inScope: false};
-  }
+  await say('And I’m asking Wellhollow in writing today to preserve its logs, and the store, as they are. My decision, as counsel.', who);
+  fin.preserve = {by: 'Noor Castellanos', day: 92, at: '11:00', decision: 'asked in writing'};
+  if (had) await chFinOpenDecide(chAt(92, '11:00'), 'in your packet');
   G.f.chFinMembers = true; touchCSF('Respond'); track();
+  const r = chFinReached('P1', 'noor');
+  if (!had && r !== null && r <= chAt(92, '11:40')) {
+    await say(chHm(r % 1440) + ': the chair passes your packet 1 to Noor. (game)');
+    await chFinOpenDecide(r, 'in your packet');
+  }
   await say('14:00: your desk: the decision log.');
 }
 
 /* ---------- The decision log (14:00, your desk): one decider per decision ---------- */
 async function chFinRoute() {
   const fin = chFin();
-  await UI.openModal('The decision log', '<p>Monday, 14:00. Six decisions this week. For each, who decides? One decider each, whoever is on duty. You recommend and supply the facts. (game)</p>' +
+  await UI.openModal('The decision log', '<p>Monday, 14:00. Six decisions to route this week. For each, who decides? One decider each, whoever is on duty. You recommend and supply the facts. (game)</p>' +
     '<p class="small">CSF 2.0 (NIST CSWP 29) GV.RR-02: “Roles, responsibilities, and authorities related to cybersecurity risk management are established, communicated, understood, and enforced”. One of NIST’s examples for it, in the CSF 2.0 Implementation Examples: “Document who is responsible and accountable for cybersecurity risk management activities and how those teams and individuals are to be consulted and informed”.</p>',
     [{label: 'The first decision', meta: {good: true}}], {closable: false, cls: 'summary'});
   const rec = {first: [], picks: []};
@@ -158,7 +172,7 @@ async function chFinRoute() {
     rec.first.push(first); rec.picks.push(d.choices[pick].label);
   }
   fin.route = rec;
-  await UI.openModal('The decision log, as recorded', chFinRouteHtml() + '<p>Your first picks: <b>' + rec.first.filter(Boolean).length + ' of ' + rec.first.length + '</b> to the decider the rules name. (game)</p>',
+  await UI.openModal('The decision log, as recorded', chFinRouteHtml(chAt(92, '14:00')) + '<p>Your first picks: <b>' + rec.first.filter(Boolean).length + ' of ' + rec.first.length + '</b> to the decider the rules name. The log also records the decisions already taken this morning, and who decides any report to law enforcement. (game)</p>',
     [{label: 'Pin it to the incident page', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.f.chFinRoute = true; unlock('act', 'chfinroute'); touchCSF('Govern'); track();
   await say('End the day at your desk.');
@@ -167,8 +181,13 @@ async function chFinRoute() {
 /* ---------- Tuesday 09:00 (Edda's desk): Wellhollow's second answer and our own job log ---------- */
 async function chFinAnswer2() {
   const who = 'Edda Thornquist';
-  await say('09:00. Wellhollow’s second answer: files on one of its stores were copied out between 21:58 and 22:40 on Day 91. Whose files, they don’t know yet.', who);
-  await say('09:40. And our own job log names the store for every night: every copy from Day 58 to Day 92, 35 nights, went to that one. The copies stay paused, my decision.', who);
+  await say('09:00. Wellhollow’s second answer: files on one of its stores were copied out between 21:58 and 22:40 on Day 91, by its clock. Whose files, they don’t know yet.', who);
+  const r = chFinReached('P1', 'noor');
+  if (r !== null && r > chAt(92, '11:40') && r <= chAt(93, '09:40')) {
+    await say(chHm(r % 1440) + ': your packet 1 reaches Noor and the chair. Noor’s note: (game)');
+    await chFinOpenDecide(r, 'in your packet');
+  }
+  await say('09:40. And our own job log names the store for every night. When the files were copied out, it held our copies of Days 57 to 91, 35 nights by our setting; Day 92’s went at 01:00, after. The copies stay paused, my decision.', who);
   G.f.chFinAnswer2 = true; touchCSF('Respond'); track();
   await say('11:30: Marit, at her desk.');
 }
@@ -194,12 +213,17 @@ async function chFinDirective() {
 /* ---------- Tuesday 15:00 (Noor): the determination, then drill 3 ---------- */
 async function chFinDetermine() {
   const who = 'Noor Castellanos', fin = chFin();
-  await say('15:00. On the facts in your packets: personal records held for the town may have been acquired by someone not authorised. That is my determination, as counsel for the town and the shared services. Each member’s counsel decides for its own.', who);
-  fin.determination = {by: 'Noor Castellanos', for: 'the town and the shared services', at: CH_FIN_EVENTS.determination.at.slice()};
+  const has2 = chFinHas('P2', 'noor', chAt(93, '15:00'));
+  await say('15:00. ' + (has2 ? 'On the facts in your packets' : 'On your packet 1, and what Edda and Wellhollow have told me') + ': personal records held for the town may have been acquired by someone not authorised. That is my determination, as counsel for the town and the shared services. Each member’s counsel decides for its own.', who);
+  fin.determination = {by: 'Noor Castellanos', for: 'the town and the shared services', at: CH_FIN_EVENTS.determination.at.slice(), packets: has2 ? ['P1', 'P2'] : ['P1']};
   G.f.chFinDetermine = true; touchCSF('Respond'); track();
+  // Packet 2 sent late or through Edda reaches Noor and the chair at its own time (fix pass M-1), told then.
+  const r = chFinReached('P2', 'noor'), via = chFinSentKind('P2') === 'via', beat = () => say(chHm(r % 1440) + ': your packet 2 reaches Noor and the chair' + (via ? ', through Edda' : '') + '. Noor sends it on to each member’s counsel. (game)');
+  if (!has2 && r !== null && r <= chAt(93, '15:30')) await beat();
   await say('15:30. N-3 for the town starts from that. When does its clock start, and when is it due?', who);
   await chFinDrill('finclock');
   G.f.chFinDrillC = true; unlock('act', 'chfinclock'); track();
+  if (!has2 && r !== null && r > chAt(93, '15:30')) await beat();
   await say('End the day at your desk.');
 }
 
@@ -213,21 +237,27 @@ async function chFinClockView() {
 }
 
 /* ---------- Wednesday 12:00 (the Board room): the chair decides the statement ---------- */
-function chFinStatementText() {
-  const P = chFinPacketDef('P3');
-  return P.rows.filter(r => r.req).map(r => r.variants.find(v => v.good).label).join('. ') + '.';
-}
+// Fix pass S-8: packet 3 stays facts; the statement is Ada's words built from its supported rows (CH_FIN_STATEMENT),
+// leading with the known fact, the unknown beside it, a next step for residents, the next update and a contact. The
+// chair decides it on Noor's and Ada's advice; when packet 3 has not reached him by 12:00, he works from Noor's and
+// Edda's facts (fix pass M-1).
+function chFinStatementText() { return CH_FIN_STATEMENT.map(x => x.text).join(' '); }
 async function chFinStatement() {
   const who = 'Ivor Penhallow', fin = chFin(), s = fin.packets.P3 && fin.packets.P3.sent, g = fin.packets.P3 && fin.packets.P3.grade;
-  await say('12:00. Noor on what we may say, Ada on how we say it. ' + (s && s.at <= chAt(94, '12:00') ? 'Your facts are in front of me.' : 'Your facts are not in front of me, so I have Noor’s and Edda’s.'), who);
+  const had = chFinHas('P3', 'chair', chAt(94, '12:00'));
+  await say('12:00. Noor on what we may say, Ada on how we say it. ' + (had ? 'Your facts are in front of me.' : 'Your facts are not in front of me, so I have Noor’s and Edda’s.'), who);
   await say('Plain words, what we know and what we don’t, and nobody’s details. If a reporter calls you, you send them to me.', 'Ada Pemberton');
-  const fixed = g ? g.rows.filter(x => x.required && x.grade !== 'supported').map(x => x.id) : [];
-  fin.statement = {by: 'Ivor Penhallow', day: 94, at: '12:00', out: '14:00', advice: ['Noor Castellanos', 'Ada Pemberton'], text: chFinStatementText(), corrected: fixed};
+  await say('11:30: Ada’s draft went to each member’s communications lead, so every member says the same thing. Noor’s advice: nothing in it decides a member’s notice, and nothing names another party’s cause. (game)');
+  const fixed = had && g ? g.rows.filter(x => x.required && x.grade !== 'supported').map(x => x.id) : [];
+  fin.statement = {by: 'Ivor Penhallow', day: 94, at: '12:00', out: '14:00', advice: ['Noor Castellanos', 'Ada Pemberton'], text: chFinStatementText(), from: had ? 'packet 3' : 'Noor’s and Edda’s facts', corrected: fixed, coordinated: [94, '11:30']};
   await UI.openModal('The Compact’s statement', '<p>12:00: the chair decides, on Noor’s and Ada’s advice. 14:00: it goes out. (game)</p><blockquote>' + esc(fin.statement.text) + '</blockquote>' +
-    (fixed.length ? '<p>From your packet, the chair took the record’s wording for ' + esc(fixed.join(', ')) + '.</p>' : '<p>Each line from your packet, as the records support it.</p>'),
+    '<p class="small">Ada’s drafting: the known fact first and the unknown beside it; who will contact people, in place of who decides; the next update and the line for questions added. (game)</p>' +
+    (!had ? '<p>The chair worked from Noor’s and Edda’s facts.</p>' : fixed.length ? '<p>From your packet, the chair took the record’s wording for ' + esc(fixed.join(', ')) + '.</p>' : '<p>Each fact from your packet, as the records support it.</p>'),
     [{label: 'Back to the floor', meta: {good: true}}], {closable: false, cls: 'summary'});
   G.f.chFinStatement = true; unlock('act', 'chfinstatement'); touchCSF('Respond'); track();
-  await say('My decision. 14:30: Noor has three terminals for you, south-west.', who);
+  await say('My decision.', who);
+  if (!had && s) await say(chHm(chFinReached('P3', 'chair') % 1440) + ': your packet 3 reaches the chair, after the statement went out at 14:00. (game)');
+  await say('14:30: Noor has three terminals for you, south-west.');
 }
 
 /* ---------- The Disclosure terminals (Noor's) ---------- */
@@ -255,45 +285,69 @@ async function chFinDojoPuzzle(i) {
 }
 
 /* ---------- Thursday 14:00 (the Board): three questions keyed to the packets as sent ---------- */
+// Fix pass M-7: first every required row left out, then every packet sent late or not straight to its rule's recipients
+// (its time and route, as sent), then the misplaced, overstated and unsupported rows; the standing questions fill any
+// round left, and "Who heard first" only when packet 1 went on time and straight to Noor and the chair.
 const CH_FIN_MEMBERS = ['The Clinic’s representative', 'The School District’s representative', 'The town’s representative'];
+function chFinSentAsk(id) {
+  const fin = chFin(), s = fin.packets[id].sent, k = chFinSentKind(id), n = id.replace('P', '');
+  const via = {P1: 'the chair', P2: 'Edda', P3: 'Ada'}[id], rule = {P1: 'N-1 says ' + chAtText(s.due) + ', to Noor and me both', P2: 'Noor’s checkpoint was ' + chAtText(s.due) + ', under N-1', P3: 'I asked for it by ' + chAtText(s.due)}[id];
+  return '“Your packet ' + n + ' reached ' + (id === 'P3' ? 'me' : 'Noor') + ' at ' + chAtText(s.at) + (k === 'via' ? ', through ' + via : '') + '. ' + rule + '. Why?”';
+}
 function chFinBoardQs() {
   const fin = chFin(), order = {omitted: 0, misplaced: 1, overstated: 2, unsupported: 3};
   const rows = CH_FIN_PACKETS.flatMap(P => (fin.packets[P.id] && fin.packets[P.id].grade ? fin.packets[P.id].grade.rows : []).map(x => Object.assign({P: P}, x)));
   const weak = rows.filter(x => order[x.grade] !== undefined).sort((a, b) => order[a.grade] - order[b.grade] || CH_FIN_PACKETS.indexOf(a.P) - CH_FIN_PACKETS.indexOf(b.P) || a.P.rows.findIndex(r => r.id === a.id) - b.P.rows.findIndex(r => r.id === b.id));
-  const qs = weak.slice(0, 3).map((x, i) => { const r = x.P.rows.find(y => y.id === x.id);
-    return {row: x.id, packet: x.P.id, grade: x.grade, title: 'A member’s question', who: CH_FIN_MEMBERS[i],
+  const rowQ = (x, i) => { const r = x.P.rows.find(y => y.id === x.id);
+    return {row: x.id, packet: x.P.id, grade: x.grade, title: 'A member’s question', who: CH_FIN_MEMBERS[i % 3],
       ask: x.grade === 'omitted' ? '“Your ' + x.P.title.split(' · ')[0].toLowerCase() + ' said nothing about ' + r.topic + '. What should it have said?”' : '“Your ' + x.P.title.split(' · ')[0].toLowerCase() + ' said: ' + x.line + '. Is that what the records show?”',
-      resp: r.variants.map(v => ({label: v.label, good: !!v.good, why: v.why}))}; });
-  for (const s of CH_FIN_BOARD_SPECS()) if (qs.length < 3) qs.push(Object.assign({row: null}, s));
+      resp: r.variants.map(v => ({label: v.label, good: !!v.good, why: v.why}))}; };
+  const sentQ = CH_FIN_PACKETS.filter(P => { const x = fin.packets[P.id]; return x && x.sent && (!x.sent.onTime || chFinSentKind(P.id) !== 'rec'); }).map(P => {
+    const k = chFinSentKind(P.id), spec = CH_FIN_SENT_QS[P.id][k === 'via' ? 'via' : 'held'];
+    return {row: null, packet: P.id, sent: k, title: spec.title, who: spec.who, ask: chFinSentAsk(P.id), resp: spec.resp}; });
+  const qs = weak.filter(x => x.grade === 'omitted').concat(sentQ, weak.filter(x => x.grade !== 'omitted')).slice(0, 3).map((x, i) => x.title ? x : rowQ(x, i));
+  const p1 = fin.packets.P1 && fin.packets.P1.sent, direct = !!(p1 && p1.onTime && chFinSentKind('P1') === 'rec');
+  for (const s of CH_FIN_BOARD_SPECS()) if (qs.length < 3 && (s.when !== 'p1direct' || direct)) qs.push(Object.assign({row: null}, s));
   return qs;
 }
-// The Board's decision of record on each owner's acceptance that breaks one of its tolerances (S-7), applied in the minute.
+// The Board's decision of record on each owner's acceptance that breaks one of its tolerances (S-7), applied in the minute;
+// the lapse recorded (fix pass S-9b).
 function chFinTolDecide() {
   const st = chRiskStates(), out = [];
   for (const a of (G.ch.accept || []).filter(x => !x.closed && x.decider !== 'Board' && !x.boardDecided)) {
     const r = st.find(x => x.id === a.line); if (!r || !r.breaks.length) continue;
-    a.boardDecided = {day: 95, at: '15:00', by: 'the Compact Board (minute, Day 95)', decision: 'carried to its Day 155 review, its interim measures kept'};
+    a.boardDecided = {day: 95, at: '15:00', by: 'the Compact Board (minute, Day 95)', decision: 'carried to its Day 155 review, its interim measures kept', lapse: {from: a.day, mark: chWdAdd(a.day, 5)}};
     out.push(a);
   }
   return out;
 }
+// Owners' acceptances above appetite but within tolerance: the owner's, reported to this Board at its next meeting (S-9).
+function chFinTolReport() {
+  const st = chRiskStates(), within = r => CH_LEVELS.indexOf(r.residual) <= CH_LEVELS.indexOf(CH_APPETITE_MAX[chAppetite(r.cat)]), out = [];
+  for (const a of (G.ch.accept || []).filter(x => !x.closed && x.decider !== 'Board')) {
+    const r = st.find(x => x.id === a.line); if (!r || r.mh || r.breaks.length || within(r)) continue;
+    a.boardReported = {day: 95, at: '15:00'}; out.push(a);
+  }
+  return out;
+}
 function chFinMinute(asked) {
-  const fin = chFin(), dec = chFinTolDecide(), F = CH_FIN_PACKETS.map(P => [P, fin.packets[P.id]]).filter(([, x]) => x && x.sent);
+  const fin = chFin(), dec = chFinTolDecide(), rep = chFinTolReport(), F = CH_FIN_PACKETS.map(P => [P, fin.packets[P.id]]).filter(([, x]) => x && x.sent);
   const fixed = asked.filter(q => q.row).map(q => { const P = chFinPacketDef(q.packet), r = P.rows.find(y => y.id === q.row); return r.id + ', “' + r.variants.find(v => v.good).label + '”'; });
   const rest = F.flatMap(([P, x]) => x.grade.rows.filter(y => (y.in && y.grade !== 'supported') || y.grade === 'omitted').map(y => y.id)).filter(id => !asked.some(q => q.row === id));
   const n3 = chFinDue(CH_FIN_RULES.find(r => r.id === 'N-3'));
   const sh = a => (CH_REP_SHORT[a.line] || a.line) + ' (' + a.signedBy.split(' ')[0] + ', Day ' + a.day + ')';
-  return '15:00. The minute records the incident as the packets put it: ' + F.map(([P, x]) => P.id + ' sent ' + chAtText(x.sent.at) + ', ' + (x.sent.onTime ? 'on time' : 'late') + ' against ' + chAtText(x.sent.due)).join('; ') + '.' +
-    ' The decisions, each with its decider: the copies paused (Edda, Day 92 07:40); any notice for the town (Noor, her determination Day 93 15:00, N-3 due ' + (n3 ? chAtText(n3.due) : 'when determined') + '); each member’s notice (its own counsel); the statement (the chair, Day 94 12:00, on Noor’s and Ada’s advice).' +
+  return '15:00. The minute records the incident as the packets put it: ' + F.map(([P, x]) => P.id + ' with ' + (P.id === 'P3' ? 'the chair' : 'counsel') + ' ' + chAtText(x.sent.at) + ', ' + (x.sent.onTime ? 'on time' : 'late') + ' against ' + chAtText(x.sent.due) + (chFinSentKind(P.id) === 'via' ? ', not straight to its recipients' : '')).join('; ') + '.' +
+    ' The decisions, each with its decider: the copies paused (Edda, Day 92 07:40); the off-site gap while they are paused (Edda, Day 92 08:05: accepted until the copies resume); the written request to Wellhollow to preserve its logs (Noor, Day 92 11:00); any notice for the town (Noor, her determination Day 93 15:00, N-3 due ' + (n3 ? chAtText(n3.due) : 'when determined') + '); each member’s notice (its own counsel); any report to law enforcement (Noor for the town and the shared services, each member’s counsel for its own); the statement (the chair, Day 94 12:00, on Noor’s and Ada’s advice).' +
     (fixed.length ? ' Corrected in this minute, at the members’ questions: ' + fixed.join('; ') + '.' : ' No correction asked.') +
     (rest.length ? ' The chair asks for ' + rest.join(', ') + ' to be read again against the records.' : '') +
-    (dec.length ? ' Decided in this minute, this Board the decider of record: ' + dec.map(sh).join(', ') + ', breaking this Board’s ' + [...new Set(dec.flatMap(a => chRiskStates().find(r => r.id === a.line).breaks.map(chTolName)))].join(', ') + ' tolerance on its owner’s acceptance: carried to its Day 155 review, its interim measures kept.' : '') +
-    ' From today, an owner’s acceptance that breaks one of this Board’s tolerances goes to the chair within five working days of its signing, and into this Board’s next minute.' +
-    (chFinOpenItem() ? ' The suspicion file noted as an open item, with counsel, with no conclusion.' : '') + ' (game)';
+    (dec.length ? ' Decided in this minute, this Board the decider of record: ' + dec.map(a => sh(a) + ', breaking this Board’s ' + chRiskStates().find(r => r.id === a.line).breaks.map(chTolName).join(', ') + ' tolerance, which ran on its owner’s acceptance alone from Day ' + a.day + ', past its five-working-day mark (Day ' + a.boardDecided.lapse.mark + '), before this rule').join('; ') + ': now this Board’s decision of record, carried to its Day 155 review, its interim measures kept.' : '') +
+    (rep.length ? ' Reported to this Board, above appetite but within its tolerances, each its owner’s: ' + rep.map(sh).join(', ') + '.' : '') +
+    ' From today, an owner’s acceptance that breaks one of this Board’s tolerances goes to the chair (or, if the chair signed it or is absent, the vice-chair) within five working days of its signing, and into this Board’s next minute; an owner’s acceptance above appetite but within tolerance is reported to this Board at its next meeting.' +
+    (chFinOpenItem() && fin.openItem ? ' One matter is with counsel, at counsel’s direction.' : '') + ' (game)';
 }
 async function chFinBoardRound() {
   const who = 'Ivor Penhallow', f = G.f, fin = chFin();
-  await say('14:00. The members’ representatives, Edda, Marit, Noor and Ada. This Board has your three packets as you sent them. Three questions.', who);
+  await say('14:00. The members’ representatives, Edda, Marit, Noor and Ada. This Board has the rows of your three packets as you sent them, with their times.' + (chFinOpenItem() && fin.openItem ? ' The open item is with Noor, at her direction.' : '') + ' Three questions.', who);
   const qs = chFinBoardQs();
   fin.board = {first: [], asked: qs.map(q => q.row || q.title)};
   await chStages(qs, fin.board.first);
@@ -302,7 +356,10 @@ async function chFinBoardRound() {
   chAudit('Finale: the Board’s minute (Day 95)');
   f.chFinBoard = true; f.chHeavingLine = true;
   G.focusMax += 4; G.focus = G.focusMax; unlock('act', 'chfinboard'); touchCSF('Govern'); track();
-  await say('You brought this Board the facts on time, and counsel first. This is the Heaving Line Badge (game): the light line thrown first, so the heavy one can follow.', who);
+  // Fix pass M-2: the citation reads the packets as sent.
+  const iss = chFinSentIssues(); fin.issues = iss;
+  await say(iss.length ? 'This Board has the record of what went late or unsaid: ' + iss.join('; ') + '. The Heaving Line Badge (game) is for the week’s work all the same: the light line is thrown first, so the heavy one can follow. Next time, throw it on time.' :
+    'You brought this Board the facts on time, and counsel first. This is the Heaving Line Badge (game): the light line thrown first, so the heavy one can follow.', who);
   await say('Its power: in the next edition, every facts packet arrives with its rule’s due time beside it. And Focus +4.', who);
   await say('16:00: your desk. The edition’s end.');
 }
@@ -325,7 +382,9 @@ async function chFinEnd() {
   if (!f.chFinSummary) {
     f.chFinSummary = true; touchCSF('Govern'); chAudit('Finale: the district’s end (Day 95)');
     Series.markEdition('charter', {finale: true, editionComplete: true, heavingLine: !!f.chHeavingLine});
-    await say('The facts reached counsel first, and on time, with what was not known said plainly. That is the job. Thank you.', 'Ivor Penhallow');
+    const iss = chFinSentIssues();
+    await say(iss.length ? 'The facts reached counsel in the end, but not as the rules ask: ' + iss[0] + (iss.length > 1 ? ', and ' + (iss.length - 1) + ' more on the record' : '') + '. The job is to get them there on time, with what is not known said plainly. Thank you.' :
+      'The facts reached counsel first, and on time, with what was not known said plainly. That is the job. Thank you.', 'Ivor Penhallow');
   }
   const body = '<p class="big">Charter: the edition’s end.</p>' +
     '<p>' + esc(G.name) + ' · <b>' + esc(G.rank) + '</b> · Field Manual <b>' + fmPct() + '%</b> · Time played <b>' + fmtTime(G.playMs) + '</b> · Day <b>' + G.day + '</b> (' + (CH_DAY[G.day] || '') + ')</p>' +

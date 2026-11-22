@@ -23,7 +23,11 @@
 // containment, the drills, the three facts packets sent as recommended and on time, the members' call, the decision log,
 // the directive, Noor's determination, the clock, the chair's statement, the terminals, the Board's debrief) to the
 // edition's end, with a save/reload mid-finale; it checks the series record, the acceptances, the supplier, policy, report
-// and finale scorecards, the register and the invariant at all ten checkpoints.
+// and finale scorecards, the register and the invariant at all ten checkpoints. CHSEND=late (Charter slice 5 fix pass)
+// sends packet 1 held, packet 2 through Edda and packet 3 held; CHSEND=via sends packet 1 through the chair, packet 2
+// held and packet 3 through Ada: every row still as recommended, so the run checks the late and misrouted paths to the
+// edition's end (the Board's questions on the packets' times and routes, the chair's citation, no Noor or chair line
+// on a packet before it reached them).
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -32,6 +36,7 @@ const CH = /charter/.test(FILE);
 const CR = /crossroads/.test(FILE), TRACK = process.env.TRACK === 'dfir' ? 'dfir' : 'manager';
 const MODE = process.argv[2] || 'desktop';
 const GAMER = process.env.GAMER === '1';
+const CHSEND = process.env.CHSEND === 'late' ? {P1: 'held', P2: 'via', P3: 'held'} : process.env.CHSEND === 'via' ? {P1: 'via', P2: 'held', P3: 'via'} : null;
 const OUT = process.argv[3] || process.env.UPTIME_OUT || __dirname + '/out';
 fs.mkdirSync(OUT, { recursive: true });
 const KEY = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', a: 'z', b: 'x', start: 'Enter', select: 'Shift' };
@@ -154,6 +159,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     }
     if (CR && o.some(x => x.meta && x.meta.track)) return find(m => m.track === TRACK);
     // Charter's allocation editor is not graded line by line: meta.bot marks the next step to the recommended allocation.
+    if (CH && CHSEND && o.some(x => x.meta && x.meta.send)) { const pk = o.find(x => x.meta && x.meta.packet).meta.packet; return find(m => m.send === CHSEND[pk]); }
     if (CH) { const bt = find(m => m.bot === true); if (bt >= 0) return bt; }
     if (o.some(x => x.meta && x.meta.k === 'new')) {
       const want = p.__wantContinue ? 'cont' : 'new';
@@ -391,7 +397,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       suppliers: sup && { tiers: sup.sent, plan: sup.planSent, accept: sup.accept.map(a => a.line + ':' + a.signedBy), needs: sup.needs, incident: sup.incident.first, board: sup.board && sup.board.first, dojo: sup.dojo },
       policy: pol && { intake: pol.intakeSent, library: pol.libSent, register: pol.exc.map(e => e.id + ':' + (e.seed ? 'seed' : e.closed ? 'closed' : 'open') + ':' + (e.seed ? '' : e.owner)), needs: pol.needs, consult: pol.consult, directive: pol.directive && pol.directive.first, board: pol.board && pol.board.first, dojo: pol.dojo, minute: pol.minute && pol.minute.text },
       report: ch && ch.rep && { sent: ch.rep.sent && ch.rep.sent.picks, grade: ch.rep.grade && { lines: ch.rep.grade.lines, score: ch.rep.grade.score, claims: ch.rep.grade.claims, required: ch.rep.grade.required, decide: ch.rep.grade.decide, weak: ch.rep.grade.weak, omitted: ch.rep.grade.omitted }, needs: ch.rep.needs, directive: ch.rep.directive, board: ch.rep.board, dojo: ch.rep.dojo, minute: ch.rep.minute },
-      finale: ch && ch.fin && { packets: Object.fromEntries(Object.entries(ch.fin.packets).map(([k, x]) => [k, x.sent && { at: x.sent.at, due: x.sent.due, onTime: x.sent.onTime, score: x.grade.score, claims: x.grade.claims, required: x.grade.required }])), route: ch.fin.route, needs: ch.fin.needs, directive: ch.fin.directive, board: ch.fin.board, dojo: ch.fin.dojo, minute: ch.fin.minute, statement: ch.fin.statement },
+      finale: ch && ch.fin && { chsend: process.env.CHSEND || 'recommended', packets: Object.fromEntries(Object.entries(ch.fin.packets).map(([k, x]) => [k, x.sent && { at: x.sent.at, chair: x.sent.chair, kind: x.sent.kind, due: x.sent.due, onTime: x.sent.onTime, score: x.grade.score, claims: x.grade.claims, required: x.grade.required }])), route: ch.fin.route, needs: ch.fin.needs, directive: ch.fin.directive, board: ch.fin.board, dojo: ch.fin.dojo, minute: ch.fin.minute, statement: ch.fin.statement, determination: ch.fin.determination, openItem: ch.fin.openItem, issues: ch.fin.issues },
       noHorizontalScroll: hscroll.sw <= hscroll.iw, hscroll, seriesCharter: ser.editions && ser.editions.charter, audit: ch && ch.audit,
       final: { day: fin.day, rank: fin.rank, fm: fin.fm, metrics: fin.metrics, objective: fin.objective, override: ch && ch.decision, accept: ch && ch.accept.map(a => a.line + ':' + a.signedBy), needs: ch && ch.needs, sent: ch && ch.sent, final: ch && ch.final }, stats };
     console.log(JSON.stringify(chRes, null, 1));
@@ -407,9 +413,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     // The finale: the three packets sent as recommended, on time and fully supported, every decision routed at the first
     // pick, the drills supported, the statement the chair's, the minute, the badge, the series record of the edition's end.
     const chf = ch && ch.fin, fp = chf ? ['P1', 'P2', 'P3'].map(k => chf.packets[k]) : [];
-    const finOk = !!chf && fp.every(x => x && x.sent && x.sent.onTime && x.grade.score === 100 && x.grade.claims === 100) && chf.needs.met === 3 && chf.route && chf.route.first.every(Boolean) &&
+    // CHSEND: the packets go as planned (held or through someone), each late; the rows still score 100; the Board asks
+    // about each packet's time and route (no "Who heard first"); the chair's citation names what was late; Noor's
+    // determination rests on the packets that had reached her; a held packet 3 leaves the chair working from Noor's and
+    // Edda's facts.
+    const sendOk = !CHSEND ? fp.every(x => x && x.sent && x.sent.onTime && x.sent.kind === 'rec') && fin.metrics.chFinOnTime === 100 && !(chf.issues || []).length && chf.board.asked.includes('Who heard first') :
+      ['P1', 'P2', 'P3'].every(k => chf.packets[k].sent.kind === CHSEND[k] && !chf.packets[k].sent.onTime) && fin.metrics.chFinOnTime === 0 && (chf.issues || []).length >= 3 &&
+      chf.board.asked.join() === 'Packet 1, ' + (CHSEND.P1 === 'held' ? 'held' : 'through the chair') + ',Packet 2, ' + (CHSEND.P2 === 'held' ? 'held' : 'through Edda') + ',Packet 3, ' + (CHSEND.P3 === 'held' ? 'held' : 'through Ada') &&
+      chf.determination.packets.join() === 'P1' && chf.statement.from === (CHSEND.P3 === 'held' ? 'Noor’s and Edda’s facts' : 'packet 3') && !/on time, and counsel first/.test(chf.minute);
+    const finOk = !!chf && sendOk && fp.every(x => x && x.sent && x.grade.score === 100 && x.grade.claims === 100) && chf.needs.met === 3 && chf.route && chf.route.first.every(Boolean) &&
       !!chf.minute && chf.statement && chf.statement.by === 'Ivor Penhallow' && chf.dojo.every(Boolean) && fin.f.chHeavingLine &&
-      fin.metrics.chFinClaims === 100 && fin.metrics.chFinRequired === 100 && fin.metrics.chFinOnTime === 100 && fin.metrics.chFinRouted === 100 && !!fin.extra.chFinSummary && !!fin.extra.chRepSummary;
+      fin.metrics.chFinClaims === 100 && fin.metrics.chFinRequired === 100 && fin.metrics.chFinRouted === 100 && !!fin.extra.chFinSummary && !!fin.extra.chRepSummary;
     process.exit(errors.length || requests.length || !finOk || !savedCheckChFin || !savedCheckChFin.restored || !savedCheckChFin.exportRoundTrip || ser.editions.charter.finale !== true || ser.editions.charter.editionComplete !== true || !savedCheckChRep || !savedCheckChRep.restored || !savedCheckChRep.exportRoundTrip || ser.editions.charter.report !== true || !repOk || !savedCheckCh || !savedCheckCh.restored || !savedCheckCh.exportRoundTrip || !savedCheckChSup || !savedCheckChSup.restored || !savedCheckChSup.exportRoundTrip || !savedCheckChPol || !savedCheckChPol.restored || !savedCheckChPol.exportRoundTrip || !fin.objective.done || !fin.extra.chSummary || !fin.extra.chSupSummary || !fin.extra.chPolSummary || !ser.editions || !ser.editions.charter || ser.editions.charter.budget !== true || ser.editions.charter.suppliers !== true || ser.editions.charter.policy !== true || !accOk || !supOk || !polOk || !chRes.noHorizontalScroll ? 1 : 0);
   }
   if (CR) {
