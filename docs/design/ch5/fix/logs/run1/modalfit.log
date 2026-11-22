@@ -1,0 +1,494 @@
+Town Hall land800x360 {"n":688,"keep":272,"scroll":416,"minShare":0.31031976744186046,"hidAtOpen":231,"aRevealed":231,"cueO":416,"cueT":94,"toastLane":588,"toastHeld":100} bad 0 input/cue/toast 0
+Town Hall land844x390 {"n":688,"keep":369,"scroll":319,"minShare":0.3088235294117647,"hidAtOpen":194,"aRevealed":194,"cueO":319,"cueT":117,"toastLane":592,"toastHeld":96} bad 0 input/cue/toast 0
+Town Hall phone390x844 {"n":688,"keep":666,"scroll":22,"minShare":0.3220211161387632,"hidAtOpen":14,"aRevealed":14,"cueO":22,"cueT":244,"toastLane":631,"toastHeld":57} bad 0 input/cue/toast 0
+Town Hall phone360x640 {"n":688,"keep":359,"scroll":329,"minShare":0.31699346405228757,"hidAtOpen":208,"aRevealed":208,"cueO":329,"cueT":94,"toastLane":574,"toastHeld":114} bad 0 input/cue/toast 0
+Town Hall desktop1280x800 {"n":688,"keep":688,"scroll":0,"minShare":0.3671875,"hidAtOpen":0,"aRevealed":0,"cueO":0,"cueT":168,"toastLane":688,"toastHeld":0} bad 0 input/cue/toast 0
+Crossroads land800x360 {"n":1295,"keep":471,"scroll":824,"minShare":0.31031976744186046,"hidAtOpen":568,"aRevealed":568,"cueO":824,"cueT":203,"toastLane":1041,"toastHeld":254} bad 0 input/cue/toast 0
+Crossroads land844x390 {"n":1295,"keep":854,"scroll":441,"minShare":0.3155080213903743,"hidAtOpen":254,"aRevealed":254,"cueO":441,"cueT":219,"toastLane":892,"toastHeld":403} bad 0 input/cue/toast 0
+Crossroads phone390x844 {"n":1295,"keep":1255,"scroll":40,"minShare":0.3284313725490196,"hidAtOpen":0,"aRevealed":0,"cueO":40,"cueT":439,"toastLane":1273,"toastHeld":22} bad 0 input/cue/toast 0
+Crossroads phone360x640 {"n":1295,"keep":825,"scroll":470,"minShare":0.31917211328976036,"hidAtOpen":284,"aRevealed":284,"cueO":470,"cueT":198,"toastLane":1067,"toastHeld":228} bad 0 input/cue/toast 0
+Crossroads desktop1280x800 {"n":1295,"keep":1295,"scroll":0,"minShare":0.4030612244897959,"hidAtOpen":0,"aRevealed":0,"cueO":0,"cueT":231,"toastLane":1295,"toastHeld":0} bad 0 input/cue/toast 0
+Charter land800x360 {"n":353,"keep":159,"scroll":194,"minShare":0.3648255813953488,"hidAtOpen":91,"aRevealed":91,"cueO":194,"cueT":77,"toastLane":271,"toastHeld":82} bad 0 input/cue/toast 0
+Charter land844x390 {"n":353,"keep":212,"scroll":141,"minShare":0.4157754010695187,"hidAtOpen":88,"aRevealed":88,"cueO":141,"cueT":61,"toastLane":305,"toastHeld":48} bad 0 input/cue/toast 0
+Charter phone390x844 {"n":353,"keep":353,"scroll":0,"minShare":0.4019607843137255,"hidAtOpen":0,"aRevealed":0,"cueO":0,"cueT":143,"toastLane":353,"toastHeld":0} bad 0 input/cue/toast 0
+Charter phone360x640 {"n":353,"keep":219,"scroll":134,"minShare":0.4014161220043573,"hidAtOpen":87,"aRevealed":87,"cueO":134,"cueT":61,"toastLane":245,"toastHeld":108} bad 0 input/cue/toast 0
+Charter desktop1280x800 {"n":353,"keep":353,"scroll":0,"minShare":0.6154336734693877,"hidAtOpen":0,"aRevealed":0,"cueO":0,"cueT":81,"toastLane":353,"toastHeld":0} bad 0 input/cue/toast 0
+{
+ "suite": "modalfit",
+ "passed": 118,
+ "failed": 0,
+ "results": [
+  {
+   "name": "the four desktop bots that record the graded modals finish (Town Hall, Crossroads manager, Crossroads DFIR, Charter)",
+   "ok": true
+  },
+  {
+   "name": "Town Hall: the generator finds drill sets and clue stages (8 drill sets, 0 reports, 1 stage functions)",
+   "ok": true
+  },
+  {
+   "name": "Town Hall: the recorded play has graded modals (333)",
+   "ok": true
+  },
+  {
+   "name": "Town Hall: every generated case builds (355 cases)",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: every graded modal (688: 355 built from the data, 333 from the recorded play; 272 keep the options whole, 416 scroll as one page; smallest body share 0.31) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: A at open never acts on an option not whole on screen (231 open with the highlight out of view; A brought it into view in 231), and down then A acts only on a shown option; \"more below\" cues show while options (416) or text (94) go on below, readable, and hide at the end; a toast mid-modal (588 in the lane, 100 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: the \"more below\" cues are shown and readable in every palette at both text sizes (12 combinations, 24 cues)",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land800x360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land844x390: every graded modal (688: 355 built from the data, 333 from the recorded play; 369 keep the options whole, 319 scroll as one page; smallest body share 0.31) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land844x390: A at open never acts on an option not whole on screen (194 open with the highlight out of view; A brought it into view in 194), and down then A acts only on a shown option; \"more below\" cues show while options (319) or text (117) go on below, readable, and hide at the end; a toast mid-modal (592 in the lane, 96 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land844x390: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land844x390: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land844x390: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land844x390: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Town Hall land844x390: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone390x844: every graded modal (688: 355 built from the data, 333 from the recorded play; 666 keep the options whole, 22 scroll as one page; smallest body share 0.32) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone390x844: A at open never acts on an option not whole on screen (14 open with the highlight out of view; A brought it into view in 14), and down then A acts only on a shown option; \"more below\" cues show while options (22) or text (244) go on below, readable, and hide at the end; a toast mid-modal (631 in the lane, 57 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone390x844: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone390x844: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone390x844: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone390x844: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone390x844: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: every graded modal (688: 355 built from the data, 333 from the recorded play; 359 keep the options whole, 329 scroll as one page; smallest body share 0.32) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: A at open never acts on an option not whole on screen (208 open with the highlight out of view; A brought it into view in 208), and down then A acts only on a shown option; \"more below\" cues show while options (329) or text (94) go on below, readable, and hide at the end; a toast mid-modal (574 in the lane, 114 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: the \"more below\" cues are shown and readable in every palette at both text sizes (12 combinations, 24 cues)",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Town Hall phone360x640: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Town Hall desktop1280x800: every graded modal (688: 355 built from the data, 333 from the recorded play; 688 keep the options whole, 0 scroll as one page; smallest body share 0.37) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Town Hall desktop1280x800: A at open never acts on an option not whole on screen (0 open with the highlight out of view; A brought it into view in 0), and down then A acts only on a shown option; \"more below\" cues show while options (0) or text (168) go on below, readable, and hide at the end; a toast mid-modal (688 in the lane, 0 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Town Hall desktop1280x800: a toast on the map sits inside the screen, clear of the HUD",
+   "ok": true
+  },
+  {
+   "name": "Town Hall desktop1280x800: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Town Hall desktop1280x800: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Town Hall desktop1280x800: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads: the generator finds drill sets, reports and clue stages (6 drill sets, 13 reports, 12 stage functions)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads: the recorded play has graded modals (531)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads: every generated case builds (764 cases)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: every graded modal (1295: 764 built from the data, 531 from the recorded play; 471 keep the options whole, 824 scroll as one page; smallest body share 0.31) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: A at open never acts on an option not whole on screen (568 open with the highlight out of view; A brought it into view in 568), and down then A acts only on a shown option; \"more below\" cues show while options (824) or text (203) go on below, readable, and hide at the end; a toast mid-modal (1041 in the lane, 254 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: the \"more below\" cues are shown and readable in every palette at both text sizes (12 combinations, 24 cues)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land800x360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land844x390: every graded modal (1295: 764 built from the data, 531 from the recorded play; 854 keep the options whole, 441 scroll as one page; smallest body share 0.32) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land844x390: A at open never acts on an option not whole on screen (254 open with the highlight out of view; A brought it into view in 254), and down then A acts only on a shown option; \"more below\" cues show while options (441) or text (219) go on below, readable, and hide at the end; a toast mid-modal (892 in the lane, 403 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land844x390: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land844x390: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land844x390: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land844x390: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads land844x390: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone390x844: every graded modal (1295: 764 built from the data, 531 from the recorded play; 1255 keep the options whole, 40 scroll as one page; smallest body share 0.33) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone390x844: A at open never acts on an option not whole on screen (0 open with the highlight out of view; A brought it into view in 0), and down then A acts only on a shown option; \"more below\" cues show while options (40) or text (439) go on below, readable, and hide at the end; a toast mid-modal (1273 in the lane, 22 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone390x844: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone390x844: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone390x844: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone390x844: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone390x844: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: every graded modal (1295: 764 built from the data, 531 from the recorded play; 825 keep the options whole, 470 scroll as one page; smallest body share 0.32) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: A at open never acts on an option not whole on screen (284 open with the highlight out of view; A brought it into view in 284), and down then A acts only on a shown option; \"more below\" cues show while options (470) or text (198) go on below, readable, and hide at the end; a toast mid-modal (1067 in the lane, 228 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: the \"more below\" cues are shown and readable in every palette at both text sizes (12 combinations, 24 cues)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads phone360x640: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop1280x800: every graded modal (1295: 764 built from the data, 531 from the recorded play; 1295 keep the options whole, 0 scroll as one page; smallest body share 0.40) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop1280x800: A at open never acts on an option not whole on screen (0 open with the highlight out of view; A brought it into view in 0), and down then A acts only on a shown option; \"more below\" cues show while options (0) or text (231) go on below, readable, and hide at the end; a toast mid-modal (1295 in the lane, 0 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop1280x800: a toast on the map sits inside the screen, clear of the HUD",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop1280x800: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop1280x800: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Crossroads desktop1280x800: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Charter: the generator finds drill sets and clue stages (5 drill sets, 0 reports, 0 stage functions)",
+   "ok": true
+  },
+  {
+   "name": "Charter: the recorded play has graded modals (129)",
+   "ok": true
+  },
+  {
+   "name": "Charter: every generated case builds (224 cases)",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: every graded modal (353: 224 built from the data, 129 from the recorded play; 159 keep the options whole, 194 scroll as one page; smallest body share 0.36) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: A at open never acts on an option not whole on screen (91 open with the highlight out of view; A brought it into view in 91), and down then A acts only on a shown option; \"more below\" cues show while options (194) or text (77) go on below, readable, and hide at the end; a toast mid-modal (271 in the lane, 82 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: the \"more below\" cues are shown and readable in every palette at both text sizes (12 combinations, 24 cues)",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Charter land800x360: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Charter land844x390: every graded modal (353: 224 built from the data, 129 from the recorded play; 212 keep the options whole, 141 scroll as one page; smallest body share 0.42) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Charter land844x390: A at open never acts on an option not whole on screen (88 open with the highlight out of view; A brought it into view in 88), and down then A acts only on a shown option; \"more below\" cues show while options (141) or text (61) go on below, readable, and hide at the end; a toast mid-modal (305 in the lane, 48 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Charter land844x390: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Charter land844x390: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Charter land844x390: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Charter land844x390: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Charter land844x390: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Charter phone390x844: every graded modal (353: 224 built from the data, 129 from the recorded play; 353 keep the options whole, 0 scroll as one page; smallest body share 0.40) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Charter phone390x844: A at open never acts on an option not whole on screen (0 open with the highlight out of view; A brought it into view in 0), and down then A acts only on a shown option; \"more below\" cues show while options (0) or text (143) go on below, readable, and hide at the end; a toast mid-modal (353 in the lane, 0 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Charter phone390x844: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Charter phone390x844: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Charter phone390x844: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Charter phone390x844: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Charter phone390x844: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: every graded modal (353: 224 built from the data, 129 from the recorded play; 219 keep the options whole, 134 scroll as one page; smallest body share 0.40) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: A at open never acts on an option not whole on screen (87 open with the highlight out of view; A brought it into view in 87), and down then A acts only on a shown option; \"more below\" cues show while options (134) or text (61) go on below, readable, and hide at the end; a toast mid-modal (245 in the lane, 108 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: the \"more below\" cues are shown and readable in every palette at both text sizes (12 combinations, 24 cues)",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: a toast on the map sits inside the screen, clear of the HUD and the controls",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: with the Start menu open every pad button stays visible, tappable and clear of the box, and the pad drives it (down moves, B closes)",
+   "ok": true
+  },
+  {
+   "name": "Charter phone360x640: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop1280x800: every graded modal (353: 224 built from the data, 129 from the recorded play; 353 keep the options whole, 0 scroll as one page; smallest body share 0.62) shows every option whole, on screen and clear of the controls",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop1280x800: A at open never acts on an option not whole on screen (0 open with the highlight out of view; A brought it into view in 0), and down then A acts only on a shown option; \"more below\" cues show while options (0) or text (81) go on below, readable, and hide at the end; a toast mid-modal (353 in the lane, 0 held until close) never switches the layout",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop1280x800: a toast on the map sits inside the screen, clear of the HUD",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop1280x800: with a modal open the toast shows in the lane below the box, clear of the box, its options, the HUD and the controls; the map toast is hidden",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop1280x800: a toast raised during a modal goes to the lane; after the modal it shows on the map, then fades",
+   "ok": true
+  },
+  {
+   "name": "Charter desktop1280x800: no console errors or network requests",
+   "ok": true
+  }
+ ]
+}

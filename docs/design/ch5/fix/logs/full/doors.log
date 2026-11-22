@@ -1,0 +1,67 @@
+{
+ "suite": "doors",
+ "passed": 5,
+ "failed": 0,
+ "results": [
+  {
+   "name": "old save on a now-wall tile (hub 1,10) loads onto the nearest walkable floor tile",
+   "ok": true
+  },
+  {
+   "name": "every door pair: exit wall matches the arrival side, facing away from the door",
+   "ok": true
+  },
+  {
+   "name": "every exit tile is a working door",
+   "ok": true
+  },
+  {
+   "name": "checked all doors (at least 38 one-way links, Water Plant and Council Chambers included)",
+   "ok": true
+  },
+  {
+   "name": "no console errors or network requests",
+   "ok": true
+  }
+ ],
+ "doors": [
+  "hub 4,6 -> desk 9,9 up (exit up)",
+  "hub 6,17 -> board 9,9 up (exit up)",
+  "hub 24,17 -> dojo 9,9 up (exit up)",
+  "hub 19,10 -> mail 14,14 up (exit up)",
+  "hub 25,10 -> clerks 14,14 up (exit up)",
+  "hub 26,6 -> market 14,14 up (exit up)",
+  "hub 15,17 -> records 14,14 up (exit up)",
+  "hub 2,10 -> basement 14,1 down (exit down)",
+  "desk 9,10 -> hub 4,7 down (exit down)",
+  "board 9,10 -> hub 6,18 down (exit down)",
+  "dojo 9,10 -> hub 24,18 down (exit down)",
+  "mail 14,15 -> hub 19,11 down (exit down)",
+  "mail 29,10 -> mboard 1,6 right (exit right)",
+  "mboard 0,6 -> mail 28,10 left (exit left)",
+  "clerks 14,15 -> hub 25,11 down (exit down)",
+  "clerks 29,10 -> eboard 1,6 right (exit right)",
+  "eboard 0,6 -> clerks 28,10 left (exit left)",
+  "market 14,15 -> hub 26,7 down (exit down)",
+  "market 29,6 -> wboard 1,6 right (exit right)",
+  "wboard 0,6 -> market 28,6 left (exit left)",
+  "records 14,15 -> hub 15,18 down (exit down)",
+  "records 29,7 -> rboard 1,6 right (exit right)",
+  "rboard 0,6 -> records 28,7 left (exit left)",
+  "basement 14,0 -> hub 2,9 up (exit up)",
+  "basement 29,7 -> bboard 1,6 right (exit right)",
+  "basement 0,7 -> server 27,12 left (exit left)",
+  "bboard 0,6 -> basement 28,7 left (exit left)",
+  "server 28,12 -> basement 1,7 right (exit right)",
+  "server 28,7 -> svboard 1,5 right (exit right)",
+  "server 0,12 -> water 27,12 left (exit left)",
+  "svboard 0,5 -> server 27,7 left (exit left)",
+  "water 28,12 -> server 1,12 right (exit right)",
+  "water 0,7 -> ptboard 16,5 left (exit left)",
+  "water 14,15 -> council 14,1 down (exit down)",
+  "ptboard 17,5 -> water 1,7 right (exit right)",
+  "council 14,0 -> water 14,14 up (exit up)",
+  "council 0,7 -> ccboard 16,5 left (exit left)",
+  "ccboard 17,5 -> council 1,7 right (exit right)"
+ ]
+}

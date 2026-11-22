@@ -1,0 +1,4 @@
+ARCD-20261122-0206Z  2026-11-22 02:06 UTC  1300943 bytes -> editions/town-hall/index.html
+ARCD-20261122-0206Z  2026-11-22 02:06 UTC  1119234 bytes -> editions/crossroads/index.html
+ARCD-20261122-0206Z  2026-11-22 02:06 UTC  728796 bytes -> editions/charter/index.html
+ARCD-20261122-0206Z  2026-11-22 02:06 UTC  series menu -> index.html

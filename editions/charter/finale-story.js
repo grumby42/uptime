@@ -358,7 +358,7 @@ async function chFinBoardRound() {
   G.focusMax += 4; G.focus = G.focusMax; unlock('act', 'chfinboard'); touchCSF('Govern'); track();
   // Fix pass M-2: the citation reads the packets as sent.
   const iss = chFinSentIssues(); fin.issues = iss;
-  await say(iss.length ? 'This Board has the record of what went late or unsaid: ' + iss.join('; ') + '. The Heaving Line Badge (game) is for the week’s work all the same: the light line is thrown first, so the heavy one can follow. Next time, throw it on time.' :
+  await say(iss.length ? 'This Board has the record of what went late or unsaid: ' + iss.join('; ') + '. The Heaving Line Badge (game) is for the week’s work all the same: the light line is thrown first, so the heavy one can follow. Next time, throw it first, at the rule’s time.' :
     'You brought this Board the facts on time, and counsel first. This is the Heaving Line Badge (game): the light line thrown first, so the heavy one can follow.', who);
   await say('Its power: in the next edition, every facts packet arrives with its rule’s due time beside it. And Focus +4.', who);
   await say('16:00: your desk. The edition’s end.');

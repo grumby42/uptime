@@ -1,0 +1,2331 @@
+{
+ "suite": "settings",
+ "passed": 56,
+ "failed": 0,
+ "results": [
+  {
+   "name": "defaults: Classic, Soft, volume 60 but sound muted, all sounds, reduced flashing off without prefers-reduced-motion, normal text",
+   "ok": true
+  },
+  {
+   "name": "first start: a toast says \"Sound is off. Turn it on in Settings.\" in the toast lane below the title menu, clear of it, and it is remembered in uptime.settings",
+   "ok": true
+  },
+  {
+   "name": "sound off by default: menu moves after the first gesture are muted",
+   "ok": true
+  },
+  {
+   "name": "the title screen lists Settings",
+   "ok": true
+  },
+  {
+   "name": "Settings opens from the title screen with the keyboard (A)",
+   "ok": true
+  },
+  {
+   "name": "left/right on Colours changes the palette live (page repainted, preview canvas present)",
+   "ok": true
+  },
+  {
+   "name": "D-pad/keyboard navigation changes each value and keeps the cursor on the row",
+   "ok": true
+  },
+  {
+   "name": "B leaves Settings back to the title screen",
+   "ok": true
+  },
+  {
+   "name": "settings are stored in their own key (uptime.settings), not in the game save",
+   "ok": true
+  },
+  {
+   "name": "the sound-off toast shows once: not again after a reload",
+   "ok": true
+  },
+  {
+   "name": "persistence across reload: palette, volume, alerts only, reduced flashing and text size come back and are applied",
+   "ok": true
+  },
+  {
+   "name": "the Start menu lists Settings and opens the same page; New game keeps settings",
+   "ok": true
+  },
+  {
+   "name": "large text: modal body and options at 18px",
+   "ok": true
+  },
+  {
+   "name": "run 1: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "storage unavailable: settings still work in memory, the page says they are not kept, no errors",
+   "ok": true
+  },
+  {
+   "name": "v1 settings: sound is muted once (volume, palette and set kept, toast shown); turning it back on sticks after a reload",
+   "ok": true
+  },
+  {
+   "name": "corrupt stored settings: a non-number volume falls back to 60; a stored string, array, number or null gives the defaults",
+   "ok": true
+  },
+  {
+   "name": "run 2b: no console errors",
+   "ok": true
+  },
+  {
+   "name": "every palette is applied to canvas pixels (player sprite sampled exactly; each differs from Classic)",
+   "ok": true
+  },
+  {
+   "name": "every palette is applied to the CSS tokens and to real elements (modal page, heading, cursor row, HUD, dialogue panel)",
+   "ok": true
+  },
+  {
+   "name": "WCAG 2.x contrast >= 4.5:1 for every UI text/background pair in every palette (15 pairs x 6)",
+   "ok": true
+  },
+  {
+   "name": "Colour-blind safe: all 21 equipment state pairs (from PAL + stateBadge) and the bar and accent pairs have dE >= 20 under normal vision, protanopia, deuteranopia and tritanopia",
+   "ok": true
+  },
+  {
+   "name": "the colour-vision check bites: Classic has pairs that collapse under simulated colour blindness (why the badges exist)",
+   "ok": true
+  },
+  {
+   "name": "lit vs dark screens and windows also differ in brightness in every palette (PC >= 3:1, windows >= 1.5:1 plus a different sprite)",
+   "ok": true
+  },
+  {
+   "name": "the door marker outline and the state badges keep their contrast in every palette (>= 3:1, badge >= 4.5:1)",
+   "ok": true
+  },
+  {
+   "name": "no colour-only cue: every fixed / isolated / lit-because-fixed tile state an edition switches to carries a badge (26 swaps checked; lit PCs in editionTile, crTile)",
+   "ok": true
+  },
+  {
+   "name": "Front Desk: a PC with logging on carries the tick badge, one without does not",
+   "ok": true
+  },
+  {
+   "name": "rendered: the fixed kiosk shows the tick badge (sampled), the unfixed one does not",
+   "ok": true
+  },
+  {
+   "name": "battle bars carry their label and a number (Evidence, Dwell, Focus), not colour alone",
+   "ok": true
+  },
+  {
+   "name": "Dwell is hatched and Evidence solid in every palette, so the two fills never look alike",
+   "ok": true
+  },
+  {
+   "name": "Amber and Green: Evidence, Dwell and Focus fills >= 3:1 against their card (WCAG 1.4.11), Evidence vs Dwell >= 1.5:1 in brightness",
+   "ok": true
+  },
+  {
+   "name": "run 3: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "Classic in a dark system scheme: modal text pairs >= 4.5:1 (headings and warnings re-tinted for dark)",
+   "ok": true
+  },
+  {
+   "name": "autoplay policy: before any user gesture nothing is created or played",
+   "ok": true
+  },
+  {
+   "name": "the first key press unlocks audio (one context) and the menu move plays",
+   "ok": true
+  },
+  {
+   "name": "select and back play from the real menus",
+   "ok": true
+  },
+  {
+   "name": "battle start, alert arrives, correct, wrong and badge each play from real game events",
+   "ok": true
+  },
+  {
+   "name": "feedback is never sound-only: the correct / wrong sound comes with written feedback (Correct. / Rae reviewed it)",
+   "ok": true
+  },
+  {
+   "name": "all sounds: every event plays (move, select, back, alert, correct, wrong, badge, battle)",
+   "ok": true
+  },
+  {
+   "name": "alerts only: alert and battle start play; menu, verdict and badge sounds are filtered",
+   "ok": true
+  },
+  {
+   "name": "mute and volume 0 silence every event",
+   "ok": true
+  },
+  {
+   "name": "alerts only: changing the sound set or the volume in Settings still plays its preview; mute and volume 0 still silence it",
+   "ok": true
+  },
+  {
+   "name": "every sound set synthesises every event with Web Audio nodes (5 sets x 8 events)",
+   "ok": true
+  },
+  {
+   "name": "volume: 0 to 100 in steps of 10 drives the master gain",
+   "ok": true
+  },
+  {
+   "name": "run 5: no console errors or network requests",
+   "ok": true
+  },
+  {
+   "name": "AudioContext unavailable: no exception, events report noaudio, Test sound is harmless",
+   "ok": true
+  },
+  {
+   "name": "real Web Audio (Chromium): every set and event runs with no console errors",
+   "ok": true
+  },
+  {
+   "name": "prefers-reduced-motion: reduced flashing is on by default",
+   "ok": true
+  },
+  {
+   "name": "reduced flashing: the title screen field stands still (and scrolls when off)",
+   "ok": true
+  },
+  {
+   "name": "reduced flashing follows the system setting until the player changes it in Settings",
+   "ok": true
+  },
+  {
+   "name": "reduced flashing: no shake on actions, no blinking prompt, no fade between rooms (and they come back when off)",
+   "ok": true
+  },
+  {
+   "name": "run 6: no console errors",
+   "ok": true
+  },
+  {
+   "name": "Crossroads reads the shared settings (palette, text size), swaps its own palettes (the School District’s, the Clinic’s, Dispatch’s, the Airport’s and the finale’s too), and ticks its fixed equipment (not colour alone)",
+   "ok": true
+  },
+  {
+   "name": "Crossroads settings run: no console errors or requests",
+   "ok": true
+  },
+  {
+   "name": "Charter reads the shared settings (palette, text size), swaps its own palettes, and ticks the register once it is fixed (not colour alone)",
+   "ok": true
+  },
+  {
+   "name": "Charter settings run: no console errors or requests",
+   "ok": true
+  }
+ ],
+ "contrast": {
+  "classic": [
+   {
+    "pair": "paper-ink on paper",
+    "fg": "#1b2233",
+    "bg": "#f4f2ec",
+    "r": 14.18
+   },
+   {
+    "pair": "muted on paper",
+    "fg": "#4a5163",
+    "bg": "#f4f2ec",
+    "r": 7.08
+   },
+   {
+    "pair": "accent on paper",
+    "fg": "#2f6e3e",
+    "bg": "#f4f2ec",
+    "r": 5.48
+   },
+   {
+    "pair": "warn on paper",
+    "fg": "#b8432f",
+    "bg": "#f4f2ec",
+    "r": 4.83
+   },
+   {
+    "pair": "paper-ink on cur",
+    "fg": "#1b2233",
+    "bg": "#e6f5c8",
+    "r": 13.8
+   },
+   {
+    "pair": "muted on cur",
+    "fg": "#4a5163",
+    "bg": "#e6f5c8",
+    "r": 6.89
+   },
+   {
+    "pair": "box-ink on box",
+    "fg": "#1b2233",
+    "bg": "#ffffff",
+    "r": 15.87
+   },
+   {
+    "pair": "box-muted on box",
+    "fg": "#4a5163",
+    "bg": "#ffffff",
+    "r": 7.93
+   },
+   {
+    "pair": "box-accent on box",
+    "fg": "#2f6e3e",
+    "bg": "#ffffff",
+    "r": 6.14
+   },
+   {
+    "pair": "box-ink on box-cur",
+    "fg": "#1b2233",
+    "bg": "#e6f5c8",
+    "r": 13.8
+   },
+   {
+    "pair": "box-muted on box-cur",
+    "fg": "#4a5163",
+    "bg": "#e6f5c8",
+    "r": 6.89
+   },
+   {
+    "pair": "hud-ink on hud-bg",
+    "fg": "#ffffff",
+    "bg": "#161b29",
+    "r": 17.17
+   },
+   {
+    "pair": "gold on hud-bg",
+    "fg": "#ffd96a",
+    "bg": "#161b29",
+    "r": 12.58
+   },
+   {
+    "pair": "foot on bg",
+    "fg": "#8b93a7",
+    "bg": "#10141f",
+    "r": 5.98
+   },
+   {
+    "pair": "toast-ink on toast",
+    "fg": "#ffffff",
+    "bg": "#1b2233",
+    "r": 15.87
+   }
+  ],
+  "contrast": [
+   {
+    "pair": "paper-ink on paper",
+    "fg": "#ffffff",
+    "bg": "#000000",
+    "r": 21
+   },
+   {
+    "pair": "muted on paper",
+    "fg": "#d6d6d6",
+    "bg": "#000000",
+    "r": 14.45
+   },
+   {
+    "pair": "accent on paper",
+    "fg": "#ffe14d",
+    "bg": "#000000",
+    "r": 16.13
+   },
+   {
+    "pair": "warn on paper",
+    "fg": "#ff9a8a",
+    "bg": "#000000",
+    "r": 10.24
+   },
+   {
+    "pair": "paper-ink on cur",
+    "fg": "#ffffff",
+    "bg": "#1d3f80",
+    "r": 10.12
+   },
+   {
+    "pair": "muted on cur",
+    "fg": "#d6d6d6",
+    "bg": "#1d3f80",
+    "r": 6.96
+   },
+   {
+    "pair": "box-ink on box",
+    "fg": "#ffffff",
+    "bg": "#000000",
+    "r": 21
+   },
+   {
+    "pair": "box-muted on box",
+    "fg": "#d6d6d6",
+    "bg": "#000000",
+    "r": 14.45
+   },
+   {
+    "pair": "box-accent on box",
+    "fg": "#ffe14d",
+    "bg": "#000000",
+    "r": 16.13
+   },
+   {
+    "pair": "box-ink on box-cur",
+    "fg": "#ffffff",
+    "bg": "#1d3f80",
+    "r": 10.12
+   },
+   {
+    "pair": "box-muted on box-cur",
+    "fg": "#d6d6d6",
+    "bg": "#1d3f80",
+    "r": 6.96
+   },
+   {
+    "pair": "hud-ink on hud-bg",
+    "fg": "#ffffff",
+    "bg": "#000000",
+    "r": 21
+   },
+   {
+    "pair": "gold on hud-bg",
+    "fg": "#ffe14d",
+    "bg": "#000000",
+    "r": 16.13
+   },
+   {
+    "pair": "foot on bg",
+    "fg": "#d6d6d6",
+    "bg": "#000000",
+    "r": 14.45
+   },
+   {
+    "pair": "toast-ink on toast",
+    "fg": "#ffffff",
+    "bg": "#000000",
+    "r": 21
+   }
+  ],
+  "cbsafe": [
+   {
+    "pair": "paper-ink on paper",
+    "fg": "#1b2233",
+    "bg": "#f7f6f2",
+    "r": 14.68
+   },
+   {
+    "pair": "muted on paper",
+    "fg": "#4a5163",
+    "bg": "#f7f6f2",
+    "r": 7.33
+   },
+   {
+    "pair": "accent on paper",
+    "fg": "#005f96",
+    "bg": "#f7f6f2",
+    "r": 6.31
+   },
+   {
+    "pair": "warn on paper",
+    "fg": "#a34400",
+    "bg": "#f7f6f2",
+    "r": 5.74
+   },
+   {
+    "pair": "paper-ink on cur",
+    "fg": "#1b2233",
+    "bg": "#d6e9f8",
+    "r": 12.75
+   },
+   {
+    "pair": "muted on cur",
+    "fg": "#4a5163",
+    "bg": "#d6e9f8",
+    "r": 6.37
+   },
+   {
+    "pair": "box-ink on box",
+    "fg": "#1b2233",
+    "bg": "#ffffff",
+    "r": 15.87
+   },
+   {
+    "pair": "box-muted on box",
+    "fg": "#4a5163",
+    "bg": "#ffffff",
+    "r": 7.93
+   },
+   {
+    "pair": "box-accent on box",
+    "fg": "#005f96",
+    "bg": "#ffffff",
+    "r": 6.82
+   },
+   {
+    "pair": "box-ink on box-cur",
+    "fg": "#1b2233",
+    "bg": "#d6e9f8",
+    "r": 12.75
+   },
+   {
+    "pair": "box-muted on box-cur",
+    "fg": "#4a5163",
+    "bg": "#d6e9f8",
+    "r": 6.37
+   },
+   {
+    "pair": "hud-ink on hud-bg",
+    "fg": "#ffffff",
+    "bg": "#161b29",
+    "r": 17.17
+   },
+   {
+    "pair": "gold on hud-bg",
+    "fg": "#ffd96a",
+    "bg": "#161b29",
+    "r": 12.58
+   },
+   {
+    "pair": "foot on bg",
+    "fg": "#8b93a7",
+    "bg": "#10141f",
+    "r": 5.98
+   },
+   {
+    "pair": "toast-ink on toast",
+    "fg": "#ffffff",
+    "bg": "#1b2233",
+    "r": 15.87
+   }
+  ],
+  "amber": [
+   {
+    "pair": "paper-ink on paper",
+    "fg": "#ffcf70",
+    "bg": "#140b00",
+    "r": 13.37
+   },
+   {
+    "pair": "muted on paper",
+    "fg": "#d9a441",
+    "bg": "#140b00",
+    "r": 8.66
+   },
+   {
+    "pair": "accent on paper",
+    "fg": "#ffb000",
+    "bg": "#140b00",
+    "r": 10.64
+   },
+   {
+    "pair": "warn on paper",
+    "fg": "#ff9a52",
+    "bg": "#140b00",
+    "r": 9.28
+   },
+   {
+    "pair": "paper-ink on cur",
+    "fg": "#ffcf70",
+    "bg": "#4a2e00",
+    "r": 8.57
+   },
+   {
+    "pair": "muted on cur",
+    "fg": "#d9a441",
+    "bg": "#4a2e00",
+    "r": 5.55
+   },
+   {
+    "pair": "box-ink on box",
+    "fg": "#ffcf70",
+    "bg": "#140b00",
+    "r": 13.37
+   },
+   {
+    "pair": "box-muted on box",
+    "fg": "#d9a441",
+    "bg": "#140b00",
+    "r": 8.66
+   },
+   {
+    "pair": "box-accent on box",
+    "fg": "#ffb000",
+    "bg": "#140b00",
+    "r": 10.64
+   },
+   {
+    "pair": "box-ink on box-cur",
+    "fg": "#ffcf70",
+    "bg": "#4a2e00",
+    "r": 8.57
+   },
+   {
+    "pair": "box-muted on box-cur",
+    "fg": "#d9a441",
+    "bg": "#4a2e00",
+    "r": 5.55
+   },
+   {
+    "pair": "hud-ink on hud-bg",
+    "fg": "#ffcf70",
+    "bg": "#140b00",
+    "r": 13.37
+   },
+   {
+    "pair": "gold on hud-bg",
+    "fg": "#ffd88a",
+    "bg": "#140b00",
+    "r": 14.33
+   },
+   {
+    "pair": "foot on bg",
+    "fg": "#d9a441",
+    "bg": "#0a0600",
+    "r": 8.99
+   },
+   {
+    "pair": "toast-ink on toast",
+    "fg": "#ffcf70",
+    "bg": "#140b00",
+    "r": 13.37
+   }
+  ],
+  "green": [
+   {
+    "pair": "paper-ink on paper",
+    "fg": "#9dffb0",
+    "bg": "#03120a",
+    "r": 15.86
+   },
+   {
+    "pair": "muted on paper",
+    "fg": "#5fd47a",
+    "bg": "#03120a",
+    "r": 10.22
+   },
+   {
+    "pair": "accent on paper",
+    "fg": "#c2ffcf",
+    "bg": "#03120a",
+    "r": 16.9
+   },
+   {
+    "pair": "warn on paper",
+    "fg": "#ffe28a",
+    "bg": "#03120a",
+    "r": 15.07
+   },
+   {
+    "pair": "paper-ink on cur",
+    "fg": "#9dffb0",
+    "bg": "#0d4a1f",
+    "r": 8.61
+   },
+   {
+    "pair": "muted on cur",
+    "fg": "#5fd47a",
+    "bg": "#0d4a1f",
+    "r": 5.55
+   },
+   {
+    "pair": "box-ink on box",
+    "fg": "#9dffb0",
+    "bg": "#03120a",
+    "r": 15.86
+   },
+   {
+    "pair": "box-muted on box",
+    "fg": "#5fd47a",
+    "bg": "#03120a",
+    "r": 10.22
+   },
+   {
+    "pair": "box-accent on box",
+    "fg": "#c2ffcf",
+    "bg": "#03120a",
+    "r": 16.9
+   },
+   {
+    "pair": "box-ink on box-cur",
+    "fg": "#9dffb0",
+    "bg": "#0d4a1f",
+    "r": 8.61
+   },
+   {
+    "pair": "box-muted on box-cur",
+    "fg": "#5fd47a",
+    "bg": "#0d4a1f",
+    "r": 5.55
+   },
+   {
+    "pair": "hud-ink on hud-bg",
+    "fg": "#9dffb0",
+    "bg": "#03120a",
+    "r": 15.86
+   },
+   {
+    "pair": "gold on hud-bg",
+    "fg": "#c2ffcf",
+    "bg": "#03120a",
+    "r": 16.9
+   },
+   {
+    "pair": "foot on bg",
+    "fg": "#5fd47a",
+    "bg": "#010a03",
+    "r": 10.69
+   },
+   {
+    "pair": "toast-ink on toast",
+    "fg": "#9dffb0",
+    "bg": "#03120a",
+    "r": 15.86
+   }
+  ],
+  "light": [
+   {
+    "pair": "paper-ink on paper",
+    "fg": "#1b2233",
+    "bg": "#fdfcf8",
+    "r": 15.46
+   },
+   {
+    "pair": "muted on paper",
+    "fg": "#4a5163",
+    "bg": "#fdfcf8",
+    "r": 7.72
+   },
+   {
+    "pair": "accent on paper",
+    "fg": "#2f6e3e",
+    "bg": "#fdfcf8",
+    "r": 5.98
+   },
+   {
+    "pair": "warn on paper",
+    "fg": "#a8361f",
+    "bg": "#fdfcf8",
+    "r": 6.37
+   },
+   {
+    "pair": "paper-ink on cur",
+    "fg": "#1b2233",
+    "bg": "#dfeccb",
+    "r": 12.85
+   },
+   {
+    "pair": "muted on cur",
+    "fg": "#4a5163",
+    "bg": "#dfeccb",
+    "r": 6.42
+   },
+   {
+    "pair": "box-ink on box",
+    "fg": "#1b2233",
+    "bg": "#ffffff",
+    "r": 15.87
+   },
+   {
+    "pair": "box-muted on box",
+    "fg": "#4a5163",
+    "bg": "#ffffff",
+    "r": 7.93
+   },
+   {
+    "pair": "box-accent on box",
+    "fg": "#2f6e3e",
+    "bg": "#ffffff",
+    "r": 6.14
+   },
+   {
+    "pair": "box-ink on box-cur",
+    "fg": "#1b2233",
+    "bg": "#dfeccb",
+    "r": 12.85
+   },
+   {
+    "pair": "box-muted on box-cur",
+    "fg": "#4a5163",
+    "bg": "#dfeccb",
+    "r": 6.42
+   },
+   {
+    "pair": "hud-ink on hud-bg",
+    "fg": "#1b2233",
+    "bg": "#f4f1e8",
+    "r": 14.05
+   },
+   {
+    "pair": "gold on hud-bg",
+    "fg": "#6b4a00",
+    "bg": "#f4f1e8",
+    "r": 7.14
+   },
+   {
+    "pair": "foot on bg",
+    "fg": "#4a5163",
+    "bg": "#e9e6dc",
+    "r": 6.35
+   },
+   {
+    "pair": "toast-ink on toast",
+    "fg": "#ffffff",
+    "bg": "#1b2233",
+    "r": 15.87
+   }
+  ],
+  "classic (dark scheme)": [
+   {
+    "pair": "paper-ink on paper",
+    "fg": "#e9edf5",
+    "bg": "#1f2533",
+    "r": 13.06
+   },
+   {
+    "pair": "muted on paper",
+    "fg": "#aab3c5",
+    "bg": "#1f2533",
+    "r": 7.27
+   },
+   {
+    "pair": "accent on paper",
+    "fg": "#a6d96a",
+    "bg": "#1f2533",
+    "r": 9.31
+   },
+   {
+    "pair": "warn on paper",
+    "fg": "#ff8a70",
+    "bg": "#1f2533",
+    "r": 6.65
+   },
+   {
+    "pair": "paper-ink on cur",
+    "fg": "#e9edf5",
+    "bg": "#2c4a35",
+    "r": 8.37
+   },
+   {
+    "pair": "muted on cur",
+    "fg": "#aab3c5",
+    "bg": "#2c4a35",
+    "r": 4.66
+   },
+   {
+    "pair": "box-accent on box",
+    "fg": "#2f6e3e",
+    "bg": "#ffffff",
+    "r": 6.14
+   }
+  ]
+ },
+ "cvd": {
+  "classic": [
+   {
+    "name": "pcOff/pcOnOk[3]",
+    "i": 3,
+    "a": "#2b2f3a",
+    "b": "#9ff0c8",
+    "normal": 79.8,
+    "protan": 74.9,
+    "deutan": 70.3,
+    "tritan": 74.6
+   },
+   {
+    "name": "kioskBad/kioskOk[3]",
+    "i": 3,
+    "a": "#e58a5c",
+    "b": "#9ff0c8",
+    "normal": 72.9,
+    "protan": 34.3,
+    "deutan": 37.8,
+    "tritan": 87.4
+   },
+   {
+    "name": "closetBad/closetOk[3]",
+    "i": 3,
+    "a": "#e58a5c",
+    "b": "#9ff0c8",
+    "normal": 72.9,
+    "protan": 34.3,
+    "deutan": 37.8,
+    "tritan": 87.4
+   },
+   {
+    "name": "pcOff/pcIso[2]",
+    "i": 2,
+    "a": "#a8703f",
+    "b": "#6d7fa6",
+    "normal": 60.4,
+    "protan": 56.3,
+    "deutan": 61.1,
+    "tritan": 51.3
+   },
+   {
+    "name": "wafBox/wafOn[2]",
+    "i": 2,
+    "a": "#b8432f",
+    "b": "#9fc4f0",
+    "normal": 85.6,
+    "protan": 66.6,
+    "deutan": 73.7,
+    "tritan": 98.3
+   },
+   {
+    "name": "vault/vaultOk[1]",
+    "i": 1,
+    "a": "#4a1414",
+    "b": "#2f4f8a",
+    "normal": 56.6,
+    "protan": 50,
+    "deutan": 57.5,
+    "tritan": 62.4
+   },
+   {
+    "name": "collector/collectorOk[3]",
+    "i": 3,
+    "a": "#e58a5c",
+    "b": "#9ff0c8",
+    "normal": 72.9,
+    "protan": 34.3,
+    "deutan": 37.8,
+    "tritan": 87.4
+   },
+   {
+    "name": "edgefw/edgefwOk[0]",
+    "i": 0,
+    "a": "#4a1414",
+    "b": "#1b2233",
+    "normal": 35.2,
+    "protan": 20.6,
+    "deutan": 29.8,
+    "tritan": 44.1
+   },
+   {
+    "name": "ntpBad/ntpOk[2]",
+    "i": 2,
+    "a": "#b8432f",
+    "b": "#2f6e3e",
+    "normal": 79.6,
+    "protan": 5.1,
+    "deutan": 23.8,
+    "tritan": 93.1
+   },
+   {
+    "name": "svPaw/svPawOk[3]",
+    "i": 3,
+    "a": "#a6d96a",
+    "b": "#9ff0c8",
+    "normal": 38.2,
+    "protan": 40.6,
+    "deutan": 37.7,
+    "tritan": 19
+   },
+   {
+    "name": "svCage/svCageOk[2]",
+    "i": 2,
+    "a": "#5a6fa0",
+    "b": "#2f6e3e",
+    "normal": 62.4,
+    "protan": 54.1,
+    "deutan": 49,
+    "tritan": 13.9
+   },
+   {
+    "name": "wtHmi/wtHmiOk[3]",
+    "i": 3,
+    "a": "#a6d96a",
+    "b": "#9ff0c8",
+    "normal": 38.2,
+    "protan": 40.6,
+    "deutan": 37.7,
+    "tritan": 19
+   },
+   {
+    "name": "wtPlc/wtPlcOk[2]",
+    "i": 2,
+    "a": "#5a6fa0",
+    "b": "#2f6e3e",
+    "normal": 62.4,
+    "protan": 54.1,
+    "deutan": 49,
+    "tritan": 13.9
+   },
+   {
+    "name": "wtFw/wtFwOk[2]",
+    "i": 2,
+    "a": "#5a6fa0",
+    "b": "#2f6e3e",
+    "normal": 62.4,
+    "protan": 54.1,
+    "deutan": 49,
+    "tritan": 13.9
+   },
+   {
+    "name": "wtVend/wtVendOk[2]",
+    "i": 2,
+    "a": "#5a6fa0",
+    "b": "#2f6e3e",
+    "normal": 62.4,
+    "protan": 54.1,
+    "deutan": 49,
+    "tritan": 13.9
+   },
+   {
+    "name": "wtNet/wtNetOk[3]",
+    "i": 3,
+    "a": "#a6d96a",
+    "b": "#9ff0c8",
+    "normal": 38.2,
+    "protan": 40.6,
+    "deutan": 37.7,
+    "tritan": 19
+   },
+   {
+    "name": "ccClerk/ccClerkOk[2]",
+    "i": 2,
+    "a": "#5a6fa0",
+    "b": "#2f6e3e",
+    "normal": 62.4,
+    "protan": 54.1,
+    "deutan": 49,
+    "tritan": 13.9
+   },
+   {
+    "name": "ccWar/ccWarOk[2]",
+    "i": 2,
+    "a": "#5a6fa0",
+    "b": "#2f6e3e",
+    "normal": 62.4,
+    "protan": 54.1,
+    "deutan": 49,
+    "tritan": 13.9
+   },
+   {
+    "name": "ccTeam/ccTeamOk[2]",
+    "i": 2,
+    "a": "#5a6fa0",
+    "b": "#2f6e3e",
+    "normal": 62.4,
+    "protan": 54.1,
+    "deutan": 49,
+    "tritan": 13.9
+   },
+   {
+    "name": "pcOn/pcIso[2]",
+    "i": 2,
+    "a": "#a8703f",
+    "b": "#6d7fa6",
+    "normal": 60.4,
+    "protan": 56.3,
+    "deutan": 61.1,
+    "tritan": 51.3
+   },
+   {
+    "name": "pcOnOk/pcIso[2]",
+    "i": 2,
+    "a": "#a8703f",
+    "b": "#6d7fa6",
+    "normal": 60.4,
+    "protan": 56.3,
+    "deutan": 61.1,
+    "tritan": 51.3
+   },
+   {
+    "name": "Evidence/Dwell bars",
+    "a": "#2f74b5",
+    "b": "#b8432f",
+    "normal": 89.7,
+    "protan": 66.9,
+    "deutan": 84.5,
+    "tritan": 98.9
+   },
+   {
+    "name": "UI accent/warn",
+    "a": "#2f6e3e",
+    "b": "#b8432f",
+    "normal": 79.6,
+    "protan": 5.1,
+    "deutan": 23.8,
+    "tritan": 93.1
+   }
+  ],
+  "contrast": [
+   {
+    "name": "pcOff/pcOnOk[3]",
+    "i": 3,
+    "a": "#0a0b0e",
+    "b": "#d9feec",
+    "normal": 95.1,
+    "protan": 95,
+    "deutan": 93.1,
+    "tritan": 94.7
+   },
+   {
+    "name": "kioskBad/kioskOk[3]",
+    "i": 3,
+    "a": "#fb9967",
+    "b": "#d9feec",
+    "normal": 64.8,
+    "protan": 42.2,
+    "deutan": 46.1,
+    "tritan": 69.6
+   },
+   {
+    "name": "closetBad/closetOk[3]",
+    "i": 3,
+    "a": "#fb9967",
+    "b": "#d9feec",
+    "normal": 64.8,
+    "protan": 42.2,
+    "deutan": 46.1,
+    "tritan": 69.6
+   },
+   {
+    "name": "pcOff/pcIso[3]",
+    "i": 3,
+    "a": "#0a0b0e",
+    "b": "#96b8ea",
+    "normal": 76,
+    "protan": 77.2,
+    "deutan": 75.6,
+    "tritan": 74.8
+   },
+   {
+    "name": "wafBox/wafOn[2]",
+    "i": 2,
+    "a": "#c23219",
+    "b": "#d9eafe",
+    "normal": 95.4,
+    "protan": 74.8,
+    "deutan": 76.9,
+    "tritan": 102.8
+   },
+   {
+    "name": "vault/vaultOk[2]",
+    "i": 2,
+    "a": "#8f796b",
+    "b": "#d9eafe",
+    "normal": 46.1,
+    "protan": 46.3,
+    "deutan": 45.2,
+    "tritan": 46.5
+   },
+   {
+    "name": "collector/collectorOk[3]",
+    "i": 3,
+    "a": "#fb9967",
+    "b": "#d9feec",
+    "normal": 64.8,
+    "protan": 42.2,
+    "deutan": 46.1,
+    "tritan": 69.6
+   },
+   {
+    "name": "edgefw/edgefwOk[2]",
+    "i": 2,
+    "a": "#dd914f",
+    "b": "#4fae3c",
+    "normal": 72.3,
+    "protan": 15.1,
+    "deutan": 7.7,
+    "tritan": 78.5
+   },
+   {
+    "name": "ntpBad/ntpOk[2]",
+    "i": 2,
+    "a": "#c23219",
+    "b": "#1a5227",
+    "normal": 90,
+    "protan": 13.2,
+    "deutan": 38.8,
+    "tritan": 102.8
+   },
+   {
+    "name": "svPaw/svPawOk[3]",
+    "i": 3,
+    "a": "#b7ee77",
+    "b": "#d9feec",
+    "normal": 52.3,
+    "protan": 52.7,
+    "deutan": 45.9,
+    "tritan": 11.3
+   },
+   {
+    "name": "svCage/svCageOk[2]",
+    "i": 2,
+    "a": "#4f6aa9",
+    "b": "#1a5227",
+    "normal": 69.7,
+    "protan": 62.3,
+    "deutan": 58.3,
+    "tritan": 19.7
+   },
+   {
+    "name": "wtHmi/wtHmiOk[3]",
+    "i": 3,
+    "a": "#b7ee77",
+    "b": "#d9feec",
+    "normal": 52.3,
+    "protan": 52.7,
+    "deutan": 45.9,
+    "tritan": 11.3
+   },
+   {
+    "name": "wtPlc/wtPlcOk[2]",
+    "i": 2,
+    "a": "#4f6aa9",
+    "b": "#1a5227",
+    "normal": 69.7,
+    "protan": 62.3,
+    "deutan": 58.3,
+    "tritan": 19.7
+   },
+   {
+    "name": "wtFw/wtFwOk[2]",
+    "i": 2,
+    "a": "#4f6aa9",
+    "b": "#1a5227",
+    "normal": 69.7,
+    "protan": 62.3,
+    "deutan": 58.3,
+    "tritan": 19.7
+   },
+   {
+    "name": "wtVend/wtVendOk[2]",
+    "i": 2,
+    "a": "#4f6aa9",
+    "b": "#1a5227",
+    "normal": 69.7,
+    "protan": 62.3,
+    "deutan": 58.3,
+    "tritan": 19.7
+   },
+   {
+    "name": "wtNet/wtNetOk[3]",
+    "i": 3,
+    "a": "#b7ee77",
+    "b": "#d9feec",
+    "normal": 52.3,
+    "protan": 52.7,
+    "deutan": 45.9,
+    "tritan": 11.3
+   },
+   {
+    "name": "ccClerk/ccClerkOk[2]",
+    "i": 2,
+    "a": "#4f6aa9",
+    "b": "#1a5227",
+    "normal": 69.7,
+    "protan": 62.3,
+    "deutan": 58.3,
+    "tritan": 19.7
+   },
+   {
+    "name": "ccWar/ccWarOk[2]",
+    "i": 2,
+    "a": "#4f6aa9",
+    "b": "#1a5227",
+    "normal": 69.7,
+    "protan": 62.3,
+    "deutan": 58.3,
+    "tritan": 19.7
+   },
+   {
+    "name": "ccTeam/ccTeamOk[2]",
+    "i": 2,
+    "a": "#4f6aa9",
+    "b": "#1a5227",
+    "normal": 69.7,
+    "protan": 62.3,
+    "deutan": 58.3,
+    "tritan": 19.7
+   },
+   {
+    "name": "pcOn/pcIso[2]",
+    "i": 2,
+    "a": "#ae692d",
+    "b": "#6b81b2",
+    "normal": 74.6,
+    "protan": 69.9,
+    "deutan": 75,
+    "tritan": 63.2
+   },
+   {
+    "name": "pcOnOk/pcIso[2]",
+    "i": 2,
+    "a": "#ae692d",
+    "b": "#6b81b2",
+    "normal": 74.6,
+    "protan": 69.9,
+    "deutan": 75,
+    "tritan": 63.2
+   },
+   {
+    "name": "Evidence/Dwell bars",
+    "a": "#196ebd",
+    "b": "#c23219",
+    "normal": 108.4,
+    "protan": 83.6,
+    "deutan": 103.5,
+    "tritan": 110.2
+   },
+   {
+    "name": "UI accent/warn",
+    "a": "#ffe14d",
+    "b": "#ff9a8a",
+    "normal": 65.2,
+    "protan": 63.1,
+    "deutan": 44.8,
+    "tritan": 34.4
+   }
+  ],
+  "cbsafe": [
+   {
+    "name": "pcOff/pcOnOk[3]",
+    "i": 3,
+    "a": "#2b2f3a",
+    "b": "#007fff",
+    "normal": 75,
+    "protan": 70,
+    "deutan": 76.3,
+    "tritan": 49.9
+   },
+   {
+    "name": "kioskBad/kioskOk[2]",
+    "i": 2,
+    "a": "#ca5c1d",
+    "b": "#0072e4",
+    "normal": 120.8,
+    "protan": 110.5,
+    "deutan": 124.9,
+    "tritan": 97.6
+   },
+   {
+    "name": "closetBad/closetOk[3]",
+    "i": 3,
+    "a": "#e7995a",
+    "b": "#007fff",
+    "normal": 117,
+    "protan": 107.4,
+    "deutan": 124,
+    "tritan": 81
+   },
+   {
+    "name": "pcOff/pcIso[2]",
+    "i": 2,
+    "a": "#ca751d",
+    "b": "#6d7fa6",
+    "normal": 84.4,
+    "protan": 79.2,
+    "deutan": 82.7,
+    "tritan": 68.8
+   },
+   {
+    "name": "wafBox/wafOn[2]",
+    "i": 2,
+    "a": "#ca5c1d",
+    "b": "#007fff",
+    "normal": 126.6,
+    "protan": 114.7,
+    "deutan": 131.3,
+    "tritan": 100.4
+   },
+   {
+    "name": "vault/vaultOk[3]",
+    "i": 3,
+    "a": "#e7995a",
+    "b": "#007fff",
+    "normal": 117,
+    "protan": 107.4,
+    "deutan": 124,
+    "tritan": 81
+   },
+   {
+    "name": "collector/collectorOk[3]",
+    "i": 3,
+    "a": "#e7995a",
+    "b": "#007fff",
+    "normal": 117,
+    "protan": 107.4,
+    "deutan": 124,
+    "tritan": 81
+   },
+   {
+    "name": "edgefw/edgefwOk[2]",
+    "i": 2,
+    "a": "#e38f3a",
+    "b": "#007fff",
+    "normal": 128.3,
+    "protan": 120.1,
+    "deutan": 134.3,
+    "tritan": 85.6
+   },
+   {
+    "name": "ntpBad/ntpOk[2]",
+    "i": 2,
+    "a": "#ca5c1d",
+    "b": "#0072e4",
+    "normal": 120.8,
+    "protan": 110.5,
+    "deutan": 124.9,
+    "tritan": 97.6
+   },
+   {
+    "name": "svPaw/svPawOk[3]",
+    "i": 3,
+    "a": "#6ad9bf",
+    "b": "#007fff",
+    "normal": 97.4,
+    "protan": 77.9,
+    "deutan": 80.4,
+    "tritan": 28.8
+   },
+   {
+    "name": "svCage/svCageOk[1]",
+    "i": 1,
+    "a": "#2a3550",
+    "b": "#005bb6",
+    "normal": 41.3,
+    "protan": 39.4,
+    "deutan": 42.7,
+    "tritan": 25.7
+   },
+   {
+    "name": "wtHmi/wtHmiOk[3]",
+    "i": 3,
+    "a": "#6ad9bf",
+    "b": "#007fff",
+    "normal": 97.4,
+    "protan": 77.9,
+    "deutan": 80.4,
+    "tritan": 28.8
+   },
+   {
+    "name": "wtPlc/wtPlcOk[1]",
+    "i": 1,
+    "a": "#2a3550",
+    "b": "#005bb6",
+    "normal": 41.3,
+    "protan": 39.4,
+    "deutan": 42.7,
+    "tritan": 25.7
+   },
+   {
+    "name": "wtFw/wtFwOk[1]",
+    "i": 1,
+    "a": "#2a3550",
+    "b": "#005bb6",
+    "normal": 41.3,
+    "protan": 39.4,
+    "deutan": 42.7,
+    "tritan": 25.7
+   },
+   {
+    "name": "wtVend/wtVendOk[1]",
+    "i": 1,
+    "a": "#2a3550",
+    "b": "#005bb6",
+    "normal": 41.3,
+    "protan": 39.4,
+    "deutan": 42.7,
+    "tritan": 25.7
+   },
+   {
+    "name": "wtNet/wtNetOk[3]",
+    "i": 3,
+    "a": "#6ad9bf",
+    "b": "#007fff",
+    "normal": 97.4,
+    "protan": 77.9,
+    "deutan": 80.4,
+    "tritan": 28.8
+   },
+   {
+    "name": "ccClerk/ccClerkOk[1]",
+    "i": 1,
+    "a": "#2a3550",
+    "b": "#005bb6",
+    "normal": 41.3,
+    "protan": 39.4,
+    "deutan": 42.7,
+    "tritan": 25.7
+   },
+   {
+    "name": "ccWar/ccWarOk[1]",
+    "i": 1,
+    "a": "#2a3550",
+    "b": "#005bb6",
+    "normal": 41.3,
+    "protan": 39.4,
+    "deutan": 42.7,
+    "tritan": 25.7
+   },
+   {
+    "name": "ccTeam/ccTeamOk[1]",
+    "i": 1,
+    "a": "#2a3550",
+    "b": "#005bb6",
+    "normal": 41.3,
+    "protan": 39.4,
+    "deutan": 42.7,
+    "tritan": 25.7
+   },
+   {
+    "name": "pcOn/pcIso[2]",
+    "i": 2,
+    "a": "#ca751d",
+    "b": "#6d7fa6",
+    "normal": 84.4,
+    "protan": 79.2,
+    "deutan": 82.7,
+    "tritan": 68.8
+   },
+   {
+    "name": "pcOnOk/pcIso[1]",
+    "i": 1,
+    "a": "#0067cd",
+    "b": "#3a4a6b",
+    "normal": 42.1,
+    "protan": 39.4,
+    "deutan": 43.5,
+    "tritan": 22.4
+   },
+   {
+    "name": "Evidence/Dwell bars",
+    "a": "#2f74b5",
+    "b": "#ca5c1d",
+    "normal": 102.1,
+    "protan": 86.6,
+    "deutan": 99.7,
+    "tritan": 96.4
+   },
+   {
+    "name": "UI accent/warn",
+    "a": "#005f96",
+    "b": "#a34400",
+    "normal": 96.4,
+    "protan": 77.6,
+    "deutan": 91.1,
+    "tritan": 86.1
+   }
+  ],
+  "amber": [
+   {
+    "name": "pcOff/pcOnOk[3]",
+    "i": 3,
+    "a": "#412500",
+    "b": "#f3b851",
+    "normal": 69.2,
+    "protan": 69.8,
+    "deutan": 69.6,
+    "tritan": 61
+   },
+   {
+    "name": "kioskBad/kioskOk[3]",
+    "i": 3,
+    "a": "#c67d0e",
+    "b": "#f3b851",
+    "normal": 22.4,
+    "protan": 20.6,
+    "deutan": 19.5,
+    "tritan": 22.3
+   },
+   {
+    "name": "closetBad/closetOk[3]",
+    "i": 3,
+    "a": "#c67d0e",
+    "b": "#f3b851",
+    "normal": 22.4,
+    "protan": 20.6,
+    "deutan": 19.5,
+    "tritan": 22.3
+   },
+   {
+    "name": "pcOff/pcIso[3]",
+    "i": 3,
+    "a": "#412500",
+    "b": "#c57c0e",
+    "normal": 55.7,
+    "protan": 53,
+    "deutan": 54.8,
+    "tritan": 47.8
+   },
+   {
+    "name": "wafBox/wafOn[2]",
+    "i": 2,
+    "a": "#864e00",
+    "b": "#e89a1c",
+    "normal": 37.8,
+    "protan": 39.4,
+    "deutan": 38.2,
+    "tritan": 32.8
+   },
+   {
+    "name": "vault/vaultOk[2]",
+    "i": 2,
+    "a": "#a05d00",
+    "b": "#e89a1c",
+    "normal": 28.2,
+    "protan": 30.5,
+    "deutan": 28.3,
+    "tritan": 24.1
+   },
+   {
+    "name": "collector/collectorOk[3]",
+    "i": 3,
+    "a": "#c67d0e",
+    "b": "#f3b851",
+    "normal": 22.4,
+    "protan": 20.6,
+    "deutan": 19.5,
+    "tritan": 22.3
+   },
+   {
+    "name": "edgefw/edgefwOk[1]",
+    "i": 1,
+    "a": "#734300",
+    "b": "#7b4700",
+    "normal": 3.2,
+    "protan": 2.6,
+    "deutan": 3,
+    "tritan": 3.1
+   },
+   {
+    "name": "ntpBad/ntpOk[2]",
+    "i": 2,
+    "a": "#864e00",
+    "b": "#7b4700",
+    "normal": 4.5,
+    "protan": 4.1,
+    "deutan": 4.5,
+    "tritan": 4
+   },
+   {
+    "name": "svPaw/svPawOk[3]",
+    "i": 3,
+    "a": "#eba32c",
+    "b": "#f3b851",
+    "normal": 12,
+    "protan": 11.6,
+    "deutan": 9.7,
+    "tritan": 11.8
+   },
+   {
+    "name": "svCage/svCageOk[2]",
+    "i": 2,
+    "a": "#8d5200",
+    "b": "#7b4700",
+    "normal": 7.3,
+    "protan": 6.5,
+    "deutan": 7.2,
+    "tritan": 6.5
+   },
+   {
+    "name": "wtHmi/wtHmiOk[3]",
+    "i": 3,
+    "a": "#eba32c",
+    "b": "#f3b851",
+    "normal": 12,
+    "protan": 11.6,
+    "deutan": 9.7,
+    "tritan": 11.8
+   },
+   {
+    "name": "wtPlc/wtPlcOk[2]",
+    "i": 2,
+    "a": "#8d5200",
+    "b": "#7b4700",
+    "normal": 7.3,
+    "protan": 6.5,
+    "deutan": 7.2,
+    "tritan": 6.5
+   },
+   {
+    "name": "wtFw/wtFwOk[2]",
+    "i": 2,
+    "a": "#8d5200",
+    "b": "#7b4700",
+    "normal": 7.3,
+    "protan": 6.5,
+    "deutan": 7.2,
+    "tritan": 6.5
+   },
+   {
+    "name": "wtVend/wtVendOk[2]",
+    "i": 2,
+    "a": "#8d5200",
+    "b": "#7b4700",
+    "normal": 7.3,
+    "protan": 6.5,
+    "deutan": 7.2,
+    "tritan": 6.5
+   },
+   {
+    "name": "wtNet/wtNetOk[3]",
+    "i": 3,
+    "a": "#eba32c",
+    "b": "#f3b851",
+    "normal": 12,
+    "protan": 11.6,
+    "deutan": 9.7,
+    "tritan": 11.8
+   },
+   {
+    "name": "ccClerk/ccClerkOk[2]",
+    "i": 2,
+    "a": "#8d5200",
+    "b": "#7b4700",
+    "normal": 7.3,
+    "protan": 6.5,
+    "deutan": 7.2,
+    "tritan": 6.5
+   },
+   {
+    "name": "ccWar/ccWarOk[2]",
+    "i": 2,
+    "a": "#8d5200",
+    "b": "#7b4700",
+    "normal": 7.3,
+    "protan": 6.5,
+    "deutan": 7.2,
+    "tritan": 6.5
+   },
+   {
+    "name": "ccTeam/ccTeamOk[2]",
+    "i": 2,
+    "a": "#8d5200",
+    "b": "#7b4700",
+    "normal": 7.3,
+    "protan": 6.5,
+    "deutan": 7.2,
+    "tritan": 6.5
+   },
+   {
+    "name": "pcOn/pcIso[3]",
+    "i": 3,
+    "a": "#f3b851",
+    "b": "#c57c0e",
+    "normal": 22.7,
+    "protan": 20.9,
+    "deutan": 19.8,
+    "tritan": 22.6
+   },
+   {
+    "name": "pcOnOk/pcIso[3]",
+    "i": 3,
+    "a": "#f3b851",
+    "b": "#c57c0e",
+    "normal": 22.7,
+    "protan": 20.9,
+    "deutan": 19.8,
+    "tritan": 22.6
+   },
+   {
+    "name": "Evidence/Dwell bars",
+    "a": "#ffb000",
+    "b": "#b86500",
+    "normal": 35.2,
+    "protan": 34.9,
+    "deutan": 32.7,
+    "tritan": 26
+   },
+   {
+    "name": "UI accent/warn",
+    "a": "#ffb000",
+    "b": "#ff9a52",
+    "normal": 31.4,
+    "protan": 27.5,
+    "deutan": 24.3,
+    "tritan": 10.7
+   }
+  ],
+  "green": [
+   {
+    "name": "pcOff/pcOnOk[3]",
+    "i": 3,
+    "a": "#093313",
+    "b": "#7fe695",
+    "normal": 71.6,
+    "protan": 69.3,
+    "deutan": 66.1,
+    "tritan": 68.5
+   },
+   {
+    "name": "kioskBad/kioskOk[3]",
+    "i": 3,
+    "a": "#2da549",
+    "b": "#7fe695",
+    "normal": 25.5,
+    "protan": 25.4,
+    "deutan": 24.8,
+    "tritan": 23.7
+   },
+   {
+    "name": "closetBad/closetOk[3]",
+    "i": 3,
+    "a": "#2da549",
+    "b": "#7fe695",
+    "normal": 25.5,
+    "protan": 25.4,
+    "deutan": 24.8,
+    "tritan": 23.7
+   },
+   {
+    "name": "pcOff/pcIso[3]",
+    "i": 3,
+    "a": "#093313",
+    "b": "#2da448",
+    "normal": 55.6,
+    "protan": 50.7,
+    "deutan": 45.3,
+    "tritan": 46.9
+   },
+   {
+    "name": "wafBox/wafOn[2]",
+    "i": 2,
+    "a": "#166529",
+    "b": "#3fcf5f",
+    "normal": 47,
+    "protan": 43.2,
+    "deutan": 39.1,
+    "tritan": 41
+   },
+   {
+    "name": "vault/vaultOk[2]",
+    "i": 2,
+    "a": "#1a7831",
+    "b": "#3fcf5f",
+    "normal": 37.5,
+    "protan": 34.6,
+    "deutan": 31.6,
+    "tritan": 33.2
+   },
+   {
+    "name": "collector/collectorOk[3]",
+    "i": 3,
+    "a": "#2da549",
+    "b": "#7fe695",
+    "normal": 25.5,
+    "protan": 25.4,
+    "deutan": 24.8,
+    "tritan": 23.7
+   },
+   {
+    "name": "edgefw/edgefwOk[1]",
+    "i": 1,
+    "a": "#125823",
+    "b": "#145d25",
+    "normal": 2.6,
+    "protan": 2.4,
+    "deutan": 2.1,
+    "tritan": 2.1
+   },
+   {
+    "name": "ntpBad/ntpOk[2]",
+    "i": 2,
+    "a": "#166529",
+    "b": "#145d25",
+    "normal": 3.9,
+    "protan": 3.5,
+    "deutan": 3.2,
+    "tritan": 3.4
+   },
+   {
+    "name": "svPaw/svPawOk[3]",
+    "i": 3,
+    "a": "#52d66f",
+    "b": "#7fe695",
+    "normal": 16.1,
+    "protan": 13.6,
+    "deutan": 11.4,
+    "tritan": 10.2
+   },
+   {
+    "name": "svCage/svCageOk[2]",
+    "i": 2,
+    "a": "#176a2b",
+    "b": "#145d25",
+    "normal": 6.5,
+    "protan": 5.9,
+    "deutan": 5.2,
+    "tritan": 5.4
+   },
+   {
+    "name": "wtHmi/wtHmiOk[3]",
+    "i": 3,
+    "a": "#52d66f",
+    "b": "#7fe695",
+    "normal": 16.1,
+    "protan": 13.6,
+    "deutan": 11.4,
+    "tritan": 10.2
+   },
+   {
+    "name": "wtPlc/wtPlcOk[2]",
+    "i": 2,
+    "a": "#176a2b",
+    "b": "#145d25",
+    "normal": 6.5,
+    "protan": 5.9,
+    "deutan": 5.2,
+    "tritan": 5.4
+   },
+   {
+    "name": "wtFw/wtFwOk[2]",
+    "i": 2,
+    "a": "#176a2b",
+    "b": "#145d25",
+    "normal": 6.5,
+    "protan": 5.9,
+    "deutan": 5.2,
+    "tritan": 5.4
+   },
+   {
+    "name": "wtVend/wtVendOk[2]",
+    "i": 2,
+    "a": "#176a2b",
+    "b": "#145d25",
+    "normal": 6.5,
+    "protan": 5.9,
+    "deutan": 5.2,
+    "tritan": 5.4
+   },
+   {
+    "name": "wtNet/wtNetOk[3]",
+    "i": 3,
+    "a": "#52d66f",
+    "b": "#7fe695",
+    "normal": 16.1,
+    "protan": 13.6,
+    "deutan": 11.4,
+    "tritan": 10.2
+   },
+   {
+    "name": "ccClerk/ccClerkOk[2]",
+    "i": 2,
+    "a": "#176a2b",
+    "b": "#145d25",
+    "normal": 6.5,
+    "protan": 5.9,
+    "deutan": 5.2,
+    "tritan": 5.4
+   },
+   {
+    "name": "ccWar/ccWarOk[2]",
+    "i": 2,
+    "a": "#176a2b",
+    "b": "#145d25",
+    "normal": 6.5,
+    "protan": 5.9,
+    "deutan": 5.2,
+    "tritan": 5.4
+   },
+   {
+    "name": "ccTeam/ccTeamOk[2]",
+    "i": 2,
+    "a": "#176a2b",
+    "b": "#145d25",
+    "normal": 6.5,
+    "protan": 5.9,
+    "deutan": 5.2,
+    "tritan": 5.4
+   },
+   {
+    "name": "pcOn/pcIso[3]",
+    "i": 3,
+    "a": "#7fe695",
+    "b": "#2da448",
+    "normal": 25.8,
+    "protan": 25.8,
+    "deutan": 25.2,
+    "tritan": 24
+   },
+   {
+    "name": "pcOnOk/pcIso[3]",
+    "i": 3,
+    "a": "#7fe695",
+    "b": "#2da448",
+    "normal": 25.8,
+    "protan": 25.8,
+    "deutan": 25.2,
+    "tritan": 24
+   },
+   {
+    "name": "Evidence/Dwell bars",
+    "a": "#9dffb0",
+    "b": "#2a9a45",
+    "normal": 37.3,
+    "protan": 37.2,
+    "deutan": 36.9,
+    "tritan": 36.3
+   },
+   {
+    "name": "UI accent/warn",
+    "a": "#c2ffcf",
+    "b": "#ffe28a",
+    "normal": 40.3,
+    "protan": 27.9,
+    "deutan": 31.9,
+    "tritan": 38.5
+   }
+  ],
+  "light": [
+   {
+    "name": "pcOff/pcOnOk[3]",
+    "i": 3,
+    "a": "#5a5d65",
+    "b": "#b4f3d4",
+    "normal": 59.6,
+    "protan": 55.7,
+    "deutan": 51.9,
+    "tritan": 56.2
+   },
+   {
+    "name": "kioskBad/kioskOk[3]",
+    "i": 3,
+    "a": "#eba480",
+    "b": "#b4f3d4",
+    "normal": 55.2,
+    "protan": 26.1,
+    "deutan": 28.9,
+    "tritan": 68
+   },
+   {
+    "name": "closetBad/closetOk[3]",
+    "i": 3,
+    "a": "#eba480",
+    "b": "#b4f3d4",
+    "normal": 55.2,
+    "protan": 26.1,
+    "deutan": 28.9,
+    "tritan": 68
+   },
+   {
+    "name": "pcOff/pcIso[2]",
+    "i": 2,
+    "a": "#bb8f69",
+    "b": "#8d9bba",
+    "normal": 45.4,
+    "protan": 42.3,
+    "deutan": 46.4,
+    "tritan": 38.9
+   },
+   {
+    "name": "wafBox/wafOn[2]",
+    "i": 2,
+    "a": "#c86c5d",
+    "b": "#b4d1f3",
+    "normal": 64,
+    "protan": 49.4,
+    "deutan": 54.6,
+    "tritan": 75.8
+   },
+   {
+    "name": "vault/vaultOk[1]",
+    "i": 1,
+    "a": "#724848",
+    "b": "#5d76a4",
+    "normal": 40.5,
+    "protan": 35.5,
+    "deutan": 40.1,
+    "tritan": 47.4
+   },
+   {
+    "name": "collector/collectorOk[3]",
+    "i": 3,
+    "a": "#eba480",
+    "b": "#b4f3d4",
+    "normal": 55.2,
+    "protan": 26.1,
+    "deutan": 28.9,
+    "tritan": 68
+   },
+   {
+    "name": "edgefw/edgefwOk[0]",
+    "i": 0,
+    "a": "#724848",
+    "b": "#4d5360",
+    "normal": 23.4,
+    "protan": 12.5,
+    "deutan": 18.1,
+    "tritan": 30.5
+   },
+   {
+    "name": "ntpBad/ntpOk[2]",
+    "i": 2,
+    "a": "#c86c5d",
+    "b": "#5d8e68",
+    "normal": 60.6,
+    "protan": 4.8,
+    "deutan": 15.8,
+    "tritan": 72.4
+   },
+   {
+    "name": "svPaw/svPawOk[3]",
+    "i": 3,
+    "a": "#bae18b",
+    "b": "#b4f3d4",
+    "normal": 30,
+    "protan": 31.2,
+    "deutan": 29.9,
+    "tritan": 16.1
+   },
+   {
+    "name": "svCage/svCageOk[2]",
+    "i": 2,
+    "a": "#7e8fb5",
+    "b": "#5d8e68",
+    "normal": 46.5,
+    "protan": 40.4,
+    "deutan": 36.4,
+    "tritan": 11.2
+   },
+   {
+    "name": "wtHmi/wtHmiOk[3]",
+    "i": 3,
+    "a": "#bae18b",
+    "b": "#b4f3d4",
+    "normal": 30,
+    "protan": 31.2,
+    "deutan": 29.9,
+    "tritan": 16.1
+   },
+   {
+    "name": "wtPlc/wtPlcOk[2]",
+    "i": 2,
+    "a": "#7e8fb5",
+    "b": "#5d8e68",
+    "normal": 46.5,
+    "protan": 40.4,
+    "deutan": 36.4,
+    "tritan": 11.2
+   },
+   {
+    "name": "wtFw/wtFwOk[2]",
+    "i": 2,
+    "a": "#7e8fb5",
+    "b": "#5d8e68",
+    "normal": 46.5,
+    "protan": 40.4,
+    "deutan": 36.4,
+    "tritan": 11.2
+   },
+   {
+    "name": "wtVend/wtVendOk[2]",
+    "i": 2,
+    "a": "#7e8fb5",
+    "b": "#5d8e68",
+    "normal": 46.5,
+    "protan": 40.4,
+    "deutan": 36.4,
+    "tritan": 11.2
+   },
+   {
+    "name": "wtNet/wtNetOk[3]",
+    "i": 3,
+    "a": "#bae18b",
+    "b": "#b4f3d4",
+    "normal": 30,
+    "protan": 31.2,
+    "deutan": 29.9,
+    "tritan": 16.1
+   },
+   {
+    "name": "ccClerk/ccClerkOk[2]",
+    "i": 2,
+    "a": "#7e8fb5",
+    "b": "#5d8e68",
+    "normal": 46.5,
+    "protan": 40.4,
+    "deutan": 36.4,
+    "tritan": 11.2
+   },
+   {
+    "name": "ccWar/ccWarOk[2]",
+    "i": 2,
+    "a": "#7e8fb5",
+    "b": "#5d8e68",
+    "normal": 46.5,
+    "protan": 40.4,
+    "deutan": 36.4,
+    "tritan": 11.2
+   },
+   {
+    "name": "ccTeam/ccTeamOk[2]",
+    "i": 2,
+    "a": "#7e8fb5",
+    "b": "#5d8e68",
+    "normal": 46.5,
+    "protan": 40.4,
+    "deutan": 36.4,
+    "tritan": 11.2
+   },
+   {
+    "name": "pcOn/pcIso[2]",
+    "i": 2,
+    "a": "#bb8f69",
+    "b": "#8d9bba",
+    "normal": 45.4,
+    "protan": 42.3,
+    "deutan": 46.4,
+    "tritan": 38.9
+   },
+   {
+    "name": "pcOnOk/pcIso[2]",
+    "i": 2,
+    "a": "#bb8f69",
+    "b": "#8d9bba",
+    "normal": 45.4,
+    "protan": 42.3,
+    "deutan": 46.4,
+    "tritan": 38.9
+   },
+   {
+    "name": "Evidence/Dwell bars",
+    "a": "#5d93c5",
+    "b": "#c86c5d",
+    "normal": 68.1,
+    "protan": 48.4,
+    "deutan": 62,
+    "tritan": 85.3
+   },
+   {
+    "name": "UI accent/warn",
+    "a": "#2f6e3e",
+    "b": "#a8361f",
+    "normal": 79.5,
+    "protan": 11,
+    "deutan": 24.5,
+    "tritan": 92.5
+   }
+  ]
+ },
+ "bars": {
+  "classic": {
+   "ev": "#2f74b5 4.90",
+   "dwell": "#b8432f 5.41",
+   "focus": "#5aa64b 3.00",
+   "evVsDwell": 1.1
+  },
+  "contrast": {
+   "ev": "#196ebd 4.01",
+   "dwell": "#c23219 3.76",
+   "focus": "#4fae3c 7.45",
+   "evVsDwell": 1.06
+  },
+  "cbsafe": {
+   "ev": "#2f74b5 4.90",
+   "dwell": "#ca5c1d 4.15",
+   "focus": "#1f8a70 4.26",
+   "evVsDwell": 1.18
+  },
+  "amber": {
+   "ev": "#ffb000 10.64",
+   "dwell": "#b86500 4.55",
+   "focus": "#b97109 5.04",
+   "evVsDwell": 2.34
+  },
+  "green": {
+   "ev": "#9dffb0 15.86",
+   "dwell": "#2a9a45 5.30",
+   "focus": "#269540 4.98",
+   "evVsDwell": 2.99
+  },
+  "light": {
+   "ev": "#5d93c5 3.26",
+   "dwell": "#c86c5d 3.65",
+   "focus": "#4a9a3d 3.51",
+   "evVsDwell": 1.12
+  }
+ },
+ "sound": {
+  "events": [
+   "alert:played",
+   "battle:played",
+   "select:played",
+   "select:played",
+   "select:played",
+   "correct:played",
+   "battle:played",
+   "select:played",
+   "select:played",
+   "select:played",
+   "wrong:played",
+   "badge:played"
+  ],
+  "sets": {
+   "soft": {
+    "move": 1,
+    "select": 2,
+    "back": 1,
+    "alert": 2,
+    "correct": 3,
+    "wrong": 1,
+    "badge": 5,
+    "battle": 3
+   },
+   "chip": {
+    "move": 1,
+    "select": 2,
+    "back": 2,
+    "alert": 4,
+    "correct": 4,
+    "wrong": 2,
+    "badge": 6,
+    "battle": 4
+   },
+   "console": {
+    "move": 1,
+    "select": 1,
+    "back": 1,
+    "alert": 3,
+    "correct": 2,
+    "wrong": 1,
+    "badge": 3,
+    "battle": 4
+   },
+   "clicks": {
+    "move": 1,
+    "select": 2,
+    "back": 1,
+    "alert": 2,
+    "correct": 2,
+    "wrong": 1,
+    "badge": 2,
+    "battle": 2
+   },
+   "warm": {
+    "move": 2,
+    "select": 4,
+    "back": 2,
+    "alert": 4,
+    "correct": 6,
+    "wrong": 2,
+    "badge": 8,
+    "battle": 6
+   }
+  }
+ },
+ "classicWeak": [
+  "ntpBad/ntpOk[2]",
+  "svPaw/svPawOk[3]",
+  "svCage/svCageOk[2]",
+  "wtHmi/wtHmiOk[3]",
+  "wtPlc/wtPlcOk[2]",
+  "wtFw/wtFwOk[2]",
+  "wtVend/wtVendOk[2]",
+  "wtNet/wtNetOk[3]",
+  "ccClerk/ccClerkOk[2]",
+  "ccWar/ccWarOk[2]",
+  "ccTeam/ccTeamOk[2]",
+  "UI accent/warn"
+ ]
+}

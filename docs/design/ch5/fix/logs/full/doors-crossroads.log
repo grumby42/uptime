@@ -1,0 +1,71 @@
+{
+ "suite": "doors",
+ "passed": 9,
+ "failed": 0,
+ "results": [
+  {
+   "name": "old save on a wall tile (library 1,1) loads onto the nearest walkable floor tile",
+   "ok": true
+  },
+  {
+   "name": "every door pair: exit wall matches the arrival side, facing away from the door",
+   "ok": true
+  },
+  {
+   "name": "every exit tile is a working door",
+   "ok": true
+  },
+  {
+   "name": "checked all Crossroads doors (war room, square, Library, Library Board, School District, School Board, Clinic, Clinic Board, Dispatch, Dispatch Board, Airport, Airport Board, the Compact operations room, the Compact Board: 26 one-way links)",
+   "ok": true
+  },
+  {
+   "name": "an old save standing on a School District cabinet (13,2) loads onto the nearest walkable floor tile",
+   "ok": true
+  },
+  {
+   "name": "an old save standing on the Clinic’s server rack (14,1) loads onto the nearest walkable floor tile",
+   "ok": true
+  },
+  {
+   "name": "an old save standing on Dispatch’s CAD rack (21,1) loads onto the nearest walkable floor tile",
+   "ok": true
+  },
+  {
+   "name": "an old save standing on the Airport’s Plinthwise server (27,1) loads onto the nearest walkable floor tile",
+   "ok": true
+  },
+  {
+   "name": "no console errors or network requests",
+   "ok": true
+  }
+ ],
+ "doors": [
+  "cwar 9,10 -> csquare 9,1 down (exit down)",
+  "csquare 9,0 -> cwar 9,9 up (exit up)",
+  "csquare 9,10 -> library 15,1 down (exit down)",
+  "csquare 19,5 -> school 1,7 right (exit right)",
+  "csquare 0,5 -> clinic 28,7 left (exit left)",
+  "csquare 15,0 -> dispatch 15,14 up (exit up)",
+  "csquare 15,10 -> airport 15,1 down (exit down)",
+  "csquare 4,0 -> fnops 4,14 up (exit up)",
+  "library 15,0 -> csquare 9,9 up (exit up)",
+  "library 29,7 -> lboard 1,5 right (exit right)",
+  "lboard 0,5 -> library 28,7 left (exit left)",
+  "school 0,7 -> csquare 18,5 left (exit left)",
+  "school 29,7 -> sboard 1,5 right (exit right)",
+  "sboard 0,5 -> school 28,7 left (exit left)",
+  "clinic 29,7 -> csquare 1,5 right (exit right)",
+  "clinic 0,7 -> cnboard 16,5 left (exit left)",
+  "cnboard 17,5 -> clinic 1,7 right (exit right)",
+  "dispatch 15,15 -> csquare 15,1 down (exit down)",
+  "dispatch 0,7 -> dpboard 16,5 left (exit left)",
+  "dpboard 17,5 -> dispatch 1,7 right (exit right)",
+  "airport 15,0 -> csquare 15,9 up (exit up)",
+  "airport 0,7 -> apboard 16,5 left (exit left)",
+  "apboard 17,5 -> airport 1,7 right (exit right)",
+  "fnops 4,15 -> csquare 4,1 down (exit down)",
+  "fnops 0,7 -> fnboard 16,5 left (exit left)",
+  "fnboard 17,5 -> fnops 1,7 right (exit right)"
+ ]
+}

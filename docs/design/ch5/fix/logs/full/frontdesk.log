@@ -1,0 +1,21 @@
+{
+ "intern sees \"Ask Rae (escalate)\" in an alert": "ok",
+ "escalating a real attack with no evidence is not a good escalation": "ok",
+ "escalating a real attack with evidence >= 40 counts; precision 50%": "ok",
+ "escalating a benign alert costs reputation; precision 33%": "ok",
+ "Tier 1 sees \"Escalate to Tier 2\"": "ok",
+ "Lure response ends sessions": "ok",
+ "scoping question after a malicious close": "ok",
+ "scoping unlocks the Field Manual entry": "ok",
+ "verdicts-with-evidence metric tracked": "ok",
+ "Prober is 15% of malicious alerts (was 42%)": "ok",
+ "false-positive and benign alerts pick a rule evenly (~20% each of 5 rules)": "ok",
+ "malicious scan = login attempts after the scan; right response is not \"block the IP\"": "ok",
+ "Enforce MFA card leaves Stage 3 (rogue MFA device) unchanged": "ok",
+ "Review MFA devices card makes Stage 3 easier": "ok",
+ "CSF: Notify leadership and Review sign-in logs are Respond": "ok",
+ "Credits: © 2026 notice, licence, current trademark wording, non-affiliation": "ok",
+ "Scorecard: Hardening row, escalation precision, no \"Patch state\"": "ok",
+ "errors": [],
+ "requests": []
+}

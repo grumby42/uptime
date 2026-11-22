@@ -1,0 +1,77 @@
+[
+ [
+  "M-1: chFinHas ignores the clock",
+  4,
+  [
+   "Finale members’ call (11:00), packet 1 held (fix pass M-1, the test re-pinned): Noor does not have p",
+   "Finale, packet 1 held (fix pass M-1): it reaches Noor and the chair at Day 93 09:10, told then, betw",
+   "Finale Board, the chair’s citation on the packets as sent (fix pass M-2): on this path (packet 1 hel",
+   "Finale, every send path (fix pass M-1, M-2, M-7; 27 ways to send the three packets, each recommended"
+  ]
+ ],
+ [
+  "M-1: determination always on both packets",
+  2,
+  [
+   "Finale Board, the chair’s citation on the packets as sent (fix pass M-2): on this path (packet 1 hel",
+   "Finale, every send path (fix pass M-1, M-2, M-7; 27 ways to send the three packets, each recommended"
+  ]
+ ],
+ [
+  "S-9a: the ratification not checked",
+  2,
+  [
+   "Finale Board, the chair’s citation on the packets as sent (fix pass M-2): on this path (packet 1 hel",
+   "Finale invariant (S-7; fix pass S-9a, the ratification), re-created on purpose: with the Board’s dec"
+  ]
+ ],
+ [
+  "M-7: Who heard first on every path",
+  2,
+  [
+   "Finale Board, the chair’s citation on the packets as sent (fix pass M-2): on this path (packet 1 hel",
+   "Finale, every send path (fix pass M-1, M-2, M-7; 27 ways to send the three packets, each recommended"
+  ]
+ ],
+ [
+  "M-3: the minute names the suspicion file",
+  2,
+  [
+   "Finale Board and minute, the open item kept out of the Board papers as Noor ruled (fix pass M-3): th",
+   "Finale Board, the chair’s citation on the packets as sent (fix pass M-2): on this path (packet 1 hel"
+  ]
+ ],
+ [
+  "M-2: late packets not named in the citation",
+  3,
+  [
+   "Finale Board, the chair’s citation on the packets as sent (fix pass M-2): on this path (packet 1 hel",
+   "Finale, the edition’s end: the scorecard on the packets as sent (required rows supported 69%, counte",
+   "Finale, every send path (fix pass M-1, M-2, M-7; 27 ways to send the three packets, each recommended"
+  ]
+ ],
+ [
+  "S-8: the statement is the packet rows pasted",
+  2,
+  [
+   "Finale statement (fix pass S-8): packet 3 sent to Ada to publish, reached the chair through her at 1",
+   "Finale Board, the chair’s citation on the packets as sent (fix pass M-2): on this path (packet 1 hel"
+  ]
+ ],
+ [
+  "M-4: the decision log shows decisions before their time",
+  2,
+  [
+   "Finale decision log as recorded at Monday 14:00 (fix pass M-4: no decision recorded before its time;",
+   "Finale Board, the chair’s citation on the packets as sent (fix pass M-2): on this path (packet 1 hel"
+  ]
+ ],
+ [
+  "M-6: K2's not-known wording graded unsupported",
+  2,
+  [
+   "Finale Board, the chair’s citation on the packets as sent (fix pass M-2): on this path (packet 1 hel",
+   "Finale, what Wellhollow holds is its to say (fix pass M-6): K2’s supported wording states what we se"
+  ]
+ ]
+]
